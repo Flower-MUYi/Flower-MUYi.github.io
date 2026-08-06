@@ -1,10 +1,11 @@
 # 🌐 FlowerMUYi Navigation Portal & Web Tools Studio
 
+[![Website Status](https://img.shields.io/badge/Website-flowermuyi.me-blue?style=flat-square&logo=cloudflare)](https://flowermuyi.me)
 [![GitHub Pages](https://img.shields.io/badge/Hosted%20With-GitHub%20Pages-blue?style=flat-square&logo=github)](https://Flower-MUYi.github.io)
-[![Language](https://img.shields.io/badge/Language-CN%20%7C%20EN-brightgreen?style=flat-square)](https://Flower-MUYi.github.io)
+[![Language](https://img.shields.io/badge/Language-CN%20%7C%20EN-brightgreen?style=flat-square)](https://flowermuyi.me)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
 
-[**FlowerMUYi Navigation Portal**](https://Flower-MUYi.github.io) 是一个极简、高性能且现代感十足的个人导航门户与网络工具站，集成了智能双语识别、**EdgeTunnel** 代理节点部署服务、**IP 质量与全量网络威胁检测系统** 以及 **关于我们 (About Us)** 开发者主页。
+[**FlowerMUYi Navigation Portal**](https://flowermuyi.me) 是一个极简、高性能且现代感十足的个人导航门户与网络工具站，集成了智能双语识别、**EdgeTunnel** 代理节点部署服务、**IP 质量与全量网络威胁检测系统** 以及 **关于我们 (About Us)** 开发者主页。
 
 ---
 
@@ -32,6 +33,8 @@
 ```text
 Flower-MUYi.github.io/
 ├── index.html         # 根入口 (负责浏览器语言识别与重定向)
+├── CNAME              # 自定义域名配置 (flowermuyi.me)
+├── LICENSE            # MIT 开源许可证
 ├── README.md          # 项目文档说明
 ├── cn/                # 中文版本目录
 │   ├── index.html     # 中文导航工作台首页
@@ -57,9 +60,9 @@ Flower-MUYi.github.io/
 
 ## 👤 联系方式 & 开发者 (Contact & Developer)
 
+- **官方域名**: [flowermuyi.me](https://flowermuyi.me)
 - **GitHub 主页**: [https://github.com/Flower-MUYi](https://github.com/Flower-MUYi)
 - **电子邮箱**: [PineMuyi@gmail.com](mailto:PineMuyi@gmail.com)
-- **官方域名**: [edgetunnel.flowermuyi.me/login](https://edgetunnel.flowermuyi.me/login)
 
 ---
 
