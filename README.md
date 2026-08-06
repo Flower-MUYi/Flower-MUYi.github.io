@@ -15,7 +15,7 @@
   - 支持手动切换语言，并通过 `localStorage` 记忆用户的偏好设置。
 
 - ⚡ **EdgeTunnel 直达 (External Service Link)**:
-  - 快捷入口直达 Cloudflare Worker 代理与网络加速控制台: [`edgetunnel.flowermuyi.me`](https://edgetunnel.flowermuyi.me)。
+  - 快捷入口直达 Cloudflare Worker 代理与网络加速控制台: [`edgetunnel.flowermuyi.me/login`](https://edgetunnel.flowermuyi.me/login)。
 
 - 🛡️ **IP 质量与全量网络威胁检测 (IP Quality & Threat Inspection)**:
   - 并发对接权威情报 API (`ipdata.co` 与 `ipapi.is`)。
@@ -49,7 +49,7 @@ Flower-MUYi.github.io/
 
 | 功能模块 (Feature) | 中文链接 | English Link | 说明 (Description) |
 | :--- | :--- | :--- | :--- |
-| **EdgeTunnel** | [External Link](https://edgetunnel.flowermuyi.me) | [External Link](https://edgetunnel.flowermuyi.me) | Cloudflare Worker 云加速代理 |
+| **EdgeTunnel** | [External Link](https://edgetunnel.flowermuyi.me/login) | [External Link](https://edgetunnel.flowermuyi.me/login) | Cloudflare Worker 云加速代理 |
 | **IP 检测 (IP Check)** | [`/cn/ip.html`](./cn/ip.html) | [`/en/ip.html`](./en/ip.html) | IP 质量、威胁情报与 WebRTC 检测 |
 | **关于我们 (About Us)** | [`/cn/about.html`](./cn/about.html) | [`/en/about.html`](./en/about.html) | GitHub: [Flower-MUYi](https://github.com/Flower-MUYi) / Email: [PineMuyi@gmail.com](mailto:PineMuyi@gmail.com) |
 
@@ -59,7 +59,7 @@ Flower-MUYi.github.io/
 
 - **GitHub 主页**: [https://github.com/Flower-MUYi](https://github.com/Flower-MUYi)
 - **电子邮箱**: [PineMuyi@gmail.com](mailto:PineMuyi@gmail.com)
-- **官方域名**: [edgetunnel.flowermuyi.me](https://edgetunnel.flowermuyi.me)
+- **官方域名**: [edgetunnel.flowermuyi.me/login](https://edgetunnel.flowermuyi.me/login)
 
 ---
 
