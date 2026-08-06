@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowerMUYi Navigation Portal | 导航工作台</title>
+    <meta name="description" content="FlowerMUYi Personal Navigation Portal - EdgeTunnel, IP Quality & Threat Intelligence Detection, About Us.">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: #161f30;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .loader-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid #23324a;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(59, 130, 246, 0.2);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        h2 { margin: 0 0 10px 0; font-size: 1.4rem; background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
+        .lang-links { display: flex; gap: 12px; justify-content: center; }
+        .lang-btn {
+            padding: 10px 20px;
+            background: #23324a;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .lang-btn:hover { background: var(--primary); }
+    </style>
+    <script>
+        (function() {
+            var userLang = localStorage.getItem('preferred_lang');
+            if (!userLang) {
+                var navLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+                userLang = navLang.indexOf('zh') === 0 ? 'cn' : 'en';
+            }
+            if (userLang === 'cn') {
+                window.location.replace('./cn/index.html');
+            } else {
+                window.location.replace('./en/index.html');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="loader-card">
+        <div class="spinner"></div>
+        <h2>FlowerMUYi Portal</h2>
+        <p>正在根据浏览器语言自动重定向... / Redirecting...</p>
+        <div class="lang-links">
+            <a href="./cn/index.html" class="lang-btn">中文 (CN)</a>
+            <a href="./en/index.html" class="lang-btn">English (EN)</a>
+        </div>
+    </div>
+</body>
+</html>

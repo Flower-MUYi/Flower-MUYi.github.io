@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowerMUYi 导航工作台 - 高效工具与网络检测</title>
+    <meta name="description" content="FlowerMUYi 个人导航门户，集成 EdgeTunnel 极速代理、全量 IP 质量与威胁检测工具、以及个人开源与联系信息。">
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg: #0b0f19;
+            --card-bg: #161f30;
+            --card-border: #23324a;
+            --card-hover: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 70%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 导航栏 Navbar */
+        .navbar {
+            background: rgba(22, 31, 48, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .brand-logo i {
+            font-size: 1.5rem;
+            color: var(--primary);
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #fff;
+        }
+
+        .lang-switch-btn {
+            background: var(--card-border);
+            color: var(--text-main);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .lang-switch-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        /* Hero 区域 */
+        .hero {
+            padding: 60px 0 40px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 680px;
+            margin: 0 auto 32px auto;
+            line-height: 1.6;
+        }
+
+        /* 搜索框 */
+        .search-box {
+            max-width: 560px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* 核心导航卡片区 */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 50px;
+        }
+
+        .nav-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(96, 165, 250, 0.4);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            background: var(--card-hover);
+        }
+
+        .nav-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .card-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .icon-purple { background: rgba(139, 92, 246, 0.15); color: #c084fc; }
+        .icon-cyan { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+
+        .card-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-ext { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .tag-internal { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tag-about { background: rgba(139, 92, 246, 0.2); color: #d8b4fe; border: 1px solid rgba(139, 92, 246, 0.3); }
+
+        .card-body h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .card-body p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.55;
+            margin-bottom: 24px;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--primary);
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .card-footer i {
+            transition: transform 0.2s;
+        }
+
+        .nav-card:hover .card-footer i {
+            transform: translateX(4px);
+        }
+
+        /* 页脚 Footer */
+        footer {
+            margin-top: auto;
+            border-top: 1px solid var(--card-border);
+            padding: 30px 0;
+            background: rgba(11, 15, 25, 0.8);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 12px;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.1rem; }
+            .nav-links { display: none; }
+            .cards-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 顶栏导航 -->
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="./index.html" class="brand-logo">
+                <i class="fa-solid fa-compass"></i>
+                <span>FlowerMUYi 导航</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="./index.html" class="active"><i class="fa-solid fa-house"></i> 首页</a></li>
+                <li><a href="https://edgetunnel.flowermuyi.me" target="_blank"><i class="fa-solid fa-cloud-bolt"></i> EdgeTunnel</a></li>
+                <li><a href="./ip.html"><i class="fa-solid fa-shield-halved"></i> IP 检测</a></li>
+                <li><a href="./about.html"><i class="fa-solid fa-circle-info"></i> 关于我们</a></li>
+            </ul>
+            <button class="lang-switch-btn" onclick="switchLanguage('en')">
+                <i class="fa-solid fa-globe"></i> English
+            </button>
+        </div>
+    </nav>
+
+    <!-- 主体区域 -->
+    <main class="container">
+        <header class="hero">
+            <h1>FlowerMUYi 极简工具门户</h1>
+            <p>连接极速网络、深度 IP 质量安全分析与极简关于页面，打造一站式个人实用导航。</p>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="搜索功能、服务或工具关键字..." onkeyup="filterCards()">
+            </div>
+        </header>
+
+        <!-- 工具卡片组 -->
+        <section>
+            <div class="section-title">
+                <i class="fa-solid fa-bolt-lightning"></i>
+                <span>精选工具与服务</span>
+            </div>
+            <div class="cards-grid" id="cardsGrid">
+                
+                <!-- 卡片 1: EdgeTunnel -->
+                <a href="https://edgetunnel.flowermuyi.me" target="_blank" class="nav-card" data-title="edgetunnel 代理 云端 网络加速">
+                    <div class="card-header">
+                        <div class="card-icon icon-blue">
+                            <i class="fa-solid fa-cloud-bolt"></i>
+                        </div>
+                        <span class="card-tag tag-ext">外部服务</span>
+                    </div>
+                    <div class="card-body">
+                        <h3>EdgeTunnel</h3>
+                        <p>高性能基于 Cloudflare Workers 的代理连接与云边缘部署管理服务，即刻体验极速全球连接。</p>
+                    </div>
+                    <div class="card-footer">
+                        <span>打开链接 (edgetunnel.flowermuyi.me)</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </div>
+                </a>
+
+                <!-- 卡片 2: IP 检测 -->
+                <a href="./ip.html" class="nav-card" data-title="ip检测 威胁检测 欺诈分析 webrtc 查ip asn isps">
+                    <div class="card-header">
+                        <div class="card-icon icon-purple">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <span class="card-tag tag-internal">核心内置</span>
+                    </div>
+                    <div class="card-body">
+                        <h3>IP 质量与网络威胁检测</h3>
+                        <p>深度检测本机/任意 IP 的地理位置、ASN/ISP 归属、欺诈风险评分、代理/VPN/Tor/数据中心标识及 WebRTC 泄漏测试。</p>
+                    </div>
+                    <div class="card-footer">
+                        <span>立即进入检测系统</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- 卡片 3: 关于我们 -->
+                <a href="./about.html" class="nav-card" data-title="关于我们 github 邮箱 联系方式 pine-muyi flowermuyi">
+                    <div class="card-header">
+                        <div class="card-icon icon-cyan">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <span class="card-tag tag-about">开发者</span>
+                    </div>
+                    <div class="card-body">
+                        <h3>关于我们 (About Us)</h3>
+                        <p>了解 FlowerMUYi 项目背后的故事、技术栈、GitHub 主页开源仓库以及个人联系邮箱沟通管道。</p>
+                    </div>
+                    <div class="card-footer">
+                        <span>查看主页与联系方式</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container">
+            <ul class="footer-links">
+                <li><a href="https://github.com/Flower-MUYi" target="_blank"><i class="fa-brands fa-github"></i> GitHub 主页</a></li>
+                <li><a href="mailto:PineMuyi@gmail.com"><i class="fa-solid fa-envelope"></i> 邮箱联系</a></li>
+                <li><a href="https://edgetunnel.flowermuyi.me" target="_blank"><i class="fa-solid fa-cloud"></i> EdgeTunnel</a></li>
+                <li><a href="./ip.html"><i class="fa-solid fa-shield"></i> IP 检测</a></li>
+            </ul>
+            <p>© 2026 FlowerMUYi. All rights reserved. Powered by GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script>
+        function switchLanguage(lang) {
+            localStorage.setItem('preferred_lang', lang);
+            if (lang === 'en') {
+                window.location.href = '../en/index.html';
+            } else {
+                window.location.href = './index.html';
+            }
+        }
+
+        function filterCards() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.nav-card');
+            cards.forEach(card => {
+                const title = card.getAttribute('data-title') || '';
+                const text = card.innerText.toLowerCase();
+                if (title.toLowerCase().includes(query) || text.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
