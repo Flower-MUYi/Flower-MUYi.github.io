@@ -3511,11 +3511,21 @@
                 let eqVar = 'x';
                 let foundVars = (leftStr + rightStr).match(/[a-zA-Z]/g);
                 if (foundVars) {
-                    let nonFuncVars = foundVars.filter(v => !['e', 'i', 'p', 'd', 's', 'c', 't', 'l'].includes(v.toLowerCase()));
-                    if (nonFuncVars.length > 0) eqVar = nonFuncVars[0];
-                    else if (foundVars.includes('x')) eqVar = 'x';
-                    else if (foundVars.includes('y')) eqVar = 'y';
-                    else if (foundVars.includes('t')) eqVar = 't';
+                    if (foundVars.includes('x')) {
+                        eqVar = 'x';
+                    } else if (foundVars.includes('y')) {
+                        eqVar = 'y';
+                    } else if (foundVars.includes('t')) {
+                        eqVar = 't';
+                    } else {
+                        let nonConstVars = foundVars.filter(v => !['e', 'i', 'p', 'd', 's', 'c', 'l'].includes(v.toLowerCase()));
+                        let nonSliderVars = nonConstVars.filter(v => !slidersState.has(v));
+                        if (nonSliderVars.length > 0) {
+                            eqVar = nonSliderVars[0];
+                        } else if (nonConstVars.length > 0) {
+                            eqVar = nonConstVars[0];
+                        }
+                    }
                 }
 
                 steps.push({
@@ -4175,7 +4185,16 @@
         function recompilePlotFunc() {
             if (currentPlotFunction) {
                 try {
-                    compiledVars = ['x', ...Array.from(slidersState.keys())];
+                    const rawFormula = mathField ? mathField.getValue() : '';
+                    let exprStr = '';
+                    if (typeof currentPlotFunction === 'string') {
+                        exprStr = currentPlotFunction;
+                    } else if (Array.isArray(currentPlotFunction)) {
+                        exprStr = currentPlotFunction.map(item => item.expr).join(' + ');
+                    }
+                    const suspected = getSuspectedParameters(rawFormula + ' ' + exprStr);
+                    const allParamNames = Array.from(new Set([...Array.from(slidersState.keys()), ...suspected]));
+                    compiledVars = ['x', ...allParamNames];
 
                     // 多图层列表绘制
                     if (Array.isArray(currentPlotFunction)) {
