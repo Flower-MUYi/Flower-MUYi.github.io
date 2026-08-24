@@ -452,23 +452,34 @@
             font-family: 'JetBrains Mono', monospace;
             color: #fff;
             pointer-events: none;
-            z-index: 20;
-            white-space: nowrap;
-        }
-
         .domain-tag {
             position: absolute;
             top: 8px;
             left: 8px;
-            background: rgba(139, 92, 246, 0.2);
-            border: 1px solid rgba(139, 92, 246, 0.4);
-            color: #c084fc;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.72rem;
-            font-weight: 600;
+            background: rgba(139, 92, 246, 0.22);
+            border: 1px solid rgba(167, 139, 250, 0.5);
+            color: #ddd6fe;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            pointer-events: none;
             display: none;
-            z-index: 10;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+            letter-spacing: 0.02em;
+            z-index: 15;
+            align-items: center;
+            gap: 4px;
+        }
+
+        [data-theme="light"] .domain-tag {
+            background: rgba(139, 92, 246, 0.14);
+            border-color: rgba(139, 92, 246, 0.35);
+            color: #6d28d9;
+            box-shadow: 0 2px 8px rgba(109, 40, 217, 0.1);
         }
 
         /* 动态参数滑块面板 */
@@ -1555,6 +1566,30 @@
             }
         }
 
+        function formatPiMultiple(multiple) {
+            let bestM = null, bestN = null, minDiff = 1e-4;
+            for (let n = 1; n <= 12; n++) {
+                let m = Math.round(multiple * n);
+                let diff = Math.abs(multiple - m / n);
+                if (diff < minDiff) {
+                    bestM = m;
+                    bestN = n;
+                    minDiff = diff;
+                }
+            }
+            if (bestM === null || minDiff >= 1e-4) {
+                return (multiple * Math.PI).toFixed(2).replace(/\.?0+$/, '');
+            }
+            if (bestM === 0) return '0';
+            let sign = bestM < 0 ? '-' : '';
+            let absM = Math.abs(bestM);
+            if (bestN === 1) {
+                return absM === 1 ? `${sign}π` : `${sign}${absM}π`;
+            } else {
+                return absM === 1 ? `${sign}π/${bestN}` : `${sign}${absM}π/${bestN}`;
+            }
+        }
+
         function redrawGraph() {
             const rect = canvasWrapper.getBoundingClientRect();
             const w = rect.width;
@@ -1567,14 +1602,46 @@
             const axisColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.45)';
             const textColor = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.55)';
             const curveColor = '#38bdf8';
+            const domainShadeColor = isDark ? 'rgba(137, 87, 229, 0.08)' : 'rgba(137, 87, 229, 0.08)';
+            const domainBorderColor = 'rgba(137, 87, 229, 0.4)';
 
             ctx.clearRect(0, 0, w, h);
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, w, h);
 
             if (currentDomain) {
-                domainBadge.textContent = `定义域: ${currentDomain.raw}`;
-                domainBadge.style.display = 'block';
+                const leftB = currentDomain.minOp === 'le' ? '[' : '(';
+                const rightB = currentDomain.maxOp === 'le' ? ']' : ')';
+                let minTxt = currentDomain.min <= -100 ? '-∞' : formatPiMultiple(currentDomain.min / Math.PI);
+                let maxTxt = currentDomain.max >= 100 ? '+∞' : formatPiMultiple(currentDomain.max / Math.PI);
+                domainBadge.innerHTML = `<i class="fa-solid fa-lock" style="font-size:0.68rem;"></i> 定义域: x ∈ ${leftB}${minTxt}, ${maxTxt}${rightB}`;
+                domainBadge.style.display = 'inline-flex';
+
+                // 绘制定义域区间高亮阴影与边界虚线
+                const domMinX = Math.max(-200, currentDomain.min);
+                const domMaxX = Math.min(200, currentDomain.max);
+                const domMinScreen = (domMinX - view.centerX) * view.scale + w / 2;
+                const domMaxScreen = (domMaxX - view.centerX) * view.scale + w / 2;
+
+                ctx.fillStyle = domainShadeColor;
+                ctx.fillRect(domMinScreen, 0, domMaxScreen - domMinScreen, h);
+
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = domainBorderColor;
+                if (currentDomain.min > -100) {
+                    ctx.beginPath();
+                    ctx.moveTo(domMinScreen, 0);
+                    ctx.lineTo(domMinScreen, h);
+                    ctx.stroke();
+                }
+                if (currentDomain.max < 100) {
+                    ctx.beginPath();
+                    ctx.moveTo(domMaxScreen, 0);
+                    ctx.lineTo(domMaxScreen, h);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
             } else {
                 domainBadge.style.display = 'none';
             }
