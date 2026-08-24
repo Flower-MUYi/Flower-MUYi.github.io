@@ -1901,7 +1901,11 @@
                 btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
                 btn.setAttribute('title', theme === 'dark' ? '切换为明亮模式' : '切换为暗黑模式');
             }
-            if (typeof redrawGraph === 'function') redrawGraph();
+            try {
+                if (typeof redrawGraph === 'function' && typeof canvasWrapper !== 'undefined' && canvasWrapper) {
+                    redrawGraph();
+                }
+            } catch (e) {}
         }
 
         document.getElementById('themeToggleBtn').addEventListener('click', () => {
