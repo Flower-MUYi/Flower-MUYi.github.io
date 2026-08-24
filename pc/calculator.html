@@ -4553,8 +4553,8 @@
                 if (isExp) {
                     // u = sqrt(e^{kx} + a) => u^2 = e^{kx} + a => e^{kx} = u^2 - a => x = (1/k)ln(u^2 - a)
                     let expMatch = radInner.match(/exp\(([a-zA-Z0-9\*\+\-]+)\)([\+\-][0-9\.]+)?/);
-                    let kx = expMatch[1] || v;
-                    let aVal = parseFloat(expMatch[2] || '0');
+                    let kx = expMatch ? expMatch[1] : v;
+                    let aVal = parseFloat((expMatch && expMatch[2]) ? expMatch[2] : '0');
                     
                     let k = (kx === v) ? 1 : (parseFloat(kx.replace(v, '').replace('*', '')) || 1);
                     let aStr = aVal >= 0 ? `- (${aVal})` : `+ (${-aVal})`;
@@ -4600,21 +4600,24 @@
                     math: `\\int \\left( ${nerdamer(simplifiedIntegrandU).toTeX()} \\right) \\,du`
                 });
 
-                // 3. 对关于 u 的有理函数进行符号积分
+                // 3. 对关于 u 的有理函数进行符号积分并展开系数
                 let intU = nerdamer(`integrate(${simplifiedIntegrandU}, u)`);
-                let intUTeX = intU.toTeX();
+                let intUExpanded;
+                try {
+                    intUExpanded = nerdamer(intU.toString()).expand();
+                } catch(e) {
+                    intUExpanded = intU;
+                }
+                let intUTeX = intUExpanded.toTeX();
 
                 stepsBreakdown.push({
                     desc: '求解关于 $u$ 的不定积分：',
                     math: intUTeX
                 });
 
-                // 4. 将 u = sqrt(radInner) 回代自变量
-                let backSubLatex = intUTeX.replace(/\bu\b/g, `\\left(${radTeX}\\right)`)
-                                          .replace(/\\left\(\\left\(/g, '\\left(')
-                                          .replace(/\\right\)\\right\)/g, '\\right)');
+                // 4. 将 u = sqrt(radInner) 直接干净回代，避免破坏括号定界符
+                let finalResultLatex = intUTeX.replace(/\bu\b/g, radTeX);
 
-                let finalResultLatex = backSubLatex;
                 stepsBreakdown.push({
                     desc: `将 $u = ${radTeX}$ 回代自变量，得出最简原函数：`,
                     math: finalResultLatex
