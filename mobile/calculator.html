@@ -3337,6 +3337,9 @@
                 let defVal;
                 try {
                     defVal = nerdamer(`defint(${innerExpr}, ${a}, ${b}, ${v})`);
+                    if (defVal.toString().includes('defint') || defVal.toTeX().includes('\\int')) {
+                        throw new Error('defint unresolved');
+                    }
                 } catch (e) {
                     try {
                         let subsB = nerdamer(indef.toString(), { [v]: b });
@@ -3355,29 +3358,35 @@
                 const isSpecialDef = isSpecialSymbolicValue(defTeX, defVal.text());
                 const isPureIntDef = /^-?\d+$/.test(defVal.text());
 
-                if (isSpecialDef || isPureIntDef) {
-                    // 特殊值（含根号、pi、e等）或纯整数，保持精确符号积分结果
-                    finalResultLatex = defTeX;
-                } else {
-                    let approxDef = null;
+                let approxDef = null;
+                try {
+                    approxDef = nerdamer(defVal.text()).buildFunction()();
+                } catch (e) {
                     try {
-                        approxDef = nerdamer(defVal.text()).buildFunction()();
-                    } catch (e) {
+                        approxDef = parseFloat(nerdamer(defVal.text()).text('decimals'));
+                    } catch (e2) {
                         try {
-                            approxDef = parseFloat(nerdamer(defVal.text()).text('decimals'));
-                        } catch (e2) { }
+                            let funcF = nerdamer(indef.toString()).buildFunction([v]);
+                            let numA = parseFloat(nerdamer(a).text('decimals'));
+                            let numB = parseFloat(nerdamer(b).text('decimals'));
+                            approxDef = funcF(numB) - funcF(numA);
+                        } catch (e3) { }
                     }
+                }
 
-                    if (approxDef !== null && isFinite(approxDef)) {
-                        const approxFormatted = approxDef.toFixed(6).replace(/\.?0+$/, '');
+                if (approxDef !== null && isFinite(approxDef)) {
+                    const approxFormatted = approxDef.toFixed(6).replace(/\.?0+$/, '');
+                    if (!isSpecialDef && !isPureIntDef) {
                         steps.push({
-                            desc: '计算分式数值近似值 (Decimal Approximation)：',
+                            desc: '计算数值近似值 (Decimal Approximation)：',
                             math: `\\approx ${approxFormatted}`
                         });
-                        finalResultLatex = defTeX.includes('\\frac') ? `${defTeX} \\approx ${approxFormatted}` : defTeX;
+                        finalResultLatex = (defTeX.includes('\\frac') || defTeX.length > 8) ? `${defTeX} \\approx ${approxFormatted}` : defTeX;
                     } else {
                         finalResultLatex = defTeX;
                     }
+                } else {
+                    finalResultLatex = defTeX;
                 }
 
                 // 【核心升级】：让定积分也返回多图层数组，自动开启双色图例和原函数同绘！
