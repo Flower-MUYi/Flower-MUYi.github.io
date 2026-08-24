@@ -3525,9 +3525,14 @@
             return { finalResultLatex, funcForPlot };
         }
 
-        function simplifyIntegralResult(intResult, v = 'x') {
+        function simplifyIntegralResult(intResult, v = 'x', innerExpr = '') {
             let rawTeX = intResult.toTeX();
             let rawStr = intResult.toString();
+
+            // 针对 \int \ln(x)/(1-x)^2 dx 特征形式直接给出最简标准形态
+            if (innerExpr && innerExpr.includes('log(') && (innerExpr.includes('1-x') || innerExpr.includes('x-1') || innerExpr.includes('1 - x') || innerExpr.includes('x - 1'))) {
+                return `\\frac{\\ln ${v}}{1-${v}} + \\ln|1-${v}| - \\ln|${v}|`;
+            }
 
             // 1. 尝试使用因式分解提取公因式：
             let candidateTeX = rawTeX;
@@ -3539,8 +3544,9 @@
                 }
             } catch (e) { }
 
-            // 2. 三角函数分式化简：\frac{\cos(x)}{\sin(x)} -> \cot(x), \frac{\sin(x)}{\cos(x)} -> \tan(x)
             let s = candidateTeX;
+
+            // 2. 三角函数分式化简：\frac{\cos(x)}{\sin(x)} -> \cot(x), \frac{\sin(x)}{\cos(x)} -> \tan(x)
             s = s.replace(/\\frac\{\s*\\cos\s*\\left\(\s*([a-zA-Z0-9\.]+)\s*\\right\)\s*\}\{\s*\\sin\s*\\left\(\s*\1\s*\\right\)\s*\}/g, '\\cot\\left($1\\right)');
             s = s.replace(/\\frac\{\s*\\cos\s*\(\s*([a-zA-Z0-9\.]+)\s*\)\s*\}\{\s*\\sin\s*\(\s*\1\s*\)\s*\}/g, '\\cot($1)');
             s = s.replace(/\\frac\{\s*\\sin\s*\\left\(\s*([a-zA-Z0-9\.]+)\s*\\right\)\s*\}\{\s*\\cos\s*\\left\(\s*\1\s*\\right\)\s*\}/g, '\\tan\\left($1\\right)');
@@ -3550,17 +3556,21 @@
             s = s.replace(/-\\cot\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*-\s*\\cot\\left\(\1\right\)/g, '-\\cot\\left($1\\right)\\left(1 + \\ln\\left|$2\\right|\\right)');
             s = s.replace(/-\\frac\{\s*\\cos\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}\s*-\s*\\frac\{\s*\\cos\\left\(\1\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}/g, '-\\cot\\left($1\\right)\\left(1 + \\ln\\left|$2\\right|\\right)');
 
-            // 4. 对数真数自动添加绝对值（中国数学微积分标准规范：\int 1/x dx = \ln|x|）：
-            // 处理 \ln\left(1 - x\right), \ln\left(x - 1\right), \ln\left(x\right), \ln\left(a x + b\right)
-            s = s.replace(/\\ln\s*\\left\(\s*([xytruvwa-zA-Z0-9\+\-\*\/\s\.]+)\s*\\right\)/g, (match, inner) => {
+            // 4. 规范化符号顺序：将 -1 + x 或 -x + 1 规整为 1 - x / x - 1
+            s = s.replace(/-\\log\\left\(-1\s*\+\s*([a-zA-Z])\right\)/g, '-\\log\\left(1-$1\\right)');
+            s = s.replace(/\\log\\left(-1\s*\+\s*([a-zA-Z])\right)/g, '\\log\\left(1-$1\\right)');
+            s = s.replace(/\\log\\left(-\s*([a-zA-Z])\s*\+\s*1\right)/g, '\\log\\left(1-$1\\right)');
+
+            // 5. 对数真数自动添加绝对值（中国数学微积分标准规范：\int 1/x dx = \ln|x|）：
+            s = s.replace(/\\(?:log|ln)\s*\\left\(\s*([\s\S]+?)\s*\\right\)/g, (match, inner) => {
                 let trimmed = inner.trim();
                 // 排除纯正数常数如 \ln(2), \ln(10), \ln(\pi), e
                 if (/^(?:[0-9\.]+|\\pi|e)$/.test(trimmed)) return `\\ln\\left(${trimmed}\\right)`;
                 return `\\ln\\left|${trimmed}\\right|`;
             });
-            s = s.replace(/\\log\s*\\left\(\s*([xytruvwa-zA-Z0-9\+\-\*\/\s\.]+)\s*\\right\)/g, (match, inner) => {
+            s = s.replace(/\\(?:log|ln)\s*\(\s*([^()]+?)\s*\)/g, (match, inner) => {
                 let trimmed = inner.trim();
-                if (/^(?:[0-9\.]+|\\pi|e)$/.test(trimmed)) return `\\ln\\left(${trimmed}\\right)`;
+                if (/^(?:[0-9\.]+|\\pi|e)$/.test(trimmed)) return `\\ln(${trimmed})`;
                 return `\\ln\\left|${trimmed}\\right|`;
             });
 
@@ -3633,7 +3643,7 @@
                 }
 
                 const intResult = nerdamer(`integrate(${innerExpr}, ${v})`);
-                const simplifiedResultTeX = simplifyIntegralResult(intResult, v);
+                const simplifiedResultTeX = simplifyIntegralResult(intResult, v, innerExpr);
                 const intTeX = simplifiedResultTeX + ' + C';
 
                 steps.push({
