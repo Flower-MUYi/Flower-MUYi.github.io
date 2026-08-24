@@ -1508,6 +1508,18 @@
                                 <span class="katex-inline" data-tex="\int (x^2 - 2x)\,dx"></span>
                                 <span class="pill-badge">微积分</span>
                             </button>
+                            <button class="preset-pill" data-preset="\frac{x^3 - 2x^2 - 4}{x - 3}">
+                                <span class="katex-inline" data-tex="\frac{x^3 - 2x^2 - 4}{x - 3}"></span>
+                                <span class="pill-badge">多项式长除法</span>
+                            </button>
+                            <button class="preset-pill" data-preset="(2x^4 - x^3 + 3x - 5) \div (x^2 + 1)">
+                                <span class="katex-inline" data-tex="(2x^4 - x^3 + 3x - 5) \div (x^2 + 1)"></span>
+                                <span class="pill-badge">长除法</span>
+                            </button>
+                            <button class="preset-pill" data-preset="1234 \div 56">
+                                <span class="katex-inline" data-tex="1234 \div 56"></span>
+                                <span class="pill-badge">整数长除法</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1525,6 +1537,9 @@
                     </button>
                     <button class="btn-action btn-secondary" id="btnDiff">
                         <span>📈 求导 (d/dx)</span>
+                    </button>
+                    <button class="btn-action btn-secondary" id="btnLongDiv">
+                        <span>➗ 多项式长除法</span>
                     </button>
                 </div>
             </div>
@@ -3038,9 +3053,33 @@
             return { type: 'integrate', expr: expr, varName: v };
         }
 
-            // -------------------------------------------------------------
-            // Mode 3: Equations (Contains '=')
-            // -------------------------------------------------------------
+        // -------------------------------------------------------------
+        // Mode 2.8: Long Division (多项式 / 整数长除法)
+        // -------------------------------------------------------------
+        if (s.includes('\\div')) {
+            let divParts = s.split('\\div');
+            if (divParts.length === 2 && divParts[0].trim() && divParts[1].trim()) {
+                return {
+                    type: 'longdiv',
+                    num: cleanBaseExpression(divParts[0]),
+                    den: cleanBaseExpression(divParts[1])
+                };
+            }
+        }
+
+        let polydivRegex = /(?:\\operatorname\{polydiv\}|\\operatorname\{div\}|\\operatorname\{longdiv\}|polydiv|div|longdiv)\s*\(([\s\S]+?),([\s\S]+?)\)/i;
+        if (polydivRegex.test(s)) {
+            let m = s.match(polydivRegex);
+            return {
+                type: 'longdiv',
+                num: cleanBaseExpression(m[1]),
+                den: cleanBaseExpression(m[2])
+            };
+        }
+
+        // -------------------------------------------------------------
+        // Mode 3: Equations (Contains '=')
+        // -------------------------------------------------------------
             if (s.includes('=')) {
                 let parts = s.split('=');
                 let leftStr = cleanBaseExpression(parts[0]);
@@ -3772,6 +3811,235 @@
             return { finalResultLatex, funcForPlot };
         }
 
+        function handleLongDivision(ast, steps, rawInput) {
+            let numStr = ast.num;
+            let denStr = ast.den;
+
+            // If numStr or denStr was not directly in ast (e.g. from fraction \frac{A}{B} or A/B)
+            if (!numStr || !denStr) {
+                let exprInput = ast.expr || rawInput || '';
+                let fracMatch = exprInput.match(/^\\frac\{([\s\S]+)\}\{([\s\S]+)\}$/);
+                if (fracMatch) {
+                    numStr = fracMatch[1].trim();
+                    denStr = fracMatch[2].trim();
+                } else {
+                    let slashParts = exprInput.split('/');
+                    if (slashParts.length === 2) {
+                        numStr = slashParts[0].trim();
+                        denStr = slashParts[1].trim();
+                    }
+                }
+            }
+
+            if (!numStr || !denStr) {
+                numStr = 'x^3 - 2*x^2 - 4';
+                denStr = 'x - 3';
+            }
+
+            numStr = numStr.replace(/^\((.*)\)$/, '$1').trim();
+            denStr = denStr.replace(/^\((.*)\)$/, '$1').trim();
+
+            const numClean = cleanBaseExpression(numStr);
+            const denClean = cleanBaseExpression(denStr);
+
+            // Detect main variable
+            let foundVars = (numClean + denClean).match(/[a-zA-Z]/g);
+            let mainVar = 'x';
+            if (foundVars) {
+                let nonConstVars = foundVars.filter(v => !['e', 'i', 'p', 'd', 's', 'c', 't', 'l'].includes(v.toLowerCase()));
+                if (nonConstVars.length > 0) mainVar = nonConstVars[0];
+                else if (foundVars.includes('x')) mainVar = 'x';
+                else if (foundVars.includes('y')) mainVar = 'y';
+                else if (foundVars.includes('t')) mainVar = 't';
+            }
+
+            const isPureNumber = !/[a-zA-Z]/.test(numClean.replace(/pi|e/g, '')) && !/[a-zA-Z]/.test(denClean.replace(/pi|e/g, ''));
+
+            let finalResultLatex = '';
+            let funcForPlot = `(${numClean}) / (${denClean})`;
+
+            if (isPureNumber) {
+                // -------------------------------------------------------------
+                // Numerical Long Division (整数 / 数值长除法)
+                // -------------------------------------------------------------
+                steps.push({
+                    desc: '识别为数值长除法运算，写出被除数与除数：',
+                    math: `${nerdamer(numClean).toTeX()} \\div ${nerdamer(denClean).toTeX()}`
+                });
+
+                try {
+                    let numVal = parseFloat(nerdamer(numClean).text('decimals'));
+                    let denVal = parseFloat(nerdamer(denClean).text('decimals'));
+
+                    if (Math.abs(denVal) < 1e-12) {
+                        steps.push({ desc: '除数为 0 异常：', math: '\\text{除数不能为 0 (Division by Zero)}' });
+                        return { finalResultLatex: '\\text{无定义 (除数为 0)}', funcForPlot: null };
+                    }
+
+                    if (Number.isInteger(numVal) && Number.isInteger(denVal)) {
+                        let sign = (numVal * denVal < 0) ? -1 : 1;
+                        let absNum = Math.abs(numVal);
+                        let absDen = Math.abs(denVal);
+                        let quotient = Math.floor(absNum / absDen) * sign;
+                        let remainder = numVal - denVal * quotient;
+
+                        steps.push({
+                            desc: '计算带余除法基本式 (被除数 = 除数 × 商 + 余数)：',
+                            math: `${numVal} = ${denVal} \\times (${quotient}) + (${remainder})`
+                        });
+
+                        steps.push({
+                            desc: '得出商与余数结果：',
+                            math: `\\text{商数 (Quotient) } q = ${quotient}, \\quad \\text{余数 (Remainder) } r = ${remainder}`
+                        });
+
+                        if (remainder === 0) {
+                            finalResultLatex = `\\text{商 } q = ${quotient} \\quad (\\text{完全整除})`;
+                            steps.push({
+                                desc: '被除数可被除数整除：',
+                                math: `${numVal} \\div ${denVal} = ${quotient}`
+                            });
+                        } else {
+                            let decVal = (numVal / denVal).toFixed(6).replace(/\.?0+$/, '');
+                            finalResultLatex = `\\text{商 } q = ${quotient}, \\; \\text{余 } r = ${remainder} \\quad \\left( \\frac{${numVal}}{${denVal}} = ${quotient} + \\frac{${remainder}}{${denVal}} \\approx ${decVal} \\right)`;
+                            steps.push({
+                                desc: '转化为带分数及小数展开形式：',
+                                math: `\\frac{${numVal}}{${denVal}} = ${quotient} + \\frac{${remainder}}{${denVal}} \\approx ${decVal}`
+                            });
+                        }
+                    } else {
+                        let decVal = (numVal / denVal).toFixed(6).replace(/\.?0+$/, '');
+                        finalResultLatex = `${decVal}`;
+                        steps.push({
+                            desc: '计算实数除法精确小数值：',
+                            math: `${numVal} \\div ${denVal} = ${decVal}`
+                        });
+                    }
+                } catch (e) {
+                    finalResultLatex = nerdamer(`(${numClean})/(${denClean})`).toTeX();
+                }
+                funcForPlot = null;
+            } else {
+                // -------------------------------------------------------------
+                // Polynomial Long Division (多项式长除法)
+                // -------------------------------------------------------------
+                const P_expanded = nerdamer(numClean).expand();
+                const D_expanded = nerdamer(denClean).expand();
+
+                steps.push({
+                    desc: `识别为关于未知数 $${mainVar}$ 的多项式长除法，整理被除式 $P(${mainVar})$ 与除式 $D(${mainVar})$：`,
+                    math: `\\frac{P(${mainVar})}{D(${mainVar})} = \\frac{${P_expanded.toTeX()}}{${D_expanded.toTeX()}}`
+                });
+
+                function getPolyInfo(exprStr, v) {
+                    let exp = nerdamer(exprStr).expand();
+                    let s = exp.toString();
+                    if (s === '0') return { deg: -1, leadCoeff: '0', leadTermTeX: '0', str: '0' };
+                    let deg = 0;
+                    try {
+                        let dVal = nerdamer.deg(s, v);
+                        deg = Number(dVal.toString());
+                    } catch (e) {
+                        deg = 0;
+                    }
+                    if (isNaN(deg) || !isFinite(deg) || deg < 0) deg = 0;
+
+                    let leadCoeff = '0';
+                    try {
+                        if (deg === 0) {
+                            leadCoeff = nerdamer(s, { [v]: 0 }).toString();
+                            if (leadCoeff === '0' && s !== '0') leadCoeff = s;
+                        } else {
+                            let nthDiff = nerdamer.diff(s, v, deg).toString();
+                            let fact = 1;
+                            for (let i = 2; i <= deg; i++) fact *= i;
+                            leadCoeff = nerdamer(`(${nthDiff}) / ${fact}`).expand().toString();
+                        }
+                    } catch (e) {
+                        leadCoeff = '1';
+                    }
+
+                    let termTeX = '';
+                    if (deg === 0) termTeX = nerdamer(leadCoeff).toTeX();
+                    else if (leadCoeff === '1') termTeX = deg === 1 ? v : `${v}^{${deg}}`;
+                    else if (leadCoeff === '-1') termTeX = deg === 1 ? `-${v}` : `-${v}^{${deg}}`;
+                    else termTeX = deg === 1 ? `${nerdamer(leadCoeff).toTeX()} ${v}` : `${nerdamer(leadCoeff).toTeX()} ${v}^{${deg}}`;
+
+                    return { deg, leadCoeff, leadTermTeX: termTeX, str: s };
+                }
+
+                const denInfo = getPolyInfo(D_expanded.toString(), mainVar);
+                if (denInfo.str === '0') {
+                    steps.push({ desc: '除式为 0 异常：', math: '\\text{除式多项式不能为 0}' });
+                    return { finalResultLatex: '\\text{无定义 (除式为 0)}', funcForPlot: null };
+                }
+
+                let currentR = P_expanded.toString();
+                let quotientTerms = [];
+                let stepCount = 0;
+                const maxSteps = 12;
+
+                while (stepCount < maxSteps) {
+                    let rInfo = getPolyInfo(currentR, mainVar);
+                    if (rInfo.deg < denInfo.deg || rInfo.str === '0') {
+                        break;
+                    }
+
+                    let degDiff = rInfo.deg - denInfo.deg;
+                    let termCoeff = nerdamer(`(${rInfo.leadCoeff}) / (${denInfo.leadCoeff})`).expand().toString();
+                    let termExpr = degDiff === 0 ? termCoeff : (termCoeff === '1' ? `${mainVar}^(${degDiff})` : (termCoeff === '-1' ? `-${mainVar}^(${degDiff})` : `(${termCoeff})*${mainVar}^(${degDiff})`));
+                    let qTerm = nerdamer(termExpr).expand().toString();
+                    quotientTerms.push(qTerm);
+
+                    let subtrahend = nerdamer(`(${qTerm}) * (${D_expanded.toString()})`).expand().toString();
+                    let nextR = nerdamer(`(${currentR}) - (${subtrahend})`).expand().toString();
+
+                    stepCount++;
+                    steps.push({
+                        desc: `步骤 ${stepCount}：计算商式第 ${stepCount} 项并消除被除式最高次项：`,
+                        math: `\\begin{aligned}
+                            \\text{当前最高次项相除：} & \\frac{${rInfo.leadTermTeX}}{${denInfo.leadTermTeX}} = ${nerdamer(qTerm).toTeX()} \\\\[4pt]
+                            \\text{商项乘以除式：} & (${nerdamer(qTerm).toTeX()}) \\cdot (${D_expanded.toTeX()}) = ${nerdamer(subtrahend).toTeX()} \\\\[4pt]
+                            \\text{作差消项得到新余式：} & (${nerdamer(currentR).toTeX()}) - (${nerdamer(subtrahend).toTeX()}) = ${nerdamer(nextR).toTeX()}
+                        \\end{aligned}`
+                    });
+
+                    currentR = nextR;
+                }
+
+                const quotient = quotientTerms.length > 0 ? nerdamer(quotientTerms.join(' + ')).expand().toString() : '0';
+                const remainder = nerdamer(currentR).expand().toString();
+                const quotientTeX = nerdamer(quotient).toTeX();
+                const remainderTeX = nerdamer(remainder).toTeX();
+
+                steps.push({
+                    desc: '长除法迭代完成，汇总商式 $Q(' + mainVar + ')$ 与余式 $R(' + mainVar + ')$：',
+                    math: `\\text{商式 } Q(${mainVar}) = ${quotientTeX}, \\quad \\text{余式 } R(${mainVar}) = ${remainderTeX}`
+                });
+
+                if (remainder === '0') {
+                    steps.push({
+                        desc: '被除式可被除式完全整除 (Remainder is 0)：',
+                        math: `\\frac{${P_expanded.toTeX()}}{${D_expanded.toTeX()}} = ${quotientTeX}`
+                    });
+                    finalResultLatex = `Q(${mainVar}) = ${quotientTeX} \\quad (\\text{余式 } R = 0, \\text{完全整除})`;
+                } else {
+                    steps.push({
+                        desc: '写出带余分解形式与欧几里得除法恒等式：',
+                        math: `\\begin{aligned}
+                            \\frac{${P_expanded.toTeX()}}{${D_expanded.toTeX()}} &= ${quotientTeX} + \\frac{${remainderTeX}}{${D_expanded.toTeX()}} \\\\[6pt]
+                            ${P_expanded.toTeX()} &= (${D_expanded.toTeX()}) \\cdot (${quotientTeX}) + (${remainderTeX})
+                        \\end{aligned}`
+                    });
+                    finalResultLatex = `${quotientTeX} + \\frac{${remainderTeX}}{${D_expanded.toTeX()}}`;
+                }
+
+                funcForPlot = `(${numClean}) / (${denClean})`;
+            }
+
+            return { finalResultLatex, funcForPlot };
+        }
+
         /**
          * Main Calculation Dispatcher (Open-Closed Architecture)
          */
@@ -3811,6 +4079,8 @@
                     outcome = handleLimit(ast, steps, rawInput);
                 } else if (ast.type === 'integrate' || ast.type === 'defint') {
                     outcome = handleIntegration(ast, steps);
+                } else if (ast.type === 'longdiv' || action === 'longdiv') {
+                    outcome = handleLongDivision(ast, steps, rawInput);
                 } else if (ast.type === 'equation' || ast.type === 'system') {
                     outcome = handleEquation(ast, steps);
                 } else if (ast.type === 'piecewise') {
@@ -4113,6 +4383,10 @@
         document.getElementById('btnSimplify').addEventListener('click', () => processCalculation('simplify'));
         document.getElementById('btnFactor').addEventListener('click', () => processCalculation('factor'));
         document.getElementById('btnDiff').addEventListener('click', () => processCalculation('diff'));
+        const btnLongDiv = document.getElementById('btnLongDiv');
+        if (btnLongDiv) {
+            btnLongDiv.addEventListener('click', () => processCalculation('longdiv'));
+        }
 
         // ==========================================
         // 性能优化：防抖函数 (Debounce)
