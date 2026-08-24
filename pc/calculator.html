@@ -3482,9 +3482,206 @@
             return s;
         }
 
+        function extractRationalFraction(expr, v = 'x') {
+            if (!expr) return null;
+            let s = expr.trim();
+            // 排除含有对数、指数、三角函数的复杂非有理式
+            if (/log|ln|sin|cos|tan|cot|sec|csc|exp|sqrt|asin|acos|atan/i.test(s)) {
+                return null;
+            }
+
+            let parts = null;
+            if (s.startsWith('(') && s.endsWith(')')) {
+                let inside = s.substring(1, s.length - 1).trim();
+                let divIdx = -1;
+                let depth = 0;
+                for (let i = 0; i < inside.length; i++) {
+                    if (inside[i] === '(') depth++;
+                    else if (inside[i] === ')') depth--;
+                    else if (inside[i] === '/' && depth === 0) {
+                        divIdx = i;
+                        break;
+                    }
+                }
+                if (divIdx !== -1) {
+                    parts = [inside.substring(0, divIdx).trim(), inside.substring(divIdx + 1).trim()];
+                }
+            }
+            if (!parts) {
+                let divIdx = -1;
+                let depth = 0;
+                for (let i = 0; i < s.length; i++) {
+                    if (s[i] === '(') depth++;
+                    else if (s[i] === ')') depth--;
+                    else if (s[i] === '/' && depth === 0) {
+                        divIdx = i;
+                        break;
+                    }
+                }
+                if (divIdx !== -1) {
+                    parts = [s.substring(0, divIdx).trim(), s.substring(divIdx + 1).trim()];
+                }
+            }
+            if (parts && parts[0] && parts[1]) {
+                let numStr = parts[0];
+                let denStr = parts[1];
+                while (numStr.startsWith('(') && numStr.endsWith(')')) numStr = numStr.substring(1, numStr.length - 1).trim();
+                while (denStr.startsWith('(') && denStr.endsWith(')')) denStr = denStr.substring(1, denStr.length - 1).trim();
+                return { num: numStr, den: denStr };
+            }
+            return null;
+        }
+
+        function solveRationalQuadraticIntegral(numStr, denStr, v = 'x') {
+            try {
+                let P = nerdamer(numStr).expand();
+                let Q = nerdamer(denStr).expand();
+
+                let degP = parseInt(nerdamer(`deg(${P.toString()}, ${v})`).toString());
+                let degQ = parseInt(nerdamer(`deg(${Q.toString()}, ${v})`).toString());
+
+                if (isNaN(degQ) || degQ !== 2 || isNaN(degP) || degP > 1) {
+                    return null;
+                }
+
+                let a = parseFloat(nerdamer(`coeff(${Q.toString()}, ${v}, 2)`).toString()) || 0;
+                let b = parseFloat(nerdamer(`coeff(${Q.toString()}, ${v}, 1)`).toString()) || 0;
+                let c = parseFloat(nerdamer(`coeff(${Q.toString()}, ${v}, 0)`).toString()) || 0;
+
+                if (a === 0) return null;
+
+                let A = degP === 1 ? (parseFloat(nerdamer(`coeff(${P.toString()}, ${v}, 1)`).toString()) || 0) : 0;
+                let B = parseFloat(nerdamer(`coeff(${P.toString()}, ${v}, 0)`).toString()) || 0;
+
+                let delta = b * b - 4 * a * c;
+                let diffCoeff = A / (2 * a);
+                let constRem = B - (A * b) / (2 * a);
+
+                let stepsBreakdown = [];
+                let resultLatex = '';
+
+                stepsBreakdown.push({
+                    desc: '识别为有理分式积分 (Rational Function Integration)：',
+                    math: `\\int \\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} \\,d${v}`
+                });
+
+                // Case 1: 判别式 Delta < 0 (不可约二次因式，标准配方与反正切形式)
+                if (delta < -1e-6) {
+                    let negDelta = -delta;
+                    let sqrtNegDelta = Math.sqrt(negDelta);
+                    let k = sqrtNegDelta / (2 * Math.abs(a));
+                    let x0 = -b / (2 * a);
+
+                    let kLatex = Number.isInteger(k) ? `${k}` : nerdamer(`sqrt(${negDelta}) / (2*${Math.abs(a)})`).toTeX();
+                    let x0Latex = Number.isInteger(x0) ? `${x0}` : nerdamer(`-${b} / (2*${a})`).toTeX();
+
+                    let shiftSign = x0 > 0 ? `- ${x0}` : (x0 < 0 ? `+ ${-x0}` : '');
+                    let compSquareTeX = a === 1 ? (x0 !== 0 ? `(${v} ${shiftSign})^2 + ${k}^2` : `${v}^2 + ${k}^2`) : `${a}\\left[ (${v} ${shiftSign})^2 + ${k}^2 \\right]`;
+
+                    stepsBreakdown.push({
+                        desc: `计算分母判别式 $\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${delta} < 0$，配方得恒正形式：`,
+                        math: `${nerdamer(denStr).toTeX()} = ${compSquareTeX} > 0`
+                    });
+
+                    if (A !== 0) {
+                        let diffPart = a === 1 ? `(2${v} ${b >= 0 ? '+ ' + b : '- ' + (-b)})` : `(${2*a}${v} ${b >= 0 ? '+ ' + b : '- ' + (-b)})`;
+                        let diffCoeffTeX = nerdamer(diffCoeff).toTeX();
+                        let constRemTeX = nerdamer(constRem).toTeX();
+
+                        stepsBreakdown.push({
+                            desc: '采用凑微分拆项法，将分子拆分为「分母导数项」与「常数项」之和：',
+                            math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${diffCoeffTeX} \\cdot \\frac{${diffPart}}{${nerdamer(denStr).toTeX()}} + \\frac{${constRemTeX}}{${compSquareTeX}}`
+                        });
+                    }
+
+                    let logTermLatex = '';
+                    if (A !== 0) {
+                        let coeffStr = nerdamer(diffCoeff).toTeX();
+                        if (coeffStr === '1') logTermLatex = `\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+                        else if (coeffStr === '-1') logTermLatex = `-\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+                        else logTermLatex = `${coeffStr}\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+
+                        stepsBreakdown.push({
+                            desc: '求解第一项积分（凑微分对数积分，因分母 $\\Delta < 0$ 恒正，无需绝对值）：',
+                            math: `\\int \\frac{${nerdamer(diffCoeff).toTeX()}(${2*a}${v} ${b >= 0 ? '+' : ''}${b})}{${nerdamer(denStr).toTeX()}} \\,d${v} = ${logTermLatex}`
+                        });
+                    }
+
+                    let atanCoeffVal = constRem / (a * k);
+                    let atanCoeffStr = nerdamer(atanCoeffVal).toTeX();
+                    let atanArgTeX = `\\frac{${v} ${shiftSign}}{${kLatex}}`.replace(/\\frac\{([^}]+)\}\{1\}/, '$1');
+                    if (x0 === 0 && k === 1) atanArgTeX = `${v}`;
+
+                    let atanTermLatex = '';
+                    if (atanCoeffStr === '1') atanTermLatex = `\\arctan\\left(${atanArgTeX}\\right)`;
+                    else if (atanCoeffStr === '-1') atanTermLatex = `-\\arctan\\left(${atanArgTeX}\\right)`;
+                    else atanTermLatex = `${atanCoeffStr}\\arctan\\left(${atanArgTeX}\\right)`;
+
+                    stepsBreakdown.push({
+                        desc: '求解第二项积分（标准反正切积分公式 $\\int \\frac{1}{u^2 + a^2} \\,du = \\frac{1}{a} \\arctan(\\frac{u}{a})$）：',
+                        math: `\\int \\frac{${nerdamer(constRem).toTeX()}}{${compSquareTeX}} \\,d${v} = ${atanTermLatex}`
+                    });
+
+                    if (logTermLatex && atanTermLatex) {
+                        resultLatex = `${logTermLatex} + ${atanTermLatex}`;
+                    } else if (logTermLatex) {
+                        resultLatex = logTermLatex;
+                    } else {
+                        resultLatex = atanTermLatex;
+                    }
+
+                    return {
+                        finalResultLatex: resultLatex,
+                        steps: stepsBreakdown
+                    };
+                }
+
+                // Case 2: 判别式 Delta > 0 (两个相异实根，部分分式拆分)
+                else if (delta > 1e-6) {
+                    let sqrtDelta = Math.sqrt(delta);
+                    let r1 = (-b + sqrtDelta) / (2 * a);
+                    let r2 = (-b - sqrtDelta) / (2 * a);
+
+                    let r1Str = Number.isInteger(r1) ? `${r1}` : nerdamer(r1).toTeX();
+                    let r2Str = Number.isInteger(r2) ? `${r2}` : nerdamer(r2).toTeX();
+
+                    stepsBreakdown.push({
+                        desc: `分母判别式 $\\Delta = ${delta} > 0$，因式分解得两不等实根因式：`,
+                        math: `${nerdamer(denStr).toTeX()} = ${a === 1 ? '' : a + ' '}(${v} - ${r1Str})(${v} - ${r2Str})`
+                    });
+
+                    let partFrac = nerdamer(`partfrac(${numStr}/${denStr}, ${v})`);
+                    stepsBreakdown.push({
+                        desc: '进行部分分式分解 (Partial Fraction Decomposition)：',
+                        math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${partFrac.toTeX()}`
+                    });
+
+                    let integrated = nerdamer(`integrate(${partFrac.toString()}, ${v})`);
+                    let resTeX = simplifyIntegralResult(integrated, v, '');
+
+                    return {
+                        finalResultLatex: resTeX,
+                        steps: stepsBreakdown
+                    };
+                }
+            } catch (e) {
+                return null;
+            }
+            return null;
+        }
+
         function simplifyIntegralResult(intResult, v = 'x', innerExpr = '') {
             let rawTeX = intResult.toTeX();
             let rawStr = intResult.toString();
+
+            // 针对有理函数积分优先调用专属二次有理式求解器
+            let rationalCheck = extractRationalFraction(innerExpr, v);
+            if (rationalCheck) {
+                let rSol = solveRationalQuadraticIntegral(rationalCheck.num, rationalCheck.den, v);
+                if (rSol && rSol.finalResultLatex) {
+                    return rSol.finalResultLatex;
+                }
+            }
 
             // 针对 \int \ln(x)/(1-x)^2 dx 特征形式：因 x > 0，|x| 去除为 x，与分式通分合并为最简形式
             if (innerExpr && innerExpr.includes('log(') && (innerExpr.includes('1-x') || innerExpr.includes('x-1') || innerExpr.includes('1 - x') || innerExpr.includes('x - 1'))) {
@@ -3552,6 +3749,25 @@
             if (ast.type === 'integrate') {
                 let innerExpr = ast.expr;
                 let v = ast.varName || 'x';
+
+                // 优先检查并应用有理函数积分求解器 (Rational Function Integration)
+                let rationalParts = extractRationalFraction(innerExpr, v);
+                if (rationalParts) {
+                    let rSol = solveRationalQuadraticIntegral(rationalParts.num, rationalParts.den, v);
+                    if (rSol) {
+                        rSol.steps.forEach(st => steps.push(st));
+                        finalResultLatex = rSol.finalResultLatex + ' + C';
+                        steps.push({
+                            desc: '汇总两项积分结果，求得最简原函数并添加积分常数 $C$：',
+                            math: finalResultLatex
+                        });
+                        funcForPlot = [
+                            { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
+                            { expr: rSol.finalResultLatex.replace(/\\arctan/g, 'atan').replace(/\\ln/g, 'log').replace(/\\left\(/g, '(').replace(/\\right\)/g, ')').replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)'), color: '#34d399', label: '原函数 F(x)' }
+                        ];
+                        return { finalResultLatex, funcForPlot };
+                    }
+                }
 
                 steps.push({
                     desc: '被积函数表达式：',
