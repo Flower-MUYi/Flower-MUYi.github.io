@@ -28,7 +28,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
     <script>
-        (function() {
+        (function () {
             var t = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
             document.documentElement.setAttribute('data-theme', t);
         })();
@@ -1325,9 +1325,15 @@
             </div>
         </div>
         <div class="header-actions">
-            <a href="./index.html" class="btn-icon" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; color:inherit;" title="返回导航工作台首页">🏠</a>
-            <a href="./ip.html" class="btn-icon" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; color:inherit;" title="前往 IP 质量与威胁检测">🛡️</a>
-            <a href="./about.html" class="btn-icon" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; color:inherit;" title="关于我们">ℹ️</a>
+            <a href="./index.html" class="btn-icon"
+                style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; color:inherit;"
+                title="返回导航工作台首页">🏠</a>
+            <a href="./ip.html" class="btn-icon"
+                style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; color:inherit;"
+                title="前往 IP 质量与威胁检测">🛡️</a>
+            <a href="./about.html" class="btn-icon"
+                style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; color:inherit;"
+                title="关于我们">ℹ️</a>
             <button class="btn-icon" id="themeToggleBtn" title="切换明亮/暗黑主题">🌓</button>
             <button class="btn-icon" id="helpModalBtn" title="快捷键与使用说明">?</button>
         </div>
@@ -2001,7 +2007,7 @@
             if (document.body) document.body.setAttribute('data-theme', next);
             try {
                 localStorage.setItem('flowermuyi_theme', next);
-            } catch(e) {}
+            } catch (e) { }
             const btn = document.getElementById('themeToggleBtn');
             if (btn) {
                 btn.innerHTML = next === 'dark' ? '☀️' : '🌙';
@@ -2201,51 +2207,25 @@
         function getSuspectedParameters(formulaStr) {
             let s = formulaStr || '';
 
-            // 1. 去除定义域大括号 / 区间条件
-            s = s.replace(/(?:\\left\s*)?(?:\\lbrace|\\\{)\s*[\s\S]+?\s*(?:\\right\s*)?(?:\\rbrace|\\\})/g, ' ');
+            // 1. 去除末尾的定义域大括号内容
+            s = s.replace(/(?:\\left\s*)?(?:\\lbrace|\\\{)\s*([\s\S]+?)\s*(?:\\right\s*)?(?:\\rbrace|\\\})\s*$/, '');
 
-            // 2. 完整剥除 LaTeX 容器/字体宏及其花括号内容 (消灭 \mathrm{e}, \text{otherwise}, \operatorname{...} 等遗留碎渣)
-            s = s.replace(/\\(operatorname|mathrm|mathit|mathbf|text|textbf|textit|mathbb|mathcal|begin|end)\s*\{[^{}]*\}/gi, ' ');
-
-            // 3. 剥除微分与导数算子及函数符号
-            s = s.replace(/\\frac\{\s*d\^?\d*\s*[a-zA-Z]*\s*\}\{\s*d\s*[a-zA-Z]*\^?\d*\s*\}/gi, ' ');
-            s = s.replace(/\\frac\{\s*\\partial\^?\d*\s*[a-zA-Z]*\s*\}\{\s*\\partial\s*[a-zA-Z]*\^?\d*\s*\}/gi, ' ');
-            s = s.replace(/\\bf\s*'+/gi, ' ');
-            s = s.replace(/\\by\s*'+/gi, ' ');
-            s = s.replace(/\b[fghuy]\s*\(\s*x\s*\)/gi, ' ');
-            s = s.replace(/\b[fghuy]\s*'+/gi, ' ');
-            s = s.replace(/\bY_D[0-4]\b/g, ' ');
-
-            // 4. 彻底抹除所有以反斜杠开头的 LaTeX 命令关键字 (如 \sin, \cos, \ln, \lim, \int, \frac, \left, \right, \infty 等)
+            // 2. 彻底抹除所有以反斜杠开头的 LaTeX 命令 (消灭 \mathrm, \rightarrow, \alpha 等导致的字母碎渣)
             s = s.replace(/\\[a-zA-Z]+/g, ' ');
 
-            // 5. 抹除微分增量符号 (dx, dy, dz, dt, du, dv, dw, dr, ds 等)
-            s = s.replace(/\bd[xyzuvwtrs]\b/gi, ' ');
-
-            // 6. 全面抹除所有已知的数学函数名、算子符号、常量、计算机语法关键字
-            const KNOWN_WORDS = [
-                'sin', 'cos', 'tan', 'sec', 'csc', 'cot',
-                'asin', 'acos', 'atan', 'arcsin', 'arccos', 'arctan', 'arcsec', 'arccsc', 'arccot',
-                'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth',
-                'ln', 'lg', 'log', 'log10', 'exp', 'sqrt', 'cbrt', 'root', 'abs',
-                'min', 'max', 'gcd', 'lcm', 'mod', 'det', 'dim', 'ker', 'deg', 'rad',
-                'diff', 'derivative', 'integrate', 'int', 'defint', 'sum', 'prod',
-                'polydiv', 'longdiv', 'div', 'limit', 'lim',
-                'infty', 'inf', 'infinity', 'nan', 'undefined',
-                'otherwise', 'else', 'if', 'true', 'false', 'in', 'to', 'placeholder',
-                'left', 'right', 'pi', 'dx', 'dy', 'dt', 'du', 'dv', 'dz', 'dr', 'ds'
-            ];
+            // 3. 抹除可能未带反斜杠的纯文本数学函数和算子符号
+            const KNOWN_WORDS = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'log', 'ln', 'exp', 'sqrt', 'abs', 'lim', 'limit', 'min', 'max', 'pi', 'dx', 'dy', 'dt', 'du', 'dv', 'd', 'to', 'begin', 'end', 'cases', 'matrix', 'pmatrix', 'bmatrix', 'vmatrix', 'array', 'placeholder', 'text'];
             const wordRegex = new RegExp(`\\b(?:${KNOWN_WORDS.join('|')})\\b`, 'gi');
             s = s.replace(wordRegex, ' ');
 
-            // 7. 从绝对纯净的数学表达式中提取真正的可调节参数 (例如 a, b, c, k, m, n, C_1, C_2)
-            let tokens = s.match(/[a-zA-Z](?:_[0-9]+)?/g) || [];
+            // 4. 从绝对干净的字符串中提取单个字母
+            let letters = s.match(/[a-zA-Z]/g) || [];
             const params = new Set();
-            const RESERVED = new Set(['x', 'y', 'e', 'i', 'j', 'd', 'f', 'pi']);
-            tokens.forEach(tok => {
-                let base = tok.split('_')[0].toLowerCase();
-                if (!RESERVED.has(base)) {
-                    params.add(tok);
+            letters.forEach(l => {
+                let lower = l.toLowerCase();
+                // 排除预留自变量与常量
+                if (!['x', 'y', 'e', 'i'].includes(lower)) {
+                    params.add(l);
                 }
             });
             return Array.from(params);
@@ -2557,16 +2537,11 @@
             s = s.replace(/^\s*\(([^()]+)\)\s*$/, '$1');
 
             // ==============================================================
-            // Step 1.8: 补全函数与指数项前紧贴变量/数字时的隐式乘号
+            // Step 1.8: 标准化自然指数底数 e^x / e^{...} -> exp(...)
             // ==============================================================
-            // 1.8.1 补全 LaTeX 函数前紧贴的变量/数字 (例如 x\ln(x) -> x*\ln(x), x\sin(x) -> x*\sin(x), 2\cos(x) -> 2*\cos(x), (x+1)\ln(x) -> (x+1)*\ln(x))
-            s = s.replace(/([a-zA-Z0-9\)])\s*\\(sin|cos|tan|arcsin|arccos|arctan|sinh|cosh|tanh|sec|csc|cot|ln|lg|log|sqrt|exp|abs|frac|left)\b/g, '$1*\\$2');
-
-            // 1.8.2 补全 e 前面的隐式乘号 (例如 xe^x -> x*e^x, 2e^{2x} -> 2*e^{2x}, (x+1)e^x -> (x+1)*e^x)
-            s = s.replace(/([a-zA-Z0-9\)])\s*(?:\\mathrm\{e\}|\\mathbf\{e\}|\\mathit\{e\}|e)\s*\^/g, '$1*e^');
-            s = s.replace(/(?:\\mathrm\{e\}|\\mathbf\{e\}|\\mathit\{e\}|\\exp|\bexp|e)\s*\^\s*\{([^{}]+)\}/g, 'exp($1)');
-            s = s.replace(/(?:\\mathrm\{e\}|\\mathbf\{e\}|\\mathit\{e\}|\\exp|\bexp|e)\s*\^\s*\(([^()]+)\)/g, 'exp($1)');
-            s = s.replace(/(?:\\mathrm\{e\}|\\mathbf\{e\}|\\mathit\{e\}|\\exp|\bexp|e)\s*\^\s*([a-zA-Z0-9\.]+)/g, 'exp($1)');
+            s = s.replace(/(?:\\mathrm\{e\}|\\mathbf\{e\}|\\mathit\{e\}|\\exp|\bexp|\be)\s*\^\s*\{([^{}]+)\}/g, 'exp($1)');
+            s = s.replace(/(?:\\mathrm\{e\}|\\mathbf\{e\}|\\mathit\{e\}|\\exp|\bexp|\be)\s*\^\s*\(([^()]+)\)/g, 'exp($1)');
+            s = s.replace(/(?:\\mathrm\{e\}|\\mathbf\{e\}|\\mathit\{e\}|\\exp|\bexp|\be)\s*\^\s*([a-zA-Z0-9\.]+)/g, 'exp($1)');
 
             // ==============================================================
             // Step 2: 全新高安全对数与函数转换管线
@@ -2729,10 +2704,10 @@
         function cleanOdeSide(sideStr) {
             let s = normalizeOdeTokens(sideStr);
             s = s.replace(/\by\s*''''/g, 'Y_D4')
-                 .replace(/\by\s*'''/g, 'Y_D3')
-                 .replace(/\by\s*''/g, 'Y_D2')
-                 .replace(/\by\s*'/g, 'Y_D1')
-                 .replace(/\by\b/g, 'Y_D0');
+                .replace(/\by\s*'''/g, 'Y_D3')
+                .replace(/\by\s*''/g, 'Y_D2')
+                .replace(/\by\s*'/g, 'Y_D1')
+                .replace(/\by\b/g, 'Y_D0');
             return cleanBaseExpression(s);
         }
 
@@ -3598,10 +3573,10 @@
 
             function odeToDisplayTeX(exprStr) {
                 let s = (exprStr || '').replace(/Y_D4/g, "y^{(4)}")
-                                       .replace(/Y_D3/g, "y'''")
-                                       .replace(/Y_D2/g, "y''")
-                                       .replace(/Y_D1/g, "y'")
-                                       .replace(/Y_D0/g, "y");
+                    .replace(/Y_D3/g, "y'''")
+                    .replace(/Y_D2/g, "y''")
+                    .replace(/Y_D1/g, "y'")
+                    .replace(/Y_D0/g, "y");
                 try {
                     return nerdamer(s).toTeX();
                 } catch (e) {
@@ -4608,7 +4583,11 @@
                     outcome = handleExpression(ast, steps, action);
                 }
 
-                finalResultLatex = outcome.finalResultLatex;
+                finalResultLatex = formatChineseLog(outcome.finalResultLatex);
+                steps.forEach(s => {
+                    if (s.math) s.math = formatChineseLog(s.math);
+                    if (s.desc) s.desc = formatChineseLog(s.desc);
+                });
                 funcForPlot = outcome.funcForPlot;
 
                 const time = (performance.now() - startTime).toFixed(1) + ' ms';
@@ -4784,38 +4763,55 @@
         // UI 渲染层：规范对齐中国数学排版格式
         // ==========================================
         function formatChineseLog(tex) {
-            let s = (tex || '0').toString();
+            if (!tex) return '';
+            let s = tex.toString();
 
-            // 1. 规范常用对数与特殊底数对数：\log_{10}(x) -> \lg(x), \log_{e}(x) -> \ln(x)
-            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\\left\(\s*([^{}]+?)\s*\\right\)/g, '\\lg\\left($1\\right)');
-            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/g, '\\lg($1)');
-            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\\left\(\s*([^{}]+?)\s*\\right\)/g, '\\ln\\left($1\\right)');
-            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/g, '\\ln($1)');
+            // 0. 移除常见的 operatorname / mathrm / mathit 宏包装
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*log10\s*\}/gi, '\\lg ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*lg\s*\}/gi, '\\lg ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*ln\s*\}/gi, '\\ln ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*log\s*\}/gi, '\\log ');
 
-            // 2. 换底公式形式还原为常用对数 \lg(x): \frac{\log(x)}{\log(10)} -> \lg(x)
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\\left\(\s*([^{}]+?)\s*\\right\)\s*\}\{\s*(?:\\log|\\ln)\s*\\left\(\s*10\s*\\right\)\s*\}/g, '\\lg\\left($1\\right)');
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\(?\s*([^{}]+?)\s*\)?\s*\}\{\s*(?:\\log|\\ln)\s*\(?\s*10\s*\)?\s*\}/g, '\\lg\\left($1\\right)');
-            s = s.replace(/\(\s*(?:\\log|\\ln)\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?\s*\/\s*(?:\\log|\\ln)\s*\(?\s*10\s*\)?\s*\)/g, '\\lg($1)');
+            // 1. 规范换底公式还原为常用对数 \lg(x): \frac{\log(x)}{\log(10)} -> \lg(x)
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([^\{\}\(\)]+?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?10\}?(?:\\right\s*\))?\s*\}/gi, '\\lg\\left($1\\right)');
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*10\s*\\right\)\s*\}/gi, '\\lg\\left($1\\right)');
+            s = s.replace(/\(\s*\\?(?:log|ln)\s*\(?\s*([^()\s]+?)\s*\)?\s*\/\s*\\?(?:log|ln)\s*\(?\s*10\s*\)?\s*\)/gi, '\\lg($1)');
 
-            // 3. 换底公式形式还原为指定底数的对数 \log_a(x): \frac{\log(x)}{\log(a)} -> \log_{a}(x) (排除纯常数分式)
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\\left\(\s*([a-zA-Z][^{}]*?)\s*\\right\)\s*\}\{\s*(?:\\log|\\ln)\s*\\left\(\s*([a-zA-Z0-9]+)\s*\\right\)\s*\}/g, '\\log_{$2}\\left($1\\right)');
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\(\s*([a-zA-Z][^()]*?)\s*\)\s*\}\{\s*(?:\\log|\\ln)\s*\(\s*([a-zA-Z0-9]+)\s*\)\s*\}/g, '\\log_{$2}\\left($1\\right)');
+            // 2. 规范常用对数与特殊底数：\log_{10}(x) -> \lg(x), \log_{e}(x) -> \ln(x)
+            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\\left\(\s*([\s\S]+?)\s*\\right\)/gi, '\\lg\\left($1\\right)');
+            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/gi, '\\lg($1)');
+            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\\left\(\s*([\s\S]+?)\s*\\right\)/gi, '\\ln\\left($1\\right)');
+            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/gi, '\\ln($1)');
 
-            // 4. 清理宏标签: \mathrm{lg}, \mathrm{log10}
-            s = s.replace(/\\mathrm\{lg\}/g, '\\lg ');
-            s = s.replace(/\\mathrm\{log10\}/g, '\\lg ');
-            s = s.replace(/\blg\(/g, '\\lg(');
+            // 3. 规范换底公式还原为指定底数对数 \log_a(x): \frac{\log(x)}{\log(a)} -> \log_{a}(x) (仅当分子包含变量时)
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z][^\{\}\(\)]*?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z0-9]+)\}?(?:\\right\s*\))?\s*\}/gi, (m, arg, base) => {
+                if (base === '10') return `\\lg\\left(${arg}\\right)`;
+                if (base === 'e' || base === 'E') return `\\ln\\left(${arg}\\right)`;
+                return `\\log_{${base}}\\left(${arg}\\right)`;
+            });
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z][\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z0-9]+)\s*\\right\)\s*\}/gi, (m, arg, base) => {
+                if (base === '10') return `\\lg\\left(${arg}\\right)`;
+                if (base === 'e' || base === 'E') return `\\ln\\left(${arg}\\right)`;
+                return `\\log_{${base}}\\left(${arg}\\right)`;
+            });
 
-            // 5. 将分母中的导数/常数因子 \log(10) / \log(a) 规范化为自然对数 \ln 10 / \ln a (例如 1/(x ln 10))
-            s = s.replace(/\\log\s*\\left\(\s*(\d+|[a-zA-Z])\s*\\right\)/g, '\\ln\\left($1\\right)');
-            s = s.replace(/\\log\s*\(\s*(\d+|[a-zA-Z])\s*\)/g, '\\ln($1)');
+            // 4. 将分母中的导数/常数因子 \log(10) / \log(a) 规范化为自然对数 \ln 10 / \ln a (例如 1/(x ln 10))
+            s = s.replace(/\\log\s*\\left\(\s*(\d+|[a-zA-Z])\s*\\right\)/gi, '\\ln\\left($1\\right)');
+            s = s.replace(/\\log\s*\(\s*(\d+|[a-zA-Z])\s*\)/gi, '\\ln($1)');
+            s = s.replace(/\blog\s*\(\s*(\d+)\s*\)/gi, '\\ln($1)');
 
-            // 6. Nerdamer 原生自带的无下标 \log(...) 全部规范化为自然对数 \ln(...)
-            s = s.replace(/\\log\b(?!\s*_)/g, '\\ln ');
+            // 5. Nerdamer 原生自带的所有无下标 \log(...) 全部规范化为自然对数 \ln(...)
+            s = s.replace(/\\log\b(?!\s*_)/g, '\\ln');
+            s = s.replace(/\blog\s*\(/gi, '\\ln(');
+            s = s.replace(/\blg\s*\(/gi, '\\lg(');
+            s = s.replace(/\bln\s*\(/gi, '\\ln(');
 
-            // 7. 规范美化：\ln(x)
-            s = s.replace(/\bln\(/g, '\\ln(');
+            // 6. 统一添加 LaTeX 符号斜杠与美化
+            s = s.replace(/(^|[^\\])\bln\b/g, '$1\\ln ');
+            s = s.replace(/(^|[^\\])\blg\b/g, '$1\\lg ');
             s = s.replace(/\\ln\s*\\left\(/g, '\\ln\\left(');
+            s = s.replace(/\\lg\s*\\left\(/g, '\\lg\\left(');
+            s = s.replace(/\\log\s*\\left\(/g, '\\log\\left(');
 
             return s;
         }

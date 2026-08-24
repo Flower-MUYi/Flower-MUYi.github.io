@@ -4688,7 +4688,11 @@
                     outcome = handleExpression(ast, steps, action);
                 }
 
-                finalResultLatex = outcome.finalResultLatex;
+                finalResultLatex = formatChineseLog(outcome.finalResultLatex);
+                steps.forEach(s => {
+                    if (s.math) s.math = formatChineseLog(s.math);
+                    if (s.desc) s.desc = formatChineseLog(s.desc);
+                });
                 funcForPlot = outcome.funcForPlot;
 
                 const time = (performance.now() - startTime).toFixed(1) + ' ms';
@@ -4864,38 +4868,55 @@
         // UI 渲染层：规范对齐中国数学排版格式
         // ==========================================
         function formatChineseLog(tex) {
-            let s = (tex || '0').toString();
+            if (!tex) return '';
+            let s = tex.toString();
 
-            // 1. 规范常用对数与特殊底数对数：\log_{10}(x) -> \lg(x), \log_{e}(x) -> \ln(x)
-            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\\left\(\s*([^{}]+?)\s*\\right\)/g, '\\lg\\left($1\\right)');
-            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/g, '\\lg($1)');
-            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\\left\(\s*([^{}]+?)\s*\\right\)/g, '\\ln\\left($1\\right)');
-            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/g, '\\ln($1)');
+            // 0. 移除常见的 operatorname / mathrm / mathit 宏包装
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*log10\s*\}/gi, '\\lg ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*lg\s*\}/gi, '\\lg ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*ln\s*\}/gi, '\\ln ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*log\s*\}/gi, '\\log ');
 
-            // 2. 换底公式形式还原为常用对数 \lg(x): \frac{\log(x)}{\log(10)} -> \lg(x)
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\\left\(\s*([^{}]+?)\s*\\right\)\s*\}\{\s*(?:\\log|\\ln)\s*\\left\(\s*10\s*\\right\)\s*\}/g, '\\lg\\left($1\\right)');
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\(?\s*([^{}]+?)\s*\)?\s*\}\{\s*(?:\\log|\\ln)\s*\(?\s*10\s*\)?\s*\}/g, '\\lg\\left($1\\right)');
-            s = s.replace(/\(\s*(?:\\log|\\ln)\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?\s*\/\s*(?:\\log|\\ln)\s*\(?\s*10\s*\)?\s*\)/g, '\\lg($1)');
+            // 1. 规范换底公式还原为常用对数 \lg(x): \frac{\log(x)}{\log(10)} -> \lg(x)
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([^\{\}\(\)]+?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?10\}?(?:\\right\s*\))?\s*\}/gi, '\\lg\\left($1\\right)');
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*10\s*\\right\)\s*\}/gi, '\\lg\\left($1\\right)');
+            s = s.replace(/\(\s*\\?(?:log|ln)\s*\(?\s*([^()\s]+?)\s*\)?\s*\/\s*\\?(?:log|ln)\s*\(?\s*10\s*\)?\s*\)/gi, '\\lg($1)');
 
-            // 3. 换底公式形式还原为指定底数的对数 \log_a(x): \frac{\log(x)}{\log(a)} -> \log_{a}(x) (排除纯常数分式)
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\\left\(\s*([a-zA-Z][^{}]*?)\s*\\right\)\s*\}\{\s*(?:\\log|\\ln)\s*\\left\(\s*([a-zA-Z0-9]+)\s*\\right\)\s*\}/g, '\\log_{$2}\\left($1\\right)');
-            s = s.replace(/\\frac\{\s*(?:\\log|\\ln)\s*\(\s*([a-zA-Z][^()]*?)\s*\)\s*\}\{\s*(?:\\log|\\ln)\s*\(\s*([a-zA-Z0-9]+)\s*\)\s*\}/g, '\\log_{$2}\\left($1\\right)');
+            // 2. 规范常用对数与特殊底数：\log_{10}(x) -> \lg(x), \log_{e}(x) -> \ln(x)
+            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\\left\(\s*([\s\S]+?)\s*\\right\)/gi, '\\lg\\left($1\\right)');
+            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/gi, '\\lg($1)');
+            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\\left\(\s*([\s\S]+?)\s*\\right\)/gi, '\\ln\\left($1\\right)');
+            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/gi, '\\ln($1)');
 
-            // 4. 清理宏标签: \mathrm{lg}, \mathrm{log10}
-            s = s.replace(/\\mathrm\{lg\}/g, '\\lg ');
-            s = s.replace(/\\mathrm\{log10\}/g, '\\lg ');
-            s = s.replace(/\blg\(/g, '\\lg(');
+            // 3. 规范换底公式还原为指定底数对数 \log_a(x): \frac{\log(x)}{\log(a)} -> \log_{a}(x) (仅当分子包含变量时)
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z][^\{\}\(\)]*?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z0-9]+)\}?(?:\\right\s*\))?\s*\}/gi, (m, arg, base) => {
+                if (base === '10') return `\\lg\\left(${arg}\\right)`;
+                if (base === 'e' || base === 'E') return `\\ln\\left(${arg}\\right)`;
+                return `\\log_{${base}}\\left(${arg}\\right)`;
+            });
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z][\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z0-9]+)\s*\\right\)\s*\}/gi, (m, arg, base) => {
+                if (base === '10') return `\\lg\\left(${arg}\\right)`;
+                if (base === 'e' || base === 'E') return `\\ln\\left(${arg}\\right)`;
+                return `\\log_{${base}}\\left(${arg}\\right)`;
+            });
 
-            // 5. 将分母中的导数/常数因子 \log(10) / \log(a) 规范化为自然对数 \ln 10 / \ln a (例如 1/(x ln 10))
-            s = s.replace(/\\log\s*\\left\(\s*(\d+|[a-zA-Z])\s*\\right\)/g, '\\ln\\left($1\\right)');
-            s = s.replace(/\\log\s*\(\s*(\d+|[a-zA-Z])\s*\)/g, '\\ln($1)');
+            // 4. 将分母中的导数/常数因子 \log(10) / \log(a) 规范化为自然对数 \ln 10 / \ln a (例如 1/(x ln 10))
+            s = s.replace(/\\log\s*\\left\(\s*(\d+|[a-zA-Z])\s*\\right\)/gi, '\\ln\\left($1\\right)');
+            s = s.replace(/\\log\s*\(\s*(\d+|[a-zA-Z])\s*\)/gi, '\\ln($1)');
+            s = s.replace(/\blog\s*\(\s*(\d+)\s*\)/gi, '\\ln($1)');
 
-            // 6. Nerdamer 原生自带的无下标 \log(...) 全部规范化为自然对数 \ln(...)
-            s = s.replace(/\\log\b(?!\s*_)/g, '\\ln ');
+            // 5. Nerdamer 原生自带的所有无下标 \log(...) 全部规范化为自然对数 \ln(...)
+            s = s.replace(/\\log\b(?!\s*_)/g, '\\ln');
+            s = s.replace(/\blog\s*\(/gi, '\\ln(');
+            s = s.replace(/\blg\s*\(/gi, '\\lg(');
+            s = s.replace(/\bln\s*\(/gi, '\\ln(');
 
-            // 7. 规范美化：\ln(x)
-            s = s.replace(/\bln\(/g, '\\ln(');
+            // 6. 统一添加 LaTeX 符号斜杠与美化
+            s = s.replace(/(^|[^\\])\bln\b/g, '$1\\ln ');
+            s = s.replace(/(^|[^\\])\blg\b/g, '$1\\lg ');
             s = s.replace(/\\ln\s*\\left\(/g, '\\ln\\left(');
+            s = s.replace(/\\lg\s*\\left\(/g, '\\lg\\left(');
+            s = s.replace(/\\log\s*\\left\(/g, '\\log\\left(');
 
             return s;
         }
