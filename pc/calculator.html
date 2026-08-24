@@ -3080,7 +3080,7 @@
                 }
             }
 
-            let indIntRegex = /^\s*\\int\s*(.*?)(?:dx|\\,dx|d\s*([a-zA-Z])|$)/;
+            let indIntRegex = /^\s*\\int\s*([\s\S]+?)(?:\s*(?:\\,)?d\s*([a-zA-Z])\s*$|$)/;
             if (indIntRegex.test(s)) {
                 let m = s.match(indIntRegex);
                 let expr = cleanBaseExpression(m[1]);
@@ -3532,26 +3532,66 @@
             return null;
         }
 
+        function getPolyCoeffs(exprStr, v = 'x') {
+            try {
+                let expanded = nerdamer(exprStr).expand().toString();
+                expanded = expanded.replace(/\s+/g, '');
+                expanded = expanded.replace(/([^^])-/g, '$1+-');
+                if (expanded.startsWith('-')) expanded = '+-' + expanded.substring(1);
+
+                let terms = expanded.split('+').filter(t => t.length > 0);
+                let coeffs = {};
+                let maxDeg = 0;
+
+                for (let term of terms) {
+                    if (!term.includes(v)) {
+                        let val = parseFloat(nerdamer(term).evaluate().text('fractions')) || parseFloat(term) || 0;
+                        coeffs[0] = (coeffs[0] || 0) + val;
+                    } else {
+                        let power = 1;
+                        let coeffVal = 1;
+                        let vIdx = term.indexOf(v);
+                        let before = term.substring(0, vIdx).replace(/\*$/, '');
+                        let after = term.substring(vIdx + v.length);
+
+                        if (before === '' || before === '+') coeffVal = 1;
+                        else if (before === '-') coeffVal = -1;
+                        else coeffVal = parseFloat(nerdamer(before).evaluate().text('fractions')) || parseFloat(before) || 1;
+
+                        if (after.startsWith('^')) {
+                            let pMatch = after.match(/^\^(\d+)/);
+                            power = pMatch ? parseInt(pMatch[1]) : 1;
+                        } else {
+                            power = 1;
+                        }
+
+                        if (power > maxDeg) maxDeg = power;
+                        coeffs[power] = (coeffs[power] || 0) + coeffVal;
+                    }
+                }
+                return { coeffs, deg: maxDeg };
+            } catch (e) {
+                return null;
+            }
+        }
+
         function solveRationalQuadraticIntegral(numStr, denStr, v = 'x') {
             try {
-                let P = nerdamer(numStr).expand();
-                let Q = nerdamer(denStr).expand();
+                let polyQ = getPolyCoeffs(denStr, v);
+                let polyP = getPolyCoeffs(numStr, v);
 
-                let degP = parseInt(nerdamer(`deg(${P.toString()}, ${v})`).toString());
-                let degQ = parseInt(nerdamer(`deg(${Q.toString()}, ${v})`).toString());
-
-                if (isNaN(degQ) || degQ !== 2 || isNaN(degP) || degP > 1) {
+                if (!polyQ || polyQ.deg !== 2 || !polyP || polyP.deg > 1) {
                     return null;
                 }
 
-                let a = parseFloat(nerdamer(`coeff(${Q.toString()}, ${v}, 2)`).toString()) || 0;
-                let b = parseFloat(nerdamer(`coeff(${Q.toString()}, ${v}, 1)`).toString()) || 0;
-                let c = parseFloat(nerdamer(`coeff(${Q.toString()}, ${v}, 0)`).toString()) || 0;
+                let a = polyQ.coeffs[2] || 0;
+                let b = polyQ.coeffs[1] || 0;
+                let c = polyQ.coeffs[0] || 0;
 
                 if (a === 0) return null;
 
-                let A = degP === 1 ? (parseFloat(nerdamer(`coeff(${P.toString()}, ${v}, 1)`).toString()) || 0) : 0;
-                let B = parseFloat(nerdamer(`coeff(${P.toString()}, ${v}, 0)`).toString()) || 0;
+                let A = polyP.coeffs[1] || 0;
+                let B = polyP.coeffs[0] || 0;
 
                 let delta = b * b - 4 * a * c;
                 let diffCoeff = A / (2 * a);
