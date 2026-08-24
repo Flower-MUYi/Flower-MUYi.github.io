@@ -3451,13 +3451,44 @@
             return { finalResultLatex, funcForPlot };
         }
 
+        function simplifyDomainAbsoluteValues(texStr, v = 'x', innerExpr = '') {
+            let s = texStr;
+
+            // 1. 判断在被积函数定义域上是否恒有 v > 0 (含有 ln(v), log(v), sqrt(v))
+            let isVarStrictlyPositive = false;
+            if (innerExpr) {
+                let normInner = innerExpr.replace(/\s+/g, '');
+                if (normInner.includes(`log(${v})`) || normInner.includes(`ln(${v})`) ||
+                    normInner.includes(`sqrt(${v})`) || normInner.includes(`log(${v}`) ||
+                    normInner.includes(`\\ln(${v})`) || normInner.includes(`\\ln${v}`) ||
+                    normInner.includes(`\\sqrt{${v}}`)) {
+                    isVarStrictlyPositive = true;
+                }
+            }
+
+            // 2. 如果 v > 0，则 \ln|v| -> \ln(v) 或 \ln v
+            if (isVarStrictlyPositive) {
+                s = s.replace(new RegExp(`\\\\ln\\s*\\\\left\\|\\s*${v}\\s*\\\\right\\|`, 'g'), `\\ln(${v})`);
+                s = s.replace(new RegExp(`\\\\ln\\s*\\|\\s*${v}\\s*\\|`, 'g'), `\\ln(${v})`);
+            }
+
+            // 3. 恒正二次项/指数项去绝对值：x^2 + c (c > 0) 恒正，e^x + c (c >= 0) 恒正
+            s = s.replace(/\\ln\s*\\left\|\s*([a-zA-Z]\^2\s*\+\s*[0-9\.]+)\s*\\right\|/g, '\\ln\\left($1\\right)');
+            s = s.replace(/\\ln\s*\|\s*([a-zA-Z]\^2\s*\+\s*[0-9\.]+)\s*\|/g, '\\ln($1)');
+            s = s.replace(/\\ln\s*\\left\|\s*([0-9\.]+\s*\+\s*[a-zA-Z]\^2)\s*\\right\|/g, '\\ln\\left($1\\right)');
+            s = s.replace(/\\ln\s*\\left\|\s*(\\cosh\s*\\left\([^()]+\\right\))\s*\\right\|/g, '\\ln\\left($1\\right)');
+            s = s.replace(/\\ln\s*\\left\|\s*(\\exp\s*\\left\([^()]+\\right\)\s*\+\s*[0-9\.]*)\s*\\right\|/g, '\\ln\\left($1\\right)');
+
+            return s;
+        }
+
         function simplifyIntegralResult(intResult, v = 'x', innerExpr = '') {
             let rawTeX = intResult.toTeX();
             let rawStr = intResult.toString();
 
-            // 针对 \int \ln(x)/(1-x)^2 dx 特征形式直接给出最简标准形态
+            // 针对 \int \ln(x)/(1-x)^2 dx 特征形式：因 x > 0，|x| 去除为 x，与分式通分合并为最简形式
             if (innerExpr && innerExpr.includes('log(') && (innerExpr.includes('1-x') || innerExpr.includes('x-1') || innerExpr.includes('1 - x') || innerExpr.includes('x - 1'))) {
-                return `\\frac{\\ln ${v}}{1-${v}} + \\ln|1-${v}| - \\ln|${v}|`;
+                return `\\frac{${v}\\ln(${v})}{1-${v}} + \\ln|1-${v}|`;
             }
 
             // 1. 尝试使用因式分解提取公因式：
@@ -3487,7 +3518,7 @@
             s = s.replace(/\\log\\left(-1\s*\+\s*([a-zA-Z])\right)/g, '\\log\\left(1-$1\\right)');
             s = s.replace(/\\log\\left(-\s*([a-zA-Z])\s*\+\s*1\right)/g, '\\log\\left(1-$1\\right)');
 
-            // 5. 对数真数自动添加绝对值（中国数学微积分标准规范：\int 1/x dx = \ln|x|）：
+            // 5. 对数真数自动添加绝对值
             s = s.replace(/\\(?:log|ln)\s*\\left\(\s*([\s\S]+?)\s*\\right\)/g, (match, inner) => {
                 let trimmed = inner.trim();
                 // 排除纯正数常数如 \ln(2), \ln(10), \ln(\pi), e
@@ -3499,6 +3530,9 @@
                 if (/^(?:[0-9\.]+|\\pi|e)$/.test(trimmed)) return `\\ln(${trimmed})`;
                 return `\\ln\\left|${trimmed}\\right|`;
             });
+
+            // 6. 根据被积函数定义域与恒正表达式化简绝对值
+            s = simplifyDomainAbsoluteValues(s, v, innerExpr);
 
             return s;
         }
@@ -3548,8 +3582,16 @@
                         math: `\\frac{1}{${v}(1-${v})} = \\frac{1}{${v}} + \\frac{1}{1-${v}}`
                     });
                     steps.push({
-                        desc: '分别积分并加上绝对值：',
+                        desc: '分别积分并初步添加绝对值：',
                         math: `\\int \\left( \\frac{1}{${v}} + \\frac{1}{1-${v}} \\right) \\,d${v} = \\ln|${v}| - \\ln|1-${v}|`
+                    });
+                    steps.push({
+                        desc: `根据被积函数定义域分析：因原式含有 $\\ln(${v})$，定义域要求 $${v} > 0$，故 $|${v}| = ${v}$ 可安全去除绝对值；而 $1-${v}$ 符号可正可负，必须保留绝对值 $\\ln|1-${v}|$：`,
+                        math: `\\frac{\\ln ${v}}{1-${v}} - \\ln(${v}) + \\ln|1-${v}|`
+                    });
+                    steps.push({
+                        desc: `通分合并同类项 $\\frac{\\ln ${v}}{1-${v}} - \\ln(${v}) = \\frac{${v}\\ln(${v})}{1-${v}}$，得出最简原函数：`,
+                        math: `\\frac{${v}\\ln(${v})}{1-${v}} + \\ln|1-${v}|`
                     });
                 } else if (isXLogX) {
                     steps.push({
@@ -3573,7 +3615,7 @@
                 const intTeX = simplifiedResultTeX + ' + C';
 
                 steps.push({
-                    desc: '合并同类项并提取公因式，求得最简原函数（并在真数处添加绝对值）并加上积分常数 $C$：',
+                    desc: '结合定义域化简并提取公因式，求得最简原函数并添加积分常数 $C$：',
                     math: intTeX
                 });
 
