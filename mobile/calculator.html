@@ -1963,7 +1963,7 @@
                         syncSlidersWithFormula();
                         processCalculation('auto');
                     } else if (k.action === 'backspace') {
-                        performSmartBackspace(mathField);
+                        mathField.executeCommand('deleteBackward');
                         debouncedCalculate();
                     } else if (k.action === 'calc') {
                         processCalculation('auto');
@@ -4130,56 +4130,19 @@
             processCalculation('auto', false);
         }, 150); // 停顿 150ms 才触发真正的高亮与计算
 
-        function performSmartBackspace(mf) {
-            if (!mf) return;
+        mathField.addEventListener('input', () => {
+            const val = mathField.getValue();
 
-            const valBefore = mf.getValue();
-
-            // Check if selection is a range
-            const sel = mf.selection;
-            const isRange = sel && sel.ranges && sel.ranges.length > 0 && sel.ranges[0][0] !== sel.ranges[0][1];
-            if (isRange) {
-                mf.executeCommand('deleteBackward');
-                return;
-            }
-
-            if (!valBefore || valBefore.trim() === '') {
-                mf.setValue('');
-                return;
-            }
-
-            // Normal MathLive deleteBackward
-            mf.executeCommand('deleteBackward');
-            let valAfter = mf.getValue();
-
-            // Post-processing: If deleting opening parenthesis left behind an orphaned closing bracket right after a function
-            // e.g. "\sin)" -> clean to "\sin" so the next backspace can delete the function name naturally
+            // 自动自愈：当用户删除了函数左括号导致残留 "\sin)" 时，自动清除多余闭括号，使得下次退格可直接删除函数名
             const FN_NAMES = '(?:arcsin|arccos|arctan|arcsec|arccsc|arccot|sinh|cosh|tanh|sin|cos|tan|sec|csc|cot|ln|lg|log|lim|sqrt|operatorname\\{[^}]+\\})';
             const orphanedRegex = new RegExp(`(\\\\?${FN_NAMES}(?:_\\{[^}]*\\}|_\\S+)?)\\s*(?:\\\\right\\s*\\)|\\))`, 'gi');
-            if (orphanedRegex.test(valAfter)) {
-                const cleaned = valAfter.replace(orphanedRegex, '$1');
-                if (cleaned !== valAfter) {
-                    mf.setValue(cleaned);
-                    valAfter = cleaned;
+            if (orphanedRegex.test(val)) {
+                const cleaned = val.replace(orphanedRegex, '$1');
+                if (cleaned !== val) {
+                    mathField.setValue(cleaned);
                 }
             }
 
-            // If MathLive deleteBackward was blocked by AST syntax lock (valAfter === valBefore)
-            if (valAfter === valBefore) {
-                try {
-                    mf.executeCommand('deletePreviousWord');
-                    if (mf.getValue() !== valBefore) return;
-                } catch (e) { }
-
-                try {
-                    mf.executeCommand('extendSelectionBackward');
-                    mf.executeCommand('deleteBackward');
-                } catch (e) { }
-            }
-        }
-
-        mathField.addEventListener('input', () => {
-            const val = mathField.getValue();
             // 轻量级 UI 切换，不放进防抖里，保证视觉立刻响应
             document.querySelectorAll('.preset-pill[data-preset]').forEach(p => {
                 if (p.dataset.preset === val) {
@@ -4197,10 +4160,6 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 processCalculation('auto');
-            } else if (e.key === 'Backspace') {
-                e.preventDefault();
-                performSmartBackspace(mathField);
-                debouncedCalculate();
             }
         });
 
