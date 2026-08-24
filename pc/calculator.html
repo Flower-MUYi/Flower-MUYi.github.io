@@ -1893,41 +1893,21 @@
             processCalculation('auto');
         });
 
-        function applyCalcTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            document.body.setAttribute('data-theme', theme);
-            const btn = document.getElementById('themeToggleBtn');
-            if (btn) {
-                btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
-                btn.setAttribute('title', theme === 'dark' ? '切换为明亮模式' : '切换为暗黑模式');
-            }
-            try {
-                if (typeof redrawGraph === 'function' && typeof canvasWrapper !== 'undefined' && canvasWrapper) {
-                    redrawGraph();
-                }
-            } catch (e) {}
-        }
-
         document.getElementById('themeToggleBtn').addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme') || document.body.getAttribute('data-theme') || 'dark';
+            const current = document.documentElement.getAttribute('data-theme') || (document.body && document.body.getAttribute('data-theme')) || 'dark';
             const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            if (document.body) document.body.setAttribute('data-theme', next);
             try {
                 localStorage.setItem('flowermuyi_theme', next);
             } catch(e) {}
-            applyCalcTheme(next);
-        });
-
-        (function initCalcTheme() {
-            const theme = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-            applyCalcTheme(theme);
-            if (window.matchMedia) {
-                window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
-                    if (!localStorage.getItem('flowermuyi_theme')) {
-                        applyCalcTheme(e.matches ? 'light' : 'dark');
-                    }
-                });
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) {
+                btn.innerHTML = next === 'dark' ? '☀️' : '🌙';
+                btn.setAttribute('title', next === 'dark' ? '切换为明亮模式' : '切换为暗黑模式');
             }
-        })();
+            redrawGraph();
+        });
 
         document.getElementById('helpModalBtn').addEventListener('click', () => {
             alert("✨ 多功能计算器 (Desmos 体验标准)：\n\n1. 定义域逻辑：在公式右侧直接书写 \\{ -2 \\le x \\le 2 \\} 或 \\{ x > 0 \\}，画板即自动限定只绘制该区间！\n2. 滑块逻辑：当公式中输入未创建滑块的参数变量（如 a, b, c, k）时，输入框下方会自动浮现「添加滑块: [全部添加] [a] [b]」快捷按钮，点击即可创建！\n3. 动态画板：拖拽滑块或点击 ▶ 按钮播放往复波形动画，画板以 60 FPS 实时更新函数形态。");
@@ -4713,12 +4693,41 @@
 
         // Initialize application on load
         window.addEventListener('DOMContentLoaded', () => {
-            // 【核心补丁】：强行向底层引擎注入以10为底的自定义 lg 对数
+            // 1. 同步主题状态
+            const savedTheme = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (document.body) document.body.setAttribute('data-theme', savedTheme);
+            const themeBtn = document.getElementById('themeToggleBtn');
+            if (themeBtn) {
+                themeBtn.innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
+                themeBtn.setAttribute('title', savedTheme === 'dark' ? '切换为明亮模式' : '切换为暗黑模式');
+            }
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('flowermuyi_theme')) {
+                        const autoTheme = e.matches ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', autoTheme);
+                        if (document.body) document.body.setAttribute('data-theme', autoTheme);
+                        if (themeBtn) {
+                            themeBtn.innerHTML = autoTheme === 'dark' ? '☀️' : '🌙';
+                            themeBtn.setAttribute('title', autoTheme === 'dark' ? '切换为明亮模式' : '切换为暗黑模式');
+                        }
+                        redrawGraph();
+                    }
+                });
+            }
+
+            // 2. 【核心补丁】：强行向底层引擎注入以10为底的自定义 lg 对数
             try {
                 nerdamer.setFunction('lg', ['x'], 'log(x)/log(10)');
             } catch (e) { }
 
             setupMathLiveChineseMenu();
+
+            // 3. 初始公式注入 (若为空时加载默认示例)
+            if (!mathField.getValue()) {
+                mathField.setValue('a \\cdot \\sin(b \\cdot x + c)');
+            }
 
             // Initialize default sliders for default formula
             const initialParams = getSuspectedParameters(mathField.getValue());
