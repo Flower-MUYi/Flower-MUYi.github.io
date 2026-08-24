@@ -7,15 +7,15 @@
     <title>FlowerMUYi 手机版多功能科学计算器</title>
     <meta name="description" content="专为手机触控优化的移动端科学计算器，集成 MathLive 所见即所得公式输入、KaTeX 渲染、Nerdamer 符号代数 CAS 引擎与 2D 函数绘图。">
 
-    <!-- MathLive -->
+    <!-- MathLive: WYSIWYG Math AST & Virtual Cursor Engine -->
     <link rel="stylesheet" href="https://unpkg.com/mathlive/dist/mathlive-static.css">
     <script defer src="https://unpkg.com/mathlive"></script>
 
-    <!-- KaTeX -->
+    <!-- KaTeX: Math Typography -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
 
-    <!-- Nerdamer CAS -->
+    <!-- Nerdamer CAS Symbolic Engine -->
     <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/nerdamer.core.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Algebra.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Calculus.js"></script>
@@ -94,12 +94,16 @@
             transition: background-color 0.25s, color 0.25s;
         }
 
-        /* 顶部紧凑导航 */
+        .katex, .katex-display, .step-math, .pill-math {
+            color: var(--text-main) !important;
+        }
+
+        /* 顶部导航 */
         .mobile-header {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(19, 29, 46, 0.9);
+            background: rgba(19, 29, 46, 0.92);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             padding: 10px 16px;
@@ -109,7 +113,7 @@
         }
 
         [data-theme="light"] .mobile-header {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.92);
         }
 
         .header-brand {
@@ -161,11 +165,11 @@
             transform: scale(0.92);
         }
 
-        /* 主体容器 */
+        /* 主体滚动区域 */
         .content-scroll {
             flex: 1;
             padding: 12px;
-            padding-bottom: 290px; /* 为底部常驻虚拟键盘预留安全滚动空间 */
+            padding-bottom: 300px; /* 为常驻触控键盘预留空间 */
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -193,7 +197,7 @@
             margin-right: 6px;
         }
 
-        /* MathLive 移动端专用输入框 (完全禁用弹出手机原生输入法) */
+        /* MathLive 移动端专用输入框 */
         .math-box-container {
             background: var(--bg-main);
             border: 1.5px solid var(--border);
@@ -215,9 +219,7 @@
             background: transparent;
             outline: none;
             border: none;
-            --keyboard-zindex: -1;
-            /* 关键指令：阻止手机弹出任何原生输入法键盘 */
-            touch-action: manipulation;
+            cursor: text;
         }
 
         math-field::part(virtual-keyboard-toggle) {
@@ -250,10 +252,14 @@
             color: #fff;
             border: none;
             border-radius: 6px;
-            padding: 3px 8px;
+            padding: 4px 10px;
             font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
+        }
+
+        .add-pill-btn:active {
+            opacity: 0.85;
         }
 
         /* 预设横向滑动槽 */
@@ -308,17 +314,19 @@
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .result-value {
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--accent-green);
             overflow-x: auto;
-            padding: 4px 0;
+            padding: 6px 0;
         }
 
-        /* 步骤展开折叠 */
+        /* 步骤解析卡片 */
         .steps-accordion {
             margin-top: 8px;
             border-top: 1px solid var(--border);
@@ -338,18 +346,45 @@
 
         .steps-body {
             display: none;
-            margin-top: 6px;
-            font-size: 0.88rem;
-            line-height: 1.6;
-            background: var(--bg-main);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            max-height: 220px;
+            margin-top: 8px;
+            max-height: 240px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        /* 画板与交互 */
+        .step-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .step-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+        }
+
+        .step-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .step-formula {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            overflow-x: auto;
+            padding: 2px 0;
+        }
+
+        /* 2D 函数画板 */
         .canvas-card {
             display: flex;
             flex-direction: column;
@@ -388,12 +423,12 @@
         .canvas-wrapper {
             position: relative;
             width: 100%;
-            height: 240px;
+            height: 250px;
             background: #090d13;
             border-radius: 10px;
             border: 1px solid var(--border);
             overflow: hidden;
-            touch-action: none; /* 允许自绘手势拖动与缩放 */
+            touch-action: none;
         }
 
         [data-theme="light"] .canvas-wrapper {
@@ -436,7 +471,7 @@
             z-index: 10;
         }
 
-        /* 动态滑块列表 */
+        /* 动态参数滑块面板 */
         .sliders-list {
             display: flex;
             flex-direction: column;
@@ -458,21 +493,22 @@
             font-weight: 700;
             font-size: 0.95rem;
             color: var(--accent-blue);
-            min-width: 48px;
+            min-width: 52px;
         }
 
         .slider-input {
             flex: 1;
             accent-color: var(--primary);
             height: 6px;
+            cursor: pointer;
         }
 
         .slider-play-btn {
             background: transparent;
             border: 1px solid var(--border);
             color: var(--text-main);
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -481,7 +517,13 @@
             cursor: pointer;
         }
 
-        /* ================= 移动端底部专用常驻虚拟键盘 ================= */
+        .slider-play-btn.active-play {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* ================= 移动端底部常驻触控专用虚拟键盘 ================= */
         .mobile-keypad-dock {
             position: fixed;
             bottom: 0;
@@ -596,11 +638,6 @@
         .key-cur {
             color: var(--text-muted);
         }
-
-        /* 隐藏的原生输入指示 */
-        .hidden-mobile-trigger {
-            display: none;
-        }
     </style>
 </head>
 
@@ -631,9 +668,9 @@
                 <span id="calcStatusBadge" style="font-size:0.75rem; color:var(--accent-green);"><i class="fa-solid fa-bolt"></i> 实时计算中</span>
             </div>
 
-            <!-- 点击聚焦但不呼出系统原生输入法的 MathLive 容器 -->
+            <!-- MathLive 容器：支持点击任意位置定位光标，但拦截原生手机输入法弹出 -->
             <div class="math-box-container" id="mathBoxWrap">
-                <math-field id="mathInput" read-only="false" virtual-keyboard-mode="off" default-mode="math"></math-field>
+                <math-field id="mathInput" virtual-keyboard-mode="manual" locale="zh-CN"></math-field>
             </div>
 
             <!-- 动态参数滑块横幅 (Desmos 风格) -->
@@ -642,22 +679,37 @@
                 <div class="add-pills-wrap" id="slidersBannerPills"></div>
             </div>
 
-            <!-- 经典示例横向滑动槽 -->
+            <!-- 经典示例横向滑动槽 (KaTeX 渲染) -->
             <div style="margin-top: 10px;">
-                <div style="font-size:0.76rem; color:var(--text-muted); margin-bottom:4px;"><i class="fa-solid fa-lightbulb"></i> 快速填入示例:</div>
+                <div style="font-size:0.76rem; color:var(--text-muted); margin-bottom:4px;"><i class="fa-solid fa-lightbulb"></i> 快速填入精选示例:</div>
                 <div class="presets-scroller" id="presetsScroller">
-                    <button class="preset-chip active" data-preset="a \cdot \sin(b \cdot x + c)">$a\sin(bx+c)$</button>
-                    <button class="preset-chip" data-preset="\sin(x) \left\lbrace x\in\left(-2\pi,2\pi\right)\right\rbrace">$\sin(x)\{-2\pi<x<2\pi\}$</button>
-                    <button class="preset-chip" data-preset="a \cdot x^2 + b \cdot x + c">$ax^2+bx+c$</button>
-                    <button class="preset-chip" data-preset="\frac{d}{dx}(\sin(x^2))">$\frac{d}{dx}(\sin x^2)$</button>
-                    <button class="preset-chip" data-preset="\int x \cdot \cos(x) \,dx">$\int x\cos x dx$</button>
-                    <button class="preset-chip" data-preset="(x+2)^3">$(x+2)^3$</button>
+                    <button class="preset-chip active" data-preset="a \cdot \sin(b \cdot x + c)">
+                        <span class="katex-inline" data-tex="a\sin(bx+c)"></span>
+                    </button>
+                    <button class="preset-chip" data-preset="\sin(x) \left\lbrace x\in\left(-2\pi,2\pi\right)\right\rbrace">
+                        <span class="katex-inline" data-tex="\sin(x)\{-2\pi \le x \le 2\pi\}"></span>
+                    </button>
+                    <button class="preset-chip" data-preset="a \cdot x^2 + b \cdot x + c">
+                        <span class="katex-inline" data-tex="ax^2+bx+c"></span>
+                    </button>
+                    <button class="preset-chip" data-preset="\frac{d}{dx}(\sin(x^2))">
+                        <span class="katex-inline" data-tex="\frac{d}{dx}(\sin x^2)"></span>
+                    </button>
+                    <button class="preset-chip" data-preset="\int x \cdot \cos(x) \,dx">
+                        <span class="katex-inline" data-tex="\int x\cos x dx"></span>
+                    </button>
+                    <button class="preset-chip" data-preset="(x+2)^3">
+                        <span class="katex-inline" data-tex="(x+2)^3"></span>
+                    </button>
                 </div>
             </div>
 
             <!-- 计算结果与分步解析 -->
             <div class="result-box">
-                <div class="result-label">CAS 符号求值 / 化简结果:</div>
+                <div class="result-label">
+                    <span>CAS 符号求值 / 化简结果:</span>
+                    <span id="solutionTime" style="font-family:'JetBrains Mono',monospace;">耗时: 0ms</span>
+                </div>
                 <div class="result-value" id="resultValueDisplay">正在计算...</div>
 
                 <div class="steps-accordion" id="stepsAccordion">
@@ -665,8 +717,8 @@
                         <span><i class="fa-solid fa-layer-group"></i> 查看分步推导过程</span>
                         <i class="fa-solid fa-chevron-down" id="stepsChevron"></i>
                     </div>
-                    <div class="steps-body" id="stepsContent">
-                        暂无分步推导
+                    <div class="steps-body" id="stepsContent" style="display:none;">
+                        <!-- 动态插入结构化推导卡片 -->
                     </div>
                 </div>
             </div>
@@ -676,7 +728,7 @@
         <section class="card canvas-card">
             <div class="canvas-toolbar">
                 <div class="card-title-row" style="margin-bottom:0;">
-                    <span><i class="fa-solid fa-chart-line"></i> 2D 函数图像与零点交点追踪</span>
+                    <span><i class="fa-solid fa-chart-line"></i> 2D 函数图像与零点追踪</span>
                 </div>
                 <div class="canvas-tools-group">
                     <button class="c-btn" id="zoomInBtn"><i class="fa-solid fa-plus"></i></button>
@@ -695,7 +747,7 @@
         <!-- 参数滑块控制面板 -->
         <section class="card" id="slidersCard" style="display:none;">
             <div class="card-title-row">
-                <span><i class="fa-solid fa-sliders"></i> 动态参数滑块 (60 FPS 动画)</span>
+                <span><i class="fa-solid fa-sliders"></i> 动态参数滑块 (60 FPS 实时更新)</span>
             </div>
             <div class="sliders-list" id="slidersList"></div>
         </section>
@@ -715,14 +767,32 @@
         </div>
 
         <!-- 5列触控大按键矩阵 -->
-        <div class="keypad-grid" id="keypadGrid">
-            <!-- 动态生成按键 -->
-        </div>
+        <div class="keypad-grid" id="keypadGrid"></div>
     </div>
 
     <script>
         // =========================================================================
-        // 1. 移动端键盘数据字典与按键布局系统
+        // 1. MathLive 触控光标交互优化与软键盘拦截机制
+        // =========================================================================
+        const mathField = document.getElementById('mathInput');
+
+        function suppressMobileSoftwareKeyboard() {
+            if (mathField) {
+                mathField.mathVirtualKeyboardPolicy = "manual";
+                if (mathField.shadowRoot) {
+                    const ta = mathField.shadowRoot.querySelector('textarea, input');
+                    if (ta) {
+                        ta.setAttribute('inputmode', 'none');
+                    }
+                }
+            }
+        }
+
+        mathField.addEventListener('focusin', suppressMobileSoftwareKeyboard);
+        mathField.addEventListener('pointerdown', () => setTimeout(suppressMobileSoftwareKeyboard, 0));
+
+        // =========================================================================
+        // 2. 移动端键盘数据字典与按键布局系统
         // =========================================================================
         const KEYPAD_LAYOUTS = {
             basic: [
@@ -853,33 +923,8 @@
             ]
         };
 
-        const mathField = document.getElementById('mathInput');
         const keypadGrid = document.getElementById('keypadGrid');
         const keypadTabs = document.querySelectorAll('.k-tab');
-
-        // 彻底禁用手机软键盘呼出
-        function blockMobileNativeKeyboard() {
-            if (!mathField) return;
-            mathField.setAttribute('inputmode', 'none');
-            mathField.setAttribute('virtual-keyboard-mode', 'off');
-            
-            const shadowTextarea = mathField.shadowRoot && mathField.shadowRoot.querySelector('textarea, input');
-            if (shadowTextarea) {
-                shadowTextarea.setAttribute('inputmode', 'none');
-                shadowTextarea.setAttribute('readonly', 'true');
-                setTimeout(() => {
-                    shadowTextarea.removeAttribute('readonly');
-                }, 100);
-            }
-        }
-
-        mathField.addEventListener('focus', () => {
-            blockMobileNativeKeyboard();
-        });
-
-        mathField.addEventListener('touchstart', () => {
-            blockMobileNativeKeyboard();
-        }, { passive: true });
 
         function renderKeypad(tabName) {
             keypadGrid.innerHTML = '';
@@ -890,14 +935,14 @@
                 btn.className = `key-btn ${k.cls || ''}`;
                 btn.innerHTML = k.label;
 
-                btn.addEventListener('touchstart', (e) => {
+                btn.addEventListener('touchstart', () => {
                     if (navigator.vibrate) navigator.vibrate(8);
                 }, { passive: true });
 
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     mathField.focus();
-                    blockMobileNativeKeyboard();
+                    suppressMobileSoftwareKeyboard();
 
                     if (k.action === 'clear') {
                         mathField.setValue('');
@@ -931,7 +976,40 @@
         renderKeypad('basic');
 
         // =========================================================================
-        // 2. 动态参数滑块与定义域解析系统 (CAS Engine & Domain Parser)
+        // 3. KaTeX 美化与渲染工具
+        // =========================================================================
+        function renderStaticKaTeX() {
+            document.querySelectorAll('.katex-inline').forEach(el => {
+                const tex = el.getAttribute('data-tex');
+                if (tex && window.katex) {
+                    try {
+                        katex.render(tex, el, { throwOnError: false, displayMode: false });
+                    } catch (e) {
+                        el.textContent = tex;
+                    }
+                }
+            });
+        }
+
+        function renderKaTeXToElem(elem, latexStr) {
+            if (!elem) return;
+            if (!latexStr) {
+                elem.innerHTML = '0';
+                return;
+            }
+            if (window.katex) {
+                try {
+                    katex.render(latexStr, elem, { throwOnError: false, displayMode: false });
+                } catch (e) {
+                    elem.textContent = latexStr;
+                }
+            } else {
+                elem.textContent = latexStr;
+            }
+        }
+
+        // =========================================================================
+        // 4. 定义域与动态参数滑块解析引擎 (Dynamic Sliders & Domain Parser)
         // =========================================================================
         let currentDomain = null;
         const slidersState = new Map();
@@ -1081,7 +1159,8 @@
                         slidersState.set(p, { value: 1, min: -10, max: 10, step: 0.1, isPlaying: false, dir: 1 });
                         renderSlidersList();
                         updateAddSlidersBanner();
-                        processCalculation('auto');
+                        recompilePlotFunction();
+                        redrawGraph();
                     };
                     pillsWrap.appendChild(btn);
                 });
@@ -1105,8 +1184,8 @@
                 const item = document.createElement('div');
                 item.className = 'slider-item';
                 item.innerHTML = `
-                    <button class="slider-play-btn" id="playBtn_${param}">${cfg.isPlaying ? '❚❚' : '▶'}</button>
-                    <span class="slider-label">${param} = <span id="val_${param}">${cfg.value}</span></span>
+                    <button class="slider-play-btn ${cfg.isPlaying ? 'active-play' : ''}" id="playBtn_${param}">${cfg.isPlaying ? '⏸' : '▶'}</button>
+                    <span class="slider-label">${param} = <span id="val_${param}">${cfg.value.toFixed(2)}</span></span>
                     <input type="range" class="slider-input" min="${cfg.min}" max="${cfg.max}" step="${cfg.step}" value="${cfg.value}" id="range_${param}">
                 `;
 
@@ -1114,16 +1193,18 @@
                 const valLabel = item.querySelector(`#val_${param}`);
                 const playBtn = item.querySelector(`#playBtn_${param}`);
 
+                // 核心修复：滑块滑动时，即刻更新参数并以 60 FPS 重新绘制函数曲线
                 rangeInput.addEventListener('input', (e) => {
                     cfg.value = parseFloat(e.target.value);
-                    valLabel.textContent = cfg.value;
+                    valLabel.textContent = cfg.value.toFixed(2);
                     redrawGraph();
                     debouncedCalc();
                 });
 
                 playBtn.addEventListener('click', () => {
                     cfg.isPlaying = !cfg.isPlaying;
-                    playBtn.textContent = cfg.isPlaying ? '❚❚' : '▶';
+                    playBtn.textContent = cfg.isPlaying ? '⏸' : '▶';
+                    playBtn.classList.toggle('active-play', cfg.isPlaying);
                     checkAnimationLoop();
                 });
 
@@ -1132,11 +1213,7 @@
         }
 
         function checkAnimationLoop() {
-            let anyPlaying = false;
-            slidersState.forEach(cfg => {
-                if (cfg.isPlaying) anyPlaying = true;
-            });
-
+            const anyPlaying = Array.from(slidersState.values()).some(s => s.isPlaying);
             if (anyPlaying && !animationFrameId) {
                 runSliderAnimation();
             } else if (!anyPlaying && animationFrameId) {
@@ -1158,7 +1235,7 @@
                     const r = document.getElementById(`range_${param}`);
                     const v = document.getElementById(`val_${param}`);
                     if (r) r.value = cfg.value;
-                    if (v) v.textContent = cfg.value;
+                    if (v) v.textContent = cfg.value.toFixed(2);
                 }
             });
 
@@ -1171,98 +1248,240 @@
         }
 
         // =========================================================================
-        // 3. Nerdamer CAS 解析与求值核心 (Evaluation & Calculation Engine)
+        // 5. 符号 CAS 解析、分步推导与函数编译核心
         // =========================================================================
+        let currentPlotFunction = null;
         let compiledPlotFunc = null;
+        let compiledVars = ['x'];
 
-        function sanitizeLatexForCAS(latexStr) {
-            let s = latexStr || '';
-            let { cleanFormula, domain } = extractDomainFromLatex(s);
-            currentDomain = domain;
+        function cleanBaseExpression(latexStr) {
+            let s = (latexStr || '').trim();
+            if (!s) return '';
 
-            let eqMatch = cleanFormula.match(/^(?:y|f\(x\))\s*=\s*(.*)$/);
-            if (eqMatch) cleanFormula = eqMatch[1].trim();
+            s = s.replace(/\\(mathrm|operatorname|text|mathbf|mathit)\{([^{}]+)\}/g, '$2');
+            s = s.replace(/\\(mathrm|operatorname|text|mathbf|mathit)\s*/g, '');
+            s = s.replace(/\\(displaystyle|textstyle|scriptstyle|limits|nolimits)/g, '');
+            s = s.replace(/\\[,;:! ]/g, ' ');
 
-            slidersState.forEach((cfg, param) => {
-                const re = new RegExp(`\\b${param}\\b`, 'g');
-                cleanFormula = cleanFormula.replace(re, `(${cfg.value})`);
+            s = s.replace(/\\left\(/g, '(').replace(/\\right\)/g, ')');
+            s = s.replace(/\\left\[/g, '[').replace(/\\right\]/g, ']');
+            s = s.replace(/\\left\|/g, 'abs(').replace(/\\right\|/g, ')');
+            s = s.replace(/\\times/g, '*').replace(/\\cdot/g, '*').replace(/\\div/g, '/');
+            s = s.replace(/\\pi/g, 'pi');
+
+            // 换底对数 \log_b(x)
+            s = s.replace(/\\log_\{([^}]+)\}\s*(?:\((.*?)\)|\\left\((.*?)\\right\)|\{([^}]+)\})/g, '(log($2$3$4)/log($1))');
+            s = s.replace(/\\log_([a-zA-Z0-9\.]+)\s*(?:\((.*?)\)|\\left\((.*?)\\right\)|\{([^}]+)\})/g, '(log($2$3$4)/log($1))');
+
+            // 三角与对数乘方：\sin^2(x) -> (sin(x))^2
+            const ALL_FUNCS = ['sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'ln', 'lg', 'log'];
+            ALL_FUNCS.forEach(fn => {
+                let re = new RegExp(`\\\\?${fn}\\^([0-9]+)\\s*(?:\\((.*?)\\)|\\{([^}]+)\\})`, 'g');
+                s = s.replace(re, `(${fn}($2$3))^$1`);
             });
 
-            return cleanFormula;
+            // 剥离函数反斜杠
+            s = s.replace(/\\(sin|cos|tan|arcsin|arccos|arctan|sinh|cosh|tanh|sec|csc|cot|ln|lg|log|sqrt|exp|abs)(?![a-zA-Z])/g, '$1');
+
+            // 分数与根号
+            while (s.includes('\\frac{')) {
+                let m = s.match(/\\frac\{([^{}]+)\}\{([^{}]+)\}/);
+                if (m) {
+                    let num = cleanBaseExpression(m[1]);
+                    let den = cleanBaseExpression(m[2]);
+                    s = s.replace(m[0], `((${num})/(${den}))`);
+                } else break;
+            }
+
+            let sqrtRegex = /\\sqrt\{([^{}]+)\}/;
+            while (sqrtRegex.test(s)) {
+                let m = s.match(sqrtRegex);
+                s = s.replace(sqrtRegex, `sqrt(${cleanBaseExpression(m[1])})`);
+            }
+
+            s = s.replace(/\{([^{}]+)\}/g, '($1)');
+
+            // 隐式乘号补充
+            s = s.replace(/(^|[^a-zA-Z0-9])(\d+\.?\d*)\s*([a-zA-Z])/g, '$1$2*$3');
+            s = s.replace(/(^|[^a-zA-Z0-9])(\d+\.?\d*)\s*\(/g, '$1$2*(');
+            s = s.replace(/\)\s*\(/g, ')*(');
+            s = s.replace(/\)\s*([a-zA-Z])/g, ')*$1');
+
+            return s;
+        }
+
+        function recompilePlotFunction() {
+            if (!currentPlotFunction) {
+                compiledPlotFunc = null;
+                return;
+            }
+
+            try {
+                compiledVars = ['x', ...Array.from(slidersState.keys())];
+                compiledPlotFunc = nerdamer(currentPlotFunction).buildFunction(compiledVars);
+            } catch (e) {
+                compiledPlotFunc = null;
+            }
         }
 
         function processCalculation(mode = 'auto') {
-            const rawLatex = mathField.getValue();
+            const startTime = performance.now();
+            const rawInput = mathField.getValue();
             const resDisplay = document.getElementById('resultValueDisplay');
-            const stepsContent = document.getElementById('stepsContent');
+            const stepsContainer = document.getElementById('stepsContent');
             const statusBadge = document.getElementById('calcStatusBadge');
+            const solutionTime = document.getElementById('solutionTime');
 
-            if (!rawLatex.trim()) {
+            if (!rawInput.trim()) {
                 resDisplay.textContent = '0';
-                stepsContent.textContent = '请输入有效公式';
+                stepsContainer.innerHTML = '<div class="step-desc">请输入数学公式进行计算。</div>';
+                currentPlotFunction = null;
                 compiledPlotFunc = null;
                 redrawGraph();
                 return;
             }
 
-            statusBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 计算中...';
+            statusBadge.innerHTML = '<i class="fa-solid fa-bolt fa-fade"></i> 计算中...';
+
+            const { cleanFormula, domain } = extractDomainFromLatex(rawInput);
+            currentDomain = domain;
+
+            let s = cleanFormula;
+            let steps = [];
+            let finalLatex = '';
+            let plotTarget = null;
 
             try {
-                const cleanedLatex = sanitizeLatexForCAS(rawLatex);
-                let evaluatedLatex = '';
-                let stepsHtml = '';
-
-                // 微分算子 d/dx(f(x))
-                let diffMatch = cleanedLatex.match(/\\frac\{d\}\{dx\}\((.*?)\)/) || cleanedLatex.match(/\\frac\{d\}\{dx\}\s*([\s\S]+)/);
+                // 1. 微积分导数检测：d/dx(...) 或 \frac{d}{dx}(...)
+                let diffMatch = s.match(/\\frac\{d\}\{dx\}\((.*?)\)/) || s.match(/\\frac\{d\}\{dx\}\s*([\s\S]+)/) || s.match(/d\/dx\((.*?)\)/);
                 if (diffMatch) {
-                    let inner = nerdamer.convertFromLaTeX(diffMatch[1]);
-                    let diffRes = nerdamer.diff(inner, 'x');
-                    evaluatedLatex = diffRes.toTeX();
-                    stepsHtml = `<b>导数求解</b>: 原式 $f(x) = ${diffMatch[1]}$<br>一阶导数 $f'(x) = ${evaluatedLatex}$`;
-                    compiledPlotFunc = diffRes.buildFunction(['x']);
+                    let targetRaw = diffMatch[1].trim();
+                    let targetClean = cleanBaseExpression(targetRaw);
+
+                    steps.push({
+                        badge: '步骤 1 · 识别导数算子',
+                        desc: `待求导函数 $f(x) = ${targetRaw}$，应用导数基本法则与链式法则：`,
+                        math: `\\frac{d}{dx} \\left[ ${nerdamer(targetClean).toTeX()} \\right]`
+                    });
+
+                    let diffRes = nerdamer(`diff(${targetClean}, x)`);
+                    finalLatex = diffRes.toTeX();
+
+                    steps.push({
+                        badge: '步骤 2 · 求导化简完成',
+                        desc: `逐项求导化简得出导函数结果：`,
+                        math: `f'(x) = ${finalLatex}`
+                    });
+
+                    plotTarget = diffRes.toString();
                 }
-                // 不定积分
-                else if (cleanedLatex.includes('\\int')) {
-                    let intMatch = cleanedLatex.match(/\\int\s*(.*?)\s*\\,d\s*x/);
-                    let inner = intMatch ? intMatch[1] : cleanedLatex.replace(/\\int/g, '').replace(/\\,d\s*x/g, '');
-                    let parsed = nerdamer.convertFromLaTeX(inner);
-                    let intRes = nerdamer.integrate(parsed, 'x');
-                    evaluatedLatex = intRes.toTeX() + ' + C';
-                    stepsHtml = `<b>不定积分求解</b>: $\\int (${inner}) dx = ${evaluatedLatex}$`;
-                    compiledPlotFunc = intRes.buildFunction(['x']);
+                // 2. 不定积分检测：\int f(x) dx
+                else if (s.includes('\\int')) {
+                    let intMatch = s.match(/\\int\s*(.*?)\s*\\,d\s*x/) || s.match(/\\int\s*(.*?)\s*dx/);
+                    let innerRaw = intMatch ? intMatch[1] : s.replace(/\\int/g, '').replace(/\\,d\s*x|dx/g, '');
+                    let innerClean = cleanBaseExpression(innerRaw);
+
+                    steps.push({
+                        badge: '步骤 1 · 识别不定积分',
+                        desc: `待积分表达式为 $\\int f(x) dx$，应用原函数积分法则：`,
+                        math: `\\int \\left( ${nerdamer(innerClean).toTeX()} \\right) dx`
+                    });
+
+                    let intRes = nerdamer(`integrate(${innerClean}, x)`);
+                    finalLatex = intRes.toTeX() + ' + C';
+
+                    steps.push({
+                        badge: '步骤 2 · 积分求解完成',
+                        desc: `得出不定积分原函数及积分常数 $C$：`,
+                        math: `\\int (${innerRaw}) dx = ${finalLatex}`
+                    });
+
+                    plotTarget = intRes.toString();
                 }
-                // 常规代数与函数绘图
+                // 3. 方程求解检测 (含 =)
+                else if (s.includes('=')) {
+                    let parts = s.split('=');
+                    let leftClean = cleanBaseExpression(parts[0]);
+                    let rightClean = cleanBaseExpression(parts[1]);
+
+                    steps.push({
+                        badge: '步骤 1 · 整理为标准方程',
+                        desc: `将方程所有项移至左侧整理为 $F(x) = 0$ 形式：`,
+                        math: `(${nerdamer(leftClean).toTeX()}) - (${nerdamer(rightClean).toTeX()}) = 0`
+                    });
+
+                    let eqExpr = `(${leftClean}) - (${rightClean})`;
+                    let sol = nerdamer.solve(eqExpr, 'x');
+                    finalLatex = `x = ${sol.toTeX()}`;
+
+                    steps.push({
+                        badge: '步骤 2 · 符号求解方程根',
+                        desc: `利用代数求解器求出该方程的实数/复数根集合：`,
+                        math: finalLatex
+                    });
+
+                    plotTarget = eqExpr;
+                }
+                // 4. 常规代数化简与函数图像
                 else {
-                    let parsed = nerdamer.convertFromLaTeX(cleanedLatex);
-                    let simp = nerdamer(parsed).evaluate();
-                    evaluatedLatex = simp.toTeX();
-                    stepsHtml = `<b>符号化简</b>: $${cleanedLatex} = ${evaluatedLatex}$`;
-                    compiledPlotFunc = simp.buildFunction(['x']);
+                    let exprClean = cleanBaseExpression(s);
+                    steps.push({
+                        badge: '步骤 1 · 原式符号解析',
+                        desc: `解析数学语法树并建立代数表达式：`,
+                        math: nerdamer(exprClean).toTeX()
+                    });
+
+                    let simplified = nerdamer(exprClean).evaluate();
+                    finalLatex = simplified.toTeX();
+
+                    steps.push({
+                        badge: '步骤 2 · 符号化简计算结果',
+                        desc: `合并同类项与三角/对数代数化简得出最简形式：`,
+                        math: finalLatex
+                    });
+
+                    plotTarget = exprClean;
                 }
 
-                if (window.katex) {
-                    katex.render(evaluatedLatex, resDisplay, { throwOnError: false });
-                    katex.render(stepsHtml.replace(/\$(.*?)\$/g, (m, c) => katex.renderToString(c, { throwOnError: false })), stepsContent, { throwOnError: false });
-                } else {
-                    resDisplay.textContent = evaluatedLatex;
-                    stepsContent.innerHTML = stepsHtml;
-                }
+                // 渲染最终结果
+                renderKaTeXToElem(resDisplay, finalLatex);
 
+                // 渲染步骤卡片
+                stepsContainer.innerHTML = '';
+                steps.forEach(st => {
+                    const card = document.createElement('div');
+                    card.className = 'step-card';
+                    card.innerHTML = `
+                        <span class="step-badge">${st.badge}</span>
+                        <div class="step-desc">${st.desc}</div>
+                        <div class="step-formula"></div>
+                    `;
+                    const mathBox = card.querySelector('.step-formula');
+                    renderKaTeXToElem(mathBox, st.math);
+                    stepsContainer.appendChild(card);
+                });
+
+                currentPlotFunction = plotTarget;
+                recompilePlotFunction();
                 statusBadge.innerHTML = '<i class="fa-solid fa-check"></i> 计算完成';
             } catch (e) {
-                resDisplay.innerHTML = `<span style="color:var(--accent-red); font-size:0.95rem;">格式待完善 (支持代数/导数/积分)</span>`;
-                stepsContent.textContent = '暂无详细步骤';
+                resDisplay.innerHTML = `<span style="color:var(--accent-red); font-size:0.95rem;">格式待完善 (支持代数/导数/积分/方程)</span>`;
+                stepsContainer.innerHTML = '<div class="step-desc">暂无详细推导过程。请检查数学符号括号是否闭合。</div>';
                 statusBadge.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="color:var(--accent-amber);"></i> 待完善';
+                currentPlotFunction = cleanBaseExpression(cleanFormula);
+                recompilePlotFunction();
             }
 
+            const elapsed = Math.round(performance.now() - startTime);
+            solutionTime.textContent = `耗时: ${elapsed}ms`;
             redrawGraph();
         }
 
         const debouncedCalc = (() => {
-            let t = null;
+            let timer = null;
             return () => {
-                clearTimeout(t);
-                t = setTimeout(() => {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
                     syncSlidersWithFormula();
                     processCalculation('auto');
                 }, 120);
@@ -1274,7 +1493,7 @@
         });
 
         // =========================================================================
-        // 4. 2D 函数图像触控画板引擎 (Mobile Touch Canvas Plotter)
+        // 6. 2D 函数触控画板引擎 (Mobile Touch Canvas Plotter)
         // =========================================================================
         const canvas = document.getElementById('plotCanvas');
         const ctx = canvas.getContext('2d');
@@ -1318,6 +1537,7 @@
             };
         }
 
+        // 核心求值器：在每次采样时动态带入当前所有滑块的最新数值
         function evalNode(xVal, targetFunc) {
             if (!targetFunc) return null;
             if (currentDomain) {
@@ -1327,8 +1547,9 @@
                 if (currentDomain.maxOp === 'lt' && xVal >= currentDomain.max) return null;
             }
             try {
-                let y = targetFunc(xVal);
-                return isFinite(y) ? y : null;
+                const args = compiledVars.map(v => v === 'x' ? xVal : (slidersState.get(v) ? slidersState.get(v).value : 1));
+                let num = targetFunc.apply(null, args);
+                return isNaN(num) || !isFinite(num) ? null : num;
             } catch (e) {
                 return null;
             }
@@ -1351,7 +1572,6 @@
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, w, h);
 
-            // 更新定义域角标
             if (currentDomain) {
                 domainBadge.textContent = `定义域: ${currentDomain.raw}`;
                 domainBadge.style.display = 'block';
@@ -1359,7 +1579,6 @@
                 domainBadge.style.display = 'none';
             }
 
-            // 绘制网格与坐标轴
             let step = 1;
             if (view.scale < 20) step = 5;
             if (view.scale < 8) step = 10;
@@ -1403,7 +1622,6 @@
                 }
             }
 
-            // X / Y 轴实线
             const origin = mathToScreen(0, 0);
             ctx.lineWidth = 1.5;
             ctx.strokeStyle = axisColor;
@@ -1414,16 +1632,14 @@
             ctx.lineTo(origin.px, h);
             ctx.stroke();
 
-            // 绘制函数曲线
+            // 绘制连续函数曲线
             if (compiledPlotFunc) {
                 ctx.lineWidth = 2.5;
                 ctx.strokeStyle = curveColor;
                 ctx.beginPath();
 
                 let isDrawing = false;
-                const sampleSteps = w; // 逐像素高密度采样
-
-                for (let px = 0; px <= sampleSteps; px++) {
+                for (let px = 0; px <= w; px++) {
                     const { x } = screenToMath(px, 0);
                     const y = evalNode(x, compiledPlotFunc);
 
@@ -1443,7 +1659,7 @@
             }
         }
 
-        // 触控手势监听 (单指拖动画板，多点触控与按键缩放)
+        // 触控手势监听 (单指拖动画板)
         canvasWrapper.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 view.isDragging = true;
@@ -1480,7 +1696,7 @@
 
         canvasWrapper.addEventListener('touchend', () => {
             view.isDragging = false;
-            setTimeout(() => { tooltip.style.display = 'none'; }, 1000);
+            setTimeout(() => { tooltip.style.display = 'none'; }, 1200);
         });
 
         document.getElementById('zoomInBtn').onclick = () => {
@@ -1515,44 +1731,44 @@
         document.getElementById('stepsToggle').onclick = () => {
             const body = document.getElementById('stepsContent');
             const chev = document.getElementById('stepsChevron');
-            const isOpen = body.style.display === 'block';
-            body.style.display = isOpen ? 'none' : 'block';
+            const isOpen = body.style.display === 'flex';
+            body.style.display = isOpen ? 'none' : 'flex';
             chev.className = isOpen ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
         };
 
-        // 帮助按钮
+        // 帮助说明
         document.getElementById('helpBtn').onclick = () => {
-            alert("📱 手机版多功能计算器：\n\n1. 专为触屏设计，点击输入框不会弹出手机软键盘，请直接使用下方触控大按键进行公式输入。\n2. 支持在公式中书写 a, b, c 等字母参数，上方会自动浮现动态参数滑块！\n3. 支持区间定义域，如 {x ∈ (-2π, 2π)} 或 {x > 0}。\n4. 支持手指单指拖动画板，坐标点自动磁吸显示。");
+            alert("📱 手机版多功能计算器：\n\n1. 支持手指直接点击公式内任意位置定位光标，绝不呼出系统软键盘。\n2. 支持动态参数滑块 (a, b, c 等)，滑动时图像 60 FPS 实时更新。\n3. 支持区间定义域约束，如 {x ∈ (-2π, 2π)}。\n4. 支持单指拖动画板，工具栏支持缩放与一键归位。");
         };
 
         // 主题切换
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme') || 'dark';
-            const next = current === 'dark' ? 'light' : 'dark';
-            applyTheme(next);
-            try { localStorage.setItem('flowermuyi_theme', next); } catch(e) {}
-        }
-
-        function applyTheme(t) {
-            document.documentElement.setAttribute('data-theme', t);
-            if (document.body) document.body.setAttribute('data-theme', t);
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.body.setAttribute('data-theme', theme);
             const btn = document.getElementById('themeToggleBtn');
             if (btn) {
-                btn.innerHTML = t === 'dark' ? '☀️' : '🌙';
+                btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
             }
             redrawGraph();
         }
 
-        document.getElementById('themeToggleBtn').onclick = toggleTheme;
+        document.getElementById('themeToggleBtn').onclick = () => {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            try { localStorage.setItem('flowermuyi_theme', next); } catch(e) {}
+            applyTheme(next);
+        };
 
         // 首屏启动
         window.addEventListener('DOMContentLoaded', () => {
             try { nerdamer.setFunction('lg', ['x'], 'log(x)/log(10)'); } catch (e) { }
 
-            blockMobileNativeKeyboard();
+            suppressMobileSoftwareKeyboard();
 
             const savedTheme = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
             applyTheme(savedTheme);
+
+            renderStaticKaTeX();
 
             if (!mathField.getValue()) {
                 mathField.setValue('a \\cdot \\sin(b \\cdot x + c)');
@@ -1561,7 +1777,8 @@
             syncSlidersWithFormula();
 
             setTimeout(() => {
-                blockMobileNativeKeyboard();
+                suppressMobileSoftwareKeyboard();
+                renderStaticKaTeX();
                 resizeCanvas();
                 processCalculation('auto');
             }, 120);
