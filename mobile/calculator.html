@@ -2715,13 +2715,13 @@
                     let den = cleanBaseExpression(topFrac.den);
                     let before = s.substring(0, fracIdx);
                     let after = topFrac.rest || '';
-                    s = before + `((${num})/(${den}))` + after;
+                    s = before + `(((${num}))/(((${den}))))` + after;
                 } else {
                     let m = s.match(/\\frac\{([^{}]+)\}\{([^{}]+)\}/);
                     if (m) {
                         let num = cleanBaseExpression(m[1]);
                         let den = cleanBaseExpression(m[2]);
-                        s = s.replace(m[0], `((${num})/(${den}))`);
+                        s = s.replace(m[0], `(((${num}))/(((${den}))))`);
                     } else {
                         break;
                     }
@@ -3811,6 +3811,216 @@
             }
         }
 
+        function solveLinearSystem(matrix, vector) {
+            let n = vector.length;
+            let A = [];
+            for (let i = 0; i < n; i++) {
+                A[i] = matrix[i].slice();
+                A[i].push(vector[i]);
+            }
+
+            for (let i = 0; i < n; i++) {
+                let maxEl = Math.abs(A[i][i]);
+                let maxRow = i;
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(A[k][i]) > maxEl) {
+                        maxEl = Math.abs(A[k][i]);
+                        maxRow = k;
+                    }
+                }
+                if (maxEl < 1e-12) return null;
+
+                let tmp = A[maxRow];
+                A[maxRow] = A[i];
+                A[i] = tmp;
+
+                for (let k = i + 1; k < n; k++) {
+                    let c = -A[k][i] / A[i][i];
+                    for (let j = i; j <= n; j++) {
+                        if (i === j) A[k][j] = 0;
+                        else A[k][j] += c * A[i][j];
+                    }
+                }
+            }
+
+            let x = new Array(n).fill(0);
+            for (let i = n - 1; i >= 0; i--) {
+                let sum = A[i][n];
+                for (let j = i + 1; j < n; j++) {
+                    sum -= A[i][j] * x[j];
+                }
+                x[i] = sum / A[i][i];
+            }
+            return x;
+        }
+
+        function solvePartialFractionsNative(numStr, denStr, v = 'x') {
+            try {
+                let factorStrs = [];
+                let s = stripOuterParentheses(denStr);
+                let curr = '';
+                let depth = 0;
+                for (let i = 0; i < s.length; i++) {
+                    let ch = s[i];
+                    if (ch === '(') depth++;
+                    else if (ch === ')') depth--;
+
+                    if (ch === '*' && depth === 0) {
+                        if (curr.trim()) factorStrs.push(curr.trim());
+                        curr = '';
+                    } else {
+                        curr += ch;
+                    }
+                }
+                if (curr.trim()) factorStrs.push(curr.trim());
+
+                if (factorStrs.length === 0) return null;
+
+                let termsInfo = [];
+                let totalUnknowns = 0;
+
+                for (let fStr of factorStrs) {
+                    let fClean = stripOuterParentheses(fStr);
+                    let powMatch = fClean.match(/^\(?\s*([a-zA-Z0-9\.\*\+\-]+?)\s*\)?\^(\d+)$/);
+                    let baseStr = fClean;
+                    let power = 1;
+                    if (powMatch) {
+                        baseStr = powMatch[1];
+                        power = parseInt(powMatch[2]);
+                    }
+                    baseStr = stripOuterParentheses(baseStr);
+                    let polyBase = getPolyCoeffs(baseStr, v);
+                    if (!polyBase) return null;
+
+                    if (polyBase.deg === 1) {
+                        for (let p = 1; p <= power; p++) {
+                            termsInfo.push({
+                                type: 'linear',
+                                baseStr: baseStr,
+                                power: p,
+                                polyBase: polyBase,
+                                denTeX: p === 1 ? nerdamer(baseStr).toTeX() : `\\left(${nerdamer(baseStr).toTeX()}\\right)^${p}`
+                            });
+                            totalUnknowns += 1;
+                        }
+                    } else if (polyBase.deg === 2) {
+                        for (let p = 1; p <= power; p++) {
+                            termsInfo.push({
+                                type: 'quadratic',
+                                baseStr: baseStr,
+                                power: p,
+                                polyBase: polyBase,
+                                denTeX: p === 1 ? nerdamer(baseStr).toTeX() : `\\left(${nerdamer(baseStr).toTeX()}\\right)^${p}`
+                            });
+                            totalUnknowns += 2;
+                        }
+                    } else {
+                        return null;
+                    }
+                }
+
+                if (totalUnknowns === 0) return null;
+
+                let samplePoints = [];
+                let candidates = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 0.5, -0.5, 1.5, -1.5, 6, -6, 7, -7];
+                for (let pt of candidates) {
+                    try {
+                        let denVal = parseFloat(nerdamer(denStr, { [v]: pt }).evaluate().text('fractions'));
+                        if (Math.abs(denVal) > 1e-6 && !isNaN(denVal) && isFinite(denVal)) {
+                            samplePoints.push(pt);
+                            if (samplePoints.length === totalUnknowns) break;
+                        }
+                    } catch (e) { }
+                }
+
+                if (samplePoints.length < totalUnknowns) return null;
+
+                let matrix = [];
+                let vector = [];
+
+                for (let i = 0; i < totalUnknowns; i++) {
+                    let xVal = samplePoints[i];
+                    let pVal = parseFloat(nerdamer(numStr, { [v]: xVal }).evaluate().text('fractions'));
+                    let qVal = parseFloat(nerdamer(denStr, { [v]: xVal }).evaluate().text('fractions'));
+                    vector.push(pVal);
+
+                    let row = [];
+                    for (let term of termsInfo) {
+                        let baseVal = parseFloat(nerdamer(term.baseStr, { [v]: xVal }).evaluate().text('fractions'));
+                        let termDenVal = Math.pow(baseVal, term.power);
+                        let factorContrib = qVal / termDenVal;
+
+                        if (term.type === 'linear') {
+                            row.push(factorContrib);
+                        } else if (term.type === 'quadratic') {
+                            row.push(factorContrib * xVal);
+                            row.push(factorContrib);
+                        }
+                    }
+                    matrix.push(row);
+                }
+
+                let solution = solveLinearSystem(matrix, vector);
+                if (!solution) return null;
+
+                let solIdx = 0;
+                let decompTerms = [];
+                let decompLatexParts = [];
+                let integratedTerms = [];
+                let stepMathLines = [];
+
+                for (let term of termsInfo) {
+                    if (term.type === 'linear') {
+                        let coeff = solution[solIdx++];
+                        coeff = Math.round(coeff * 1e9) / 1e9;
+                        if (Math.abs(coeff) > 1e-7) {
+                            let coeffTeX = nerdamer(coeff).toTeX();
+                            let termStr = `${coeff}/(${term.baseStr})^${term.power}`;
+                            decompTerms.push(termStr);
+                            let sign = coeff < 0 ? '-' : (decompLatexParts.length > 0 ? '+' : '');
+                            let absCoeffTeX = nerdamer(Math.abs(coeff)).toTeX();
+                            let termLatex = absCoeffTeX === '1' ? `${sign}\\frac{1}{${term.denTeX}}` : `${sign}\\frac{${absCoeffTeX}}{${term.denTeX}}`;
+                            decompLatexParts.push(termLatex);
+
+                            let intRes = integratePartialFractionTerm(termStr, v);
+                            integratedTerms.push(intRes);
+                            stepMathLines.push(`\\int \\left( ${termLatex} \\right) \\,d${v} = ${intRes}`);
+                        }
+                    } else if (term.type === 'quadratic') {
+                        let C = solution[solIdx++];
+                        let D = solution[solIdx++];
+                        C = Math.round(C * 1e9) / 1e9;
+                        D = Math.round(D * 1e9) / 1e9;
+
+                        if (Math.abs(C) > 1e-7 || Math.abs(D) > 1e-7) {
+                            let numPolyStr = C !== 0 ? (D !== 0 ? `${C}*${v} + ${D}` : `${C}*${v}`) : `${D}`;
+                            let termStr = `(${numPolyStr})/(${term.baseStr})^${term.power}`;
+                            decompTerms.push(termStr);
+
+                            let numTeX = nerdamer(numPolyStr).toTeX();
+                            let termLatex = `\\frac{${numTeX}}{${term.denTeX}}`;
+                            decompLatexParts.push(termLatex);
+
+                            let intRes = integratePartialFractionTerm(termStr, v);
+                            integratedTerms.push(intRes);
+                            stepMathLines.push(`\\int \\left( ${termLatex} \\right) \\,d${v} = ${intRes}`);
+                        }
+                    }
+                }
+
+                let decompFullTeX = decompLatexParts.join(' + ').replace(/\+\s*-/g, '- ');
+                let finalCombinedTeX = combineIntegratedTerms(integratedTerms);
+
+                return {
+                    decompFullTeX: decompFullTeX,
+                    stepMathLines: stepMathLines,
+                    finalCombinedTeX: finalCombinedTeX
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+
         function solveRationalQuadraticIntegral(numStr, denStr, v = 'x') {
             try {
                 let polyQ = getPolyCoeffs(denStr, v);
@@ -3842,7 +4052,7 @@
                     });
 
                     let uVar = 'u';
-                    let uEq = `${v}^2`;
+                    let uEq = `${v}` + '^2';
                     let numUStr = A !== 0 ? (B !== 0 ? `${A}*${uVar} + ${B}` : `${A}*${uVar}`) : `${B}`;
                     let denUStr = `${a}*${uVar}^2 + ${b}*${uVar} + ${c}`;
 
@@ -3883,7 +4093,6 @@
                             });
                         }
 
-                        // 对数项（乘以外部 1/2）
                         let logTermLatex = '';
                         if (A !== 0) {
                             let totalDiffCoeff = diffCoeff * 0.5;
@@ -3898,7 +4107,6 @@
                             });
                         }
 
-                        // 反正切项（乘以外部 1/2）
                         let totalAtanCoeffVal = (constRem / (a * k)) * 0.5;
                         let atanCoeffStr = nerdamer(totalAtanCoeffVal).toTeX();
                         let atanArgTeX = `\\frac{${uEq} ${shiftSign}}{${kLatex}}`.replace(/\\frac\{([^}]+)\}\{1\}/, '$1');
@@ -4036,6 +4244,26 @@
                         math: `\\int \\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} \\,d${v}`
                     });
 
+                    // 优先调用原生待定系数法分解引擎
+                    let nativeSol = solvePartialFractionsNative(numStr, denStr, v);
+                    if (nativeSol) {
+                        stepsBreakdown.push({
+                            desc: '采用待定系数法进行部分分式分解 (Partial Fraction Decomposition)：',
+                            math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${nativeSol.decompFullTeX}`
+                        });
+
+                        stepsBreakdown.push({
+                            desc: '对各部分分式项逐项求不定积分：',
+                            math: nativeSol.stepMathLines.join(' \\quad,\\quad ')
+                        });
+
+                        return {
+                            finalResultLatex: nativeSol.finalCombinedTeX,
+                            steps: stepsBreakdown
+                        };
+                    }
+
+                    // 兜底调用 CAS 自带 partfrac
                     let partFrac = nerdamer(`partfrac((${numStr})/(${denStr}), ${v})`);
                     let partFracStr = partFrac.toString();
                     let partFracTeX = partFrac.toTeX();
