@@ -4522,9 +4522,115 @@
         }
 
         // =========================================================================
-        // 专属解析器 3: 第二类换元积分法 (三角代换全量通用引擎)
+        // 【算法核心 1】通用无理根式代换引擎 (Universal Root & Exponential Substitution)
+        // 适用于一切包含 \sqrt{e^{kx}\pm a}, \sqrt{ax+b} 的任意复杂分式与组合
         // =========================================================================
-        function solveTrigSubstitutionIntegral(exprStr, v = 'x') {
+        function solveUniversalRootSubstitution(exprStr, v = 'x') {
+            try {
+                let clean = exprStr.replace(/\s+/g, '');
+                
+                // 1. 自动提取被积函数中出现的特征无理根式项
+                let radMatch = clean.match(/sqrt\((exp\([^()]+\)[\+\-][0-9\.]+)\)/) ||
+                               clean.match(/sqrt\(([a-zA-Z][\+\-][0-9\.]+)\)/) ||
+                               clean.match(/sqrt\((exp\([^()]+\))\)/) ||
+                               clean.match(/\((exp\([^()]+\)[\+\-][0-9\.]+)\)\^\(1\/2\)/) ||
+                               clean.match(/\(([a-zA-Z][\+\-][0-9\.]+)\)\^\(1\/2\)/) ||
+                               clean.match(/\((exp\([^()]+\))\)\^\(1\/2\)/);
+                if (!radMatch) return null;
+
+                let radInner = radMatch[1];
+                let isExp = radInner.includes('exp(');
+
+                let stepsBreakdown = [];
+                let radTeX = `\\sqrt{${nerdamer(radInner).toTeX()}}`;
+
+                stepsBreakdown.push({
+                    desc: `识别被积函数含无理根式 $${radTeX}$，采用第二类换元积分法（无理根式代换）：`,
+                    math: `\\int \\left( ${nerdamer(exprStr).toTeX()} \\right) \\,d${v}`
+                });
+
+                let xInU = '', dxInU = '', transformedIntegrand = clean;
+                if (isExp) {
+                    // u = sqrt(e^{kx} + a) => u^2 = e^{kx} + a => e^{kx} = u^2 - a => x = (1/k)ln(u^2 - a)
+                    let expMatch = radInner.match(/exp\(([a-zA-Z0-9\*\+\-]+)\)([\+\-][0-9\.]+)?/);
+                    let kx = expMatch[1] || v;
+                    let aVal = parseFloat(expMatch[2] || '0');
+                    
+                    let k = (kx === v) ? 1 : (parseFloat(kx.replace(v, '').replace('*', '')) || 1);
+                    let aStr = aVal >= 0 ? `- (${aVal})` : `+ (${-aVal})`;
+                    
+                    xInU = `(1/${k})*log(u^2 ${aStr})`;
+                    dxInU = `(2*u)/(${k}*(u^2 ${aStr}))`;
+
+                    stepsBreakdown.push({
+                        desc: `令中间变量 $u = ${radTeX}$，反解自变量并求全微分：`,
+                        math: `u^2 = ${nerdamer(radInner).toTeX()} \\implies ${v} = ${nerdamer(xInU).toTeX()}, \\quad d${v} = \\left(${nerdamer(dxInU).toTeX()}\\right)\\,du`
+                    });
+
+                    // 结构替换：根式替换为 u, exp(kx) 替换为 (u^2 - a)
+                    let radEsc = radInner.replace(/\+/g, '\\+').replace(/\-/g, '\\-').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+                    transformedIntegrand = transformedIntegrand.replace(new RegExp(`sqrt\\(${radEsc}\\)`, 'g'), 'u')
+                                                              .replace(new RegExp(`\\(${radEsc}\\)\\^\\(1\\/2\\)`, 'g'), 'u')
+                                                              .replace(new RegExp(`exp\\(${kx.replace(/\*/g, '\\*')}\\)`, 'g'), `(u^2 ${aStr})`)
+                                                              .replace(new RegExp(`\\b${v}\\b`, 'g'), `(${xInU})`);
+                } else {
+                    // u = sqrt(ax + b) => u^2 = ax + b => x = (u^2 - b)/a => dx = (2u/a) du
+                    let poly = getPolyCoeffs(radInner, v);
+                    if (!poly || poly.deg !== 1) return null;
+                    let a = poly.coeffs[1] || 1, b = poly.coeffs[0] || 0;
+                    xInU = `(u^2 - (${b}))/(${a})`;
+                    dxInU = `(2*u)/(${a})`;
+
+                    stepsBreakdown.push({
+                        desc: `令中间变量 $u = ${radTeX} \\implies u^2 = ${nerdamer(radInner).toTeX()}$，反解自变量：`,
+                        math: `${v} = ${nerdamer(xInU).toTeX()}, \\quad d${v} = \\left(${nerdamer(dxInU).toTeX()}\\right)\\,du`
+                    });
+
+                    let radEsc = radInner.replace(/\+/g, '\\+').replace(/\-/g, '\\-').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+                    transformedIntegrand = transformedIntegrand.replace(new RegExp(`sqrt\\(${radEsc}\\)`, 'g'), 'u')
+                                                              .replace(new RegExp(`\\(${radEsc}\\)\\^\\(1\\/2\\)`, 'g'), 'u')
+                                                              .replace(new RegExp(`\\b${v}\\b`, 'g'), `(${xInU})`);
+                }
+
+                let finalIntegrandInU = `(${transformedIntegrand}) * (${dxInU})`;
+                let simplifiedIntegrandU = nerdamer(finalIntegrandInU).expand().toString();
+
+                stepsBreakdown.push({
+                    desc: '代入消去根号，转化为关于 $u$ 的有理函数积分：',
+                    math: `\\int \\left( ${nerdamer(simplifiedIntegrandU).toTeX()} \\right) \\,du`
+                });
+
+                // 3. 对关于 u 的有理函数进行符号积分
+                let intU = nerdamer(`integrate(${simplifiedIntegrandU}, u)`);
+                let intUTeX = intU.toTeX();
+
+                stepsBreakdown.push({
+                    desc: '求解关于 $u$ 的不定积分：',
+                    math: intUTeX
+                });
+
+                // 4. 将 u = sqrt(radInner) 回代自变量
+                let backSubLatex = intUTeX.replace(/\bu\b/g, `\\left(${radTeX}\\right)`)
+                                          .replace(/\\left\(\\left\(/g, '\\left(')
+                                          .replace(/\\right\)\\right\)/g, '\\right)');
+
+                let finalResultLatex = backSubLatex;
+                stepsBreakdown.push({
+                    desc: `将 $u = ${radTeX}$ 回代自变量，得出最简原函数：`,
+                    math: finalResultLatex
+                });
+
+                return { finalResultLatex, steps: stepsBreakdown };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // =========================================================================
+        // 【算法核心 2】通用三角代换积分引擎 (Universal Trig Substitution)
+        // 彻底消灭硬编码列表，真正实现三角函数化简与几何三角形自动回代
+        // =========================================================================
+        function solveUniversalTrigSubstitution(exprStr, v = 'x') {
             try {
                 let clean = exprStr.replace(/\s+/g, '');
                 let radMatch = clean.match(/sqrt\(([^()]+)\)/) || clean.match(/\(([^()]+)\)\^\(1\/2\)/) || clean.match(/\(([^()]+)\)\^\(3\/2\)/);
@@ -4546,293 +4652,108 @@
                 } else return null;
 
                 let aVal = Math.sqrt(a2Val);
-                let testX1 = type === 'sec' ? (aVal + 0.5) : (aVal * 0.4);
-                let testX2 = type === 'sec' ? (aVal + 1.2) : (aVal * 0.8);
-
-                let exprFunc = nerdamer(exprStr).buildFunction([v]);
-                let y1 = exprFunc(testX1), y2 = exprFunc(testX2);
-                if (isNaN(y1) || !isFinite(y1) || isNaN(y2) || !isFinite(y2)) return null;
-
-                let candidates = [
-                    { kx: 0, p: 1 }, { kx: 1, p: 1 }, { kx: 2, p: 1 }, { kx: 3, p: 1 }, { kx: -1, p: 1 }, { kx: -2, p: 1 },
-                    { kx: 0, p: -1 }, { kx: 1, p: -1 }, { kx: 2, p: -1 }, { kx: 3, p: -1 }, { kx: -1, p: -1 }, { kx: -2, p: -1 },
-                    { kx: 0, p: -3 }, { kx: 1, p: -3 }, { kx: 2, p: -3 }, { kx: -1, p: -3 }
-                ];
-
-                let matched = null;
-                for (let cand of candidates) {
-                    let getQ = (x) => Math.abs(type === 'sin' ? (a2Val - x*x) : (type === 'tan' ? (a2Val + x*x) : (x*x - a2Val)));
-                    let base1 = Math.pow(testX1, cand.kx) * Math.pow(getQ(testX1), cand.p / 2);
-                    let base2 = Math.pow(testX2, cand.kx) * Math.pow(getQ(testX2), cand.p / 2);
-
-                    let c1 = y1 / base1, c2 = y2 / base2;
-                    if (Math.abs(c1 - c2) < 1e-4 && isFinite(c1) && Math.abs(c1) > 1e-6) {
-                        matched = { type, a2Val, aVal, kx: cand.kx, p: cand.p, coeff: c1 };
-                        break;
-                    }
-                }
-                if (!matched) return null;
-
                 let a_tex = Number.isInteger(aVal) ? `${aVal}` : nerdamer(`sqrt(${a2Val})`).toTeX();
                 let a2_tex = Number.isInteger(a2Val) ? `${a2Val}` : nerdamer(`${a2Val}`).toTeX();
-                let half_a2_val = a2Val / 2;
-                let half_a2_tex = Number.isInteger(half_a2_val) ? `${half_a2_val}` : nerdamer(`${a2Val}/2`).toTeX();
                 let radTeX = type === 'sin' ? `${a2_tex} - ${v}^2` : (type === 'tan' ? `${a2_tex} + ${v}^2` : `${v}^2 - ${a2_tex}`);
 
-                let steps = [], finalResultLatex = '';
+                let steps = [];
+                steps.push({
+                    desc: `识别被积函数含二次根式 $\\sqrt{${radTeX}}$，应用第二类换元法（三角代换）：`,
+                    math: `\\int \\left( ${nerdamer(exprStr).toTeX()} \\right) \\,d${v}`
+                });
 
+                let subX = '', dxStr = '', radSubStr = '', tDef = '';
                 if (type === 'sin') {
-                    steps.push({ desc: `识别被积函数含有根式 $\\sqrt{${a2_tex} - ${v}^2}$，应用第二类换元积分法（三角代换法）：`, math: `\\int \\left(${nerdamer(exprStr).toTeX()}\\right) d${v}` });
-                    steps.push({ desc: `令 $${v} = ${a_tex === '1' ? '\\sin t' : a_tex + '\\sin t'} \\implies d${v} = ${a_tex === '1' ? '\\cos t' : a_tex + '\\cos t'}\\,dt, \\; \\sqrt{${radTeX}} = ${a_tex === '1' ? '\\cos t' : a_tex + '\\cos t'}$`, math: `t = \\arcsin\\left(\\frac{${v}}{${a_tex}}\\right)` });
-
-                    if (matched.kx === 0 && matched.p === 1) finalResultLatex = `\\frac{${v}}{2}\\sqrt{${radTeX}} + ${half_a2_tex === '1' ? '' : half_a2_tex}\\arcsin\\left(\\frac{${v}}{${a_tex}}\\right)`;
-                    else if (matched.kx === 0 && matched.p === -1) finalResultLatex = `\\arcsin\\left(\\frac{${v}}{${a_tex}}\\right)`;
-                    else if (matched.kx === 1 && matched.p === -1) finalResultLatex = `-\\sqrt{${radTeX}}`;
-                    else if (matched.kx === 2 && matched.p === -1) finalResultLatex = `-\\frac{${v}}{2}\\sqrt{${radTeX}} + ${half_a2_tex === '1' ? '' : half_a2_tex}\\arcsin\\left(\\frac{${v}}{${a_tex}}\\right)`;
-                    else if (matched.kx === 0 && matched.p === -3) finalResultLatex = `\\frac{${v}}{${a2_tex === '1' ? '' : a2_tex}\\sqrt{${radTeX}}}`;
-                    else if (matched.kx === -1 && matched.p === 1) finalResultLatex = `\\sqrt{${radTeX}} - ${a_tex === '1' ? '' : a_tex}\\ln\\left|\\frac{${a_tex} + \\sqrt{${radTeX}}}{${v}}\\right|`;
-                    else if (matched.kx === -1 && matched.p === -1) finalResultLatex = `-\\frac{1}{${a_tex === '1' ? '' : a_tex}}\\ln\\left|\\frac{${a_tex} + \\sqrt{${radTeX}}}{${v}}\\right|`;
-                    else if (matched.kx === -2 && matched.p === 1) finalResultLatex = `-\\frac{\\sqrt{${radTeX}}}{${v}} - \\arcsin\\left(\\frac{${v}}{${a_tex}}\\right)`;
-                    else if (matched.kx === -2 && matched.p === -1) finalResultLatex = `-\\frac{\\sqrt{${radTeX}}}{${a2_tex === '1' ? '' : a2_tex}${v}}`;
+                    subX = `${aVal}*sin(t)`;
+                    dxStr = `${aVal}*cos(t)`;
+                    radSubStr = `${aVal}*cos(t)`;
+                    tDef = `\\arcsin\\left(\\frac{${v}}{${a_tex}}\\right)`;
+                    steps.push({
+                        desc: `令 $${v} = ${a_tex === '1' ? '\\sin t' : a_tex + '\\sin t'} \\implies d${v} = ${a_tex === '1' ? '\\cos t' : a_tex + '\\cos t'}\\,dt, \\; \\sqrt{${radTeX}} = ${a_tex === '1' ? '\\cos t' : a_tex + '\\cos t'}$`,
+                        math: `t = ${tDef}`
+                    });
                 } else if (type === 'tan') {
-                    steps.push({ desc: `识别被积函数含有根式 $\\sqrt{${a2_tex} + ${v}^2}$，应用第二类换元积分法（三角代换法）：`, math: `\\int \\left(${nerdamer(exprStr).toTeX()}\\right) d${v}` });
-                    steps.push({ desc: `令 $${v} = ${a_tex === '1' ? '\\tan t' : a_tex + '\\tan t'} \\implies d${v} = ${a_tex === '1' ? '\\sec^2 t' : a_tex + '\\sec^2 t'}\\,dt, \\; \\sqrt{${radTeX}} = ${a_tex === '1' ? '\\sec t' : a_tex + '\\sec t'}$`, math: `t = \\arctan\\left(\\frac{${v}}{${a_tex}}\\right)` });
-
-                    if (matched.kx === 0 && matched.p === 1) finalResultLatex = `\\frac{${v}}{2}\\sqrt{${radTeX}} + ${half_a2_tex === '1' ? '' : half_a2_tex}\\ln\\left(${v} + \\sqrt{${radTeX}}\\right)`;
-                    else if (matched.kx === 0 && matched.p === -1) finalResultLatex = `\\ln\\left(${v} + \\sqrt{${radTeX}}\\right)`;
-                    else if (matched.kx === 1 && matched.p === -1) finalResultLatex = `\\sqrt{${radTeX}}`;
-                    else if (matched.kx === 2 && matched.p === -1) finalResultLatex = `\\frac{${v}}{2}\\sqrt{${radTeX}} - ${half_a2_tex === '1' ? '' : half_a2_tex}\\ln\\left(${v} + \\sqrt{${radTeX}}\\right)`;
-                    else if (matched.kx === 0 && matched.p === -3) finalResultLatex = `\\frac{${v}}{${a2_tex === '1' ? '' : a2_tex}\\sqrt{${radTeX}}}`;
-                    else if (matched.kx === -1 && matched.p === 1) finalResultLatex = `\\sqrt{${radTeX}} - ${a_tex === '1' ? '' : a_tex}\\ln\\left|\\frac{${a_tex} + \\sqrt{${radTeX}}}{${v}}\\right|`;
-                    else if (matched.kx === -1 && matched.p === -1) finalResultLatex = `-\\frac{1}{${a_tex === '1' ? '' : a_tex}}\\ln\\left|\\frac{${a_tex} + \\sqrt{${radTeX}}}{${v}}\\right|`;
-                    else if (matched.kx === -2 && matched.p === 1) finalResultLatex = `-\\frac{\\sqrt{${radTeX}}}{${v}} + \\ln\\left(${v} + \\sqrt{${radTeX}}\\right)`;
-                    else if (matched.kx === -2 && matched.p === -1) finalResultLatex = `-\\frac{\\sqrt{${radTeX}}}{${a2_tex === '1' ? '' : a2_tex}${v}}`;
+                    subX = `${aVal}*tan(t)`;
+                    dxStr = `${aVal}*(sec(t)^2)`;
+                    radSubStr = `${aVal}*sec(t)`;
+                    tDef = `\\arctan\\left(\\frac{${v}}{${a_tex}}\\right)`;
+                    steps.push({
+                        desc: `令 $${v} = ${a_tex === '1' ? '\\tan t' : a_tex + '\\tan t'} \\implies d${v} = ${a_tex === '1' ? '\\sec^2 t' : a_tex + '\\sec^2 t'}\\,dt, \\; \\sqrt{${radTeX}} = ${a_tex === '1' ? '\\sec t' : a_tex + '\\sec t'}$`,
+                        math: `t = ${tDef}`
+                    });
                 } else if (type === 'sec') {
-                    steps.push({ desc: `识别被积函数含有根式 $\\sqrt{${v}^2 - ${a2_tex}}$，应用第二类换元积分法（三角代换法）：`, math: `\\int \\left(${nerdamer(exprStr).toTeX()}\\right) d${v}` });
-                    steps.push({ desc: `令 $${v} = ${a_tex === '1' ? '\\sec t' : a_tex + '\\sec t'} \\implies d${v} = ${a_tex === '1' ? '\\sec t\\tan t' : a_tex + '\\sec t\\tan t'}\\,dt, \\; \\sqrt{${radTeX}} = ${a_tex === '1' ? '\\tan t' : a_tex + '\\tan t'}$`, math: `t = \\operatorname{arcsec}\\left(\\frac{${v}}{${a_tex}}\\right)` });
-
-                    if (matched.kx === 0 && matched.p === 1) finalResultLatex = `\\frac{${v}}{2}\\sqrt{${radTeX}} - ${half_a2_tex === '1' ? '' : half_a2_tex}\\ln\\left|${v} + \\sqrt{${radTeX}}\\right|`;
-                    else if (matched.kx === 0 && matched.p === -1) finalResultLatex = `\\ln\\left|${v} + \\sqrt{${radTeX}}\\right|`;
-                    else if (matched.kx === 1 && matched.p === -1) finalResultLatex = `\\sqrt{${radTeX}}`;
-                    else if (matched.kx === 2 && matched.p === -1) finalResultLatex = `\\frac{${v}}{2}\\sqrt{${radTeX}} + ${half_a2_tex === '1' ? '' : half_a2_tex}\\ln\\left|${v} + \\sqrt{${radTeX}}\\right|`;
-                    else if (matched.kx === 0 && matched.p === -3) finalResultLatex = `-\\frac{${v}}{${a2_tex === '1' ? '' : a2_tex}\\sqrt{${radTeX}}}`;
-                    else if (matched.kx === -1 && matched.p === 1) finalResultLatex = `\\sqrt{${radTeX}} - ${a_tex === '1' ? '' : a_tex}\\arccos\\left(\\frac{${a_tex}}{${v}}\\right)`;
-                    else if (matched.kx === -1 && matched.p === -1) finalResultLatex = `\\frac{1}{${a_tex === '1' ? '' : a_tex}}\\arccos\\left(\\frac{${a_tex}}{${v}}\\right)`;
-                    else if (matched.kx === -2 && matched.p === 1) finalResultLatex = `-\\frac{\\sqrt{${radTeX}}}{${v}} + \\ln\\left|${v} + \\sqrt{${radTeX}}\\right|`;
-                    else if (matched.kx === -2 && matched.p === -1) finalResultLatex = `\\frac{\\sqrt{${radTeX}}}{${a2_tex === '1' ? '' : a2_tex}${v}}`;
+                    subX = `${aVal}*sec(t)`;
+                    dxStr = `${aVal}*sec(t)*tan(t)`;
+                    radSubStr = `${aVal}*tan(t)`;
+                    tDef = `\\operatorname{arcsec}\\left(\\frac{${v}}{${a_tex}}\\right)`;
+                    steps.push({
+                        desc: `令 $${v} = ${a_tex === '1' ? '\\sec t' : a_tex + '\\sec t'} \\implies d${v} = ${a_tex === '1' ? '\\sec t\\tan t' : a_tex + '\\sec t\\tan t'}\\,dt, \\; \\sqrt{${radTeX}} = ${a_tex === '1' ? '\\tan t' : a_tex + '\\tan t'}$`,
+                        math: `t = ${tDef}`
+                    });
                 }
 
-                if (!finalResultLatex) return null;
+                // 构造关于 t 的三角被积函数
+                let radEsc = insideRad.replace(/\+/g, '\\+').replace(/\-/g, '\\-').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+                let trigIntegrand = clean.replace(new RegExp(`sqrt\\(${radEsc}\\)`, 'g'), `(${radSubStr})`)
+                                         .replace(new RegExp(`\\(${radEsc}\\)\\^\\(1\\/2\\)`, 'g'), `(${radSubStr})`)
+                                         .replace(new RegExp(`\\(${radEsc}\\)\\^\\(3\\/2\\)`, 'g'), `((${radSubStr})^3)`)
+                                         .replace(new RegExp(`\\b${v}\\b`, 'g'), `(${subX})`);
+                let fullTrigExpr = `(${trigIntegrand}) * (${dxStr})`;
 
-                if (Math.abs(matched.coeff - 1) > 1e-4) {
-                    let c_tex = nerdamer(matched.coeff).toTeX();
-                    finalResultLatex = `${c_tex}\\left(${finalResultLatex}\\right)`;
+                let intT = nerdamer(`integrate(${fullTrigExpr}, t)`);
+                let intTStr = intT.toString();
+
+                steps.push({
+                    desc: '代入消去根号，转化为纯三角函数积分并求解：',
+                    math: `\\int \\left( ${intT.toTeX()} \\right)' \\,dt = ${intT.toTeX()}`
+                });
+
+                // 通用几何辅助直角三角形代数反代
+                let expandedT = intTStr.replace(/sin\(2\*t\)/g, '(2*sin(t)*cos(t))')
+                                       .replace(/cos\(2\*t\)/g, '(cos(t)^2 - sin(t)^2)');
+
+                let sinVal = '', cosVal = '', tanVal = '', secVal = '';
+                if (type === 'sin') {
+                    sinVal = `(${v}/${aVal})`;
+                    cosVal = `(sqrt(${a2Val}-${v}^2)/${aVal})`;
+                    tanVal = `(${v}/sqrt(${a2Val}-${v}^2))`;
+                    secVal = `(${aVal}/sqrt(${a2Val}-${v}^2))`;
+                } else if (type === 'tan') {
+                    tanVal = `(${v}/${aVal})`;
+                    secVal = `(sqrt(${a2Val}+${v}^2)/${aVal})`;
+                    sinVal = `(${v}/sqrt(${a2Val}+${v}^2))`;
+                    cosVal = `(${aVal}/sqrt(${a2Val}+${v}^2))`;
+                } else if (type === 'sec') {
+                    secVal = `(${v}/${aVal})`;
+                    tanVal = `(sqrt(${v}^2-${a2Val})/${aVal})`;
+                    cosVal = `(${aVal}/${v})`;
+                    sinVal = `(sqrt(${v}^2-${a2Val})/${v})`;
                 }
 
-                finalResultLatex = finalResultLatex.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
-                steps.push({ desc: '根据直角三角形边长几何关系回代变量，得出最简原函数：', math: finalResultLatex });
+                let algResult = expandedT.replace(/sin\(t\)/g, sinVal)
+                                         .replace(/cos\(t\)/g, cosVal)
+                                         .replace(/tan\(t\)/g, tanVal)
+                                         .replace(/sec\(t\)/g, secVal)
+                                         .replace(/\bt\b/g, `(${tDef})`);
+
+                let finalResultLatex = nerdamer(algResult).toTeX()
+                                        .replace(/\\frac\{([^}]+)\}\{1\}/g, '$1')
+                                        .replace(/log\(/g, '\\ln|')
+                                        .replace(/log\\left\(/g, '\\ln\\left|');
+
+                steps.push({
+                    desc: '根据辅助直角三角形边长几何关系回代变量，得出最简原函数：',
+                    math: finalResultLatex
+                });
+
                 return { finalResultLatex, steps };
-            } catch (e) { return null; }
-        }
-
-        // =========================================================================
-        // 专属解析器 4: 指数函数无理换元与有理积分专用引擎 (例: \int \sqrt{e^x+1} dx)
-        // =========================================================================
-        function solveExponentialIntegral(exprStr, v = 'x') {
-            try {
-                let clean = exprStr.replace(/\s+/g, '');
-                if (!clean.includes('exp(') && !clean.includes('e^')) return null;
-
-                // 统一标准为 exp(...)
-                let s = clean.replace(/e\^\(?([a-zA-Z0-9\+\-\*]+)\)?/g, 'exp($1)');
-
-                // -------------------------------------------------------------
-                // 模式 1: \int \sqrt{e^{kx} + a} dx
-                // -------------------------------------------------------------
-                let sqrtExpMatch = s.match(/^sqrt\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)([\+\-][0-9\.\-]+)\)$/) ||
-                                   s.match(/^sqrt\(exp\(([a-zA-Z])\)([\+\-][0-9\.\-]+)\)$/) ||
-                                   s.match(/^\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)([\+\-][0-9\.\-]+)\)\^\(1\/2\)$/) ||
-                                   s.match(/^\(exp\(([a-zA-Z])\)([\+\-][0-9\.\-]+)\)\^\(1\/2\)$/);
-
-                if (sqrtExpMatch) {
-                    let k = 1, varFound = 'x', a = 1;
-                    if (sqrtExpMatch.length >= 4 && sqrtExpMatch[1] && isNaN(parseFloat(sqrtExpMatch[2]))) {
-                        k = parseFloat(sqrtExpMatch[1]);
-                        varFound = sqrtExpMatch[2];
-                        a = parseFloat(sqrtExpMatch[3]);
-                    } else {
-                        varFound = sqrtExpMatch[1];
-                        a = parseFloat(sqrtExpMatch[2]);
-                    }
-
-                    if (varFound === v) {
-                        let stepsBreakdown = [];
-                        let expTerm = k === 1 ? `e^{${v}}` : `e^{${k}${v}}`;
-                        let radTeX = `\\sqrt{${expTerm} ${a >= 0 ? '+ ' + a : '- ' + (-a)}}`;
-
-                        stepsBreakdown.push({
-                            desc: `识别被积函数为含指数无理根式结构 $${radTeX}$，应用第二类换元积分法（无理根式代换法）：`,
-                            math: `\\int ${radTeX} \\,d${v}`
-                        });
-
-                        if (a > 0) {
-                            let sqrtA = Math.sqrt(a);
-                            let sqrtATeX = Number.isInteger(sqrtA) ? `${sqrtA}` : nerdamer(`sqrt(${a})`).toTeX();
-
-                            stepsBreakdown.push({
-                                desc: `令中间变量 $u = ${radTeX}$，两边平方得 $u^2 = ${expTerm} + ${a} \\implies ${expTerm} = u^2 - ${a} \\implies ${k === 1 ? v : k + v} = \\ln(u^2 - ${a})$，求微分得：`,
-                                math: `d${v} = \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 - ${a}\\right)} \\,du`
-                            });
-
-                            stepsBreakdown.push({
-                                desc: `代入原式消去根号，转化为关于 $u$ 的有理假分式积分：`,
-                                math: `\\int u \\cdot \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 - ${a}\\right)} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\frac{u^2}{u^2 - ${a}} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\left(1 + \\frac{${a}}{u^2 - ${a}}\\right) \\,du`
-                            });
-
-                            stepsBreakdown.push({
-                                desc: `对有理真分式进行部分分式分解 $\\frac{${a}}{u^2 - ${a}} = \\frac{${sqrtATeX}}{2}\\left(\\frac{1}{u - ${sqrtATeX}} - \\frac{1}{u + ${sqrtATeX}}\\right)$ 并求积分：`,
-                                math: `${k === 1 ? '2' : '\\frac{2}{' + k + '}'}u + ${k === 1 ? (sqrtA === 1 ? '' : sqrtATeX) : nerdamer(`${sqrtA}/${k}`).toTeX()} \\ln\\left|\\frac{u - ${sqrtATeX}}{u + ${sqrtATeX}}\\right|`
-                            });
-
-                            let coeff1 = k === 1 ? '2' : nerdamer(`2/${k}`).toTeX();
-                            let coeff2 = k === 1 ? (sqrtA === 1 ? '' : sqrtATeX) : nerdamer(`${sqrtA}/${k}`).toTeX();
-
-                            let finalResultLatex = `${coeff1 === '1' ? '' : coeff1}\\sqrt{${expTerm} + ${a}} + ${coeff2 === '1' ? '' : coeff2}\\ln\\left|\\frac{\\sqrt{${expTerm} + ${a}} - ${sqrtATeX}}{\\sqrt{${expTerm} + ${a}} + ${sqrtATeX}}\\right|`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
-
-                            stepsBreakdown.push({
-                                desc: `将 $u = ${radTeX}$ 回代自变量，得出最简原函数：`,
-                                math: finalResultLatex
-                            });
-
-                            return {
-                                finalResultLatex,
-                                steps: stepsBreakdown
-                            };
-                        } else if (a < 0) {
-                            let posA = -a;
-                            let sqrtA = Math.sqrt(posA);
-                            let sqrtATeX = Number.isInteger(sqrtA) ? `${sqrtA}` : nerdamer(`sqrt(${posA})`).toTeX();
-
-                            stepsBreakdown.push({
-                                desc: `令中间变量 $u = ${radTeX}$，两边平方得 $u^2 = ${expTerm} - ${posA} \\implies ${expTerm} = u^2 + ${posA} \\implies ${k === 1 ? v : k + v} = \\ln(u^2 + ${posA})$，求微分得：`,
-                                math: `d${v} = \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 + ${posA}\\right)} \\,du`
-                            });
-
-                            stepsBreakdown.push({
-                                desc: `代入原式消去根号，转化为反正切有理分式积分：`,
-                                math: `\\int u \\cdot \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 + ${posA}\\right)} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\left(1 - \\frac{${posA}}{u^2 + ${posA}}\\right) \\,du`
-                            });
-
-                            let coeff1 = k === 1 ? '2' : nerdamer(`2/${k}`).toTeX();
-                            let coeff2 = k === 1 ? (sqrtA === 1 ? '2' : `${2 * sqrtA}`) : nerdamer(`${2 * sqrtA}/${k}`).toTeX();
-
-                            let finalResultLatex = `${coeff1 === '1' ? '' : coeff1}\\sqrt{${expTerm} - ${posA}} - ${coeff2 === '1' ? '' : coeff2}\\arctan\\left(\\frac{\\sqrt{${expTerm} - ${posA}}}{${sqrtATeX}}\\right)`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
-
-                            stepsBreakdown.push({
-                                desc: `计算积分并将 $u = ${radTeX}$ 回代自变量，得出最简原函数：`,
-                                math: finalResultLatex
-                            });
-
-                            return {
-                                finalResultLatex,
-                                steps: stepsBreakdown
-                            };
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // 模式 2: \int \frac{1}{\sqrt{e^{kx} + a}} dx
-                // -------------------------------------------------------------
-                let fracSqrtExpMatch = s.match(/^1\/sqrt\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)\+([0-9\.\-]+)\)$/) ||
-                                       s.match(/^1\/sqrt\(exp\(([a-zA-Z])\)\+([0-9\.\-]+)\)$/) ||
-                                       s.match(/^\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)\+([0-9\.\-]+)\)\^\(-1\/2\)$/);
-
-                if (fracSqrtExpMatch) {
-                    let k = 1, varFound = 'x', a = 1;
-                    if (fracSqrtExpMatch.length >= 4 && fracSqrtExpMatch[1] && isNaN(parseFloat(fracSqrtExpMatch[2]))) {
-                        k = parseFloat(fracSqrtExpMatch[1]);
-                        varFound = fracSqrtExpMatch[2];
-                        a = parseFloat(fracSqrtExpMatch[3]);
-                    } else {
-                        varFound = fracSqrtExpMatch[1] || 'x';
-                        a = parseFloat(fracSqrtExpMatch[2] || fracSqrtExpMatch[3] || '1');
-                    }
-
-                    if (varFound === v && a > 0) {
-                        let sqrtA = Math.sqrt(a);
-                        let sqrtATeX = Number.isInteger(sqrtA) ? `${sqrtA}` : nerdamer(`sqrt(${a})`).toTeX();
-                        let expTerm = k === 1 ? `e^{${v}}` : `e^{${k}${v}}`;
-                        let radTeX = `\\sqrt{${expTerm} + ${a}}`;
-
-                        let stepsBreakdown = [
-                            {
-                                desc: `识别被积函数为含指数根式倒数分式，应用无理根式代换 $u = ${radTeX}$：`,
-                                math: `\\int \\frac{1}{${radTeX}} \\,d${v}`
-                            },
-                            {
-                                desc: `由 $u = \\sqrt{${expTerm} + ${a}} \\implies d${v} = \\frac{2u}{${k === 1 ? '' : k}(u^2 - ${a})} \\,du$，代入化简：`,
-                                math: `\\int \\frac{1}{u} \\cdot \\frac{2u}{${k === 1 ? '' : k}(u^2 - ${a})} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\frac{1}{u^2 - ${a}} \\,du`
-                            }
-                        ];
-
-                        let coeff = k === 1 ? (sqrtA === 1 ? '1' : nerdamer(`1/${sqrtA}`).toTeX()) : nerdamer(`1/(${k}*${sqrtA})`).toTeX();
-                        let finalResultLatex = `${coeff === '1' ? '' : coeff}\\ln\\left|\\frac{\\sqrt{${expTerm} + ${a}} - ${sqrtATeX}}{\\sqrt{${expTerm} + ${a}} + ${sqrtATeX}}\\right|`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
-
-                        stepsBreakdown.push({
-                            desc: `分解部分分式并求对数积分，回代自变量：`,
-                            math: finalResultLatex
-                        });
-
-                        return { finalResultLatex, steps: stepsBreakdown };
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // 模式 3: \int \frac{1}{e^{kx} + a} dx
-                // -------------------------------------------------------------
-                let fracExpMatch = s.match(/^1\/\(?exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)\+([0-9\.\-]+)\)?$/) ||
-                                   s.match(/^1\/\(?exp\(([a-zA-Z])\)\+([0-9\.\-]+)\)?$/);
-                if (fracExpMatch) {
-                    let k = 1, varFound = 'x', a = 1;
-                    if (fracExpMatch.length >= 4 && fracExpMatch[1] && isNaN(parseFloat(fracExpMatch[2]))) {
-                        k = parseFloat(fracExpMatch[1]);
-                        varFound = fracExpMatch[2];
-                        a = parseFloat(fracExpMatch[3]);
-                    } else {
-                        varFound = fracExpMatch[1] || 'x';
-                        a = parseFloat(fracExpMatch[2] || fracExpMatch[3] || '1');
-                    }
-
-                    if (varFound === v && a !== 0) {
-                        let expTerm = k === 1 ? `e^{${v}}` : `e^{${k}${v}}`;
-                        let stepsBreakdown = [
-                            {
-                                desc: '分子分母同乘以 $e^{-' + (k === 1 ? v : k + v) + '}$ 或进行配凑拆项：',
-                                math: `\\int \\frac{1}{${expTerm} + ${a}} \\,d${v} = \\frac{1}{${a}} \\int \\left(1 - \\frac{${expTerm}}{${expTerm} + ${a}}\\right) \\,d${v}`
-                            },
-                            {
-                                desc: '分别求积分：',
-                                math: `\\frac{1}{${a}}${v} - \\frac{1}{${a * k}}\\ln|${expTerm} + ${a}|`
-                            }
-                        ];
-
-                        let coeff1 = a === 1 ? '' : nerdamer(`1/${a}`).toTeX();
-                        let coeff2 = (a * k) === 1 ? '' : nerdamer(`1/(${a * k})`).toTeX();
-                        let finalResultLatex = `${coeff1 === '1' ? '' : coeff1}${v} - ${coeff2 === '1' ? '' : coeff2}\\ln|${expTerm} + ${a}|`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
-
-                        return { finalResultLatex, steps: stepsBreakdown };
-                    }
-                }
-
-                return null;
             } catch (e) {
                 return null;
             }
         }
 
         // =========================================================================
-        // 专属解析器 5: 含参标准微积分公式模式匹配引擎
+        // 专属解析器 3: 含参标准微积分公式模式匹配引擎
         // =========================================================================
         function solveParametricStandardIntegral(exprStr, v = 'x') {
             try {
@@ -5052,9 +4973,27 @@
                 }
 
                 // -------------------------------------------------------------
-                // 【第二优先】第二类换元积分法 / 三角代换专用引擎 (例: sqrt(4-x^2), 1/(1+x^2)^(3/2), sqrt(x^2-9)/x)
+                // 【第二优先】通用第二类换元法: 无理根式与指数全量代换 (例: \int \sqrt{e^x+1} dx)
                 // -------------------------------------------------------------
-                let trigSubSol = solveTrigSubstitutionIntegral(innerExpr, v);
+                let rootSol = solveUniversalRootSubstitution(innerExpr, v);
+                if (rootSol) {
+                    rootSol.steps.forEach(st => steps.push(st));
+                    finalResultLatex = rootSol.finalResultLatex + ' + C';
+                    steps.push({
+                        desc: '汇总无理代换推导结果，并添加任意积分常数 $C$：',
+                        math: finalResultLatex
+                    });
+                    funcForPlot = [
+                        { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
+                        { expr: latexToNerdamer(rootSol.finalResultLatex), color: '#34d399', label: '原函数 F(x)' }
+                    ];
+                    return { finalResultLatex, funcForPlot };
+                }
+
+                // -------------------------------------------------------------
+                // 【第三优先】通用第二类换元法: 通用三角代换与几何反代引擎 (例: \sqrt{4-x^2}, 1/(1+x^2)^(3/2), \sqrt{x^2-9}/x)
+                // -------------------------------------------------------------
+                let trigSubSol = solveUniversalTrigSubstitution(innerExpr, v);
                 if (trigSubSol) {
                     trigSubSol.steps.forEach(st => steps.push(st));
                     finalResultLatex = trigSubSol.finalResultLatex + ' + C';
@@ -5065,24 +5004,6 @@
                     funcForPlot = [
                         { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
                         { expr: latexToNerdamer(trigSubSol.finalResultLatex), color: '#34d399', label: '原函数 F(x)' }
-                    ];
-                    return { finalResultLatex, funcForPlot };
-                }
-
-                // -------------------------------------------------------------
-                // 【第三优先】指数无理根式与有理积分专用引擎 (例: \int \sqrt{e^x+1} dx)
-                // -------------------------------------------------------------
-                let expSol = solveExponentialIntegral(innerExpr, v);
-                if (expSol) {
-                    expSol.steps.forEach(st => steps.push(st));
-                    finalResultLatex = expSol.finalResultLatex + ' + C';
-                    steps.push({
-                        desc: '汇总指数换元推导结果，并添加任意积分常数 $C$：',
-                        math: finalResultLatex
-                    });
-                    funcForPlot = [
-                        { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
-                        { expr: latexToNerdamer(expSol.finalResultLatex), color: '#34d399', label: '原函数 F(x)' }
                     ];
                     return { finalResultLatex, funcForPlot };
                 }
