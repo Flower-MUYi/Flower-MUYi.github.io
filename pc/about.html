@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us | FlowerMUYi Navigation Portal</title>
-    <meta name="description" content="Learn about FlowerMUYi Navigation Portal developer, GitHub profile, and contact information.">
+    <title>关于我们 | FlowerMUYi 导航工作台</title>
+    <meta name="description" content="了解 FlowerMUYi 导航工作台开发者信息，获取 GitHub 主页及 Email 联系管道。">
     <!-- Google Fonts & FontAwesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,7 +46,7 @@
             padding: 0 20px;
         }
 
-        /* Navbar */
+        /* 导航栏 */
         .navbar {
             background: rgba(22, 31, 48, 0.8);
             backdrop-filter: blur(12px);
@@ -103,28 +103,9 @@
             color: #fff;
         }
 
-        .lang-switch-btn {
-            background: var(--card-border);
-            color: var(--text-main);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
 
-        .lang-switch-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
-        }
 
-        /* Profile Card */
+        /* Hero / Profile */
         .profile-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -181,7 +162,7 @@
             line-height: 1.6;
         }
 
-        /* Contact Grid */
+        /* 社交与联系卡片 */
         .contact-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -222,6 +203,7 @@
 
         .github-icon { background: rgba(255, 255, 255, 0.1); color: #fff; }
         .email-icon { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .website-icon { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
 
         .contact-info {
             text-align: left;
@@ -245,7 +227,7 @@
             word-break: break-all;
         }
 
-        /* Detail Section */
+        /* 详细介绍区域 */
         .info-section {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -315,33 +297,31 @@
 </head>
 
 <body>
-    <!-- Navbar -->
+    <!-- 顶栏导航 -->
     <nav class="navbar">
         <div class="container navbar-content">
             <a href="./index.html" class="brand-logo">
                 <i class="fa-solid fa-compass"></i>
-                <span>FlowerMUYi Portal</span>
+                <span>FlowerMUYi 导航</span>
             </a>
             <ul class="nav-links">
-                <li><a href="./index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="./index.html"><i class="fa-solid fa-house"></i> 首页</a></li>
                 <li><a href="https://edgetunnel.flowermuyi.me/login" target="_blank"><i class="fa-solid fa-cloud-bolt"></i> EdgeTunnel</a></li>
-                <li><a href="./ip.html"><i class="fa-solid fa-shield-halved"></i> IP Check</a></li>
-                <li><a href="./about.html" class="active"><i class="fa-solid fa-circle-info"></i> About Us</a></li>
+                <li><a href="./calculator.html"><i class="fa-solid fa-calculator"></i> 多功能计算器</a></li>
+                <li><a href="./ip.html"><i class="fa-solid fa-shield-halved"></i> IP 检测</a></li>
+                <li><a href="./about.html" class="active"><i class="fa-solid fa-circle-info"></i> 关于我们</a></li>
             </ul>
-            <button class="lang-switch-btn" onclick="switchLanguage('cn')">
-                <i class="fa-solid fa-globe"></i> 中文 (CN)
-            </button>
         </div>
     </nav>
 
     <main class="container">
-        <!-- Developer Profile -->
+        <!-- 开发者 Profile -->
         <section class="profile-card">
             <div class="avatar">
                 <i class="fa-solid fa-seedling"></i>
             </div>
             <h1>FlowerMUYi (PineMUYi)</h1>
-            <p class="subtitle">Focusing on modern, high-performance, and beautiful web tools and cloud technology exploration.</p>
+            <p class="subtitle">专注于极简、高性能且美观的网络工具开发与云端技术应用探索。</p>
 
             <div class="contact-grid">
                 <!-- GitHub -->
@@ -350,7 +330,7 @@
                         <i class="fa-brands fa-github"></i>
                     </div>
                     <div class="contact-info">
-                        <label>GitHub Profile</label>
+                        <label>GitHub 开源主页</label>
                         <span>github.com/Flower-MUYi</span>
                     </div>
                     <i class="fa-solid fa-chevron-right" style="color: var(--text-muted)"></i>
@@ -362,7 +342,7 @@
                         <i class="fa-solid fa-envelope"></i>
                     </div>
                     <div class="contact-info">
-                        <label>Email Contact</label>
+                        <label>电子邮箱 Contact</label>
                         <span>PineMuyi@gmail.com</span>
                     </div>
                     <i class="fa-solid fa-chevron-right" style="color: var(--text-muted)"></i>
@@ -370,13 +350,13 @@
             </div>
         </section>
 
-        <!-- Project Intro -->
+        <!-- 项目说明 -->
         <section class="info-section">
-            <h2><i class="fa-solid fa-cubes"></i> About The Portal</h2>
-            <p>FlowerMUYi Navigation Portal provides a fast, lightweight, and powerful dashboard for developer and network utility tools. It integrates EdgeTunnel cloud proxy deployment, full IP threat intelligence audit, and developer profile contacts.</p>
-            <p>Built with pure frontend architecture, it is fully responsive on desktop and mobile devices and features automatic browser language detection and seamless language switching.</p>
+            <h2><i class="fa-solid fa-cubes"></i> 关于本工作台 (About Portal)</h2>
+            <p>FlowerMUYi 导航门户旨在为用户提供轻量、快速且功能强大的实用技术工具入口。涵盖 EdgeTunnel 云端代理节点管理、全量网络 IP 质量检测与威胁情报分析等模块。</p>
+            <p>本站采用纯粹的前端架构打造，针对手机、电脑和平板等不同终端设备进行全面适配与精准识别。</p>
             
-            <h2 style="margin-top: 28px;"><i class="fa-solid fa-code"></i> Tech Stack</h2>
+            <h2 style="margin-top: 28px;"><i class="fa-solid fa-code"></i> 核心技术栈</h2>
             <div class="tech-stack">
                 <span class="tech-badge"><i class="fa-brands fa-html5"></i> HTML5 Semantic</span>
                 <span class="tech-badge"><i class="fa-brands fa-css3-alt"></i> Modern Vanilla CSS</span>
@@ -393,17 +373,6 @@
             <p>© 2026 FlowerMUYi. GitHub Profile: <a href="https://github.com/Flower-MUYi" target="_blank" style="color:var(--primary)">Flower-MUYi</a> | Email: <a href="mailto:PineMuyi@gmail.com" style="color:var(--primary)">PineMuyi@gmail.com</a></p>
         </div>
     </footer>
-
-    <script>
-        function switchLanguage(lang) {
-            localStorage.setItem('preferred_lang', lang);
-            if (lang === 'cn') {
-                window.location.href = '../cn/about.html';
-            } else {
-                window.location.href = './about.html';
-            }
-        }
-    </script>
 </body>
 
 </html>

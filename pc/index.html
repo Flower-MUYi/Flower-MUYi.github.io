@@ -110,26 +110,7 @@
             color: #fff;
         }
 
-        .lang-switch-btn {
-            background: var(--card-border);
-            color: var(--text-main);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
 
-        .lang-switch-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
-        }
 
         /* Hero 区域 */
         .hero {
@@ -268,6 +249,7 @@
         .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
         .icon-purple { background: rgba(139, 92, 246, 0.15); color: #c084fc; }
         .icon-cyan { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+        .icon-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; }
 
         .card-tag {
             font-size: 0.75rem;
@@ -281,6 +263,7 @@
         .tag-ext { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
         .tag-internal { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
         .tag-about { background: rgba(139, 92, 246, 0.2); color: #d8b4fe; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .tag-calc { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
 
         .card-body h3 {
             font-size: 1.25rem;
@@ -363,12 +346,10 @@
             <ul class="nav-links">
                 <li><a href="./index.html" class="active"><i class="fa-solid fa-house"></i> 首页</a></li>
                 <li><a href="https://edgetunnel.flowermuyi.me/login" target="_blank"><i class="fa-solid fa-cloud-bolt"></i> EdgeTunnel</a></li>
+                <li><a href="./calculator.html"><i class="fa-solid fa-calculator"></i> 多功能计算器</a></li>
                 <li><a href="./ip.html"><i class="fa-solid fa-shield-halved"></i> IP 检测</a></li>
                 <li><a href="./about.html"><i class="fa-solid fa-circle-info"></i> 关于我们</a></li>
             </ul>
-            <button class="lang-switch-btn" onclick="switchLanguage('en')">
-                <i class="fa-solid fa-globe"></i> English
-            </button>
         </div>
     </nav>
 
@@ -409,8 +390,26 @@
                     </div>
                 </a>
 
-                <!-- 卡片 2: IP 检测 -->
-                <a href="./ip.html" class="nav-card" data-title="ip检测 威胁检测 欺诈分析 webrtc 查ip asn isps">
+                <!-- 卡片 2: 多功能计算器 -->
+                <a href="./calculator.html" class="nav-card" data-title="计算器 多功能计算器 科学计算器 符号代数 微积分 函数绘图 参数滑块 math calculator">
+                    <div class="card-header">
+                        <div class="card-icon icon-emerald">
+                            <i class="fa-solid fa-calculator"></i>
+                        </div>
+                        <span class="card-tag tag-calc">数学与科学</span>
+                    </div>
+                    <div class="card-body">
+                        <h3>多功能科学计算器</h3>
+                        <p>集成 MathLive 所见即所得数学输入、KaTeX 排版渲染、Nerdamer 符号代数 CAS 引擎、动态参数滑块与 2D 函数实时绘图系统。</p>
+                    </div>
+                    <div class="card-footer">
+                        <span>立即进入计算器</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- 卡片 3: IP 检测 -->
+                <a href="./ip.html" class="nav-card" data-title="ip检测 威胁检测 欺诈分析 webrtc 查ip asn isps 设备识别">
                     <div class="card-header">
                         <div class="card-icon icon-purple">
                             <i class="fa-solid fa-shield-halved"></i>
@@ -419,7 +418,7 @@
                     </div>
                     <div class="card-body">
                         <h3>IP 质量与网络威胁检测</h3>
-                        <p>深度检测本机/任意 IP 的地理位置、ASN/ISP 归属、欺诈风险评分、代理/VPN/Tor/数据中心标识及 WebRTC 泄漏测试。</p>
+                        <p>深度检测本机/任意 IP 的地理位置、ASN/ISP 归属、欺诈风险评分、手机/电脑/平板设备识别及 WebRTC 泄漏测试。</p>
                     </div>
                     <div class="card-footer">
                         <span>立即进入检测系统</span>
@@ -456,6 +455,7 @@
                 <li><a href="https://github.com/Flower-MUYi" target="_blank"><i class="fa-brands fa-github"></i> GitHub 主页</a></li>
                 <li><a href="mailto:PineMuyi@gmail.com"><i class="fa-solid fa-envelope"></i> 邮箱联系</a></li>
                 <li><a href="https://edgetunnel.flowermuyi.me/login" target="_blank"><i class="fa-solid fa-cloud"></i> EdgeTunnel</a></li>
+                <li><a href="./calculator.html"><i class="fa-solid fa-calculator"></i> 多功能计算器</a></li>
                 <li><a href="./ip.html"><i class="fa-solid fa-shield"></i> IP 检测</a></li>
             </ul>
             <p>© 2026 FlowerMUYi. All rights reserved. Powered by GitHub Pages.</p>
@@ -463,15 +463,6 @@
     </footer>
 
     <script>
-        function switchLanguage(lang) {
-            localStorage.setItem('preferred_lang', lang);
-            if (lang === 'en') {
-                window.location.href = '../en/index.html';
-            } else {
-                window.location.href = './index.html';
-            }
-        }
-
         function filterCards() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cards = document.querySelectorAll('.nav-card');

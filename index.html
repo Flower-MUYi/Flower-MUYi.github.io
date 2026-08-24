@@ -61,27 +61,32 @@
     </style>
     <script>
         (function() {
-            var userLang = localStorage.getItem('preferred_lang');
-            if (!userLang) {
-                var navLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-                userLang = navLang.indexOf('zh') === 0 ? 'cn' : 'en';
-            }
-            if (userLang === 'cn') {
-                window.location.replace('./cn/index.html');
-            } else {
-                window.location.replace('./en/index.html');
-            }
+            var ua = navigator.userAgent;
+            var navPlatform = (navigator.platform || '').toLowerCase();
+            var minDim = Math.min(window.screen.width, window.screen.height);
+            var maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+            var isTouch = ('ontouchstart' in window) || (maxTouchPoints > 0);
+
+            // 平板设备 (iPad / Android Tablet)
+            var isIPad = /iPad/i.test(ua) || (navPlatform.includes('mac') && maxTouchPoints > 1);
+            var isAndroidTablet = /Android/i.test(ua) && (!/Mobile/i.test(ua) || /Tablet/i.test(ua));
+            var isTablet = isIPad || isAndroidTablet || /Tablet|PlayBook|Silk|Kindle|SM-T/i.test(ua) || (isTouch && minDim >= 600 && minDim <= 1024);
+
+            // 手机设备 (iPhone / Android Phone)
+            var isMobile = /Mobile|iPhone|iPod|Android.*Mobile|Windows Phone/i.test(ua) || (isTouch && minDim < 600);
+
+            // 当前电脑端主站位于 ./pc/，手机端 (./mobile/) 与平板端 (./tablet/) 预留就绪
+            window.location.replace('./pc/index.html');
         })();
     </script>
 </head>
 <body>
     <div class="loader-card">
         <div class="spinner"></div>
-        <h2>FlowerMUYi Portal</h2>
-        <p>正在根据浏览器语言自动重定向... / Redirecting...</p>
+        <h2>FlowerMUYi 导航工作台</h2>
+        <p>正在前往工作台首页...</p>
         <div class="lang-links">
-            <a href="./cn/index.html" class="lang-btn">中文 (CN)</a>
-            <a href="./en/index.html" class="lang-btn">English (EN)</a>
+            <a href="./pc/index.html" class="lang-btn">进入电脑端工作台</a>
         </div>
     </div>
 </body>
