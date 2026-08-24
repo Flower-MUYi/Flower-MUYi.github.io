@@ -3054,7 +3054,7 @@
         }
 
         // -------------------------------------------------------------
-        // Mode 2.8: Long Division (多项式 / 整数长除法)
+        // Mode 2.8: Fractions & Long Division (多项式 / 整数长除法与分式)
         // -------------------------------------------------------------
         if (s.includes('\\div')) {
             let divParts = s.split('\\div');
@@ -3065,6 +3065,15 @@
                     den: cleanBaseExpression(divParts[1])
                 };
             }
+        }
+
+        let topFracAST = extractTopLevelFrac(s);
+        if (topFracAST && !topFracAST.rest) {
+            return {
+                type: 'longdiv',
+                num: cleanBaseExpression(topFracAST.num),
+                den: cleanBaseExpression(topFracAST.den)
+            };
         }
 
         let polydivRegex = /(?:\\operatorname\{polydiv\}|\\operatorname\{div\}|\\operatorname\{longdiv\}|polydiv|div|longdiv)\s*\(([\s\S]+?),([\s\S]+?)\)/i;
@@ -3811,37 +3820,68 @@
             return { finalResultLatex, funcForPlot };
         }
 
-        function handleLongDivision(ast, steps, rawInput) {
-            let numStr = ast.num;
-            let denStr = ast.den;
-
-            // 智能提取被除式与除式
-            if (!numStr || !denStr) {
-                let exprInput = ast.expr || rawInput || '';
-                let fracMatch = exprInput.match(/^\\frac\{([\s\S]+)\}\{([\s\S]+)\}$/);
-                if (fracMatch) {
-                    numStr = fracMatch[1].trim();
-                    denStr = fracMatch[2].trim();
-                } else if (exprInput.includes('\\div')) {
-                    let parts = exprInput.split('\\div');
-                    numStr = parts[0].trim();
-                    denStr = parts[1].trim();
-                } else {
-                    let slashParts = exprInput.split('/');
-                    if (slashParts.length === 2) {
-                        numStr = slashParts[0].trim();
-                        denStr = slashParts[1].trim();
+        function stripOuterParens(str) {
+            let s = (str || '').trim();
+            while (s.startsWith('(') && s.endsWith(')')) {
+                let depth = 0;
+                let wrapsAll = true;
+                for (let i = 0; i < s.length - 1; i++) {
+                    if (s[i] === '(') depth++;
+                    else if (s[i] === ')') depth--;
+                    if (depth === 0) {
+                        wrapsAll = false;
+                        break;
                     }
                 }
+                if (wrapsAll) s = s.substring(1, s.length - 1).trim();
+                else break;
             }
+            return s;
+        }
 
-            if (!numStr || !denStr) {
-                numStr = 'x^3 - 2*x^2 - 4';
-                denStr = 'x - 3';
+        function extractNumeratorAndDenominator(rawStr, ast) {
+            if (ast && ast.num && ast.den) {
+                return { num: ast.num, den: ast.den };
             }
+            let s = (rawStr || '').trim();
+            let topFrac = extractTopLevelFrac(s);
+            if (topFrac) {
+                return { num: topFrac.num, den: topFrac.den };
+            }
+            if (s.includes('\\div')) {
+                let parts = s.split('\\div');
+                if (parts.length === 2) {
+                    return { num: parts[0], den: parts[1] };
+                }
+            }
+            let cleaned = stripOuterParens(s);
+            let depth = 0;
+            let slashIdx = -1;
+            for (let i = 0; i < cleaned.length; i++) {
+                let ch = cleaned[i];
+                if (ch === '(' || ch === '[' || ch === '{') depth++;
+                else if (ch === ')' || ch === ']' || ch === '}') depth--;
+                else if (ch === '/' && depth === 0) {
+                    slashIdx = i;
+                    break;
+                }
+            }
+            if (slashIdx !== -1) {
+                return {
+                    num: cleaned.substring(0, slashIdx),
+                    den: cleaned.substring(slashIdx + 1)
+                };
+            }
+            if (ast && ast.expr) {
+                return extractNumeratorAndDenominator(ast.expr, null);
+            }
+            return { num: 'x^3 - 2*x^2 - 4', den: 'x - 3' };
+        }
 
-            numStr = numStr.replace(/^\((.*)\)$/, '$1').trim();
-            denStr = denStr.replace(/^\((.*)\)$/, '$1').trim();
+        function handleLongDivision(ast, steps, rawInput) {
+            const extracted = extractNumeratorAndDenominator(rawInput, ast);
+            let numStr = stripOuterParens(extracted.num);
+            let denStr = stripOuterParens(extracted.den);
 
             const numClean = cleanBaseExpression(numStr);
             const denClean = cleanBaseExpression(denStr);
