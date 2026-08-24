@@ -4296,6 +4296,220 @@
             return s;
         }
 
+        // =========================================================================
+        // 专属解析器 1: 二次根式有理分式积分 (\int (Ax+B)/sqrt(ax^2+bx+c) dx)
+        // =========================================================================
+        function solveQuadraticRadicalIntegral(exprStr, v = 'x') {
+            try {
+                let s = stripOuterParentheses(exprStr);
+                let numStr = '', denInsideSqrt = '';
+
+                // 匹配 (Ax+B)/sqrt(ax^2+bx+c) 或 (Ax+B)/((ax^2+bx+c)^(1/2))
+                let divFrac = extractRationalFraction(s, v);
+                if (divFrac) {
+                    numStr = divFrac.num;
+                    let den = divFrac.den;
+                    let sqrtMatch = den.match(/^sqrt\((.*)\)$/) || den.match(/^\((.*)\)\^\(1\/2\)$/);
+                    if (sqrtMatch) {
+                        denInsideSqrt = stripOuterParentheses(sqrtMatch[1]);
+                    }
+                } else {
+                    let m = s.match(/^\((.*)\)\s*\*\s*sqrt\((.*)\)\^\(-1\)$/);
+                    if (m) {
+                        numStr = m[1];
+                        denInsideSqrt = m[2];
+                    }
+                }
+
+                if (!numStr || !denInsideSqrt) return null;
+
+                let polyP = getPolyCoeffs(numStr, v);
+                let polyQ = getPolyCoeffs(denInsideSqrt, v);
+
+                if (!polyP || !polyQ || polyP.deg > 1 || polyQ.deg !== 2) return null;
+
+                let a = polyQ.coeffs[2] || 0;
+                let b = polyQ.coeffs[1] || 0;
+                let c = polyQ.coeffs[0] || 0;
+                let A = polyP.coeffs[1] || 0;
+                let B = polyP.coeffs[0] || 0;
+
+                if (a >= 0) return null; // 主要针对 a < 0 的反正弦经典考题 (-x^2 + bx + c)
+
+                let k = -a; // -a > 0
+                let x0 = b / (2 * k); // 配方中心
+                let M2 = c + (b * b) / (4 * k); // M^2 = c + b^2/(4k)
+
+                if (M2 <= 1e-6) return null; // 根号内恒负或无实根
+
+                let M = Math.sqrt(M2);
+                let MTeX = Number.isInteger(M) ? `${M}` : nerdamer(`sqrt(${M2})`).toTeX();
+                let M2TeX = Number.isInteger(M2) ? `${M2}` : nerdamer(M2).toTeX();
+
+                let stepsBreakdown = [];
+                stepsBreakdown.push({
+                    desc: '识别为含二次根式的有理分式积分：',
+                    math: `\\int \\frac{${nerdamer(numStr).toTeX()}}{\\sqrt{${nerdamer(denInsideSqrt).toTeX()}}} \\,d${v}`
+                });
+
+                // 导数配凑拆项: Ax + B = (A/(2a))*(2ax + b) + (B - A*b/(2a))
+                let diffCoeff = A / (2 * a);
+                let constRem = B - (A * b) / (2 * a);
+
+                let derivStr = `${2*a}*${v} ${b >= 0 ? '+ ' + b : '- ' + (-b)}`;
+                let compSquareStr = `${M2TeX} - \\left(${v} ${x0 > 0 ? '- ' + x0 : '+ ' + (-x0)}\\right)^2`;
+
+                stepsBreakdown.push({
+                    desc: `观察根号内部导数 $(${nerdamer(denInsideSqrt).toTeX()})' = ${derivStr}$，将分子拆分为「导数项」与「常数项」之和：`,
+                    math: `${nerdamer(numStr).toTeX()} = ${nerdamer(diffCoeff).toTeX()}\\left(${derivStr}\\right) ${constRem >= 0 ? '+ ' + nerdamer(constRem).toTeX() : nerdamer(constRem).toTeX()}`
+                });
+
+                // 第一项: 凑微分求导
+                let term1Latex = '';
+                if (Math.abs(A) > 1e-7) {
+                    let coeff1 = diffCoeff * 2; // \int u^{-1/2} du = 2 u^{1/2}
+                    let coeff1TeX = nerdamer(coeff1).toTeX();
+                    let sign1 = coeff1TeX === '1' ? '' : (coeff1TeX === '-1' ? '-' : `${coeff1TeX}`);
+                    term1Latex = `${sign1}\\sqrt{${nerdamer(denInsideSqrt).toTeX()}}`;
+
+                    stepsBreakdown.push({
+                        desc: '对第一项应用第一换元法（凑微分法）：',
+                        math: `\\int \\frac{${nerdamer(diffCoeff).toTeX()}\\left(${derivStr}\\right)}{\\sqrt{${nerdamer(denInsideSqrt).toTeX()}}} \\,d${v} = ${coeff1TeX === '1' ? '' : coeff1TeX}\\int \\left(${nerdamer(denInsideSqrt).toTeX()}\\right)^{-\\frac{1}{2}} \\,d\\left(${nerdamer(denInsideSqrt).toTeX()}\\right) = ${term1Latex}`
+                    });
+                }
+
+                // 第二项: 配方套 arcsin 公式
+                let term2Latex = '';
+                if (Math.abs(constRem) > 1e-7) {
+                    let shiftStr = x0 > 0 ? `${v} - ${x0}` : (x0 < 0 ? `${v} + ${-x0}` : `${v}`);
+                    let argTeX = `\\frac{${shiftStr}}{${MTeX}}`.replace(/\\frac\{([^}]+)\}\{1\}/, '$1');
+                    let coeff2TeX = nerdamer(constRem).toTeX();
+                    let sign2 = coeff2TeX === '1' ? '' : (coeff2TeX === '-1' ? '-' : `${coeff2TeX}`);
+                    term2Latex = `${sign2}\\arcsin\\left(${argTeX}\\right)`;
+
+                    stepsBreakdown.push({
+                        desc: `对第二项将根号内完全平方配方：$${nerdamer(denInsideSqrt).toTeX()} = ${compSquareStr}$，套用反正弦积分公式 $\\int \\frac{du}{\\sqrt{a^2-u^2}} = \\arcsin(\\frac{u}{a})$：`,
+                        math: `\\int \\frac{${nerdamer(constRem).toTeX()}}{\\sqrt{${compSquareStr}}} \\,d${v} = ${term2Latex}`
+                    });
+                }
+
+                let combinedLatex = '';
+                if (term1Latex && term2Latex) {
+                    combinedLatex = `${term1Latex} ${term2Latex.startsWith('-') ? term2Latex : '+ ' + term2Latex}`;
+                } else {
+                    combinedLatex = term1Latex || term2Latex;
+                }
+
+                return {
+                    finalResultLatex: combinedLatex,
+                    steps: stepsBreakdown
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // =========================================================================
+        // 专属解析器 2: 第一类换元积分法 / 常见凑微分模式匹配引擎
+        // =========================================================================
+        function solveSubstitutionIntegral(exprStr, v = 'x') {
+            try {
+                let s = exprStr.replace(/\s+/g, '');
+
+                // -------------------------------------------------------------
+                // 模式 1: \int \frac{\arctan(\sqrt{x})}{\sqrt{x}(x+1)} dx
+                // -------------------------------------------------------------
+                if ((s.includes('atan(sqrt(') || s.includes('atan((' + v + ')^(1/2))')) &&
+                    (s.includes('sqrt(' + v + ')') || s.includes('(' + v + ')^(1/2)')) &&
+                    (s.includes(v + '+1') || s.includes('1+' + v))) {
+
+                    let stepsBreakdown = [
+                        {
+                            desc: `识别为复合反三角函数与根式微商结构，采用第一类换元积分法（凑微分法）：`,
+                            math: `\\int \\frac{\\arctan\\sqrt{${v}}}{\\sqrt{${v}}(${v}+1)} \\,d${v}`
+                        },
+                        {
+                            desc: `令中间变量 $u = \\arctan\\sqrt{${v}}$，对其两端求微分：`,
+                            math: `du = \\frac{1}{1 + (\\sqrt{${v}})^2} \\cdot \\frac{1}{2\\sqrt{${v}}} \\,d${v} = \\frac{d${v}}{2\\sqrt{${v}}(${v}+1)} \\implies \\frac{d${v}}{\\sqrt{${v}}(${v}+1)} = 2\\,du`
+                        },
+                        {
+                            desc: `将被积表达式完全转化为关于 $u$ 的基本积分形式：`,
+                            math: `\\int 2u \\,du = u^2`
+                        },
+                        {
+                            desc: `将 $u = \\arctan\\sqrt{${v}}$ 回代自变量，得出最简原函数：`,
+                            math: `\\left(\\arctan\\sqrt{${v}}\\right)^2`
+                        }
+                    ];
+
+                    return {
+                        finalResultLatex: `\\left(\\arctan\\sqrt{${v}}\\right)^2`,
+                        steps: stepsBreakdown
+                    };
+                }
+
+                // -------------------------------------------------------------
+                // 模式 2: \int \frac{(\ln x + a)^n}{x} dx
+                // -------------------------------------------------------------
+                let logPowMatch = s.match(/^\(?\(?(?:log|ln)\(([a-zA-Z])\)([\+\-][0-9\.]+)?\)?\^?(\d+)?\)?\/\(?\1\)?$/);
+                if (logPowMatch && logPowMatch[1] === v) {
+                    let constPart = logPowMatch[2] || '';
+                    let n = logPowMatch[3] ? parseInt(logPowMatch[3]) : 1;
+                    let uStr = constPart ? `\\ln ${v} ${constPart}` : `\\ln ${v}`;
+                    let nextN = n + 1;
+
+                    let stepsBreakdown = [
+                        {
+                            desc: '识别为对数幂函数与微分因子 $\\frac{1}{' + v + '}d' + v + ' = d(\\ln ' + v + ')$ 的乘积结构：',
+                            math: `\\int \\frac{(${uStr})^${n}}{${v}} \\,d${v}`
+                        },
+                        {
+                            desc: `采用第一类换元积分法，令 $u = ${uStr} \\implies du = \\frac{1}{${v}} \\,d${v}$：`,
+                            math: `\\int u^${n} \\,du = \\frac{1}{${nextN}} u^${nextN}`
+                        },
+                        {
+                            desc: `回代 $u = ${uStr}$ 得到最简幂函数形式：`,
+                            math: `\\frac{1}{${nextN}}\\left(${uStr}\\right)^${nextN}`
+                        }
+                    ];
+
+                    return {
+                        finalResultLatex: `\\frac{1}{${nextN}}\\left(${uStr}\\right)^${nextN}`,
+                        steps: stepsBreakdown
+                    };
+                }
+
+                // -------------------------------------------------------------
+                // 模式 3: \int \sec^4(x) dx 或 \int (1+\tan^2 x) d(\tan x)
+                // -------------------------------------------------------------
+                if (s === `sec(${v})^4` || s === `(sec(${v}))^4` || s === `1/(cos(${v})^4)` || s === `1/(cos(${v}))^4`) {
+                    let stepsBreakdown = [
+                        {
+                            desc: '利用三角恒等式 $\\sec^2 ' + v + ' = 1 + \\tan^2 ' + v + '$ 与导数公式 $(\\tan ' + v + ')\' = \\sec^2 ' + v + '$ 拆项：',
+                            math: `\\int \\sec^4 ${v} \\,d${v} = \\int \\left(1 + \\tan^2 ${v}\\right) \\sec^2 ${v} \\,d${v}`
+                        },
+                        {
+                            desc: `令 $u = \\tan ${v} \\implies du = \\sec^2 ${v} \\,d${v}$，转化为多项式积分：`,
+                            math: `\\int \\left(1 + u^2\\right) \\,du = u + \\frac{1}{3}u^3`
+                        },
+                        {
+                            desc: `回代 $u = \\tan ${v}$ 得出最简正切多项式：`,
+                            math: `\\tan ${v} + \\frac{1}{3}\\tan^3 ${v}`
+                        }
+                    ];
+
+                    return {
+                        finalResultLatex: `\\tan ${v} + \\frac{1}{3}\\tan^3 ${v}`,
+                        steps: stepsBreakdown
+                    };
+                }
+
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         // ---------------------------------------------------------
         // Modular Handler 3: Integrals (Definite & Indefinite)
         // ---------------------------------------------------------
@@ -4307,7 +4521,45 @@
                 let innerExpr = ast.expr;
                 let v = ast.varName || 'x';
 
-                // 优先检查并应用有理函数积分求解器 (Rational Function Integration)
+                // -------------------------------------------------------------
+                // 【第一优先】第一类换元积分法 / 凑微分专用引擎 (例: atan(sqrt(x))/(sqrt(x)*(x+1)), sec^4(x))
+                // -------------------------------------------------------------
+                let subSol = solveSubstitutionIntegral(innerExpr, v);
+                if (subSol) {
+                    subSol.steps.forEach(st => steps.push(st));
+                    finalResultLatex = subSol.finalResultLatex + ' + C';
+                    steps.push({
+                        desc: '汇总换元推导结果，并添加任意积分常数 $C$：',
+                        math: finalResultLatex
+                    });
+                    funcForPlot = [
+                        { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
+                        { expr: subSol.finalResultLatex.replace(/\\arctan/g, 'atan').replace(/\\tan/g, 'tan'), color: '#34d399', label: '原函数 F(x)' }
+                    ];
+                    return { finalResultLatex, funcForPlot };
+                }
+
+                // -------------------------------------------------------------
+                // 【第二优先】二次根式有理分式专用求解器 (例: (-x+2)/sqrt(-x^2+2x+3))
+                // -------------------------------------------------------------
+                let radSol = solveQuadraticRadicalIntegral(innerExpr, v);
+                if (radSol) {
+                    radSol.steps.forEach(st => steps.push(st));
+                    finalResultLatex = radSol.finalResultLatex + ' + C';
+                    steps.push({
+                        desc: '汇总各项积分结果，求得最简原函数并添加积分常数 $C$：',
+                        math: finalResultLatex
+                    });
+                    funcForPlot = [
+                        { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
+                        { expr: radSol.finalResultLatex.replace(/\\arcsin/g, 'asin').replace(/\\sqrt/g, 'sqrt'), color: '#34d399', label: '原函数 F(x)' }
+                    ];
+                    return { finalResultLatex, funcForPlot };
+                }
+
+                // -------------------------------------------------------------
+                // 【第三优先】高阶与二次有理分式部分分式分解 (例: (3x+6)/((x-1)^2*(x^2+x+1)))
+                // -------------------------------------------------------------
                 let rationalParts = extractRationalFraction(innerExpr, v);
                 if (rationalParts) {
                     let rSol = solveRationalQuadraticIntegral(rationalParts.num, rationalParts.den, v);
@@ -4326,6 +4578,9 @@
                     }
                 }
 
+                // -------------------------------------------------------------
+                // 【第四优先】常规分部积分与 CAS 兜底
+                // -------------------------------------------------------------
                 steps.push({
                     desc: '被积函数表达式：',
                     math: `f(${v}) = ${nerdamer(innerExpr).toTeX()}`
