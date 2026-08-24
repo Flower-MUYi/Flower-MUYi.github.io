@@ -1963,7 +1963,7 @@
                         syncSlidersWithFormula();
                         processCalculation('auto');
                     } else if (k.action === 'backspace') {
-                        mathField.executeCommand('deleteBackward');
+                        performSmartBackspace(mathField);
                         debouncedCalculate();
                     } else if (k.action === 'calc') {
                         processCalculation('auto');
@@ -4130,6 +4130,75 @@
             processCalculation('auto', false);
         }, 150); // 停顿 150ms 才触发真正的高亮与计算
 
+        function performSmartBackspace(mf) {
+            if (!mf) return;
+
+            const valBefore = mf.getValue();
+
+            // Check if selection is a range
+            const sel = mf.selection;
+            const isRange = sel && sel.ranges && sel.ranges.length > 0 && sel.ranges[0][0] !== sel.ranges[0][1];
+            if (isRange) {
+                mf.executeCommand('deleteBackward');
+                return;
+            }
+
+            if (!valBefore || valBefore.trim() === '') {
+                mf.setValue('');
+                return;
+            }
+
+            // Attempt 1: Standard MathLive deleteBackward
+            mf.executeCommand('deleteBackward');
+            let valAfter = mf.getValue();
+
+            // If MathLive deleteBackward was blocked (valAfter === valBefore)
+            if (valAfter === valBefore) {
+                try {
+                    mf.executeCommand('deletePreviousWord');
+                    valAfter = mf.getValue();
+                } catch (e) { }
+
+                if (valAfter === valBefore) {
+                    try {
+                        mf.executeCommand('extendSelectionBackward');
+                        mf.executeCommand('deleteBackward');
+                        valAfter = mf.getValue();
+                    } catch (e) { }
+                }
+
+                if (valAfter === valBefore) {
+                    try {
+                        mf.executeCommand('deleteForward');
+                        mf.executeCommand('deleteBackward');
+                        valAfter = mf.getValue();
+                    } catch (e) { }
+                }
+
+                if (valAfter === valBefore) {
+                    const FN_PATTERN = '(?:arcsin|arccos|arctan|arcsec|arccsc|arccot|sinh|cosh|tanh|sin|cos|tan|sec|csc|cot|ln|lg|log|lim|sqrt|frac|operatorname\\{[^}]+\\})';
+                    let s = valBefore;
+                    const regex = new RegExp(`(?:\\\\?${FN_PATTERN}(?:_\\{[^}]*\\}|_\\S+)?\\s*(?:\\\\right\\s*\\)|\\)|\\\\right\\s*\\]|\\]|\\\\right\\s*\\}|\\})?|\\\\[a-zA-Z]+|[^a-zA-Z0-9\\s]|\\s)+$`, 'i');
+                    const match = s.match(regex);
+                    if (match) {
+                        s = s.substring(0, s.length - match[0].length).trim();
+                        mf.setValue(s);
+                        valAfter = mf.getValue();
+                    }
+                }
+            }
+
+            // Post-processing: If deletion left behind an orphaned function + unmatched closing bracket like "\sin)" or "\cos\right)"
+            const FN_NAMES = '(?:arcsin|arccos|arctan|arcsec|arccsc|arccot|sinh|cosh|tanh|sin|cos|tan|sec|csc|cot|ln|lg|log|lim)';
+            const orphanedRegex = new RegExp(`\\\\?${FN_NAMES}(?:_\\{[^}]*\\}|_\\S+)?\\s*(?:\\\\right\\s*\\)|\\))`, 'gi');
+            if (orphanedRegex.test(valAfter)) {
+                const cleaned = valAfter.replace(orphanedRegex, (match) => {
+                    return match.replace(/(?:\\right\s*\)|\))/, '');
+                }).trim();
+                mf.setValue(cleaned);
+            }
+        }
+
         mathField.addEventListener('input', () => {
             const val = mathField.getValue();
             // 轻量级 UI 切换，不放进防抖里，保证视觉立刻响应
@@ -4149,6 +4218,10 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 processCalculation('auto');
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                performSmartBackspace(mathField);
+                debouncedCalculate();
             }
         });
 
