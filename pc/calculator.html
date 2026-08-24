@@ -1818,12 +1818,22 @@
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     mathField.focus();
-                    if (k.action === 'backspace') {
+                    if (k.action === 'clear') {
+                        mathField.setValue('');
+                        document.querySelectorAll('.preset-pill[data-preset]').forEach(p => p.classList.remove('active-pill'));
+                        syncSlidersWithFormula();
+                        processCalculation('auto');
+                    } else if (k.action === 'backspace') {
                         mathField.executeCommand('deleteBackward');
+                        debouncedCalculate();
+                    } else if (k.action === 'calc') {
+                        processCalculation('auto');
                     } else if (k.latex) {
                         mathField.insert(k.latex);
+                        debouncedCalculate();
                     } else if (k.cmd) {
                         mathField.insert(k.cmd);
+                        debouncedCalculate();
                     }
                 });
                 keypadGrid.appendChild(btn);
