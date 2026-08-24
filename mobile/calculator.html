@@ -2668,18 +2668,24 @@
                 s = s.replace(rePowBare, `(${fn}($2))^$1`);
             });
 
-            // 2.3 粗暴剥离所有已知函数的反斜杠 \
-            s = s.replace(/\\(sin|cos|tan|arcsin|arccos|arctan|sinh|cosh|tanh|sec|csc|cot|ln|lg|log|sqrt|exp|abs)(?![a-zA-Z])/g, '$1');
+            // 2.3 精准映射 LaTeX 反斜杠函数到 Nerdamer 原生函数名
+            s = s.replace(/\\arcsin\b/g, 'asin');
+            s = s.replace(/\\arccos\b/g, 'acos');
+            s = s.replace(/\\arctan\b/g, 'atan');
+            s = s.replace(/\\ln\b/g, 'log');       // ln -> Nerdamer 原生自然对数 log
+            s = s.replace(/\\lg\b/g, 'lg');        // lg -> 自定义常用对数 lg
+            s = s.replace(/\\log\b/g, 'lg');       // 无底数 log -> 映射为常用对数 lg
+            s = s.replace(/\\(sin|cos|tan|sinh|cosh|tanh|sec|csc|cot|sqrt|exp|abs)(?![a-zA-Z])/g, '$1');
 
-            // 2.4 将纯英文单词精准映射给底层的 Nerdamer 原生函数 (彻底解决 ln2 连体字问题)
+            // 2.4 将纯英文单词映射给底层的 Nerdamer 原生函数
             s = s.replace(/(^|[^a-zA-Z])(arcsin|arccos|arctan|ln|lg|log)(?![a-zA-Z])/g, (match, p1, fn, offset, fullStr) => {
                 const map = {
                     'arcsin': 'asin',
                     'arccos': 'acos',
                     'arctan': 'atan',
-                    'ln': 'log',     // ln -> Nerdamer的原生自然对数 log
-                    'lg': 'lg',      // lg -> 自定义的常用对数 lg
-                    'log': 'lg'      // 无底数 log -> 映射为常用对数 lg
+                    'ln': 'log',
+                    'lg': 'lg',
+                    'log': 'lg'
                 };
                 let nextChar = fullStr[offset + match.length];
                 let space = (nextChar && /[0-9]/.test(nextChar)) ? ' ' : '';
