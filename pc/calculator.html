@@ -3735,13 +3735,17 @@
             let numStr = ast.num;
             let denStr = ast.den;
 
-            // If numStr or denStr was not directly in ast (e.g. from fraction \frac{A}{B} or A/B)
+            // 智能提取被除式与除式
             if (!numStr || !denStr) {
                 let exprInput = ast.expr || rawInput || '';
                 let fracMatch = exprInput.match(/^\\frac\{([\s\S]+)\}\{([\s\S]+)\}$/);
                 if (fracMatch) {
                     numStr = fracMatch[1].trim();
                     denStr = fracMatch[2].trim();
+                } else if (exprInput.includes('\\div')) {
+                    let parts = exprInput.split('\\div');
+                    numStr = parts[0].trim();
+                    denStr = parts[1].trim();
                 } else {
                     let slashParts = exprInput.split('/');
                     if (slashParts.length === 2) {
@@ -3762,7 +3766,7 @@
             const numClean = cleanBaseExpression(numStr);
             const denClean = cleanBaseExpression(denStr);
 
-            // Detect main variable
+            // 检测主要未知数 (默认 'x')
             let foundVars = (numClean + denClean).match(/[a-zA-Z]/g);
             let mainVar = 'x';
             if (foundVars) {
@@ -3780,7 +3784,7 @@
 
             if (isPureNumber) {
                 // -------------------------------------------------------------
-                // Numerical Long Division (整数 / 数值长除法)
+                // 1. 整数 / 数值带余长除法
                 // -------------------------------------------------------------
                 steps.push({
                     desc: '识别为数值长除法运算，写出被除数与除数：',
@@ -3841,7 +3845,7 @@
                 funcForPlot = null;
             } else {
                 // -------------------------------------------------------------
-                // Polynomial Long Division (多项式长除法)
+                // 2. 多项式长除法 (Polynomial Long Division)
                 // -------------------------------------------------------------
                 const P_expanded = nerdamer(numClean).expand();
                 const D_expanded = nerdamer(denClean).expand();
@@ -3851,45 +3855,106 @@
                     math: `\\frac{P(${mainVar})}{D(${mainVar})} = \\frac{${P_expanded.toTeX()}}{${D_expanded.toTeX()}}`
                 });
 
-                function getPolyInfo(exprStr, v) {
-                    let exp = nerdamer(exprStr).expand();
-                    let s = exp.toString();
-                    if (s === '0') return { deg: -1, leadCoeff: '0', leadTermTeX: '0', str: '0' };
-                    let deg = 0;
-                    try {
-                        let dVal = nerdamer.deg(s, v);
-                        deg = Number(dVal.toString());
-                    } catch (e) {
-                        deg = 0;
-                    }
-                    if (isNaN(deg) || !isFinite(deg) || deg < 0) deg = 0;
+                // 健壮的多项式各项降幂解析器
+                function parsePolyTerms(polyStr, v) {
+                    let exp = nerdamer(polyStr).expand();
+                    let s = exp.toString().replace(/\s+/g, '');
+                    if (s === '0' || !s) return { deg: 0, leadCoeff: '0', str: '0', terms: [{ deg: 0, coeff: '0' }] };
 
-                    let leadCoeff = '0';
-                    try {
-                        if (deg === 0) {
-                            leadCoeff = nerdamer(s, { [v]: 0 }).toString();
-                            if (leadCoeff === '0' && s !== '0') leadCoeff = s;
+                    let rawTerms = s.match(/[+-]?[^+-]+/g) || [s];
+                    let terms = [];
+
+                    rawTerms.forEach(t => {
+                        t = t.trim();
+                        if (!t) return;
+                        let deg = 0;
+                        let coeff = '1';
+
+                        if (!t.includes(v)) {
+                            deg = 0;
+                            try { coeff = nerdamer(t).toString(); } catch (e) { coeff = t; }
                         } else {
-                            let nthDiff = nerdamer.diff(s, v, deg).toString();
-                            let fact = 1;
-                            for (let i = 2; i <= deg; i++) fact *= i;
-                            leadCoeff = nerdamer(`(${nthDiff}) / ${fact}`).expand().toString();
+                            let caretIdx = t.indexOf(v + '^');
+                            if (caretIdx !== -1) {
+                                let after = t.substring(caretIdx + v.length + 1);
+                                let degMatch = after.match(/^\(?(-?\d+)\)?/);
+                                deg = degMatch ? parseInt(degMatch[1], 10) : 1;
+                                let before = t.substring(0, caretIdx).replace(/\*$/, '');
+                                if (before === '' || before === '+') coeff = '1';
+                                else if (before === '-') coeff = '-1';
+                                else {
+                                    try { coeff = nerdamer(before).toString(); } catch (e) { coeff = before; }
+                                }
+                            } else {
+                                deg = 1;
+                                let vIdx = t.indexOf(v);
+                                let before = t.substring(0, vIdx).replace(/\*$/, '');
+                                if (before === '' || before === '+') coeff = '1';
+                                else if (before === '-') coeff = '-1';
+                                else {
+                                    try { coeff = nerdamer(before).toString(); } catch (e) { coeff = before; }
+                                }
+                            }
                         }
-                    } catch (e) {
-                        leadCoeff = '1';
+                        terms.push({ deg, coeff });
+                    });
+
+                    // 按幂次合并同类项
+                    let combinedMap = new Map();
+                    terms.forEach(t => {
+                        if (!combinedMap.has(t.deg)) {
+                            combinedMap.set(t.deg, t.coeff);
+                        } else {
+                            let prev = combinedMap.get(t.deg);
+                            try {
+                                combinedMap.set(t.deg, nerdamer(`(${prev}) + (${t.coeff})`).expand().toString());
+                            } catch (e) {
+                                combinedMap.set(t.deg, `${prev}+${t.coeff}`);
+                            }
+                        }
+                    });
+
+                    let combinedTerms = [];
+                    combinedMap.forEach((coeff, deg) => {
+                        let isZero = false;
+                        try { isZero = nerdamer(coeff).toString() === '0'; } catch (e) { }
+                        if (!isZero) {
+                            combinedTerms.push({ deg, coeff });
+                        }
+                    });
+
+                    combinedTerms.sort((a, b) => b.deg - a.deg);
+                    if (combinedTerms.length === 0) {
+                        combinedTerms.push({ deg: 0, coeff: '0' });
                     }
 
-                    let termTeX = '';
-                    if (deg === 0) termTeX = nerdamer(leadCoeff).toTeX();
-                    else if (leadCoeff === '1') termTeX = deg === 1 ? v : `${v}^{${deg}}`;
-                    else if (leadCoeff === '-1') termTeX = deg === 1 ? `-${v}` : `-${v}^{${deg}}`;
-                    else termTeX = deg === 1 ? `${nerdamer(leadCoeff).toTeX()} ${v}` : `${nerdamer(leadCoeff).toTeX()} ${v}^{${deg}}`;
-
-                    return { deg, leadCoeff, leadTermTeX: termTeX, str: s };
+                    return {
+                        deg: combinedTerms[0].deg,
+                        leadCoeff: combinedTerms[0].coeff,
+                        terms: combinedTerms,
+                        str: s
+                    };
                 }
 
-                const denInfo = getPolyInfo(D_expanded.toString(), mainVar);
-                if (denInfo.str === '0') {
+                function formatTermTeX(coeff, deg, v) {
+                    let isZero = false;
+                    try { isZero = nerdamer(coeff).toString() === '0'; } catch (e) { }
+                    if (isZero) return '0';
+                    if (deg === 0) {
+                        try { return nerdamer(coeff).toTeX(); } catch (e) { return coeff; }
+                    }
+
+                    let coeffTeX = coeff;
+                    try { coeffTeX = nerdamer(coeff).toTeX(); } catch (e) { }
+                    let vPart = deg === 1 ? v : `${v}^{${deg}}`;
+
+                    if (coeff === '1' || coeffTeX === '1') return vPart;
+                    if (coeff === '-1' || coeffTeX === '-1') return `-${vPart}`;
+                    return `${coeffTeX}${vPart}`;
+                }
+
+                const denInfo = parsePolyTerms(D_expanded.toString(), mainVar);
+                if (denInfo.str === '0' || (denInfo.deg === 0 && denInfo.leadCoeff === '0')) {
                     steps.push({ desc: '除式为 0 异常：', math: '\\text{除式多项式不能为 0}' });
                     return { finalResultLatex: '\\text{无定义 (除式为 0)}', funcForPlot: null };
                 }
@@ -3900,13 +3965,22 @@
                 const maxSteps = 12;
 
                 while (stepCount < maxSteps) {
-                    let rInfo = getPolyInfo(currentR, mainVar);
-                    if (rInfo.deg < denInfo.deg || rInfo.str === '0') {
+                    let rInfo = parsePolyTerms(currentR, mainVar);
+                    let isZeroR = false;
+                    try { isZeroR = nerdamer(currentR).toString() === '0'; } catch (e) { }
+
+                    if (isZeroR || rInfo.deg < denInfo.deg || (rInfo.deg === 0 && rInfo.leadCoeff === '0')) {
                         break;
                     }
 
                     let degDiff = rInfo.deg - denInfo.deg;
-                    let termCoeff = nerdamer(`(${rInfo.leadCoeff}) / (${denInfo.leadCoeff})`).expand().toString();
+                    let termCoeff = '1';
+                    try {
+                        termCoeff = nerdamer(`(${rInfo.leadCoeff}) / (${denInfo.leadCoeff})`).expand().toString();
+                    } catch (e) {
+                        termCoeff = `(${rInfo.leadCoeff})/(${denInfo.leadCoeff})`;
+                    }
+
                     let termExpr = degDiff === 0 ? termCoeff : (termCoeff === '1' ? `${mainVar}^(${degDiff})` : (termCoeff === '-1' ? `-${mainVar}^(${degDiff})` : `(${termCoeff})*${mainVar}^(${degDiff})`));
                     let qTerm = nerdamer(termExpr).expand().toString();
                     quotientTerms.push(qTerm);
@@ -3914,13 +3988,20 @@
                     let subtrahend = nerdamer(`(${qTerm}) * (${D_expanded.toString()})`).expand().toString();
                     let nextR = nerdamer(`(${currentR}) - (${subtrahend})`).expand().toString();
 
+                    let leadRTeX = formatTermTeX(rInfo.leadCoeff, rInfo.deg, mainVar);
+                    let leadDTeX = formatTermTeX(denInfo.leadCoeff, denInfo.deg, mainVar);
+                    let qTermTeX = nerdamer(qTerm).toTeX();
+                    let subtrahendTeX = nerdamer(subtrahend).toTeX();
+                    let currentRTeX = nerdamer(currentR).toTeX();
+                    let nextRTeX = nerdamer(nextR).toTeX();
+
                     stepCount++;
                     steps.push({
                         desc: `步骤 ${stepCount}：计算商式第 ${stepCount} 项并消除被除式最高次项：`,
                         math: `\\begin{aligned}
-                            \\text{当前最高次项相除：} & \\frac{${rInfo.leadTermTeX}}{${denInfo.leadTermTeX}} = ${nerdamer(qTerm).toTeX()} \\\\[4pt]
-                            \\text{商项乘以除式：} & (${nerdamer(qTerm).toTeX()}) \\cdot (${D_expanded.toTeX()}) = ${nerdamer(subtrahend).toTeX()} \\\\[4pt]
-                            \\text{作差消项得到新余式：} & (${nerdamer(currentR).toTeX()}) - (${nerdamer(subtrahend).toTeX()}) = ${nerdamer(nextR).toTeX()}
+                            \\text{最高次项相除：} & \\frac{${leadRTeX}}{${leadDTeX}} = ${qTermTeX} \\\\[4pt]
+                            \\text{商项乘以除式：} & (${qTermTeX}) \\cdot (${D_expanded.toTeX()}) = ${subtrahendTeX} \\\\[4pt]
+                            \\text{作差消项得新余式：} & (${currentRTeX}) - (${subtrahendTeX}) = ${nextRTeX}
                         \\end{aligned}`
                     });
 
@@ -3937,7 +4018,10 @@
                     math: `\\text{商式 } Q(${mainVar}) = ${quotientTeX}, \\quad \\text{余式 } R(${mainVar}) = ${remainderTeX}`
                 });
 
-                if (remainder === '0') {
+                let isRemainderZero = false;
+                try { isRemainderZero = nerdamer(remainder).toString() === '0'; } catch (e) { }
+
+                if (isRemainderZero) {
                     steps.push({
                         desc: '被除式可被除式完全整除 (Remainder is 0)：',
                         math: `\\frac{${P_expanded.toTeX()}}{${D_expanded.toTeX()}} = ${quotientTeX}`
