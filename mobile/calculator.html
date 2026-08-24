@@ -3880,13 +3880,41 @@
                         math: `${nerdamer(denStr).toTeX()} = ${a === 1 ? '' : a + ' '}(${v} - ${r1Str})(${v} - ${r2Str})`
                     });
 
-                    let partFrac = nerdamer(`partfrac(${numStr}/${denStr}, ${v})`);
+                    let partFrac = nerdamer(`partfrac((${numStr})/(${denStr}), ${v})`);
                     stepsBreakdown.push({
                         desc: '进行部分分式分解 (Partial Fraction Decomposition)：',
                         math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${partFrac.toTeX()}`
                     });
 
                     let integrated = nerdamer(`integrate(${partFrac.toString()}, ${v})`);
+                    let resTeX = simplifyIntegralResult(integrated, v, '');
+
+                    return {
+                        finalResultLatex: resTeX,
+                        steps: stepsBreakdown
+                    };
+                }
+
+                // -------------------------------------------------------------
+                // Mode C: 通用高阶有理分式部分分式分解积分 (Universal Partial Fractions)
+                // -------------------------------------------------------------
+                if (polyQ.deg > 2 || (polyQ.deg === 2 && polyP.deg > 1)) {
+                    let stepsBreakdown = [];
+                    stepsBreakdown.push({
+                        desc: '识别为有理分式积分 (Rational Function Integration)：',
+                        math: `\\int \\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} \\,d${v}`
+                    });
+
+                    let partFrac = nerdamer(`partfrac((${numStr})/(${denStr}), ${v})`);
+                    let partFracStr = partFrac.toString();
+                    let partFracTeX = partFrac.toTeX();
+
+                    stepsBreakdown.push({
+                        desc: '进行部分分式分解 (Partial Fraction Decomposition)：',
+                        math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${partFracTeX}`
+                    });
+
+                    let integrated = nerdamer(`integrate(${partFracStr}, ${v})`);
                     let resTeX = simplifyIntegralResult(integrated, v, '');
 
                     return {
