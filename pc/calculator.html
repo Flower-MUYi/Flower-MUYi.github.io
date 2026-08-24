@@ -2655,6 +2655,9 @@
                 };
             }
 
+            return null;
+        }
+
         function extractBalancedCurly(str, startIndex) {
             if (str[startIndex] !== '{') return null;
             let depth = 0;
@@ -3257,7 +3260,9 @@
                     defVal = nerdamer(`defint(${innerExpr}, ${a}, ${b}, ${v})`);
                 } catch (e) {
                     try {
-                        defVal = nerdamer(`sub(${indef.toString()}, ${v}, ${b}) - sub(${indef.toString()}, ${v}, ${a})`);
+                        let subsB = nerdamer(indef.toString(), { [v]: b });
+                        let subsA = nerdamer(indef.toString(), { [v]: a });
+                        defVal = nerdamer(`(${subsB.toString()}) - (${subsA.toString()})`);
                     } catch (e2) {
                         defVal = nerdamer(`(${indef.toString()})`);
                     }

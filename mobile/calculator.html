@@ -2737,6 +2737,24 @@
             return null;
         }
 
+        function extractBalancedCurly(str, startIndex) {
+            if (str[startIndex] !== '{') return null;
+            let depth = 0;
+            for (let i = startIndex; i < str.length; i++) {
+                if (str[i] === '{') depth++;
+                else if (str[i] === '}') {
+                    depth--;
+                    if (depth === 0) {
+                        return {
+                            content: str.substring(startIndex + 1, i),
+                            endIndex: i
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
         function parseMathSemantic(rawLatex) {
             // 顺手兼容部分用户通过 markdown 复制进来的 $$ 符号
             rawLatex = (rawLatex || '').replace(/\$\$/g, '').trim();
@@ -2876,28 +2894,10 @@
                 };
             }
 
-        function extractBalancedCurly(str, startIndex) {
-            if (str[startIndex] !== '{') return null;
-            let depth = 0;
-            for (let i = startIndex; i < str.length; i++) {
-                if (str[i] === '{') depth++;
-                else if (str[i] === '}') {
-                    depth--;
-                    if (depth === 0) {
-                        return {
-                            content: str.substring(startIndex + 1, i),
-                            endIndex: i
-                        };
-                    }
-                }
-            }
-            return null;
-        }
-
-        // -------------------------------------------------------------
-        // Mode 3: Definite / Indefinite Integrals (With Balanced Curly Support)
-        // -------------------------------------------------------------
-        let intMatch = s.match(/^\s*\\int\s*(_|\^)/);
+            // -------------------------------------------------------------
+            // Mode 3: Definite / Indefinite Integrals (With Balanced Curly Support)
+            // -------------------------------------------------------------
+            let intMatch = s.match(/^\s*\\int\s*(_|\^)/);
         if (intMatch) {
             let rest = s.substring(intMatch.index + intMatch[0].length - 1);
             let firstOp = rest[0]; // '_' 或 '^'
@@ -3339,7 +3339,9 @@
                     defVal = nerdamer(`defint(${innerExpr}, ${a}, ${b}, ${v})`);
                 } catch (e) {
                     try {
-                        defVal = nerdamer(`sub(${indef.toString()}, ${v}, ${b}) - sub(${indef.toString()}, ${v}, ${a})`);
+                        let subsB = nerdamer(indef.toString(), { [v]: b });
+                        let subsA = nerdamer(indef.toString(), { [v]: a });
+                        defVal = nerdamer(`(${subsB.toString()}) - (${subsA.toString()})`);
                     } catch (e2) {
                         defVal = nerdamer(`(${indef.toString()})`);
                     }
