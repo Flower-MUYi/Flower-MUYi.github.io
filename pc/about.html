@@ -11,6 +11,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        (function() {
+            var t = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <style>
         :root {
             --primary: #3b82f6;
@@ -18,11 +24,25 @@
             --bg: #0b0f19;
             --card-bg: #161f30;
             --card-border: #23324a;
+            --card-hover: #1e293b;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent-purple: #8b5cf6;
             --accent-cyan: #06b6d4;
             --radius: 16px;
+        }
+
+        [data-theme="light"] {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --card-hover: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-purple: #7c3aed;
+            --accent-cyan: #0891b2;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,6 +57,65 @@
             background-image: 
                 radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        [data-theme="light"] body {
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.06) 0%, transparent 40%);
+        }
+
+        [data-theme="light"] .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom-color: #e2e8f0;
+        }
+
+        [data-theme="light"] footer {
+            background: rgba(255, 255, 255, 0.85);
+            border-top-color: #e2e8f0;
+        }
+
+        [data-theme="light"] .profile-card,
+        [data-theme="light"] .info-section {
+            background: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="light"] .contact-card {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .contact-card:hover {
+            background: #f1f5f9;
+            border-color: var(--primary);
+        }
+
+        [data-theme="light"] .contact-info span {
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .github-icon {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .info-section h2 {
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .tech-badge {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            color: #475569;
+        }
+
+        [data-theme="light"] .nav-links a:hover,
+        [data-theme="light"] .nav-links a.active {
+            color: #0f172a;
         }
 
         .container {
@@ -303,8 +382,35 @@
             transition: color 0.2s;
         }
 
-        .footer-links a:hover {
-            color: var(--primary);
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--card-hover);
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        [data-theme="light"] .theme-toggle-btn {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .theme-toggle-btn:hover {
+            background: #e2e8f0;
         }
 
         @media (max-width: 600px) {
@@ -329,6 +435,11 @@
                 <li><a href="./calculator.html"><i class="fa-solid fa-calculator"></i> 多功能计算器</a></li>
                 <li><a href="./ip.html"><i class="fa-solid fa-shield-halved"></i> IP 检测</a></li>
                 <li><a href="./about.html" class="active"><i class="fa-solid fa-circle-info"></i> 关于我们</a></li>
+                <li>
+                    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="切换明亮/暗黑主题">
+                        <i class="fa-solid fa-sun"></i>
+                    </button>
+                </li>
             </ul>
         </div>
     </nav>
@@ -400,6 +511,40 @@
             <p>© 2026 FlowerMUYi. All rights reserved. Powered by GitHub Pages.</p>
         </div>
     </footer>
+
+    <script>
+        // ==================== 主题控制 (Theme Controller) ====================
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            try {
+                localStorage.setItem('flowermuyi_theme', next);
+            } catch(e) {}
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            if (document.body) document.body.setAttribute('data-theme', theme);
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) {
+                btn.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+                btn.setAttribute('title', theme === 'dark' ? '切换为明亮模式' : '切换为暗黑模式');
+            }
+        }
+
+        (function initTheme() {
+            const theme = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            applyTheme(theme);
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('flowermuyi_theme')) {
+                        applyTheme(e.matches ? 'light' : 'dark');
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>

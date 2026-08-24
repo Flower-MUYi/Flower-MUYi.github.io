@@ -13,9 +13,20 @@
         :root {
             --bg: #0b0f19;
             --card-bg: #161f30;
+            --card-border: #23324a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --primary: #3b82f6;
+            --btn-bg: #23324a;
+        }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --btn-bg: #e2e8f0;
         }
         body {
             background-color: var(--bg);
@@ -27,13 +38,14 @@
             height: 100vh;
             margin: 0;
             text-align: center;
+            transition: background-color 0.3s, color 0.3s;
         }
         .loader-card {
             background: var(--card-bg);
             padding: 40px;
             border-radius: 16px;
-            border: 1px solid #23324a;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             max-width: 400px;
             width: 90%;
         }
@@ -54,20 +66,32 @@
         .lang-links { display: flex; gap: 12px; justify-content: center; }
         .lang-btn {
             padding: 10px 20px;
-            background: #23324a;
+            background: var(--primary);
             color: #fff;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.2s;
         }
-        .lang-btn:hover { background: var(--primary); }
+        .lang-btn:hover { opacity: 0.9; }
     </style>
     <script>
         (function() {
             try {
                 localStorage.removeItem('preferred_lang');
             } catch (e) {}
+
+            // 识别系统或既有白天/黑夜模式偏好
+            var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var savedTheme = localStorage.getItem('flowermuyi_theme');
+            var currentTheme = savedTheme || (systemDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            if (!savedTheme) {
+                try {
+                    localStorage.setItem('flowermuyi_theme', currentTheme);
+                } catch(e) {}
+            }
+
             var ua = navigator.userAgent;
             var navPlatform = (navigator.platform || '').toLowerCase();
             var minDim = Math.min(window.screen.width, window.screen.height);
