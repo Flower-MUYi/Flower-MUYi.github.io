@@ -3196,7 +3196,16 @@
                     math: `F(${v}) = ${indef.toTeX()}`
                 });
 
-                const defVal = nerdamer(`defint(${innerExpr}, ${a}, ${b}, ${v})`);
+                let defVal;
+                try {
+                    defVal = nerdamer(`defint(${innerExpr}, ${a}, ${b}, ${v})`);
+                } catch (e) {
+                    try {
+                        defVal = nerdamer(`sub(${indef.toString()}, ${v}, ${b}) - sub(${indef.toString()}, ${v}, ${a})`);
+                    } catch (e2) {
+                        defVal = nerdamer(`(${indef.toString()})`);
+                    }
+                }
                 const defTeX = defVal.toTeX();
                 steps.push({
                     desc: '应用牛顿-莱布尼茨公式代入上、下限计算 $F(b) - F(a)$：',

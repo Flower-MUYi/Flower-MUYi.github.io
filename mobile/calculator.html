@@ -2876,38 +2876,97 @@
                 };
             }
 
-            // -------------------------------------------------------------
-            // Mode 3: Definite / Indefinite Integrals
-            // -------------------------------------------------------------
-            // 1. 开头允许任意空白符 ^\s*
-            // 2. 如果没带大括号 {}，严格限定只抓取单字符或单指令 (\\[a-zA-Z]+|[0-9a-zA-Z])，防止 2x 被贪婪吞噬
-            let defIntRegex = /^\s*\\int\s*_\s*(?:\{([^}]+)\}|(\\[a-zA-Z]+|[0-9a-zA-Z]))\s*\^\s*(?:\{([^}]+)\}|(\\[a-zA-Z]+|[0-9a-zA-Z]))\s*(.*?)(?:dx|\\,dx|d\s*([a-zA-Z])|$)/;
-            if (defIntRegex.test(s)) {
-                let m = s.match(defIntRegex);
-                let a = cleanBaseExpression(m[1] || m[2]);
-                let b = cleanBaseExpression(m[3] || m[4]);
-                let expr = cleanBaseExpression(m[5]);
-                let v = m[6] || 'x';
-                return { type: 'defint', lower: a, upper: b, expr: expr, varName: v };
+        function extractBalancedCurly(str, startIndex) {
+            if (str[startIndex] !== '{') return null;
+            let depth = 0;
+            for (let i = startIndex; i < str.length; i++) {
+                if (str[i] === '{') depth++;
+                else if (str[i] === '}') {
+                    depth--;
+                    if (depth === 0) {
+                        return {
+                            content: str.substring(startIndex + 1, i),
+                            endIndex: i
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // -------------------------------------------------------------
+        // Mode 3: Definite / Indefinite Integrals (With Balanced Curly Support)
+        // -------------------------------------------------------------
+        let intMatch = s.match(/^\s*\\int\s*(_|\^)/);
+        if (intMatch) {
+            let rest = s.substring(intMatch.index + intMatch[0].length - 1);
+            let firstOp = rest[0]; // '_' 或 '^'
+            let lowerRaw = '', upperRaw = '';
+            let currIdx = 1;
+
+            // 解析第一个界限
+            if (rest[currIdx] === '{') {
+                let res = extractBalancedCurly(rest, currIdx);
+                if (res) {
+                    if (firstOp === '_') lowerRaw = res.content;
+                    else upperRaw = res.content;
+                    currIdx = res.endIndex + 1;
+                }
+            } else {
+                let singleMatch = rest.substring(currIdx).match(/^(\\[a-zA-Z]+|[0-9a-zA-Z])/);
+                if (singleMatch) {
+                    if (firstOp === '_') lowerRaw = singleMatch[0];
+                    else upperRaw = singleMatch[0];
+                    currIdx += singleMatch[0].length;
+                }
             }
 
-            let defIntRegexRev = /^\s*\\int\s*\^\s*(?:\{([^}]+)\}|(\\[a-zA-Z]+|[0-9a-zA-Z]))\s*_\s*(?:\{([^}]+)\}|(\\[a-zA-Z]+|[0-9a-zA-Z]))\s*(.*?)(?:dx|\\,dx|d\s*([a-zA-Z])|$)/;
-            if (defIntRegexRev.test(s)) {
-                let m = s.match(defIntRegexRev);
-                let b = cleanBaseExpression(m[1] || m[2]);
-                let a = cleanBaseExpression(m[3] || m[4]);
-                let expr = cleanBaseExpression(m[5]);
-                let v = m[6] || 'x';
-                return { type: 'defint', lower: a, upper: b, expr: expr, varName: v };
+            // 跨过空白并匹配第二个界限
+            let nextOpMatch = rest.substring(currIdx).match(/^\s*(_|\^)/);
+            if (nextOpMatch) {
+                let secondOp = nextOpMatch[1];
+                currIdx += nextOpMatch.index + nextOpMatch[0].length;
+                if (rest[currIdx] === '{') {
+                    let res = extractBalancedCurly(rest, currIdx);
+                    if (res) {
+                        if (secondOp === '_') lowerRaw = res.content;
+                        else upperRaw = res.content;
+                        currIdx = res.endIndex + 1;
+                    }
+                } else {
+                    let singleMatch = rest.substring(currIdx).match(/^(\\[a-zA-Z]+|[0-9a-zA-Z])/);
+                    if (singleMatch) {
+                        if (secondOp === '_') lowerRaw = singleMatch[0];
+                        else upperRaw = singleMatch[0];
+                        currIdx += singleMatch[0].length;
+                    }
+                }
             }
 
-            let indIntRegex = /^\s*\\int\s*(.*?)(?:dx|\\,dx|d\s*([a-zA-Z])|$)/;
-            if (indIntRegex.test(s)) {
-                let m = s.match(indIntRegex);
-                let expr = cleanBaseExpression(m[1]);
-                let v = m[2] || 'x';
-                return { type: 'integrate', expr: expr, varName: v };
+            let remaining = rest.substring(currIdx).trim();
+            // 剔除末尾的 \,dx, dx, d x 等
+            let varMatch = remaining.match(/(?:\\,)?d\s*([a-zA-Z])$/);
+            let v = varMatch ? varMatch[1] : 'x';
+            let integrandRaw = remaining.replace(/(?:\\,)?d\s*([a-zA-Z])$/, '').trim();
+
+            if (lowerRaw && upperRaw && integrandRaw) {
+                return {
+                    type: 'defint',
+                    lower: cleanBaseExpression(lowerRaw),
+                    upper: cleanBaseExpression(upperRaw),
+                    expr: cleanBaseExpression(integrandRaw),
+                    varName: v
+                };
             }
+        }
+
+        let indIntRegex = /^\s*\\int\s*(.*?)(?:dx|\\,dx|d\s*([a-zA-Z])|$)/;
+        if (indIntRegex.test(s)) {
+            let m = s.match(indIntRegex);
+            let expr = cleanBaseExpression(m[1]);
+            let v = m[2] || 'x';
+            return { type: 'integrate', expr: expr, varName: v };
+        }
 
             // -------------------------------------------------------------
             // Mode 3: Equations (Contains '=')
@@ -3275,7 +3334,16 @@
                     math: `F(${v}) = ${indef.toTeX()}`
                 });
 
-                const defVal = nerdamer(`defint(${innerExpr}, ${a}, ${b}, ${v})`);
+                let defVal;
+                try {
+                    defVal = nerdamer(`defint(${innerExpr}, ${a}, ${b}, ${v})`);
+                } catch (e) {
+                    try {
+                        defVal = nerdamer(`sub(${indef.toString()}, ${v}, ${b}) - sub(${indef.toString()}, ${v}, ${a})`);
+                    } catch (e2) {
+                        defVal = nerdamer(`(${indef.toString()})`);
+                    }
+                }
                 const defTeX = defVal.toTeX();
                 steps.push({
                     desc: '应用牛顿-莱布尼茨公式代入上、下限计算 $F(b) - F(a)$：',
