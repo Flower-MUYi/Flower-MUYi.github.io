@@ -2674,6 +2674,10 @@
             s = s.replace(/(^|[^a-zA-Z0-9])(\d+\.?\d*)\s*\(/g, '$1$2*(');
             s = s.replace(/\)\s*\(/g, ')*(');
             s = s.replace(/\)\s*([a-zA-Z])/g, ')*$1');
+            s = s.replace(/\)\^(\d+|\([^{}]+\))\s*\(/g, ')^$1*(');
+            s = s.replace(/\)\^(\d+|\([^{}]+\))\s*([a-zA-Z])/g, ')^$1*$2');
+            s = s.replace(/([a-zA-Z0-9])\^(\d+|\([^{}]+\))\s*\(/g, '$1^$2*(');
+            s = s.replace(/([a-zA-Z0-9])\^(\d+|\([^{}]+\))\s*([a-zA-Z])/g, '$1^$2*$3');
 
             s = s.replace(/\b([a-zA-Z]+)\s*\(/g, (match, fn) => {
                 if (NERDAMER_FUNCS.includes(fn.toLowerCase())) {
@@ -3482,51 +3486,51 @@
             return s;
         }
 
+        function stripOuterParentheses(str) {
+            let s = (str || '').trim();
+            while (s.startsWith('(') && s.endsWith(')')) {
+                let depth = 0;
+                let isEnclosing = true;
+                for (let i = 0; i < s.length - 1; i++) {
+                    if (s[i] === '(') depth++;
+                    else if (s[i] === ')') {
+                        depth--;
+                        if (depth === 0) {
+                            isEnclosing = false;
+                            break;
+                        }
+                    }
+                }
+                if (isEnclosing) {
+                    s = s.substring(1, s.length - 1).trim();
+                } else {
+                    break;
+                }
+            }
+            return s;
+        }
+
         function extractRationalFraction(expr, v = 'x') {
             if (!expr) return null;
-            let s = expr.trim();
+            let s = stripOuterParentheses(expr);
             // 排除含有对数、指数、三角函数的复杂非有理式
             if (/log|ln|sin|cos|tan|cot|sec|csc|exp|sqrt|asin|acos|atan/i.test(s)) {
                 return null;
             }
 
-            let parts = null;
-            if (s.startsWith('(') && s.endsWith(')')) {
-                let inside = s.substring(1, s.length - 1).trim();
-                let divIdx = -1;
-                let depth = 0;
-                for (let i = 0; i < inside.length; i++) {
-                    if (inside[i] === '(') depth++;
-                    else if (inside[i] === ')') depth--;
-                    else if (inside[i] === '/' && depth === 0) {
-                        divIdx = i;
-                        break;
-                    }
-                }
-                if (divIdx !== -1) {
-                    parts = [inside.substring(0, divIdx).trim(), inside.substring(divIdx + 1).trim()];
+            let divIdx = -1;
+            let depth = 0;
+            for (let i = 0; i < s.length; i++) {
+                if (s[i] === '(') depth++;
+                else if (s[i] === ')') depth--;
+                else if (s[i] === '/' && depth === 0) {
+                    divIdx = i;
+                    break;
                 }
             }
-            if (!parts) {
-                let divIdx = -1;
-                let depth = 0;
-                for (let i = 0; i < s.length; i++) {
-                    if (s[i] === '(') depth++;
-                    else if (s[i] === ')') depth--;
-                    else if (s[i] === '/' && depth === 0) {
-                        divIdx = i;
-                        break;
-                    }
-                }
-                if (divIdx !== -1) {
-                    parts = [s.substring(0, divIdx).trim(), s.substring(divIdx + 1).trim()];
-                }
-            }
-            if (parts && parts[0] && parts[1]) {
-                let numStr = parts[0];
-                let denStr = parts[1];
-                while (numStr.startsWith('(') && numStr.endsWith(')')) numStr = numStr.substring(1, numStr.length - 1).trim();
-                while (denStr.startsWith('(') && denStr.endsWith(')')) denStr = denStr.substring(1, denStr.length - 1).trim();
+            if (divIdx !== -1) {
+                let numStr = stripOuterParentheses(s.substring(0, divIdx).trim());
+                let denStr = stripOuterParentheses(s.substring(divIdx + 1).trim());
                 return { num: numStr, den: denStr };
             }
             return null;
