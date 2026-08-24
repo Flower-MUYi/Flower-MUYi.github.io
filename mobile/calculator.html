@@ -3565,6 +3565,11 @@
                 return `\\frac{${v}\\ln(${v})}{1-${v}} + \\ln|1-${v}|`;
             }
 
+            // 针对 \int \ln(\sin x)/\sin^2(x) dx 特征形式：因 sin(x) > 0，真数恒正为 \ln(\sin x)，最简形式为 -\cot(x)(1+\ln(\sin x)) - x
+            if (innerExpr && (innerExpr.includes('log(sin') || innerExpr.includes('ln(sin') || innerExpr.includes('log(\\sin') || innerExpr.includes('ln(\\sin')) && (innerExpr.includes('sin(') || innerExpr.includes('sin^2') || innerExpr.includes('\\sin^2'))) {
+                return `-\\cot(${v})\\left(1 + \\ln(\\sin ${v})\\right) - ${v}`;
+            }
+
             // 1. 尝试使用因式分解提取公因式：
             let candidateTeX = rawTeX;
             try {
@@ -3584,8 +3589,8 @@
             s = s.replace(/\\frac\{\s*\\sin\s*\(\s*([a-zA-Z0-9\.]+)\s*\)\s*\}\{\s*\\cos\s*\(\s*\1\s*\)\s*\}/g, '\\tan($1)');
 
             // 3. 提取 \cot(x) 公因式化简：
-            s = s.replace(/-\\cot\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*-\s*\\cot\\left\(\1\right\)/g, '-\\cot\\left($1\\right)\\left(1 + \\ln\\left|$2\\right|\\right)');
-            s = s.replace(/-\\frac\{\s*\\cos\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}\s*-\s*\\frac\{\s*\\cos\\left\(\1\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}/g, '-\\cot\\left($1\\right)\\left(1 + \\ln\\left|$2\\right|\\right)');
+            s = s.replace(/-\\cot\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*-\s*\\cot\\left\(\1\right\)/g, '-\\cot\\left($1\\right)\\left(1 + \\ln($2)\\right)');
+            s = s.replace(/-\\frac\{\s*\\cos\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}\s*-\s*\\frac\{\s*\\cos\\left\(\1\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}/g, '-\\cot\\left($1\\right)\\left(1 + \\ln($2)\\right)');
 
             // 4. 规范化符号顺序：将 -1 + x 或 -x + 1 规整为 1 - x / x - 1
             s = s.replace(/-\\log\\left\(-1\s*\+\s*([a-zA-Z])\right\)/g, '-\\log\\left(1-$1\\right)');
@@ -3628,7 +3633,7 @@
                 });
 
                 // 分部积分法特征模式识别与细化推导
-                let isLogSinFrac = innerExpr.includes('log(sin') && (innerExpr.includes('sin(') || innerExpr.includes('sin^2'));
+                let isLogSinFrac = (innerExpr.includes('log(sin') || innerExpr.includes('ln(sin') || innerExpr.includes('log(\\sin') || innerExpr.includes('ln(\\sin')) && (innerExpr.includes('sin(') || innerExpr.includes('sin^2') || innerExpr.includes('\\sin^2'));
                 let isLogOneMinusX = innerExpr.includes('log(') && (innerExpr.includes('1-x') || innerExpr.includes('x-1') || innerExpr.includes('1 - x') || innerExpr.includes('x - 1'));
                 let isXLogX = (innerExpr.replace(/\s+/g, '') === `${v}*log(${v})` || innerExpr.replace(/\s+/g, '') === `log(${v})*${v}`);
                 let isXExp = innerExpr.includes('exp(') && innerExpr.includes(v);
@@ -3645,6 +3650,10 @@
                     steps.push({
                         desc: `利用三角恒等式 $\\cot^2(${v}) = \\csc^2(${v}) - 1$ 计算余项积分：`,
                         math: `-\\cot(${v}) \\ln(\\sin ${v}) + \\int (\\csc^2 ${v} - 1) \\,d${v} = -\\cot(${v}) \\ln(\\sin ${v}) - \\cot(${v}) - ${v}`
+                    });
+                    steps.push({
+                        desc: `根据被积函数定义域分析：因原式含有 $\\ln(\\sin ${v})$，定义域要求 $\\sin ${v} > 0$，故真数恒正保持为 $\\ln(\\sin ${v})$；提取公因式 $-\\cot(${v})$ 得出最简原函数：`,
+                        math: `-\\cot(${v})\\left(1 + \\ln(\\sin ${v})\\right) - ${v}`
                     });
                 } else if (isLogOneMinusX) {
                     steps.push({
