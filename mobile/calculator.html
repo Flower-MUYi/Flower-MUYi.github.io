@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FlowerMUYi 手机版多功能科学计算器</title>
+    <meta name="description" content="专为手机触控优化的移动端科学计算器，集成 MathLive 所见即所得公式输入、KaTeX 渲染、Nerdamer 符号代数 CAS 引擎与 2D 函数绘图。">
+
+    <!-- MathLive -->
+    <link rel="stylesheet" href="https://unpkg.com/mathlive/dist/mathlive-static.css">
+    <script defer src="https://unpkg.com/mathlive"></script>
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <!-- Nerdamer CAS -->
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/nerdamer.core.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Algebra.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Calculus.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Solve.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Extra.js"></script>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        (function() {
+            var t = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-main: #0a0e17;
+            --bg-card: #131d2e;
+            --bg-card-sec: #19263c;
+            --border: #22324d;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #34d399;
+            --accent-purple: #a78bfa;
+            --accent-amber: #fbbf24;
+            --accent-red: #f87171;
+            --key-bg: #1a2436;
+            --key-active: #2563eb;
+            --key-border: #2a3b55;
+            --radius: 12px;
+        }
+
+        [data-theme="light"] {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-sec: #f8fafc;
+            --border: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-green: #059669;
+            --accent-purple: #7c3aed;
+            --accent-amber: #d97706;
+            --accent-red: #dc2626;
+            --key-bg: #ffffff;
+            --key-active: #2563eb;
+            --key-border: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            touch-action: pan-y;
+            transition: background-color 0.25s, color 0.25s;
+        }
+
+        /* 顶部紧凑导航 */
+        .mobile-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(19, 29, 46, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        [data-theme="light"] .mobile-header {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .brand-badge {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #fff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .h-btn {
+            background: var(--key-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .h-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 主体容器 */
+        .content-scroll {
+            flex: 1;
+            padding: 12px;
+            padding-bottom: 290px; /* 为底部常驻虚拟键盘预留安全滚动空间 */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .card-title-row i {
+            margin-right: 6px;
+        }
+
+        /* MathLive 移动端专用输入框 (完全禁用弹出手机原生输入法) */
+        .math-box-container {
+            background: var(--bg-main);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .math-box-container:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        math-field {
+            width: 100%;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            background: transparent;
+            outline: none;
+            border: none;
+            --keyboard-zindex: -1;
+            /* 关键指令：阻止手机弹出任何原生输入法键盘 */
+            touch-action: manipulation;
+        }
+
+        math-field::part(virtual-keyboard-toggle) {
+            display: none;
+        }
+
+        /* 滑块快捷提示栏 */
+        .sliders-hint-banner {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 10px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px dashed rgba(56, 189, 248, 0.35);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .add-pills-wrap {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .add-pill-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 预设横向滑动槽 */
+        .presets-scroller {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 0 6px 0;
+            scrollbar-width: none;
+        }
+
+        .presets-scroller::-webkit-scrollbar {
+            display: none;
+        }
+
+        .preset-chip {
+            white-space: nowrap;
+            background: var(--bg-card-sec);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .preset-chip:active, .preset-chip.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* 结果展示卡片 */
+        .result-box {
+            background: var(--bg-card-sec);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .result-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--accent-green);
+            overflow-x: auto;
+            padding: 4px 0;
+        }
+
+        /* 步骤展开折叠 */
+        .steps-accordion {
+            margin-top: 8px;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+        }
+
+        .steps-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: var(--accent-purple);
+            cursor: pointer;
+            padding: 4px 0;
+            font-weight: 600;
+        }
+
+        .steps-body {
+            display: none;
+            margin-top: 6px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            background: var(--bg-main);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        /* 画板与交互 */
+        .canvas-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .canvas-tools-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .c-btn {
+            background: var(--bg-card-sec);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .c-btn:active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            background: #090d13;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            touch-action: none; /* 允许自绘手势拖动与缩放 */
+        }
+
+        [data-theme="light"] .canvas-wrapper {
+            background: #ffffff;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .graph-tooltip {
+            position: absolute;
+            display: none;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.76rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: #fff;
+            pointer-events: none;
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        .domain-tag {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #c084fc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            display: none;
+            z-index: 10;
+        }
+
+        /* 动态滑块列表 */
+        .sliders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-item {
+            background: var(--bg-card-sec);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-blue);
+            min-width: 48px;
+        }
+
+        .slider-input {
+            flex: 1;
+            accent-color: var(--primary);
+            height: 6px;
+        }
+
+        .slider-play-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* ================= 移动端底部专用常驻虚拟键盘 ================= */
+        .mobile-keypad-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+            padding: 8px 8px 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        [data-theme="light"] .mobile-keypad-dock {
+            background: #ffffff;
+            box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .keypad-tab-row {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 2px;
+        }
+
+        .keypad-tab-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .k-tab {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .k-tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+
+        .key-btn {
+            background: var(--key-bg);
+            border: 1px solid var(--key-border);
+            color: var(--text-main);
+            height: 44px;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.08s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .key-btn:active {
+            transform: scale(0.92);
+            background: var(--key-active) !important;
+            color: #fff !important;
+        }
+
+        .key-num {
+            background: rgba(255, 255, 255, 0.06);
+            font-weight: 700;
+        }
+
+        [data-theme="light"] .key-num {
+            background: #f8fafc;
+        }
+
+        .key-op {
+            color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .key-calc {
+            background: var(--primary) !important;
+            color: #fff !important;
+            grid-column: span 1;
+            font-weight: 800;
+        }
+
+        .key-ac {
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .key-fn {
+            color: var(--accent-purple);
+            font-size: 0.95rem;
+        }
+
+        .key-cur {
+            color: var(--text-muted);
+        }
+
+        /* 隐藏的原生输入指示 */
+        .hidden-mobile-trigger {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 顶栏导航 -->
+    <header class="mobile-header">
+        <a href="./index.html" class="header-brand">
+            <span class="brand-badge">∑</span>
+            <span>FlowerMUYi 计算器</span>
+        </a>
+        <div class="header-actions">
+            <a href="./index.html" class="h-btn" title="返回主页">🏠</a>
+            <a href="./ip.html" class="h-btn" title="IP 检测">🛡️</a>
+            <a href="./about.html" class="h-btn" title="关于我们">ℹ️</a>
+            <button class="h-btn" id="themeToggleBtn" title="切换明亮/暗黑主题">☀️</button>
+            <button class="h-btn" id="helpBtn" title="使用帮助">?</button>
+        </div>
+    </header>
+
+    <!-- 主体滚动区域 -->
+    <main class="content-scroll">
+
+        <!-- 公式输入卡片 -->
+        <section class="card">
+            <div class="card-title-row">
+                <span><i class="fa-solid fa-square-root-variable"></i> 数学公式输入 (Touch WYSIWYG)</span>
+                <span id="calcStatusBadge" style="font-size:0.75rem; color:var(--accent-green);"><i class="fa-solid fa-bolt"></i> 实时计算中</span>
+            </div>
+
+            <!-- 点击聚焦但不呼出系统原生输入法的 MathLive 容器 -->
+            <div class="math-box-container" id="mathBoxWrap">
+                <math-field id="mathInput" read-only="false" virtual-keyboard-mode="off" default-mode="math"></math-field>
+            </div>
+
+            <!-- 动态参数滑块横幅 (Desmos 风格) -->
+            <div class="sliders-hint-banner" id="slidersBanner">
+                <span><i class="fa-solid fa-sliders"></i> 检测到未知参数:</span>
+                <div class="add-pills-wrap" id="slidersBannerPills"></div>
+            </div>
+
+            <!-- 经典示例横向滑动槽 -->
+            <div style="margin-top: 10px;">
+                <div style="font-size:0.76rem; color:var(--text-muted); margin-bottom:4px;"><i class="fa-solid fa-lightbulb"></i> 快速填入示例:</div>
+                <div class="presets-scroller" id="presetsScroller">
+                    <button class="preset-chip active" data-preset="a \cdot \sin(b \cdot x + c)">$a\sin(bx+c)$</button>
+                    <button class="preset-chip" data-preset="\sin(x) \left\lbrace x\in\left(-2\pi,2\pi\right)\right\rbrace">$\sin(x)\{-2\pi<x<2\pi\}$</button>
+                    <button class="preset-chip" data-preset="a \cdot x^2 + b \cdot x + c">$ax^2+bx+c$</button>
+                    <button class="preset-chip" data-preset="\frac{d}{dx}(\sin(x^2))">$\frac{d}{dx}(\sin x^2)$</button>
+                    <button class="preset-chip" data-preset="\int x \cdot \cos(x) \,dx">$\int x\cos x dx$</button>
+                    <button class="preset-chip" data-preset="(x+2)^3">$(x+2)^3$</button>
+                </div>
+            </div>
+
+            <!-- 计算结果与分步解析 -->
+            <div class="result-box">
+                <div class="result-label">CAS 符号求值 / 化简结果:</div>
+                <div class="result-value" id="resultValueDisplay">正在计算...</div>
+
+                <div class="steps-accordion" id="stepsAccordion">
+                    <div class="steps-header" id="stepsToggle">
+                        <span><i class="fa-solid fa-layer-group"></i> 查看分步推导过程</span>
+                        <i class="fa-solid fa-chevron-down" id="stepsChevron"></i>
+                    </div>
+                    <div class="steps-body" id="stepsContent">
+                        暂无分步推导
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2D 函数动态画板 -->
+        <section class="card canvas-card">
+            <div class="canvas-toolbar">
+                <div class="card-title-row" style="margin-bottom:0;">
+                    <span><i class="fa-solid fa-chart-line"></i> 2D 函数图像与零点交点追踪</span>
+                </div>
+                <div class="canvas-tools-group">
+                    <button class="c-btn" id="zoomInBtn"><i class="fa-solid fa-plus"></i></button>
+                    <button class="c-btn" id="zoomOutBtn"><i class="fa-solid fa-minus"></i></button>
+                    <button class="c-btn" id="resetViewBtn"><i class="fa-solid fa-arrows-rotate"></i> 归位</button>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <div class="domain-tag" id="domainTagBadge">定义域</div>
+                <div class="graph-tooltip" id="graphTooltip"></div>
+                <canvas id="plotCanvas"></canvas>
+            </div>
+        </section>
+
+        <!-- 参数滑块控制面板 -->
+        <section class="card" id="slidersCard" style="display:none;">
+            <div class="card-title-row">
+                <span><i class="fa-solid fa-sliders"></i> 动态参数滑块 (60 FPS 动画)</span>
+            </div>
+            <div class="sliders-list" id="slidersList"></div>
+        </section>
+
+    </main>
+
+    <!-- ================= 移动端底部常驻触控专用虚拟键盘 ================= -->
+    <div class="mobile-keypad-dock" id="mobileKeypad">
+        <!-- 选项卡切换 -->
+        <div class="keypad-tab-row">
+            <button class="k-tab active" data-tab="basic">常用 123</button>
+            <button class="k-tab" data-tab="calc">微积分 ∫dx</button>
+            <button class="k-tab" data-tab="func">函数三角</button>
+            <button class="k-tab" data-tab="vars">参数 abc</button>
+            <button class="k-tab" data-tab="greek">希腊 αβ</button>
+            <button class="k-tab" data-tab="cases">定义域 {}</button>
+        </div>
+
+        <!-- 5列触控大按键矩阵 -->
+        <div class="keypad-grid" id="keypadGrid">
+            <!-- 动态生成按键 -->
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. 移动端键盘数据字典与按键布局系统
+        // =========================================================================
+        const KEYPAD_LAYOUTS = {
+            basic: [
+                { label: 'x', latex: 'x', cls: 'key-op' },
+                { label: 'y', latex: 'y', cls: 'key-op' },
+                { label: '(', latex: '(', cls: 'key-op' },
+                { label: ')', latex: ')', cls: 'key-op' },
+                { label: 'AC', action: 'clear', cls: 'key-ac' },
+
+                { label: '7', latex: '7', cls: 'key-num' },
+                { label: '8', latex: '8', cls: 'key-num' },
+                { label: '9', latex: '9', cls: 'key-num' },
+                { label: '÷', latex: '\\frac{#@}{#?}', cls: 'key-op' },
+                { label: '⌫', action: 'backspace', cls: 'key-ac' },
+
+                { label: '4', latex: '4', cls: 'key-num' },
+                { label: '5', latex: '5', cls: 'key-num' },
+                { label: '6', latex: '6', cls: 'key-num' },
+                { label: '×', latex: '\\cdot ', cls: 'key-op' },
+                { label: 'x²', latex: '#@^2', cls: 'key-op' },
+
+                { label: '1', latex: '1', cls: 'key-num' },
+                { label: '2', latex: '2', cls: 'key-num' },
+                { label: '3', latex: '3', cls: 'key-num' },
+                { label: '-', latex: '-', cls: 'key-op' },
+                { label: 'xⁿ', latex: '#@^{#?}', cls: 'key-op' },
+
+                { label: '0', latex: '0', cls: 'key-num' },
+                { label: '.', latex: '.', cls: 'key-num' },
+                { label: '+', latex: '+', cls: 'key-op' },
+                { label: '√', latex: '\\sqrt{#0}', cls: 'key-op' },
+                { label: '=', action: 'calc', cls: 'key-calc' }
+            ],
+            calc: [
+                { label: 'd/dx', latex: '\\frac{d}{dx}(#0)', cls: 'key-fn' },
+                { label: 'd²/dx²', latex: '\\frac{d^2}{dx^2}(#0)', cls: 'key-fn' },
+                { label: '∫', latex: '\\int #0 \\,dx', cls: 'key-fn' },
+                { label: '∫_a^b', latex: '\\int_{#?}^{#?} #0 \\,dx', cls: 'key-fn' },
+                { label: '⌫', action: 'backspace', cls: 'key-ac' },
+
+                { label: 'lim', latex: '\\lim_{x \\to #?}(#0)', cls: 'key-fn' },
+                { label: '∑', latex: '\\sum_{n=1}^{#?}(#0)', cls: 'key-fn' },
+                { label: '∂/∂x', latex: '\\frac{\\partial}{\\partial x}(#0)', cls: 'key-fn' },
+                { label: 'n!', latex: '#@!', cls: 'key-fn' },
+                { label: '∞', latex: '\\infty', cls: 'key-op' },
+
+                { label: '◀', action: 'left', cls: 'key-cur' },
+                { label: '▶', action: 'right', cls: 'key-cur' },
+                { label: 'π', latex: '\\pi', cls: 'key-op' },
+                { label: 'e', latex: 'e', cls: 'key-op' },
+                { label: '=', action: 'calc', cls: 'key-calc' }
+            ],
+            func: [
+                { label: 'sin', latex: '\\sin(#0)', cls: 'key-fn' },
+                { label: 'cos', latex: '\\cos(#0)', cls: 'key-fn' },
+                { label: 'tan', latex: '\\tan(#0)', cls: 'key-fn' },
+                { label: 'ln', latex: '\\ln(#0)', cls: 'key-fn' },
+                { label: '⌫', action: 'backspace', cls: 'key-ac' },
+
+                { label: 'arcsin', latex: '\\arcsin(#0)', cls: 'key-fn' },
+                { label: 'arccos', latex: '\\arccos(#0)', cls: 'key-fn' },
+                { label: 'arctan', latex: '\\arctan(#0)', cls: 'key-fn' },
+                { label: 'lg', latex: '\\lg(#0)', cls: 'key-fn' },
+                { label: 'log_b', latex: '\\log_{#?}(#0)', cls: 'key-fn' },
+
+                { label: 'eˣ', latex: 'e^{#0}', cls: 'key-fn' },
+                { label: '10ˣ', latex: '10^{#0}', cls: 'key-fn' },
+                { label: '|x|', latex: '|#0|', cls: 'key-fn' },
+                { label: 'sgn', latex: '\\operatorname{sgn}(#0)', cls: 'key-fn' },
+                { label: '=', action: 'calc', cls: 'key-calc' }
+            ],
+            vars: [
+                { label: 'a', latex: 'a', cls: 'key-op' },
+                { label: 'b', latex: 'b', cls: 'key-op' },
+                { label: 'c', latex: 'c', cls: 'key-op' },
+                { label: 'k', latex: 'k', cls: 'key-op' },
+                { label: '⌫', action: 'backspace', cls: 'key-ac' },
+
+                { label: 'm', latex: 'm', cls: 'key-op' },
+                { label: 'n', latex: 'n', cls: 'key-op' },
+                { label: 't', latex: 't', cls: 'key-op' },
+                { label: 'z', latex: 'z', cls: 'key-op' },
+                { label: 'AC', action: 'clear', cls: 'key-ac' },
+
+                { label: '◀', action: 'left', cls: 'key-cur' },
+                { label: '▶', action: 'right', cls: 'key-cur' },
+                { label: 'x', latex: 'x', cls: 'key-op' },
+                { label: 'y', latex: 'y', cls: 'key-op' },
+                { label: '=', action: 'calc', cls: 'key-calc' }
+            ],
+            greek: [
+                { label: 'α', latex: '\\alpha', cls: 'key-op' },
+                { label: 'β', latex: '\\beta', cls: 'key-op' },
+                { label: 'θ', latex: '\\theta', cls: 'key-op' },
+                { label: 'λ', latex: '\\lambda', cls: 'key-op' },
+                { label: '⌫', action: 'backspace', cls: 'key-ac' },
+
+                { label: 'μ', latex: '\\mu', cls: 'key-op' },
+                { label: 'ω', latex: '\\omega', cls: 'key-op' },
+                { label: 'φ', latex: '\\phi', cls: 'key-op' },
+                { label: 'δ', latex: '\\delta', cls: 'key-op' },
+                { label: 'AC', action: 'clear', cls: 'key-ac' },
+
+                { label: 'π', latex: '\\pi', cls: 'key-op' },
+                { label: 'σ', latex: '\\sigma', cls: 'key-op' },
+                { label: '◀', action: 'left', cls: 'key-cur' },
+                { label: '▶', action: 'right', cls: 'key-cur' },
+                { label: '=', action: 'calc', cls: 'key-calc' }
+            ],
+            cases: [
+                { label: '{x∈(a,b)}', latex: '\\left\\lbrace x \\in \\left( #?, #? \\right) \\right\\rbrace', cls: 'key-fn' },
+                { label: '{x∈[a,b]}', latex: '\\left\\lbrace x \\in \\left[ #?, #? \\right] \\right\\rbrace', cls: 'key-fn' },
+                { label: '{x > a}', latex: '\\left\\lbrace x > #? \\right\\rbrace', cls: 'key-fn' },
+                { label: '{a≤x≤b}', latex: '\\left\\lbrace #? \\le x \\le #? \\right\\rbrace', cls: 'key-fn' },
+                { label: '⌫', action: 'backspace', cls: 'key-ac' },
+
+                { label: '≤', latex: '\\le', cls: 'key-op' },
+                { label: '≥', latex: '\\ge', cls: 'key-op' },
+                { label: '<', latex: '<', cls: 'key-op' },
+                { label: '>', latex: '>', cls: 'key-op' },
+                { label: '≠', latex: '\\neq', cls: 'key-op' },
+
+                { label: '∈', latex: '\\in', cls: 'key-op' },
+                { label: '◀', action: 'left', cls: 'key-cur' },
+                { label: '▶', action: 'right', cls: 'key-cur' },
+                { label: 'AC', action: 'clear', cls: 'key-ac' },
+                { label: '=', action: 'calc', cls: 'key-calc' }
+            ]
+        };
+
+        const mathField = document.getElementById('mathInput');
+        const keypadGrid = document.getElementById('keypadGrid');
+        const keypadTabs = document.querySelectorAll('.k-tab');
+
+        // 彻底禁用手机软键盘呼出
+        function blockMobileNativeKeyboard() {
+            if (!mathField) return;
+            mathField.setAttribute('inputmode', 'none');
+            mathField.setAttribute('virtual-keyboard-mode', 'off');
+            
+            const shadowTextarea = mathField.shadowRoot && mathField.shadowRoot.querySelector('textarea, input');
+            if (shadowTextarea) {
+                shadowTextarea.setAttribute('inputmode', 'none');
+                shadowTextarea.setAttribute('readonly', 'true');
+                setTimeout(() => {
+                    shadowTextarea.removeAttribute('readonly');
+                }, 100);
+            }
+        }
+
+        mathField.addEventListener('focus', () => {
+            blockMobileNativeKeyboard();
+        });
+
+        mathField.addEventListener('touchstart', () => {
+            blockMobileNativeKeyboard();
+        }, { passive: true });
+
+        function renderKeypad(tabName) {
+            keypadGrid.innerHTML = '';
+            const list = KEYPAD_LAYOUTS[tabName] || KEYPAD_LAYOUTS.basic;
+
+            list.forEach(k => {
+                const btn = document.createElement('button');
+                btn.className = `key-btn ${k.cls || ''}`;
+                btn.innerHTML = k.label;
+
+                btn.addEventListener('touchstart', (e) => {
+                    if (navigator.vibrate) navigator.vibrate(8);
+                }, { passive: true });
+
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    mathField.focus();
+                    blockMobileNativeKeyboard();
+
+                    if (k.action === 'clear') {
+                        mathField.setValue('');
+                        syncSlidersWithFormula();
+                        processCalculation('auto');
+                    } else if (k.action === 'backspace') {
+                        mathField.executeCommand('deleteBackward');
+                    } else if (k.action === 'left') {
+                        mathField.executeCommand('moveToPreviousChar');
+                    } else if (k.action === 'right') {
+                        mathField.executeCommand('moveToNextChar');
+                    } else if (k.action === 'calc') {
+                        processCalculation('auto');
+                    } else if (k.latex) {
+                        mathField.insert(k.latex);
+                    }
+                });
+
+                keypadGrid.appendChild(btn);
+            });
+        }
+
+        keypadTabs.forEach(t => {
+            t.addEventListener('click', () => {
+                keypadTabs.forEach(x => x.classList.remove('active'));
+                t.classList.add('active');
+                renderKeypad(t.dataset.tab);
+            });
+        });
+
+        renderKeypad('basic');
+
+        // =========================================================================
+        // 2. 动态参数滑块与定义域解析系统 (CAS Engine & Domain Parser)
+        // =========================================================================
+        let currentDomain = null;
+        const slidersState = new Map();
+        let animationFrameId = null;
+
+        function extractDomainFromLatex(latexStr) {
+            let s = (latexStr || '').trim();
+            if (!s) return { cleanFormula: '', domain: null };
+
+            let domainMatch = s.match(/(?:\\left\s*)?(?:\\lbrace|\\\{)\s*([\s\S]+?)\s*(?:\\right\s*)?(?:\\rbrace|\\\})\s*$/);
+            if (!domainMatch) {
+                domainMatch = s.match(/(?:\\left\s*)?\{\s*([^\\{}]+?)\s*(?:\\right\s*)?\}\s*$/);
+            }
+            if (!domainMatch) {
+                domainMatch = s.match(/(?:,|;)?\s*([a-zA-Z]\s*(?:\\in|\bin\b)\s*(?:\\left\s*)?[\(\[][^\)\],]+,[^\)\],]+(?:\\right\s*)?[\)\]])\s*$/);
+            }
+
+            if (!domainMatch) return { cleanFormula: s, domain: null };
+
+            let fullMatch = domainMatch[0];
+            let dContent = domainMatch[1].trim();
+
+            let hasVarX = /\b[a-zA-Z]\b/.test(dContent);
+            let hasIn = /\\in|\bin\b/.test(dContent);
+            let hasComp = /(?:\\le|\\ge|\\lt|\\gt|<=|>=|<|>|\\leq|\\geq)/.test(dContent);
+
+            if (!hasVarX || (!hasIn && !hasComp)) return { cleanFormula: s, domain: null };
+
+            let matchIdx = s.lastIndexOf(fullMatch);
+            let cleanFormula = matchIdx > 0 ? s.substring(0, matchIdx).trim() : s.trim();
+            if (cleanFormula.endsWith(',') || cleanFormula.endsWith(';')) {
+                cleanFormula = cleanFormula.substring(0, cleanFormula.length - 1).trim();
+            }
+
+            let norm = dContent
+                .replace(/\\left\s*/g, '')
+                .replace(/\\right\s*/g, '')
+                .replace(/\\(le|leq|leqslant)/g, '<=')
+                .replace(/\\(ge|geq|geqslant)/g, '>=')
+                .replace(/\\lt/g, '<')
+                .replace(/\\gt/g, '>')
+                .replace(/\s+/g, ' ');
+
+            let fracRegex = /\\frac\{([^{}]+)\}\{([^{}]+)\}/g;
+            while (fracRegex.test(norm)) {
+                norm = norm.replace(fracRegex, '(($1)/($2))');
+            }
+
+            try {
+                let intervalMatch = norm.match(/[a-zA-Z]\s*(?:\\in|\bin\b)\s*([\(\[])\s*([^,]+?)\s*,\s*([^\]\)]+?)\s*([\)\]])/);
+                if (intervalMatch) {
+                    let minOp = intervalMatch[1] === '[' ? 'le' : 'lt';
+                    let maxOp = intervalMatch[4] === ']' ? 'le' : 'lt';
+                    let minVal = evalMathExpr(intervalMatch[2]);
+                    let maxVal = evalMathExpr(intervalMatch[3]);
+                    return {
+                        cleanFormula,
+                        domain: { min: minVal, max: maxVal, minOp, maxOp, raw: dContent }
+                    };
+                }
+
+                let doubleIneq = norm.match(/([^\s<>=]+)\s*(<=|<)\s*([a-zA-Z])\s*(<=|<)\s*([^\s<>=]+)/);
+                if (doubleIneq) {
+                    let minVal = evalMathExpr(doubleIneq[1]);
+                    let minOp = doubleIneq[2] === '<=' ? 'le' : 'lt';
+                    let maxOp = doubleIneq[4] === '<=' ? 'le' : 'lt';
+                    let maxVal = evalMathExpr(doubleIneq[5]);
+                    return {
+                        cleanFormula,
+                        domain: { min: minVal, max: maxVal, minOp, maxOp, raw: dContent }
+                    };
+                }
+
+                let singleIneq = norm.match(/([a-zA-Z])\s*(>=|>|<=|<)\s*([^\s<>=]+)/);
+                if (singleIneq) {
+                    let op = singleIneq[2];
+                    let val = evalMathExpr(singleIneq[3]);
+                    if (op === '>=') return { cleanFormula, domain: { min: val, max: 9999, minOp: 'le', maxOp: 'lt', raw: dContent } };
+                    if (op === '>') return { cleanFormula, domain: { min: val, max: 9999, minOp: 'lt', maxOp: 'lt', raw: dContent } };
+                    if (op === '<=') return { cleanFormula, domain: { min: -9999, max: val, minOp: 'lt', maxOp: 'le', raw: dContent } };
+                    if (op === '<') return { cleanFormula, domain: { min: -9999, max: val, minOp: 'lt', maxOp: 'lt', raw: dContent } };
+                }
+            } catch (e) { }
+
+            return { cleanFormula: s, domain: null };
+        }
+
+        function evalMathExpr(exprStr) {
+            let str = (exprStr || '').trim();
+            if (!str) return 0;
+            if (str === '-∞' || str === '-\\infty') return -9999;
+            if (str === '+∞' || str === '∞' || str === '\\infty') return 9999;
+            str = str.replace(/\\pi/g, 'pi').replace(/π/g, 'pi').replace(/e/g, '2.718281828459');
+            try {
+                let res = nerdamer(str).evaluate().text('decimals');
+                let n = parseFloat(res);
+                return isNaN(n) ? 0 : n;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function getSuspectedParameters(latexStr) {
+            if (!latexStr) return [];
+            let { cleanFormula } = extractDomainFromLatex(latexStr);
+            let s = cleanFormula;
+
+            s = s.replace(/\\[a-zA-Z]+/g, ' ');
+            s = s.replace(/\\begin\{cases\}[\s\S]*?\\end\{cases\}/g, ' ');
+            s = s.replace(/\\left|\\right/g, ' ');
+
+            let matches = s.match(/[a-zA-Z]/g) || [];
+            let params = new Set();
+            matches.forEach(ch => {
+                if (!['x', 'y', 'e', 'i', 'd'].includes(ch.toLowerCase())) {
+                    params.add(ch);
+                }
+            });
+            return Array.from(params).sort();
+        }
+
+        function syncSlidersWithFormula() {
+            const needed = getSuspectedParameters(mathField.getValue());
+            needed.forEach(p => {
+                if (!slidersState.has(p)) {
+                    slidersState.set(p, { value: 1, min: -10, max: 10, step: 0.1, isPlaying: false, dir: 1 });
+                }
+            });
+            renderSlidersList();
+            updateAddSlidersBanner();
+        }
+
+        function updateAddSlidersBanner() {
+            const needed = getSuspectedParameters(mathField.getValue());
+            const unadded = needed.filter(p => !slidersState.has(p));
+            const banner = document.getElementById('slidersBanner');
+            const pillsWrap = document.getElementById('slidersBannerPills');
+
+            if (unadded.length > 0) {
+                banner.style.display = 'flex';
+                pillsWrap.innerHTML = '';
+                unadded.forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.className = 'add-pill-btn';
+                    btn.textContent = `+ 添加滑块 ${p}`;
+                    btn.onclick = () => {
+                        slidersState.set(p, { value: 1, min: -10, max: 10, step: 0.1, isPlaying: false, dir: 1 });
+                        renderSlidersList();
+                        updateAddSlidersBanner();
+                        processCalculation('auto');
+                    };
+                    pillsWrap.appendChild(btn);
+                });
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function renderSlidersList() {
+            const listEl = document.getElementById('slidersList');
+            const cardEl = document.getElementById('slidersCard');
+            listEl.innerHTML = '';
+
+            if (slidersState.size === 0) {
+                cardEl.style.display = 'none';
+                return;
+            }
+
+            cardEl.style.display = 'block';
+            slidersState.forEach((cfg, param) => {
+                const item = document.createElement('div');
+                item.className = 'slider-item';
+                item.innerHTML = `
+                    <button class="slider-play-btn" id="playBtn_${param}">${cfg.isPlaying ? '❚❚' : '▶'}</button>
+                    <span class="slider-label">${param} = <span id="val_${param}">${cfg.value}</span></span>
+                    <input type="range" class="slider-input" min="${cfg.min}" max="${cfg.max}" step="${cfg.step}" value="${cfg.value}" id="range_${param}">
+                `;
+
+                const rangeInput = item.querySelector(`#range_${param}`);
+                const valLabel = item.querySelector(`#val_${param}`);
+                const playBtn = item.querySelector(`#playBtn_${param}`);
+
+                rangeInput.addEventListener('input', (e) => {
+                    cfg.value = parseFloat(e.target.value);
+                    valLabel.textContent = cfg.value;
+                    redrawGraph();
+                    debouncedCalc();
+                });
+
+                playBtn.addEventListener('click', () => {
+                    cfg.isPlaying = !cfg.isPlaying;
+                    playBtn.textContent = cfg.isPlaying ? '❚❚' : '▶';
+                    checkAnimationLoop();
+                });
+
+                listEl.appendChild(item);
+            });
+        }
+
+        function checkAnimationLoop() {
+            let anyPlaying = false;
+            slidersState.forEach(cfg => {
+                if (cfg.isPlaying) anyPlaying = true;
+            });
+
+            if (anyPlaying && !animationFrameId) {
+                runSliderAnimation();
+            } else if (!anyPlaying && animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+
+        function runSliderAnimation() {
+            let anyPlaying = false;
+            slidersState.forEach((cfg, param) => {
+                if (cfg.isPlaying) {
+                    anyPlaying = true;
+                    let next = cfg.value + cfg.step * cfg.dir;
+                    if (next >= cfg.max) { next = cfg.max; cfg.dir = -1; }
+                    if (next <= cfg.min) { next = cfg.min; cfg.dir = 1; }
+                    cfg.value = Math.round(next * 100) / 100;
+
+                    const r = document.getElementById(`range_${param}`);
+                    const v = document.getElementById(`val_${param}`);
+                    if (r) r.value = cfg.value;
+                    if (v) v.textContent = cfg.value;
+                }
+            });
+
+            if (anyPlaying) {
+                redrawGraph();
+                animationFrameId = requestAnimationFrame(runSliderAnimation);
+            } else {
+                animationFrameId = null;
+            }
+        }
+
+        // =========================================================================
+        // 3. Nerdamer CAS 解析与求值核心 (Evaluation & Calculation Engine)
+        // =========================================================================
+        let compiledPlotFunc = null;
+
+        function sanitizeLatexForCAS(latexStr) {
+            let s = latexStr || '';
+            let { cleanFormula, domain } = extractDomainFromLatex(s);
+            currentDomain = domain;
+
+            let eqMatch = cleanFormula.match(/^(?:y|f\(x\))\s*=\s*(.*)$/);
+            if (eqMatch) cleanFormula = eqMatch[1].trim();
+
+            slidersState.forEach((cfg, param) => {
+                const re = new RegExp(`\\b${param}\\b`, 'g');
+                cleanFormula = cleanFormula.replace(re, `(${cfg.value})`);
+            });
+
+            return cleanFormula;
+        }
+
+        function processCalculation(mode = 'auto') {
+            const rawLatex = mathField.getValue();
+            const resDisplay = document.getElementById('resultValueDisplay');
+            const stepsContent = document.getElementById('stepsContent');
+            const statusBadge = document.getElementById('calcStatusBadge');
+
+            if (!rawLatex.trim()) {
+                resDisplay.textContent = '0';
+                stepsContent.textContent = '请输入有效公式';
+                compiledPlotFunc = null;
+                redrawGraph();
+                return;
+            }
+
+            statusBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 计算中...';
+
+            try {
+                const cleanedLatex = sanitizeLatexForCAS(rawLatex);
+                let evaluatedLatex = '';
+                let stepsHtml = '';
+
+                // 微分算子 d/dx(f(x))
+                let diffMatch = cleanedLatex.match(/\\frac\{d\}\{dx\}\((.*?)\)/) || cleanedLatex.match(/\\frac\{d\}\{dx\}\s*([\s\S]+)/);
+                if (diffMatch) {
+                    let inner = nerdamer.convertFromLaTeX(diffMatch[1]);
+                    let diffRes = nerdamer.diff(inner, 'x');
+                    evaluatedLatex = diffRes.toTeX();
+                    stepsHtml = `<b>导数求解</b>: 原式 $f(x) = ${diffMatch[1]}$<br>一阶导数 $f'(x) = ${evaluatedLatex}$`;
+                    compiledPlotFunc = diffRes.buildFunction(['x']);
+                }
+                // 不定积分
+                else if (cleanedLatex.includes('\\int')) {
+                    let intMatch = cleanedLatex.match(/\\int\s*(.*?)\s*\\,d\s*x/);
+                    let inner = intMatch ? intMatch[1] : cleanedLatex.replace(/\\int/g, '').replace(/\\,d\s*x/g, '');
+                    let parsed = nerdamer.convertFromLaTeX(inner);
+                    let intRes = nerdamer.integrate(parsed, 'x');
+                    evaluatedLatex = intRes.toTeX() + ' + C';
+                    stepsHtml = `<b>不定积分求解</b>: $\\int (${inner}) dx = ${evaluatedLatex}$`;
+                    compiledPlotFunc = intRes.buildFunction(['x']);
+                }
+                // 常规代数与函数绘图
+                else {
+                    let parsed = nerdamer.convertFromLaTeX(cleanedLatex);
+                    let simp = nerdamer(parsed).evaluate();
+                    evaluatedLatex = simp.toTeX();
+                    stepsHtml = `<b>符号化简</b>: $${cleanedLatex} = ${evaluatedLatex}$`;
+                    compiledPlotFunc = simp.buildFunction(['x']);
+                }
+
+                if (window.katex) {
+                    katex.render(evaluatedLatex, resDisplay, { throwOnError: false });
+                    katex.render(stepsHtml.replace(/\$(.*?)\$/g, (m, c) => katex.renderToString(c, { throwOnError: false })), stepsContent, { throwOnError: false });
+                } else {
+                    resDisplay.textContent = evaluatedLatex;
+                    stepsContent.innerHTML = stepsHtml;
+                }
+
+                statusBadge.innerHTML = '<i class="fa-solid fa-check"></i> 计算完成';
+            } catch (e) {
+                resDisplay.innerHTML = `<span style="color:var(--accent-red); font-size:0.95rem;">格式待完善 (支持代数/导数/积分)</span>`;
+                stepsContent.textContent = '暂无详细步骤';
+                statusBadge.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="color:var(--accent-amber);"></i> 待完善';
+            }
+
+            redrawGraph();
+        }
+
+        const debouncedCalc = (() => {
+            let t = null;
+            return () => {
+                clearTimeout(t);
+                t = setTimeout(() => {
+                    syncSlidersWithFormula();
+                    processCalculation('auto');
+                }, 120);
+            };
+        })();
+
+        mathField.addEventListener('input', () => {
+            debouncedCalc();
+        });
+
+        // =========================================================================
+        // 4. 2D 函数图像触控画板引擎 (Mobile Touch Canvas Plotter)
+        // =========================================================================
+        const canvas = document.getElementById('plotCanvas');
+        const ctx = canvas.getContext('2d');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        const tooltip = document.getElementById('graphTooltip');
+        const domainBadge = document.getElementById('domainTagBadge');
+
+        let view = {
+            centerX: 0,
+            centerY: 0,
+            scale: 35,
+            isDragging: false,
+            startX: 0,
+            startY: 0
+        };
+
+        function resizeCanvas() {
+            const rect = canvasWrapper.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            redrawGraph();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function screenToMath(px, py) {
+            const rect = canvasWrapper.getBoundingClientRect();
+            return {
+                x: (px - rect.width / 2) / view.scale + view.centerX,
+                y: -(py - rect.height / 2) / view.scale + view.centerY
+            };
+        }
+
+        function mathToScreen(mx, my) {
+            const rect = canvasWrapper.getBoundingClientRect();
+            return {
+                px: (mx - view.centerX) * view.scale + rect.width / 2,
+                py: -(my - view.centerY) * view.scale + rect.height / 2
+            };
+        }
+
+        function evalNode(xVal, targetFunc) {
+            if (!targetFunc) return null;
+            if (currentDomain) {
+                if (currentDomain.minOp === 'le' && xVal < currentDomain.min) return null;
+                if (currentDomain.minOp === 'lt' && xVal <= currentDomain.min) return null;
+                if (currentDomain.maxOp === 'le' && xVal > currentDomain.max) return null;
+                if (currentDomain.maxOp === 'lt' && xVal >= currentDomain.max) return null;
+            }
+            try {
+                let y = targetFunc(xVal);
+                return isFinite(y) ? y : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function redrawGraph() {
+            const rect = canvasWrapper.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+            if (w === 0 || h === 0) return;
+
+            const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            const bgColor = isDark ? '#090d13' : '#ffffff';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+            const axisColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.45)';
+            const textColor = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.55)';
+            const curveColor = '#38bdf8';
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, w, h);
+
+            // 更新定义域角标
+            if (currentDomain) {
+                domainBadge.textContent = `定义域: ${currentDomain.raw}`;
+                domainBadge.style.display = 'block';
+            } else {
+                domainBadge.style.display = 'none';
+            }
+
+            // 绘制网格与坐标轴
+            let step = 1;
+            if (view.scale < 20) step = 5;
+            if (view.scale < 8) step = 10;
+            if (view.scale > 80) step = 0.5;
+
+            const topLeft = screenToMath(0, 0);
+            const bottomRight = screenToMath(w, h);
+
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = gridColor;
+            ctx.fillStyle = textColor;
+            ctx.font = '10px JetBrains Mono, monospace';
+
+            const startX = Math.floor(topLeft.x / step) * step;
+            for (let x = startX; x <= bottomRight.x; x += step) {
+                const { px } = mathToScreen(x, 0);
+                ctx.beginPath();
+                ctx.moveTo(px, 0);
+                ctx.lineTo(px, h);
+                ctx.stroke();
+
+                if (Math.abs(x) > 1e-4) {
+                    const { py } = mathToScreen(0, 0);
+                    const clampedY = Math.max(14, Math.min(h - 4, py + 12));
+                    ctx.fillText(x.toFixed(step < 1 ? 1 : 0), px - 6, clampedY);
+                }
+            }
+
+            const startY = Math.floor(bottomRight.y / step) * step;
+            for (let y = startY; y <= topLeft.y; y += step) {
+                const { py } = mathToScreen(0, y);
+                ctx.beginPath();
+                ctx.moveTo(0, py);
+                ctx.lineTo(w, py);
+                ctx.stroke();
+
+                if (Math.abs(y) > 1e-4) {
+                    const { px } = mathToScreen(0, 0);
+                    const clampedX = Math.max(4, Math.min(w - 24, px + 4));
+                    ctx.fillText(y.toFixed(step < 1 ? 1 : 0), clampedX, py + 3);
+                }
+            }
+
+            // X / Y 轴实线
+            const origin = mathToScreen(0, 0);
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = axisColor;
+            ctx.beginPath();
+            ctx.moveTo(0, origin.py);
+            ctx.lineTo(w, origin.py);
+            ctx.moveTo(origin.px, 0);
+            ctx.lineTo(origin.px, h);
+            ctx.stroke();
+
+            // 绘制函数曲线
+            if (compiledPlotFunc) {
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = curveColor;
+                ctx.beginPath();
+
+                let isDrawing = false;
+                const sampleSteps = w; // 逐像素高密度采样
+
+                for (let px = 0; px <= sampleSteps; px++) {
+                    const { x } = screenToMath(px, 0);
+                    const y = evalNode(x, compiledPlotFunc);
+
+                    if (y !== null && isFinite(y)) {
+                        const { py } = mathToScreen(x, y);
+                        if (!isDrawing) {
+                            ctx.moveTo(px, py);
+                            isDrawing = true;
+                        } else {
+                            ctx.lineTo(px, py);
+                        }
+                    } else {
+                        isDrawing = false;
+                    }
+                }
+                ctx.stroke();
+            }
+        }
+
+        // 触控手势监听 (单指拖动画板，多点触控与按键缩放)
+        canvasWrapper.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                view.isDragging = true;
+                view.startX = e.touches[0].clientX;
+                view.startY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        canvasWrapper.addEventListener('touchmove', (e) => {
+            if (view.isDragging && e.touches.length === 1) {
+                const dx = e.touches[0].clientX - view.startX;
+                const dy = e.touches[0].clientY - view.startY;
+                view.startX = e.touches[0].clientX;
+                view.startY = e.touches[0].clientY;
+
+                view.centerX -= dx / view.scale;
+                view.centerY -= dy / view.scale;
+                redrawGraph();
+
+                const rect = canvasWrapper.getBoundingClientRect();
+                const mX = e.touches[0].clientX - rect.left;
+                const { x } = screenToMath(mX, 0);
+                if (compiledPlotFunc) {
+                    const y = evalNode(x, compiledPlotFunc);
+                    if (y !== null && isFinite(y)) {
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = `${mX + 10}px`;
+                        tooltip.style.top = `20px`;
+                        tooltip.textContent = `(${x.toFixed(2)}, ${y.toFixed(2)})`;
+                    }
+                }
+            }
+        }, { passive: true });
+
+        canvasWrapper.addEventListener('touchend', () => {
+            view.isDragging = false;
+            setTimeout(() => { tooltip.style.display = 'none'; }, 1000);
+        });
+
+        document.getElementById('zoomInBtn').onclick = () => {
+            view.scale = Math.min(300, view.scale * 1.25);
+            redrawGraph();
+        };
+
+        document.getElementById('zoomOutBtn').onclick = () => {
+            view.scale = Math.max(5, view.scale * 0.8);
+            redrawGraph();
+        };
+
+        document.getElementById('resetViewBtn').onclick = () => {
+            view.centerX = 0;
+            view.centerY = 0;
+            view.scale = 35;
+            redrawGraph();
+        };
+
+        // 预设芯片点击
+        document.querySelectorAll('.preset-chip').forEach(c => {
+            c.addEventListener('click', () => {
+                document.querySelectorAll('.preset-chip').forEach(x => x.classList.remove('active'));
+                c.classList.add('active');
+                mathField.setValue(c.dataset.preset);
+                syncSlidersWithFormula();
+                processCalculation('auto');
+            });
+        });
+
+        // 步骤折叠切换
+        document.getElementById('stepsToggle').onclick = () => {
+            const body = document.getElementById('stepsContent');
+            const chev = document.getElementById('stepsChevron');
+            const isOpen = body.style.display === 'block';
+            body.style.display = isOpen ? 'none' : 'block';
+            chev.className = isOpen ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
+        };
+
+        // 帮助按钮
+        document.getElementById('helpBtn').onclick = () => {
+            alert("📱 手机版多功能计算器：\n\n1. 专为触屏设计，点击输入框不会弹出手机软键盘，请直接使用下方触控大按键进行公式输入。\n2. 支持在公式中书写 a, b, c 等字母参数，上方会自动浮现动态参数滑块！\n3. 支持区间定义域，如 {x ∈ (-2π, 2π)} 或 {x > 0}。\n4. 支持手指单指拖动画板，坐标点自动磁吸显示。");
+        };
+
+        // 主题切换
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            try { localStorage.setItem('flowermuyi_theme', next); } catch(e) {}
+        }
+
+        function applyTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            if (document.body) document.body.setAttribute('data-theme', t);
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) {
+                btn.innerHTML = t === 'dark' ? '☀️' : '🌙';
+            }
+            redrawGraph();
+        }
+
+        document.getElementById('themeToggleBtn').onclick = toggleTheme;
+
+        // 首屏启动
+        window.addEventListener('DOMContentLoaded', () => {
+            try { nerdamer.setFunction('lg', ['x'], 'log(x)/log(10)'); } catch (e) { }
+
+            blockMobileNativeKeyboard();
+
+            const savedTheme = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            applyTheme(savedTheme);
+
+            if (!mathField.getValue()) {
+                mathField.setValue('a \\cdot \\sin(b \\cdot x + c)');
+            }
+
+            syncSlidersWithFormula();
+
+            setTimeout(() => {
+                blockMobileNativeKeyboard();
+                resizeCanvas();
+                processCalculation('auto');
+            }, 120);
+        });
+
+    </script>
+</body>
+
+</html>

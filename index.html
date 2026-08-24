@@ -106,8 +106,11 @@
             // 手机设备 (iPhone / Android Phone)
             var isMobile = /Mobile|iPhone|iPod|Android.*Mobile|Windows Phone/i.test(ua) || (isTouch && minDim < 600);
 
-            // 当前电脑端主站位于 ./pc/，手机端 (./mobile/) 与平板端 (./tablet/) 预留就绪
-            window.location.replace('./pc/index.html');
+            if (isMobile) {
+                window.location.replace('./mobile/index.html');
+            } else {
+                window.location.replace('./pc/index.html');
+            }
         })();
     </script>
 </head>
@@ -117,7 +120,8 @@
         <h2>FlowerMUYi 导航工作台</h2>
         <p>正在前往工作台首页...</p>
         <div class="lang-links">
-            <a href="./pc/index.html" class="lang-btn">进入电脑端工作台</a>
+            <a href="./mobile/index.html" class="lang-btn">手机版工作台</a>
+            <a href="./pc/index.html" class="lang-btn" style="background:var(--btn-bg); color:var(--text-main); border:1px solid var(--card-border);">电脑版工作台</a>
         </div>
     </div>
 </body>
