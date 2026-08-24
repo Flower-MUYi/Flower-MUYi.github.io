@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlowerMUYi Navigation Portal | 导航工作台</title>
     <meta name="description" content="FlowerMUYi Personal Navigation Portal - EdgeTunnel, IP Quality & Threat Intelligence Detection, About Us.">
+    <meta http-equiv="refresh" content="0; url=./pc/index.html">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style>
         :root {
             --bg: #0b0f19;
@@ -61,6 +65,9 @@
     </style>
     <script>
         (function() {
+            try {
+                localStorage.removeItem('preferred_lang');
+            } catch (e) {}
             var ua = navigator.userAgent;
             var navPlatform = (navigator.platform || '').toLowerCase();
             var minDim = Math.min(window.screen.width, window.screen.height);
