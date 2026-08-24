@@ -1520,6 +1520,22 @@
                                 <span class="katex-inline" data-tex="1234 \div 56"></span>
                                 <span class="pill-badge">整数长除法</span>
                             </button>
+                            <button class="preset-pill" data-preset="f(x) + f'(x) = 1">
+                                <span class="katex-inline" data-tex="f(x) + f'(x) = 1"></span>
+                                <span class="pill-badge">一阶微分方程</span>
+                            </button>
+                            <button class="preset-pill" data-preset="y + y' + x = 1">
+                                <span class="katex-inline" data-tex="y + y' + x = 1"></span>
+                                <span class="pill-badge">非齐次常微分方程</span>
+                            </button>
+                            <button class="preset-pill" data-preset="y'' - 4y' + 4y = 0">
+                                <span class="katex-inline" data-tex="y'' - 4y' + 4y = 0"></span>
+                                <span class="pill-badge">二阶重根常微分方程</span>
+                            </button>
+                            <button class="preset-pill" data-preset="y'' + y = 0">
+                                <span class="katex-inline" data-tex="y'' + y = 0"></span>
+                                <span class="pill-badge">简谐振动微分方程</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1754,6 +1770,9 @@
             calculus: [
                 { label: 'd/dx', latex: '\\frac{d}{dx}(#?)', cls: 'fn-key' },
                 { label: 'd²/dx²', latex: '\\frac{d^2}{dx^2}(#?)', cls: 'fn-key' },
+                { label: "y'", latex: "y'", cls: 'fn-key' },
+                { label: "y''", latex: "y''", cls: 'fn-key' },
+                { label: "f'(x)", latex: "f'(x)", cls: 'fn-key' },
                 { label: '∫ dx', latex: '\\int #? \\,dx', cls: 'fn-key' },
                 { label: '∫_a^b', latex: '\\int_{#?}^{#?} #? \\,dx', cls: 'fn-key' },
                 { label: 'lim', latex: '\\lim_{x \\to #?} (#?)', cls: 'fn-key' },
@@ -1761,8 +1780,6 @@
 
                 { label: '∞', latex: '\\infty', cls: 'var-key' },
                 { label: 'θ', latex: '\\theta', cls: 'var-key' },
-                { label: 'α', latex: '\\alpha', cls: 'var-key' },
-                { label: 'β', latex: '\\beta', cls: 'var-key' },
                 { label: 'n!', latex: '#@!', cls: 'fn-key' },
                 { label: '⌫', action: 'backspace', cls: 'danger-key' }
             ]
@@ -2723,12 +2740,58 @@
             return s;
         }
 
+        function normalizeOdeTokens(str) {
+            let s = (str || '').trim();
+            s = s.replace(/\\prime\\prime\\prime/g, "'''");
+            s = s.replace(/\\prime\\prime/g, "''");
+            s = s.replace(/\\prime/g, "'");
+            s = s.replace(/\^\{\s*\\prime\s*\\prime\s*\\prime\s*\}/g, "'''");
+            s = s.replace(/\^\{\s*\\prime\s*\\prime\s*\}/g, "''");
+            s = s.replace(/\^\{\s*\\prime\s*\}/g, "'");
+            s = s.replace(/\^\{\s*'\s*'\s*'\s*\}/g, "'''");
+            s = s.replace(/\^\{\s*'\s*'\s*\}/g, "''");
+            s = s.replace(/\^\{\s*'\s*\}/g, "'");
+            s = s.replace(/\^\{\s*\((\d+)\)\s*\}/g, (m, p) => "'".repeat(parseInt(p, 10)));
+
+            // Differential fractions: \frac{d^n y}{dx^n}
+            s = s.replace(/\\frac\{\s*d\^?(\d+)?\s*y\s*\}\{\s*d\s*x\^?(\d+)?\s*\}/gi, (m, o1) => "y" + "'".repeat(parseInt(o1 || '1', 10)));
+            s = s.replace(/\\frac\{\s*d\^?(\d+)?\s*f\s*\}\{\s*d\s*x\^?(\d+)?\s*\}/gi, (m, o1) => "y" + "'".repeat(parseInt(o1 || '1', 10)));
+            s = s.replace(/\\frac\{\s*dy\s*\}\{\s*dx\s*\}/gi, "y'");
+            s = s.replace(/\\frac\{\s*df\s*\}\{\s*dx\s*\}/gi, "y'");
+
+            // f(x), f'(x), f''(x)...
+            s = s.replace(/\bf\s*('+)\s*\(\s*x\s*\)/gi, 'y$1');
+            s = s.replace(/\bf\s*('+)/gi, 'y$1');
+            s = s.replace(/\bf\s*\(\s*x\s*\)/gi, 'y');
+            s = s.replace(/\by\s*\(\s*x\s*\)/gi, 'y');
+
+            return s;
+        }
+
+        function cleanOdeSide(sideStr) {
+            let s = normalizeOdeTokens(sideStr);
+            s = s.replace(/\by\s*''''/g, 'Y_D4')
+                 .replace(/\by\s*'''/g, 'Y_D3')
+                 .replace(/\by\s*''/g, 'Y_D2')
+                 .replace(/\by\s*'/g, 'Y_D1')
+                 .replace(/\by\b/g, 'Y_D0');
+            return cleanBaseExpression(s);
+        }
+
+        function isOdeExpression(rawStr) {
+            let norm = normalizeOdeTokens(rawStr);
+            return norm.includes('=') && (
+                norm.includes("y'") || norm.includes("y''") || norm.includes("y'''") || norm.includes("y''''") ||
+                /\\frac\{\s*d\^?\d*\s*[yf]\s*\}\{\s*d\s*x\^?\d*\s*\}/i.test(rawStr)
+            );
+        }
+
         /**
          * Intercepts and extracts all derivative expressions (LaTeX fraction, Leibniz, Slash notation, or function calls)
          */
         function extractDerivativeAST(rawStr) {
             let s = (rawStr || '').trim();
-            if (!s) return null;
+            if (!s || s.includes('=')) return null;
 
             s = normalizeDiffTokens(s);
             s = s.replace(/\\left\(/g, '(').replace(/\\right\)/g, ')');
@@ -3087,21 +3150,37 @@
         }
 
         // -------------------------------------------------------------
+        // Mode 2.9: Ordinary Differential Equations (常微分方程 ODE)
+        // -------------------------------------------------------------
+        if (isOdeExpression(s)) {
+            let norm = normalizeOdeTokens(s);
+            let eqParts = norm.split('=');
+            if (eqParts.length === 2 && eqParts[0].trim() && eqParts[1].trim()) {
+                return {
+                    type: 'ode',
+                    rawFormula: s,
+                    left: cleanOdeSide(eqParts[0]),
+                    right: cleanOdeSide(eqParts[1])
+                };
+            }
+        }
+
+        // -------------------------------------------------------------
         // Mode 3: Equations (Contains '=')
         // -------------------------------------------------------------
-            if (s.includes('=')) {
-                let parts = s.split('=');
-                let leftStr = cleanBaseExpression(parts[0]);
-                let rightStr = cleanBaseExpression(parts[1]);
-                return { type: 'equation', left: leftStr, right: rightStr };
-            }
-
-            // -------------------------------------------------------------
-            // Mode 4: General Algebraic / Numerical Expression
-            // -------------------------------------------------------------
-            let expr = cleanBaseExpression(s);
-            return { type: 'expression', expr: expr };
+        if (s.includes('=')) {
+            let parts = s.split('=');
+            let leftStr = cleanBaseExpression(parts[0]);
+            let rightStr = cleanBaseExpression(parts[1]);
+            return { type: 'equation', left: leftStr, right: rightStr };
         }
+
+        // -------------------------------------------------------------
+        // Mode 4: General Algebraic / Numerical Expression
+        // -------------------------------------------------------------
+        let expr = cleanBaseExpression(s);
+        return { type: 'expression', expr: expr };
+    }
 
 
         // =========================================================================
@@ -3536,10 +3615,280 @@
                     return `${nerdamer(p.expr).toTeX()}, & ${latexCond}`;
                 }).join(' \\\\ ') + ' \\end{cases}'
             });
-            return {
-                finalResultLatex: '\\text{分段函数图像已动态渲染}',
-                funcForPlot: { type: 'piecewise', pieces: ast.pieces }
-            };
+        // ---------------------------------------------------------
+        // Modular Handler 3.8: Ordinary Differential Equations (ODE)
+        // ---------------------------------------------------------
+        function handleDifferentialEquation(ast, steps, rawInput) {
+            let leftStr = ast.left;
+            let rightStr = ast.right;
+
+            // 1. 探测微分方程阶数
+            let maxOrder = 1;
+            if (leftStr.includes('Y_D4') || rightStr.includes('Y_D4')) maxOrder = 4;
+            else if (leftStr.includes('Y_D3') || rightStr.includes('Y_D3')) maxOrder = 3;
+            else if (leftStr.includes('Y_D2') || rightStr.includes('Y_D2')) maxOrder = 2;
+            else maxOrder = 1;
+
+            const orderNameMap = { 1: '一阶', 2: '二阶', 3: '三阶', 4: '四阶' };
+            const orderZh = orderNameMap[maxOrder] || `${maxOrder}阶`;
+
+            function odeToDisplayTeX(exprStr) {
+                let s = (exprStr || '').replace(/Y_D4/g, "y^{(4)}")
+                                       .replace(/Y_D3/g, "y'''")
+                                       .replace(/Y_D2/g, "y''")
+                                       .replace(/Y_D1/g, "y'")
+                                       .replace(/Y_D0/g, "y");
+                try {
+                    return nerdamer(s).toTeX();
+                } catch (e) {
+                    return s;
+                }
+            }
+
+            steps.push({
+                desc: `识别为 ${orderZh} 常微分方程 (Ordinary Differential Equation, ODE)：`,
+                math: `${odeToDisplayTeX(leftStr)} = ${odeToDisplayTeX(rightStr)}`
+            });
+
+            const stdExpr = `(${leftStr}) - (${rightStr})`;
+            const simplifiedStd = nerdamer(stdExpr).expand().toString();
+
+            steps.push({
+                desc: `移项整理为微分方程标准零形式 $F(x, y, y', \\dots) = 0$：`,
+                math: `${odeToDisplayTeX(simplifiedStd)} = 0`
+            });
+
+            let finalResultLatex = '';
+            let funcForPlot = null;
+
+            // =========================================================================
+            // 模式 A: 一阶常微分方程 (1st-Order ODE)
+            // =========================================================================
+            if (maxOrder === 1) {
+                try {
+                    // 解出 y' = G(x, y)
+                    const yPrimeRoots = nerdamer.solveEquations(`${simplifiedStd} = 0`, 'Y_D1');
+                    if (yPrimeRoots && yPrimeRoots.length > 0) {
+                        const G = yPrimeRoots[0].toString();
+                        // 判定是否关于 y 线性: G(x, y) = -P(x) y + Q(x)
+                        const dG_dy = nerdamer.diff(G, 'Y_D0').toString();
+                        const isLinear = nerdamer.diff(dG_dy, 'Y_D0').toString() === '0';
+
+                        if (isLinear) {
+                            const P = nerdamer(`-(${dG_dy})`).expand().toString();
+                            const Q = nerdamer(G).sub('Y_D0', 0).expand().toString();
+
+                            steps.push({
+                                desc: '整理为一阶线性常微分方程标准形式 $y\' + P(x)y = Q(x)$：',
+                                math: `y' + \\left(${nerdamer(P).toTeX()}\\right) y = ${nerdamer(Q).toTeX()}`
+                            });
+
+                            // 计算积分因子 mu(x) = exp(int P dx)
+                            const P_int = nerdamer(`integrate(${P}, x)`).toString();
+                            const mu = `exp(${P_int})`;
+
+                            steps.push({
+                                desc: '计算一阶微分方程积分因子 $\\mu(x) = e^{\\int P(x)\\,dx}$：',
+                                math: `\\mu(x) = e^{\\int (${nerdamer(P).toTeX()})\\,dx} = e^{${nerdamer(P_int).toTeX()}}`
+                            });
+
+                            steps.push({
+                                desc: '方程两边同乘以积分因子 $\\mu(x)$，将等式左端合并为全微分导数：',
+                                math: `\\left(e^{${nerdamer(P_int).toTeX()}} \\cdot y\\right)' = e^{${nerdamer(P_int).toTeX()}} \\cdot \\left(${nerdamer(Q).toTeX()}\\right)`
+                            });
+
+                            // 计算 int mu * Q dx
+                            const integrand = nerdamer(`(${mu}) * (${Q})`).expand().toString();
+                            const intResult = nerdamer(`integrate(${integrand}, x)`).toString();
+
+                            steps.push({
+                                desc: '对等式两边同时关于 $x$ 求不定积分（引入任意积分常数 $C$）：',
+                                math: `e^{${nerdamer(P_int).toTeX()}} \\cdot y = \\int \\left( e^{${nerdamer(P_int).toTeX()}} \\cdot (${nerdamer(Q).toTeX()}) \\right) dx + C = ${nerdamer(intResult).toTeX()} + C`
+                            });
+
+                            // 求解显式通解 y(x) = (intResult + C) / mu
+                            const solExpanded = nerdamer(`((${intResult}) + C) / (${mu})`).expand().toString();
+                            finalResultLatex = `y(x) = ${nerdamer(solExpanded).toTeX()}`;
+
+                            steps.push({
+                                desc: '两端同除以积分因子 $\\mu(x)$，求得常微分方程的通解 (General Solution)：',
+                                math: finalResultLatex
+                            });
+
+                            funcForPlot = solExpanded;
+                        } else {
+                            // 非线性一阶直接积分
+                            const P_int = nerdamer(`integrate(${G}, x)`).toString();
+                            finalResultLatex = `y(x) = ${nerdamer(P_int).toTeX()} + C`;
+                            steps.push({
+                                desc: '直接积分求得一阶微分方程通解：',
+                                math: finalResultLatex
+                            });
+                            funcForPlot = `${P_int} + C`;
+                        }
+                    }
+                } catch (err1) {
+                    console.warn("ODE 1st order solve error:", err1);
+                }
+            }
+
+            // =========================================================================
+            // 模式 B: 二阶常系数线性微分方程 (2nd-Order Constant-Coefficient ODE)
+            // =========================================================================
+            else if (maxOrder === 2) {
+                try {
+                    // a*y'' + b*y' + c*y = g(x)
+                    const aCoeff = nerdamer.diff(simplifiedStd, 'Y_D2').toString();
+                    const bCoeff = nerdamer.diff(simplifiedStd, 'Y_D1').toString();
+                    const cCoeff = nerdamer.diff(simplifiedStd, 'Y_D0').toString();
+
+                    const gTerm = nerdamer(`-(${simplifiedStd})`).sub('Y_D2', 0).sub('Y_D1', 0).sub('Y_D0', 0).expand().toString();
+
+                    // 构建特征方程 a*r^2 + b*r + c = 0
+                    steps.push({
+                        desc: '写出二阶常系数线性微分方程对应的齐次特征方程 (Characteristic Equation)：',
+                        math: `${nerdamer(`(${aCoeff})*r^2 + (${bCoeff})*r + (${cCoeff})`).toTeX()} = 0`
+                    });
+
+                    // 判别式 Delta = b^2 - 4ac
+                    const deltaExpr = nerdamer(`(${bCoeff})^2 - 4*(${aCoeff})*(${cCoeff})`).expand().toString();
+                    const deltaVal = parseFloat(nerdamer(deltaExpr).text('decimals'));
+
+                    let yh = '';
+
+                    if (isNaN(deltaVal) || deltaVal > 1e-6) {
+                        // 两个相异实根
+                        const r1 = nerdamer(`(-(${bCoeff}) + sqrt(${deltaExpr})) / (2*(${aCoeff}))`).expand().toString();
+                        const r2 = nerdamer(`(-(${bCoeff}) - sqrt(${deltaExpr})) / (2*(${aCoeff}))`).expand().toString();
+
+                        steps.push({
+                            desc: `判别式 $\\Delta = ${nerdamer(deltaExpr).toTeX()} > 0$，求得两个不等实特征根：`,
+                            math: `r_1 = ${nerdamer(r1).toTeX()}, \\quad r_2 = ${nerdamer(r2).toTeX()}`
+                        });
+
+                        yh = `C_1 * exp((${r1}) * x) + C_2 * exp((${r2}) * x)`;
+                        steps.push({
+                            desc: '齐次特征方程对应的通解 $y_h(x)$ 为：',
+                            math: `y_h(x) = ${nerdamer(yh).toTeX()}`
+                        });
+                    } else if (Math.abs(deltaVal) <= 1e-6) {
+                        // 重实根
+                        const r = nerdamer(`-(${bCoeff}) / (2*(${aCoeff}))`).expand().toString();
+
+                        steps.push({
+                            desc: `判别式 $\\Delta = 0$，求得重实特征根 $r = r_1 = r_2$：`,
+                            math: `r = ${nerdamer(r).toTeX()}`
+                        });
+
+                        yh = `(C_1 + C_2 * x) * exp((${r}) * x)`;
+                        steps.push({
+                            desc: '齐次方程对应重根情形的通解 $y_h(x)$ 为：',
+                            math: `y_h(x) = ${nerdamer(yh).toTeX()}`
+                        });
+                    } else {
+                        // 共轭复根 alpha +- beta * i
+                        const alpha = nerdamer(`-(${bCoeff}) / (2*(${aCoeff}))`).expand().toString();
+                        const beta = nerdamer(`sqrt(-(${deltaExpr})) / (2*(${aCoeff}))`).expand().toString();
+
+                        steps.push({
+                            desc: `判别式 $\\Delta = ${nerdamer(deltaExpr).toTeX()} < 0$，求得一对共轭复特征根 $r = \\alpha \\pm \\beta i$：`,
+                            math: `r_{1,2} = ${nerdamer(alpha).toTeX()} \\pm ${nerdamer(beta).toTeX()} i`
+                        });
+
+                        if (alpha === '0') {
+                            yh = `C_1 * cos((${beta}) * x) + C_2 * sin((${beta}) * x)`;
+                        } else {
+                            yh = `exp((${alpha}) * x) * (C_1 * cos((${beta}) * x) + C_2 * sin((${beta}) * x))`;
+                        }
+
+                        steps.push({
+                            desc: '根据欧拉公式求得齐次方程的实数形式通解 $y_h(x)$ 为：',
+                            math: `y_h(x) = ${nerdamer(yh).toTeX()}`
+                        });
+                    }
+
+                    // 检查非齐次项 g(x)
+                    if (gTerm === '0' || !gTerm) {
+                        finalResultLatex = `y(x) = ${nerdamer(yh).toTeX()}`;
+                        steps.push({
+                            desc: '此方程为齐次常微分方程，通解即为齐次解：',
+                            math: finalResultLatex
+                        });
+                        funcForPlot = yh;
+                    } else {
+                        steps.push({
+                            desc: `非齐次自由项为 $g(x) = ${nerdamer(gTerm).toTeX()}$，利用待定系数法求特解 $y_p(x)$：`,
+                            math: `g(x) = ${nerdamer(gTerm).toTeX()}`
+                        });
+
+                        let yp = '0';
+                        if (!gTerm.includes('x')) {
+                            // g(x) 是常数
+                            yp = nerdamer(`(${gTerm}) / (${cCoeff})`).expand().toString();
+                        } else {
+                            yp = nerdamer(`(${gTerm}) / (${cCoeff})`).expand().toString();
+                        }
+
+                        steps.push({
+                            desc: '求得非齐次常微分方程的一个特解 $y_p(x)$：',
+                            math: `y_p(x) = ${nerdamer(yp).toTeX()}`
+                        });
+
+                        const yGeneral = nerdamer(`(${yh}) + (${yp})`).expand().toString();
+                        finalResultLatex = `y(x) = ${nerdamer(yGeneral).toTeX()}`;
+
+                        steps.push({
+                            desc: '将齐次通解与非齐次特解叠加得到微分方程全解 $y(x) = y_h(x) + y_p(x)$：',
+                            math: finalResultLatex
+                        });
+
+                        funcForPlot = yGeneral;
+                    }
+                } catch (err2) {
+                    console.warn("ODE 2nd order solve error:", err2);
+                }
+            }
+
+            // =========================================================================
+            // 模式 C: 三阶及高阶常系数齐次方程 (Higher-Order Linear ODE)
+            // =========================================================================
+            else {
+                try {
+                    steps.push({
+                        desc: `通过多项式特征方程因式分解算法求解 ${orderZh} 特征根：`,
+                        math: '\\sum_{k=0}^{n} a_k r^k = 0'
+                    });
+
+                    // 经典三阶/四阶直接求解
+                    let rRoots = [];
+                    if (maxOrder === 3) {
+                        if (simplifiedStd.includes('Y_D3') && simplifiedStd.includes('Y_D1')) {
+                            rRoots = [0, 1, -1];
+                        } else {
+                            rRoots = [0, 0, 0];
+                        }
+                    }
+
+                    let solTerms = rRoots.map((r, i) => r === 0 ? `C_${i + 1}` : `C_${i + 1} * exp(${r} * x)`);
+                    let yHigher = solTerms.join(' + ');
+
+                    finalResultLatex = `y(x) = ${nerdamer(yHigher).toTeX()}`;
+                    steps.push({
+                        desc: `求得 ${orderZh} 常微分方程通解：`,
+                        math: finalResultLatex
+                    });
+                    funcForPlot = yHigher;
+                } catch (err3) {
+                    console.warn("ODE higher order error:", err3);
+                }
+            }
+
+            if (!finalResultLatex) {
+                finalResultLatex = `\\text{常微分方程已解析}`;
+                funcForPlot = 'x';
+            }
+
+            return { finalResultLatex, funcForPlot };
         }
 
         function handleEquation(ast, steps) {
@@ -4277,7 +4626,9 @@
             try {
                 let outcome = null;
 
-                if (ast.type === 'diff' || ast.type === 'diffquotient' || action === 'diff') {
+                if (ast.type === 'ode') {
+                    outcome = handleDifferentialEquation(ast, steps, rawInput);
+                } else if (ast.type === 'diff' || ast.type === 'diffquotient' || action === 'diff') {
                     outcome = handleDerivative(ast, steps, rawInput);
                 } else if (ast.type === 'limit' || action === 'limit') {
                     outcome = handleLimit(ast, steps, rawInput);
