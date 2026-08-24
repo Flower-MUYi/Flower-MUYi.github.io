@@ -3649,6 +3649,164 @@
             }
         }
 
+        function splitSumTerms(exprStr) {
+            let s = exprStr.replace(/\s+/g, '');
+            let terms = [];
+            let curr = '';
+            let depth = 0;
+            for (let i = 0; i < s.length; i++) {
+                let ch = s[i];
+                if (ch === '(') depth++;
+                else if (ch === ')') depth--;
+
+                if ((ch === '+' || ch === '-') && depth === 0 && i > 0 && s[i - 1] !== '^' && s[i - 1] !== '*' && s[i - 1] !== '/') {
+                    if (curr) terms.push(curr);
+                    curr = ch === '-' ? '-' : '';
+                } else {
+                    curr += ch;
+                }
+            }
+            if (curr) terms.push(curr);
+            return terms;
+        }
+
+        function combineIntegratedTerms(termLatexList) {
+            let res = '';
+            for (let i = 0; i < termLatexList.length; i++) {
+                let t = (termLatexList[i] || '').trim();
+                if (!t) continue;
+                if (!res) {
+                    res = t;
+                } else {
+                    if (t.startsWith('-')) {
+                        res += ' - ' + t.substring(1).trim();
+                    } else if (t.startsWith('+')) {
+                        res += ' + ' + t.substring(1).trim();
+                    } else {
+                        res += ' + ' + t;
+                    }
+                }
+            }
+            return res.replace(/\+\s*\+/g, '+ ').replace(/\+\s*-/g, '- ');
+        }
+
+        function integratePartialFractionTerm(tStr, v = 'x') {
+            try {
+                let s = tStr.trim();
+                let isNeg = false;
+                if (s.startsWith('-')) {
+                    isNeg = true;
+                    s = s.substring(1).trim();
+                } else if (s.startsWith('+')) {
+                    s = s.substring(1).trim();
+                }
+
+                // 尝试提取分子分母
+                let frac = extractRationalFraction(s, v);
+                if (!frac) {
+                    let intPoly = nerdamer(`integrate(${s}, ${v})`).toTeX();
+                    return isNeg ? `-${intPoly}` : intPoly;
+                }
+
+                let numStr = frac.num;
+                let denStr = frac.den;
+
+                // 1. 检查分母是否为 (ax+b)^k 形式
+                let linearPowMatch = denStr.match(/^\(?\s*([a-zA-Z0-9\.\*\+\-]+?)\s*\)?\^(\d+)$/);
+                let baseLinear = denStr;
+                let power = 1;
+                if (linearPowMatch) {
+                    baseLinear = linearPowMatch[1];
+                    power = parseInt(linearPowMatch[2]);
+                }
+
+                let polyBase = getPolyCoeffs(baseLinear, v);
+                let polyNum = getPolyCoeffs(numStr, v);
+
+                if (polyBase && polyBase.deg === 1 && polyNum && polyNum.deg === 0) {
+                    let a = polyBase.coeffs[1] || 0;
+                    let b = polyBase.coeffs[0] || 0;
+                    let numVal = (polyNum.coeffs[0] || 0) * (isNeg ? -1 : 1);
+
+                    let baseTeX = nerdamer(baseLinear).toTeX();
+
+                    if (power === 1) {
+                        let coeffVal = numVal / a;
+                        let coeffTeX = nerdamer(coeffVal).toTeX();
+                        if (coeffTeX === '1') return `\\ln\\left|${baseTeX}\\right|`;
+                        if (coeffTeX === '-1') return `-\\ln\\left|${baseTeX}\\right|`;
+                        return `${coeffTeX}\\ln\\left|${baseTeX}\\right|`;
+                    } else {
+                        // power > 1: \int A / (ax+b)^k = -A / (a(k-1)(ax+b)^{k-1})
+                        let newCoeff = -numVal / (a * (power - 1));
+                        let newPower = power - 1;
+                        let coeffTeX = nerdamer(Math.abs(newCoeff)).toTeX();
+                        let signStr = newCoeff < 0 ? '-' : '';
+                        let denTeX = newPower === 1 ? baseTeX : `\\left(${baseTeX}\\right)^${newPower}`;
+                        if (coeffTeX === '1') return `${signStr}\\frac{1}{${denTeX}}`;
+                        return `${signStr}\\frac{${coeffTeX}}{${denTeX}}`;
+                    }
+                }
+
+                // 2. 检查分母是否为二次项 ax^2 + bx + c
+                if (polyBase && polyBase.deg === 2 && power === 1 && polyNum && polyNum.deg <= 1) {
+                    let a = polyBase.coeffs[2] || 0;
+                    let b = polyBase.coeffs[1] || 0;
+                    let c = polyBase.coeffs[0] || 0;
+                    let A = (polyNum.coeffs[1] || 0) * (isNeg ? -1 : 1);
+                    let B = (polyNum.coeffs[0] || 0) * (isNeg ? -1 : 1);
+
+                    let delta = b * b - 4 * a * c;
+                    if (delta < -1e-6) {
+                        let negDelta = -delta;
+                        let sqrtNegDelta = Math.sqrt(negDelta);
+                        let k = sqrtNegDelta / (2 * Math.abs(a));
+                        let x0 = -b / (2 * a);
+
+                        let diffCoeff = A / (2 * a);
+                        let constRem = B - (A * b) / (2 * a);
+
+                        let logPart = '';
+                        if (A !== 0) {
+                            let coeffStr = nerdamer(diffCoeff).toTeX();
+                            if (coeffStr === '1') logPart = `\\ln\\left(${nerdamer(baseLinear).toTeX()}\\right)`;
+                            else if (coeffStr === '-1') logPart = `-\\ln\\left(${nerdamer(baseLinear).toTeX()}\\right)`;
+                            else logPart = `${coeffStr}\\ln\\left(${nerdamer(baseLinear).toTeX()}\\right)`;
+                        }
+
+                        let atanPart = '';
+                        let atanCoeffVal = constRem / (a * k);
+                        if (Math.abs(atanCoeffVal) > 1e-9) {
+                            let atanCoeffStr = nerdamer(atanCoeffVal).toTeX();
+                            let kLatex = Number.isInteger(k) ? `${k}` : nerdamer(`sqrt(${negDelta}) / (2*${Math.abs(a)})`).toTeX();
+                            let shiftSign = x0 > 0 ? `- ${x0}` : (x0 < 0 ? `+ ${-x0}` : '');
+                            let atanArgTeX = `\\frac{${v} ${shiftSign}}{${kLatex}}`.replace(/\\frac\{([^}]+)\}\{1\}/, '$1');
+                            if (x0 === 0 && k === 1) atanArgTeX = `${v}`;
+
+                            if (atanCoeffStr === '1') atanPart = `\\arctan\\left(${atanArgTeX}\\right)`;
+                            else if (atanCoeffStr === '-1') atanPart = `-\\arctan\\left(${atanArgTeX}\\right)`;
+                            else atanPart = `${atanCoeffStr}\\arctan\\left(${atanArgTeX}\\right)`;
+                        }
+
+                        if (logPart && atanPart) {
+                            return `${logPart} + ${atanPart}`.replace(/\+\s*-/g, '- ');
+                        } else if (logPart) {
+                            return logPart;
+                        } else if (atanPart) {
+                            return atanPart;
+                        }
+                    }
+                }
+
+                // 回退到通用积分
+                let intRes = nerdamer(`integrate(${isNeg ? '-' + s : s}, ${v})`);
+                return simplifyIntegralResult(intRes, v, '');
+            } catch (e) {
+                let intRes = nerdamer(`integrate(${tStr}, ${v})`);
+                return simplifyIntegralResult(intRes, v, '');
+            }
+        }
+
         function solveRationalQuadraticIntegral(numStr, denStr, v = 'x') {
             try {
                 let polyQ = getPolyCoeffs(denStr, v);
@@ -3770,135 +3928,104 @@
                 // -------------------------------------------------------------
                 // Mode B: 标准一/二次真分式有理函数积分
                 // -------------------------------------------------------------
-                if (polyQ.deg !== 2 || polyP.deg > 1) {
-                    return null;
-                }
+                if (polyQ.deg === 2 && polyP.deg <= 1) {
+                    let a = polyQ.coeffs[2] || 0;
+                    let b = polyQ.coeffs[1] || 0;
+                    let c = polyQ.coeffs[0] || 0;
 
-                let a = polyQ.coeffs[2] || 0;
-                let b = polyQ.coeffs[1] || 0;
-                let c = polyQ.coeffs[0] || 0;
+                    if (a === 0) return null;
 
-                if (a === 0) return null;
+                    let A = polyP.coeffs[1] || 0;
+                    let B = polyP.coeffs[0] || 0;
 
-                let A = polyP.coeffs[1] || 0;
-                let B = polyP.coeffs[0] || 0;
+                    let delta = b * b - 4 * a * c;
+                    let diffCoeff = A / (2 * a);
+                    let constRem = B - (A * b) / (2 * a);
 
-                let delta = b * b - 4 * a * c;
-                let diffCoeff = A / (2 * a);
-                let constRem = B - (A * b) / (2 * a);
-
-                let stepsBreakdown = [];
-                let resultLatex = '';
-
-                stepsBreakdown.push({
-                    desc: '识别为有理分式积分 (Rational Function Integration)：',
-                    math: `\\int \\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} \\,d${v}`
-                });
-
-                // Case 1: 判别式 Delta < 0 (不可约二次因式，标准配方与反正切形式)
-                if (delta < -1e-6) {
-                    let negDelta = -delta;
-                    let sqrtNegDelta = Math.sqrt(negDelta);
-                    let k = sqrtNegDelta / (2 * Math.abs(a));
-                    let x0 = -b / (2 * a);
-
-                    let kLatex = Number.isInteger(k) ? `${k}` : nerdamer(`sqrt(${negDelta}) / (2*${Math.abs(a)})`).toTeX();
-                    let x0Latex = Number.isInteger(x0) ? `${x0}` : nerdamer(`-${b} / (2*${a})`).toTeX();
-
-                    let shiftSign = x0 > 0 ? `- ${x0}` : (x0 < 0 ? `+ ${-x0}` : '');
-                    let compSquareTeX = a === 1 ? (x0 !== 0 ? `(${v} ${shiftSign})^2 + ${k}^2` : `${v}^2 + ${k}^2`) : `${a}\\left[ (${v} ${shiftSign})^2 + ${k}^2 \\right]`;
+                    let stepsBreakdown = [];
+                    let resultLatex = '';
 
                     stepsBreakdown.push({
-                        desc: `计算分母判别式 $\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${delta} < 0$，配方得恒正形式：`,
-                        math: `${nerdamer(denStr).toTeX()} = ${compSquareTeX} > 0`
+                        desc: '识别为有理分式积分 (Rational Function Integration)：',
+                        math: `\\int \\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} \\,d${v}`
                     });
 
-                    if (A !== 0) {
-                        let diffPart = a === 1 ? `(2${v} ${b >= 0 ? '+ ' + b : '- ' + (-b)})` : `(${2*a}${v} ${b >= 0 ? '+ ' + b : '- ' + (-b)})`;
-                        let diffCoeffTeX = nerdamer(diffCoeff).toTeX();
-                        let constRemTeX = nerdamer(constRem).toTeX();
+                    // Case 1: 判别式 Delta < 0 (不可约二次因式，标准配方与反正切形式)
+                    if (delta < -1e-6) {
+                        let negDelta = -delta;
+                        let sqrtNegDelta = Math.sqrt(negDelta);
+                        let k = sqrtNegDelta / (2 * Math.abs(a));
+                        let x0 = -b / (2 * a);
+
+                        let kLatex = Number.isInteger(k) ? `${k}` : nerdamer(`sqrt(${negDelta}) / (2*${Math.abs(a)})`).toTeX();
+                        let x0Latex = Number.isInteger(x0) ? `${x0}` : nerdamer(`-${b} / (2*${a})`).toTeX();
+
+                        let shiftSign = x0 > 0 ? `- ${x0}` : (x0 < 0 ? `+ ${-x0}` : '');
+                        let compSquareTeX = a === 1 ? (x0 !== 0 ? `(${v} ${shiftSign})^2 + ${k}^2` : `${v}^2 + ${k}^2`) : `${a}\\left[ (${v} ${shiftSign})^2 + ${k}^2 \\right]`;
 
                         stepsBreakdown.push({
-                            desc: '采用凑微分拆项法，将分子拆分为「分母导数项」与「常数项」之和：',
-                            math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${diffCoeffTeX} \\cdot \\frac{${diffPart}}{${nerdamer(denStr).toTeX()}} + \\frac{${constRemTeX}}{${compSquareTeX}}`
+                            desc: `计算分母判别式 $\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${delta} < 0$，配方得恒正形式：`,
+                            math: `${nerdamer(denStr).toTeX()} = ${compSquareTeX} > 0`
                         });
-                    }
 
-                    let logTermLatex = '';
-                    if (A !== 0) {
-                        let coeffStr = nerdamer(diffCoeff).toTeX();
-                        if (coeffStr === '1') logTermLatex = `\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
-                        else if (coeffStr === '-1') logTermLatex = `-\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
-                        else logTermLatex = `${coeffStr}\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+                        if (A !== 0) {
+                            let diffPart = a === 1 ? `(2${v} ${b >= 0 ? '+ ' + b : '- ' + (-b)})` : `(${2*a}${v} ${b >= 0 ? '+ ' + b : '- ' + (-b)})`;
+                            let diffCoeffTeX = nerdamer(diffCoeff).toTeX();
+                            let constRemTeX = nerdamer(constRem).toTeX();
+
+                            stepsBreakdown.push({
+                                desc: '采用凑微分拆项法，将分子拆分为「分母导数项」与「常数项」之和：',
+                                math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${diffCoeffTeX} \\cdot \\frac{${diffPart}}{${nerdamer(denStr).toTeX()}} + \\frac{${constRemTeX}}{${compSquareTeX}}`
+                            });
+                        }
+
+                        let logTermLatex = '';
+                        if (A !== 0) {
+                            let coeffStr = nerdamer(diffCoeff).toTeX();
+                            if (coeffStr === '1') logTermLatex = `\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+                            else if (coeffStr === '-1') logTermLatex = `-\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+                            else logTermLatex = `${coeffStr}\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+
+                            stepsBreakdown.push({
+                                desc: '求解第一项积分（凑微分对数积分，因分母 $\\Delta < 0$ 恒正，无需绝对值）：',
+                                math: `\\int \\frac{${nerdamer(diffCoeff).toTeX()}(${2*a}${v} ${b >= 0 ? '+' : ''}${b})}{${nerdamer(denStr).toTeX()}} \\,d${v} = ${logTermLatex}`
+                            });
+                        }
+
+                        let atanCoeffVal = constRem / (a * k);
+                        let atanCoeffStr = nerdamer(atanCoeffVal).toTeX();
+                        let atanArgTeX = `\\frac{${v} ${shiftSign}}{${kLatex}}`.replace(/\\frac\{([^}]+)\}\{1\}/, '$1');
+                        if (x0 === 0 && k === 1) atanArgTeX = `${v}`;
+
+                        let atanTermLatex = '';
+                        if (atanCoeffStr === '1') atanTermLatex = `\\arctan\\left(${atanArgTeX}\\right)`;
+                        else if (atanCoeffStr === '-1') atanTermLatex = `-\\arctan\\left(${atanArgTeX}\\right)`;
+                        else atanTermLatex = `${atanCoeffStr}\\arctan\\left(${atanArgTeX}\\right)`;
 
                         stepsBreakdown.push({
-                            desc: '求解第一项积分（凑微分对数积分，因分母 $\\Delta < 0$ 恒正，无需绝对值）：',
-                            math: `\\int \\frac{${nerdamer(diffCoeff).toTeX()}(${2*a}${v} ${b >= 0 ? '+' : ''}${b})}{${nerdamer(denStr).toTeX()}} \\,d${v} = ${logTermLatex}`
+                            desc: '求解第二项积分（标准反正切积分公式 $\\int \\frac{1}{u^2 + a^2} \\,du = \\frac{1}{a} \\arctan(\\frac{u}{a})$）：',
+                            math: `\\int \\frac{${nerdamer(constRem).toTeX()}}{${compSquareTeX}} \\,d${v} = ${atanTermLatex}`
                         });
+
+                        if (logTermLatex && atanTermLatex) {
+                            resultLatex = `${logTermLatex} + ${atanTermLatex}`;
+                        } else if (logTermLatex) {
+                            resultLatex = logTermLatex;
+                        } else {
+                            resultLatex = atanTermLatex;
+                        }
+
+                        return {
+                            finalResultLatex: resultLatex,
+                            steps: stepsBreakdown
+                        };
                     }
-
-                    let atanCoeffVal = constRem / (a * k);
-                    let atanCoeffStr = nerdamer(atanCoeffVal).toTeX();
-                    let atanArgTeX = `\\frac{${v} ${shiftSign}}{${kLatex}}`.replace(/\\frac\{([^}]+)\}\{1\}/, '$1');
-                    if (x0 === 0 && k === 1) atanArgTeX = `${v}`;
-
-                    let atanTermLatex = '';
-                    if (atanCoeffStr === '1') atanTermLatex = `\\arctan\\left(${atanArgTeX}\\right)`;
-                    else if (atanCoeffStr === '-1') atanTermLatex = `-\\arctan\\left(${atanArgTeX}\\right)`;
-                    else atanTermLatex = `${atanCoeffStr}\\arctan\\left(${atanArgTeX}\\right)`;
-
-                    stepsBreakdown.push({
-                        desc: '求解第二项积分（标准反正切积分公式 $\\int \\frac{1}{u^2 + a^2} \\,du = \\frac{1}{a} \\arctan(\\frac{u}{a})$）：',
-                        math: `\\int \\frac{${nerdamer(constRem).toTeX()}}{${compSquareTeX}} \\,d${v} = ${atanTermLatex}`
-                    });
-
-                    if (logTermLatex && atanTermLatex) {
-                        resultLatex = `${logTermLatex} + ${atanTermLatex}`;
-                    } else if (logTermLatex) {
-                        resultLatex = logTermLatex;
-                    } else {
-                        resultLatex = atanTermLatex;
-                    }
-
-                    return {
-                        finalResultLatex: resultLatex,
-                        steps: stepsBreakdown
-                    };
-                }
-
-                // Case 2: 判别式 Delta > 0 (两个相异实根，部分分式拆分)
-                else if (delta > 1e-6) {
-                    let sqrtDelta = Math.sqrt(delta);
-                    let r1 = (-b + sqrtDelta) / (2 * a);
-                    let r2 = (-b - sqrtDelta) / (2 * a);
-
-                    let r1Str = Number.isInteger(r1) ? `${r1}` : nerdamer(r1).toTeX();
-                    let r2Str = Number.isInteger(r2) ? `${r2}` : nerdamer(r2).toTeX();
-
-                    stepsBreakdown.push({
-                        desc: `分母判别式 $\\Delta = ${delta} > 0$，因式分解得两不等实根因式：`,
-                        math: `${nerdamer(denStr).toTeX()} = ${a === 1 ? '' : a + ' '}(${v} - ${r1Str})(${v} - ${r2Str})`
-                    });
-
-                    let partFrac = nerdamer(`partfrac((${numStr})/(${denStr}), ${v})`);
-                    stepsBreakdown.push({
-                        desc: '进行部分分式分解 (Partial Fraction Decomposition)：',
-                        math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${partFrac.toTeX()}`
-                    });
-
-                    let integrated = nerdamer(`integrate(${partFrac.toString()}, ${v})`);
-                    let resTeX = simplifyIntegralResult(integrated, v, '');
-
-                    return {
-                        finalResultLatex: resTeX,
-                        steps: stepsBreakdown
-                    };
                 }
 
                 // -------------------------------------------------------------
-                // Mode C: 通用高阶有理分式部分分式分解积分 (Universal Partial Fractions)
+                // Mode C: 通用高阶有理分式部分分式分解与逐项精确积分 (Universal Partial Fractions)
                 // -------------------------------------------------------------
-                if (polyQ.deg > 2 || (polyQ.deg === 2 && polyP.deg > 1)) {
+                if (polyQ.deg >= 1) {
                     let stepsBreakdown = [];
                     stepsBreakdown.push({
                         desc: '识别为有理分式积分 (Rational Function Integration)：',
@@ -3914,11 +4041,25 @@
                         math: `\\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} = ${partFracTeX}`
                     });
 
-                    let integrated = nerdamer(`integrate(${partFracStr}, ${v})`);
-                    let resTeX = simplifyIntegralResult(integrated, v, '');
+                    let terms = splitSumTerms(partFracStr);
+                    let integratedTerms = [];
+                    let stepMathLines = [];
+
+                    for (let term of terms) {
+                        let intTermTeX = integratePartialFractionTerm(term, v);
+                        integratedTerms.push(intTermTeX);
+                        stepMathLines.push(`\\int \\left( ${nerdamer(term).toTeX()} \\right) \\,d${v} = ${intTermTeX}`);
+                    }
+
+                    stepsBreakdown.push({
+                        desc: '对各部分分式项逐项求不定积分：',
+                        math: stepMathLines.join(' \\quad,\\quad ')
+                    });
+
+                    let finalCombinedTeX = combineIntegratedTerms(integratedTerms);
 
                     return {
-                        finalResultLatex: resTeX,
+                        finalResultLatex: finalCombinedTeX,
                         steps: stepsBreakdown
                     };
                 }
