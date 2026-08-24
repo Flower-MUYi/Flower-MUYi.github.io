@@ -4706,6 +4706,393 @@
             } catch (e) { return null; }
         }
 
+        // =========================================================================
+        // 专属解析器 4: 指数函数无理换元与有理积分专用引擎 (例: \int \sqrt{e^x+1} dx)
+        // =========================================================================
+        function solveExponentialIntegral(exprStr, v = 'x') {
+            try {
+                let clean = exprStr.replace(/\s+/g, '');
+                if (!clean.includes('exp(') && !clean.includes('e^')) return null;
+
+                // 统一标准为 exp(...)
+                let s = clean.replace(/e\^\(?([a-zA-Z0-9\+\-\*]+)\)?/g, 'exp($1)');
+
+                // -------------------------------------------------------------
+                // 模式 1: \int \sqrt{e^{kx} + a} dx
+                // -------------------------------------------------------------
+                let sqrtExpMatch = s.match(/^sqrt\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)([\+\-][0-9\.\-]+)\)$/) ||
+                                   s.match(/^sqrt\(exp\(([a-zA-Z])\)([\+\-][0-9\.\-]+)\)$/) ||
+                                   s.match(/^\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)([\+\-][0-9\.\-]+)\)\^\(1\/2\)$/) ||
+                                   s.match(/^\(exp\(([a-zA-Z])\)([\+\-][0-9\.\-]+)\)\^\(1\/2\)$/);
+
+                if (sqrtExpMatch) {
+                    let k = 1, varFound = 'x', a = 1;
+                    if (sqrtExpMatch.length >= 4 && sqrtExpMatch[1] && isNaN(parseFloat(sqrtExpMatch[2]))) {
+                        k = parseFloat(sqrtExpMatch[1]);
+                        varFound = sqrtExpMatch[2];
+                        a = parseFloat(sqrtExpMatch[3]);
+                    } else {
+                        varFound = sqrtExpMatch[1];
+                        a = parseFloat(sqrtExpMatch[2]);
+                    }
+
+                    if (varFound === v) {
+                        let stepsBreakdown = [];
+                        let expTerm = k === 1 ? `e^{${v}}` : `e^{${k}${v}}`;
+                        let radTeX = `\\sqrt{${expTerm} ${a >= 0 ? '+ ' + a : '- ' + (-a)}}`;
+
+                        stepsBreakdown.push({
+                            desc: `识别被积函数为含指数无理根式结构 $${radTeX}$，应用第二类换元积分法（无理根式代换法）：`,
+                            math: `\\int ${radTeX} \\,d${v}`
+                        });
+
+                        if (a > 0) {
+                            let sqrtA = Math.sqrt(a);
+                            let sqrtATeX = Number.isInteger(sqrtA) ? `${sqrtA}` : nerdamer(`sqrt(${a})`).toTeX();
+
+                            stepsBreakdown.push({
+                                desc: `令中间变量 $u = ${radTeX}$，两边平方得 $u^2 = ${expTerm} + ${a} \\implies ${expTerm} = u^2 - ${a} \\implies ${k === 1 ? v : k + v} = \\ln(u^2 - ${a})$，求微分得：`,
+                                math: `d${v} = \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 - ${a}\\right)} \\,du`
+                            });
+
+                            stepsBreakdown.push({
+                                desc: `代入原式消去根号，转化为关于 $u$ 的有理假分式积分：`,
+                                math: `\\int u \\cdot \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 - ${a}\\right)} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\frac{u^2}{u^2 - ${a}} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\left(1 + \\frac{${a}}{u^2 - ${a}}\\right) \\,du`
+                            });
+
+                            stepsBreakdown.push({
+                                desc: `对有理真分式进行部分分式分解 $\\frac{${a}}{u^2 - ${a}} = \\frac{${sqrtATeX}}{2}\\left(\\frac{1}{u - ${sqrtATeX}} - \\frac{1}{u + ${sqrtATeX}}\\right)$ 并求积分：`,
+                                math: `${k === 1 ? '2' : '\\frac{2}{' + k + '}'}u + ${k === 1 ? (sqrtA === 1 ? '' : sqrtATeX) : nerdamer(`${sqrtA}/${k}`).toTeX()} \\ln\\left|\\frac{u - ${sqrtATeX}}{u + ${sqrtATeX}}\\right|`
+                            });
+
+                            let coeff1 = k === 1 ? '2' : nerdamer(`2/${k}`).toTeX();
+                            let coeff2 = k === 1 ? (sqrtA === 1 ? '' : sqrtATeX) : nerdamer(`${sqrtA}/${k}`).toTeX();
+
+                            let finalResultLatex = `${coeff1 === '1' ? '' : coeff1}\\sqrt{${expTerm} + ${a}} + ${coeff2 === '1' ? '' : coeff2}\\ln\\left|\\frac{\\sqrt{${expTerm} + ${a}} - ${sqrtATeX}}{\\sqrt{${expTerm} + ${a}} + ${sqrtATeX}}\\right|`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                            stepsBreakdown.push({
+                                desc: `将 $u = ${radTeX}$ 回代自变量，得出最简原函数：`,
+                                math: finalResultLatex
+                            });
+
+                            return {
+                                finalResultLatex,
+                                steps: stepsBreakdown
+                            };
+                        } else if (a < 0) {
+                            let posA = -a;
+                            let sqrtA = Math.sqrt(posA);
+                            let sqrtATeX = Number.isInteger(sqrtA) ? `${sqrtA}` : nerdamer(`sqrt(${posA})`).toTeX();
+
+                            stepsBreakdown.push({
+                                desc: `令中间变量 $u = ${radTeX}$，两边平方得 $u^2 = ${expTerm} - ${posA} \\implies ${expTerm} = u^2 + ${posA} \\implies ${k === 1 ? v : k + v} = \\ln(u^2 + ${posA})$，求微分得：`,
+                                math: `d${v} = \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 + ${posA}\\right)} \\,du`
+                            });
+
+                            stepsBreakdown.push({
+                                desc: `代入原式消去根号，转化为反正切有理分式积分：`,
+                                math: `\\int u \\cdot \\frac{2u}{${k === 1 ? '' : k}\\left(u^2 + ${posA}\\right)} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\left(1 - \\frac{${posA}}{u^2 + ${posA}}\\right) \\,du`
+                            });
+
+                            let coeff1 = k === 1 ? '2' : nerdamer(`2/${k}`).toTeX();
+                            let coeff2 = k === 1 ? (sqrtA === 1 ? '2' : `${2 * sqrtA}`) : nerdamer(`${2 * sqrtA}/${k}`).toTeX();
+
+                            let finalResultLatex = `${coeff1 === '1' ? '' : coeff1}\\sqrt{${expTerm} - ${posA}} - ${coeff2 === '1' ? '' : coeff2}\\arctan\\left(\\frac{\\sqrt{${expTerm} - ${posA}}}{${sqrtATeX}}\\right)`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                            stepsBreakdown.push({
+                                desc: `计算积分并将 $u = ${radTeX}$ 回代自变量，得出最简原函数：`,
+                                math: finalResultLatex
+                            });
+
+                            return {
+                                finalResultLatex,
+                                steps: stepsBreakdown
+                            };
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // 模式 2: \int \frac{1}{\sqrt{e^{kx} + a}} dx
+                // -------------------------------------------------------------
+                let fracSqrtExpMatch = s.match(/^1\/sqrt\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)\+([0-9\.\-]+)\)$/) ||
+                                       s.match(/^1\/sqrt\(exp\(([a-zA-Z])\)\+([0-9\.\-]+)\)$/) ||
+                                       s.match(/^\(exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)\+([0-9\.\-]+)\)\^\(-1\/2\)$/);
+
+                if (fracSqrtExpMatch) {
+                    let k = 1, varFound = 'x', a = 1;
+                    if (fracSqrtExpMatch.length >= 4 && fracSqrtExpMatch[1] && isNaN(parseFloat(fracSqrtExpMatch[2]))) {
+                        k = parseFloat(fracSqrtExpMatch[1]);
+                        varFound = fracSqrtExpMatch[2];
+                        a = parseFloat(fracSqrtExpMatch[3]);
+                    } else {
+                        varFound = fracSqrtExpMatch[1] || 'x';
+                        a = parseFloat(fracSqrtExpMatch[2] || fracSqrtExpMatch[3] || '1');
+                    }
+
+                    if (varFound === v && a > 0) {
+                        let sqrtA = Math.sqrt(a);
+                        let sqrtATeX = Number.isInteger(sqrtA) ? `${sqrtA}` : nerdamer(`sqrt(${a})`).toTeX();
+                        let expTerm = k === 1 ? `e^{${v}}` : `e^{${k}${v}}`;
+                        let radTeX = `\\sqrt{${expTerm} + ${a}}`;
+
+                        let stepsBreakdown = [
+                            {
+                                desc: `识别被积函数为含指数根式倒数分式，应用无理根式代换 $u = ${radTeX}$：`,
+                                math: `\\int \\frac{1}{${radTeX}} \\,d${v}`
+                            },
+                            {
+                                desc: `由 $u = \\sqrt{${expTerm} + ${a}} \\implies d${v} = \\frac{2u}{${k === 1 ? '' : k}(u^2 - ${a})} \\,du$，代入化简：`,
+                                math: `\\int \\frac{1}{u} \\cdot \\frac{2u}{${k === 1 ? '' : k}(u^2 - ${a})} \\,du = ${k === 1 ? '2' : '\\frac{2}{' + k + '}'} \\int \\frac{1}{u^2 - ${a}} \\,du`
+                            }
+                        ];
+
+                        let coeff = k === 1 ? (sqrtA === 1 ? '1' : nerdamer(`1/${sqrtA}`).toTeX()) : nerdamer(`1/(${k}*${sqrtA})`).toTeX();
+                        let finalResultLatex = `${coeff === '1' ? '' : coeff}\\ln\\left|\\frac{\\sqrt{${expTerm} + ${a}} - ${sqrtATeX}}{\\sqrt{${expTerm} + ${a}} + ${sqrtATeX}}\\right|`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `分解部分分式并求对数积分，回代自变量：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // 模式 3: \int \frac{1}{e^{kx} + a} dx
+                // -------------------------------------------------------------
+                let fracExpMatch = s.match(/^1\/\(?exp\((?:([0-9\.\-]+)\*)?([a-zA-Z])\)\+([0-9\.\-]+)\)?$/) ||
+                                   s.match(/^1\/\(?exp\(([a-zA-Z])\)\+([0-9\.\-]+)\)?$/);
+                if (fracExpMatch) {
+                    let k = 1, varFound = 'x', a = 1;
+                    if (fracExpMatch.length >= 4 && fracExpMatch[1] && isNaN(parseFloat(fracExpMatch[2]))) {
+                        k = parseFloat(fracExpMatch[1]);
+                        varFound = fracExpMatch[2];
+                        a = parseFloat(fracExpMatch[3]);
+                    } else {
+                        varFound = fracExpMatch[1] || 'x';
+                        a = parseFloat(fracExpMatch[2] || fracExpMatch[3] || '1');
+                    }
+
+                    if (varFound === v && a !== 0) {
+                        let expTerm = k === 1 ? `e^{${v}}` : `e^{${k}${v}}`;
+                        let stepsBreakdown = [
+                            {
+                                desc: '分子分母同乘以 $e^{-' + (k === 1 ? v : k + v) + '}$ 或进行配凑拆项：',
+                                math: `\\int \\frac{1}{${expTerm} + ${a}} \\,d${v} = \\frac{1}{${a}} \\int \\left(1 - \\frac{${expTerm}}{${expTerm} + ${a}}\\right) \\,d${v}`
+                            },
+                            {
+                                desc: '分别求积分：',
+                                math: `\\frac{1}{${a}}${v} - \\frac{1}{${a * k}}\\ln|${expTerm} + ${a}|`
+                            }
+                        ];
+
+                        let coeff1 = a === 1 ? '' : nerdamer(`1/${a}`).toTeX();
+                        let coeff2 = (a * k) === 1 ? '' : nerdamer(`1/(${a * k})`).toTeX();
+                        let finalResultLatex = `${coeff1 === '1' ? '' : coeff1}${v} - ${coeff2 === '1' ? '' : coeff2}\\ln|${expTerm} + ${a}|`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // =========================================================================
+        // 专属解析器 5: 含参标准微积分公式模式匹配引擎
+        // =========================================================================
+        function solveParametricStandardIntegral(exprStr, v = 'x') {
+            try {
+                let clean = exprStr.replace(/\s+/g, '');
+
+                // 1. \int \frac{1}{x^2 + a^2} dx 或 \int \frac{1}{a^2 + x^2} dx (含字母参数 a)
+                let invSquareMatch = clean.match(/^\(?1\)?\/\(?\((?:([a-zA-Z0-9]+)\^2\+([a-zA-Z])\^2|([a-zA-Z])\^2\+([a-zA-Z0-9]+)\^2)\)\)?$/) ||
+                                     clean.match(/^\(?1\)?\/\(?([a-zA-Z0-9]+)\^2\+([a-zA-Z])\^2\)?$/) ||
+                                     clean.match(/^\(?1\)?\/\(?([a-zA-Z])\^2\+([a-zA-Z0-9]+)\^2\)?$/);
+                if (invSquareMatch) {
+                    let aParam = '', varParam = '';
+                    for (let i = 1; i < invSquareMatch.length; i++) {
+                        if (invSquareMatch[i] === v) varParam = v;
+                        else if (invSquareMatch[i]) aParam = invSquareMatch[i];
+                    }
+                    if (varParam === v && aParam && aParam !== v) {
+                        let aTeX = nerdamer(aParam).toTeX();
+                        let stepsBreakdown = [
+                            {
+                                desc: `识别为含常数参数 $${aTeX}$ 的标准反正切型有理分式积分：`,
+                                math: `\\int \\frac{1}{${v}^2 + ${aTeX}^2} \\,d${v}`
+                            },
+                            {
+                                desc: `应用标准积分公式 $\\int \\frac{1}{${v}^2 + a^2} \\,d${v} = \\frac{1}{a}\\arctan\\left(\\frac{${v}}{a}\\right)$：`,
+                                math: `\\frac{1}{${aTeX}}\\arctan\\left(\\frac{${v}}{${aTeX}}\\right)`
+                            }
+                        ];
+                        let finalResultLatex = `\\frac{1}{${aTeX}}\\arctan\\left(\\frac{${v}}{${aTeX}}\\right)`.replace(/\\frac\{1\}\{1\}/g, '');
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // 2. \int \frac{1}{\sqrt{a^2 - x^2}} dx (含字母参数 a)
+                let invSqrtMatch = clean.match(/^\(?1\)?\/sqrt\(\(?([a-zA-Z0-9]+)\^2\-([a-zA-Z])\^2\)?\)$/) ||
+                                   clean.match(/^\(?1\)?\/\(\(?([a-zA-Z0-9]+)\^2\-([a-zA-Z])\^2\)?\)\^\(1\/2\)$/);
+                if (invSqrtMatch) {
+                    let aParam = invSqrtMatch[1], varParam = invSqrtMatch[2];
+                    if (varParam === v && aParam && aParam !== v) {
+                        let aTeX = nerdamer(aParam).toTeX();
+                        let stepsBreakdown = [
+                            {
+                                desc: `识别为含常数参数 $${aTeX}$ 的标准反正弦型二次根式积分：`,
+                                math: `\\int \\frac{1}{\\sqrt{${aTeX}^2 - ${v}^2}} \\,d${v}`
+                            },
+                            {
+                                desc: `应用标准积分公式 $\\int \\frac{1}{\\sqrt{a^2 - ${v}^2}} \\,d${v} = \\arcsin\\left(\\frac{${v}}{a}\\right)$：`,
+                                math: `\\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`
+                            }
+                        ];
+                        let finalResultLatex = `\\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`;
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // 3. \int \frac{1}{\sqrt{x^2 \pm a^2}} dx (含字母参数 a)
+                let invSqrtPlusMinusMatch = clean.match(/^\(?1\)?\/sqrt\(\(?([a-zA-Z])\^2([\+\-])([a-zA-Z0-9]+)\^2\)?\)$/);
+                if (invSqrtPlusMinusMatch && invSqrtPlusMinusMatch[1] === v) {
+                    let sign = invSqrtPlusMinusMatch[2];
+                    let aParam = invSqrtPlusMinusMatch[3];
+                    if (aParam !== v) {
+                        let aTeX = nerdamer(aParam).toTeX();
+                        let insideTeX = `${v}^2 ${sign} ${aTeX}^2`;
+                        let stepsBreakdown = [
+                            {
+                                desc: `识别为含常数参数 $${aTeX}$ 的标准对数根式积分：`,
+                                math: `\\int \\frac{1}{\\sqrt{${insideTeX}}} \\,d${v}`
+                            },
+                            {
+                                desc: `应用标准积分公式 $\\int \\frac{1}{\\sqrt{${v}^2 \\pm a^2}} \\,d${v} = \\ln\\left|${v} + \\sqrt{${v}^2 \\pm a^2}\\right|$：`,
+                                math: `\\ln\\left|${v} + \\sqrt{${insideTeX}}\\right|`
+                            }
+                        ];
+                        let finalResultLatex = sign === '+' ? `\\ln\\left(${v} + \\sqrt{${insideTeX}}\\right)` : `\\ln\\left|${v} + \\sqrt{${insideTeX}}\\right|`;
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // 4. \int \sqrt{a^2 - x^2} dx (含字母参数 a)
+                let sqrtMinusMatch = clean.match(/^sqrt\(\(?([a-zA-Z0-9]+)\^2\-([a-zA-Z])\^2\)?\)$/) ||
+                                     clean.match(/^\(\(?([a-zA-Z0-9]+)\^2\-([a-zA-Z])\^2\)?\)\^\(1\/2\)$/);
+                if (sqrtMinusMatch) {
+                    let aParam = sqrtMinusMatch[1], varParam = sqrtMinusMatch[2];
+                    if (varParam === v && aParam && aParam !== v) {
+                        let aTeX = nerdamer(aParam).toTeX();
+                        let stepsBreakdown = [
+                            {
+                                desc: `识别被积函数含参数 $${aTeX}$ 的圆弧二次根式，应用第二类换元法（三角代换法 $${v} = ${aTeX}\\sin t$）：`,
+                                math: `\\int \\sqrt{${aTeX}^2 - ${v}^2} \\,d${v}`
+                            },
+                            {
+                                desc: `求三角积分并由辅助直角三角形回代得出标准原函数：`,
+                                math: `\\frac{${v}}{2}\\sqrt{${aTeX}^2 - ${v}^2} + \\frac{${aTeX}^2}{2}\\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`
+                            }
+                        ];
+                        let finalResultLatex = `\\frac{${v}}{2}\\sqrt{${aTeX}^2 - ${v}^2} + \\frac{${aTeX}^2}{2}\\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // 5. \int \frac{1}{ax + b} dx 或 \int \frac{1}{x - a} dx
+                let linearFracMatch = clean.match(/^\(?1\)?\/\(?([a-zA-Z0-9]+)\*([a-zA-Z])([\+\-][a-zA-Z0-9]+)?\)?$/) ||
+                                      clean.match(/^\(?1\)?\/\(?([a-zA-Z])([\+\-][a-zA-Z0-9]+)\)?$/);
+                if (linearFracMatch) {
+                    let aParam = linearFracMatch.length >= 4 && linearFracMatch[1] !== v ? linearFracMatch[1] : '1';
+                    let varParam = linearFracMatch.length >= 4 ? linearFracMatch[2] : linearFracMatch[1];
+                    let bParam = linearFracMatch.length >= 4 ? (linearFracMatch[3] || '') : linearFracMatch[2];
+
+                    if (varParam === v) {
+                        let denStr = aParam === '1' ? `${v}${bParam}` : `${aParam}*${v}${bParam}`;
+                        let denTeX = nerdamer(denStr).toTeX();
+                        let aTeX = nerdamer(aParam).toTeX();
+
+                        let stepsBreakdown = [
+                            {
+                                desc: `识别为一次分式对数积分，凑微分 $d(${denTeX}) = ${aTeX}\\,d${v}$：`,
+                                math: `\\int \\frac{1}{${denTeX}} \\,d${v} = \\frac{1}{${aTeX}} \\int \\frac{1}{${denTeX}} \\,d(${denTeX})`
+                            },
+                            {
+                                desc: `求得对数原函数：`,
+                                math: `\\frac{1}{${aTeX}}\\ln|${denTeX}|`
+                            }
+                        ];
+
+                        let finalResultLatex = aParam === '1' ? `\\ln|${denTeX}|` : `\\frac{1}{${aTeX}}\\ln|${denTeX}|`;
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // 6. \int x^n dx (n 为符号参数)
+                let powMatch = clean.match(/^([a-zA-Z])\^([a-zA-Z])$/);
+                if (powMatch && powMatch[1] === v) {
+                    let nParam = powMatch[2];
+                    let stepsBreakdown = [
+                        {
+                            desc: `应用幂函数基本积分公式（假定参数 $${nParam} \\ne -1$）：`,
+                            math: `\\int ${v}^{${nParam}} \\,d${v} = \\frac{${v}^{${nParam}+1}}{${nParam}+1}`
+                        }
+                    ];
+                    let finalResultLatex = `\\frac{${v}^{${nParam}+1}}{${nParam}+1}`;
+                    return { finalResultLatex, steps: stepsBreakdown };
+                }
+
+                // 7. \int \sin(ax + b) dx, \int \cos(ax + b) dx, \int e^{ax + b} dx (含参数 a, b)
+                let trigExpMatch = clean.match(/^(sin|cos|exp)\((.+)\)$/);
+                if (trigExpMatch) {
+                    let fn = trigExpMatch[1];
+                    let inner = trigExpMatch[2];
+                    let deriv = nerdamer.diff(inner, v).toString();
+                    if (!deriv.includes(v) && deriv !== '0') {
+                        let aTeX = nerdamer(deriv).toTeX();
+                        let innerTeX = nerdamer(inner).toTeX();
+                        let stepsBreakdown = [];
+                        let finalResultLatex = '';
+
+                        if (fn === 'sin') {
+                            stepsBreakdown.push({
+                                desc: `正弦复合函数凑微分 $d(${innerTeX}) = (${aTeX})\\,d${v}$：`,
+                                math: `\\int \\sin(${innerTeX}) \\,d${v} = \\frac{1}{${aTeX}} \\int \\sin(${innerTeX}) \\,d(${innerTeX})`
+                            });
+                            finalResultLatex = `-\\frac{1}{${aTeX}}\\cos(${innerTeX})`.replace(/\\frac\{1\}\{1\}/g, '');
+                        } else if (fn === 'cos') {
+                            stepsBreakdown.push({
+                                desc: `余弦复合函数凑微分 $d(${innerTeX}) = (${aTeX})\\,d${v}$：`,
+                                math: `\\int \\cos(${innerTeX}) \\,d${v} = \\frac{1}{${aTeX}} \\int \\cos(${innerTeX}) \\,d(${innerTeX})`
+                            });
+                            finalResultLatex = `\\frac{1}{${aTeX}}\\sin(${innerTeX})`.replace(/\\frac\{1\}\{1\}/g, '');
+                        } else if (fn === 'exp') {
+                            stepsBreakdown.push({
+                                desc: `指数复合函数凑微分 $d(${innerTeX}) = (${aTeX})\\,d${v}$：`,
+                                math: `\\int e^{${innerTeX}} \\,d${v} = \\frac{1}{${aTeX}} \\int e^{${innerTeX}} \\,d(${innerTeX})`
+                            });
+                            finalResultLatex = `\\frac{1}{${aTeX}}e^{${innerTeX}}`.replace(/\\frac\{1\}\{1\}/g, '');
+                        }
+
+                        stepsBreakdown.push({
+                            desc: '求得原函数：',
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         // ---------------------------------------------------------
         // Modular Handler 3: Integrals (Definite & Indefinite)
         // ---------------------------------------------------------
@@ -4754,7 +5141,43 @@
                 }
 
                 // -------------------------------------------------------------
-                // 【第三优先】二次根式有理分式专用求解器 (例: (-x+2)/sqrt(-x^2+2x+3))
+                // 【第三优先】指数无理根式与有理积分专用引擎 (例: \int \sqrt{e^x+1} dx)
+                // -------------------------------------------------------------
+                let expSol = solveExponentialIntegral(innerExpr, v);
+                if (expSol) {
+                    expSol.steps.forEach(st => steps.push(st));
+                    finalResultLatex = expSol.finalResultLatex + ' + C';
+                    steps.push({
+                        desc: '汇总指数换元推导结果，并添加任意积分常数 $C$：',
+                        math: finalResultLatex
+                    });
+                    funcForPlot = [
+                        { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
+                        { expr: latexToNerdamer(expSol.finalResultLatex), color: '#34d399', label: '原函数 F(x)' }
+                    ];
+                    return { finalResultLatex, funcForPlot };
+                }
+
+                // -------------------------------------------------------------
+                // 【第四优先】含参标准微积分公式模式解析引擎 (例: \int 1/(x^2+a^2) dx, \int \sin(ax) dx)
+                // -------------------------------------------------------------
+                let paramSol = solveParametricStandardIntegral(innerExpr, v);
+                if (paramSol) {
+                    paramSol.steps.forEach(st => steps.push(st));
+                    finalResultLatex = paramSol.finalResultLatex + ' + C';
+                    steps.push({
+                        desc: '汇总含参积分推导结果，并添加任意积分常数 $C$：',
+                        math: finalResultLatex
+                    });
+                    funcForPlot = [
+                        { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
+                        { expr: latexToNerdamer(paramSol.finalResultLatex), color: '#34d399', label: '原函数 F(x)' }
+                    ];
+                    return { finalResultLatex, funcForPlot };
+                }
+
+                // -------------------------------------------------------------
+                // 【第五优先】二次根式有理分式专用求解器 (例: (-x+2)/sqrt(-x^2+2x+3))
                 // -------------------------------------------------------------
                 let radSol = solveQuadraticRadicalIntegral(innerExpr, v);
                 if (radSol) {
