@@ -2658,8 +2658,24 @@
             s = s.replace(/\\log_\{([^}]+)\}\s+([a-zA-Z0-9\.]+)/g, '(log($2)/log($1))');
             s = s.replace(/\\log_([a-zA-Z0-9\.]+)\s+([a-zA-Z0-9\.]+)/g, '(log($2)/log($1))');
 
-            // 2.2 处理函数的乘方：\sin^2(x) -> (sin(x))^2
-            const ALL_FUNCS = ['sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'ln', 'lg', 'log'];
+            // 2.2 常用对数 \lg(x) 与 \lg x -> (log(x)/log(10))
+            s = s.replace(/\\lg\s*(?:\((.*?)\)|\\left\((.*?)\\right\)|\{([^}]+)\})/g, '(log($1$2$3)/log(10))');
+            s = s.replace(/\\lg\s+([a-zA-Z0-9\.]+)/g, '(log($1)/log(10))');
+            s = s.replace(/(^|[^a-zA-Z])lg\s*\((.*?)\)/g, '$1(log($2)/log(10))');
+            s = s.replace(/(^|[^a-zA-Z])lg\s+([a-zA-Z0-9\.]+)/g, '$1(log($2)/log(10))');
+
+            // 2.3 无底数 \log(x) 与 \log x -> (log(x)/log(10))
+            s = s.replace(/\\log\s*(?:\((.*?)\)|\\left\((.*?)\\right\)|\{([^}]+)\})/g, '(log($1$2$3)/log(10))');
+            s = s.replace(/\\log\s+([a-zA-Z0-9\.]+)/g, '(log($1)/log(10))');
+
+            // 2.4 自然对数 \ln(x) 与 \ln x -> log(x)
+            s = s.replace(/\\ln\s*(?:\((.*?)\)|\\left\((.*?)\\right\)|\{([^}]+)\})/g, 'log($1$2$3)');
+            s = s.replace(/\\ln\s+([a-zA-Z0-9\.]+)/g, 'log($1)');
+            s = s.replace(/(^|[^a-zA-Z])ln\s*\((.*?)\)/g, '$1log($2)');
+            s = s.replace(/(^|[^a-zA-Z])ln\s+([a-zA-Z0-9\.]+)/g, '$1log($2)');
+
+            // 2.5 处理其他三角函数的乘方：\sin^2(x) -> (sin(x))^2
+            const ALL_FUNCS = ['sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot'];
             ALL_FUNCS.forEach(fn => {
                 let rePowBrace = new RegExp(`\\\\?${fn}\\^([0-9]+)\\s*(?:\\((.*?)\\)|\\\\left\\((.*?)\\\\right\\)|\\{([^}]+)\\})`, 'g');
                 s = s.replace(rePowBrace, `(${fn}($2$3$4))^$1`);
@@ -2668,32 +2684,18 @@
                 s = s.replace(rePowBare, `(${fn}($2))^$1`);
             });
 
-            // 2.3 精准映射 LaTeX 反斜杠函数到 Nerdamer 原生函数名
+            // 2.6 精准映射其他三角函数
             s = s.replace(/\\arcsin\b/g, 'asin');
             s = s.replace(/\\arccos\b/g, 'acos');
             s = s.replace(/\\arctan\b/g, 'atan');
-            s = s.replace(/\\ln\b/g, 'log');       // ln -> Nerdamer 原生自然对数 log
-            s = s.replace(/\\lg\b/g, 'lg');        // lg -> 自定义常用对数 lg
-            s = s.replace(/\\log\b/g, 'lg');       // 无底数 log -> 映射为常用对数 lg
             s = s.replace(/\\(sin|cos|tan|sinh|cosh|tanh|sec|csc|cot|sqrt|exp|abs)(?![a-zA-Z])/g, '$1');
-
-            // 2.4 将纯英文单词映射给底层的 Nerdamer 原生函数
-            s = s.replace(/(^|[^a-zA-Z])(arcsin|arccos|arctan|ln|lg|log)(?![a-zA-Z])/g, (match, p1, fn, offset, fullStr) => {
-                const map = {
-                    'arcsin': 'asin',
-                    'arccos': 'acos',
-                    'arctan': 'atan',
-                    'ln': 'log',
-                    'lg': 'lg',
-                    'log': 'lg'
-                };
-                let nextChar = fullStr[offset + match.length];
-                let space = (nextChar && /[0-9]/.test(nextChar)) ? ' ' : '';
-                return p1 + map[fn] + space;
+            s = s.replace(/(^|[^a-zA-Z])(arcsin|arccos|arctan)(?![a-zA-Z])/g, (match, p1, fn) => {
+                const map = { 'arcsin': 'asin', 'arccos': 'acos', 'arctan': 'atan' };
+                return p1 + map[fn];
             });
 
-            // 2.5 补全没写括号的参数：sin x -> sin(x)
-            const NERDAMER_FUNCS = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'log', 'lg', 'exp', 'sqrt', 'abs'];
+            // 2.7 补全没写括号的参数：sin x -> sin(x), log x -> log(x)
+            const NERDAMER_FUNCS = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'log', 'exp', 'sqrt', 'abs'];
             NERDAMER_FUNCS.forEach(fn => {
                 let reBarePow = new RegExp(`\\b${fn}\\s+([a-zA-Z0-9\.]+)\\^([a-zA-Z0-9\.]+)`, 'g');
                 s = s.replace(reBarePow, `${fn}(($1)^($2))`);
@@ -4697,7 +4699,6 @@
                 finalResultLatex = formatChineseLog(outcome.finalResultLatex);
                 steps.forEach(s => {
                     if (s.math) s.math = formatChineseLog(s.math);
-                    if (s.desc) s.desc = formatChineseLog(s.desc);
                 });
                 funcForPlot = outcome.funcForPlot;
 
@@ -4877,52 +4878,33 @@
             if (!tex) return '';
             let s = tex.toString();
 
-            // 0. 移除常见的 operatorname / mathrm / mathit 宏包装
-            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*log10\s*\}/gi, '\\lg ');
-            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*lg\s*\}/gi, '\\lg ');
-            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*ln\s*\}/gi, '\\ln ');
-            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*log\s*\}/gi, '\\log ');
+            // 1. 规范换底公式还原为常用对数 \lg(x): \frac{\log(x)}{\log(10)} 或 \frac{\ln(x)}{\ln(10)}
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([^\{\}\(\)]+?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?10\}?(?:\\right\s*\))?\s*\}/g, '\\lg\\left($1\\right)');
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*10\s*\\right\)\s*\}/g, '\\lg\\left($1\\right)');
 
-            // 1. 规范换底公式还原为常用对数 \lg(x): \frac{\log(x)}{\log(10)} -> \lg(x)
-            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([^\{\}\(\)]+?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?10\}?(?:\\right\s*\))?\s*\}/gi, '\\lg\\left($1\\right)');
-            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*10\s*\\right\)\s*\}/gi, '\\lg\\left($1\\right)');
-            s = s.replace(/\(\s*\\?(?:log|ln)\s*\(?\s*([^()\s]+?)\s*\)?\s*\/\s*\\?(?:log|ln)\s*\(?\s*10\s*\)?\s*\)/gi, '\\lg($1)');
-
-            // 2. 规范常用对数与特殊底数：\log_{10}(x) -> \lg(x), \log_{e}(x) -> \ln(x)
-            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\\left\(\s*([\s\S]+?)\s*\\right\)/gi, '\\lg\\left($1\\right)');
-            s = s.replace(/\\log\s*_\{?\s*10\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/gi, '\\lg($1)');
-            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\\left\(\s*([\s\S]+?)\s*\\right\)/gi, '\\ln\\left($1\\right)');
-            s = s.replace(/\\log\s*_\{?\s*e\s*\}?\s*\(?\s*([a-zA-Z0-9\.]+)\s*\)?/gi, '\\ln($1)');
-
-            // 3. 规范换底公式还原为指定底数对数 \log_a(x): \frac{\log(x)}{\log(a)} -> \log_{a}(x) (仅当分子包含变量时)
-            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z][^\{\}\(\)]*?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z0-9]+)\}?(?:\\right\s*\))?\s*\}/gi, (m, arg, base) => {
+            // 2. 规范换底公式还原为指定底数对数 \log_a(x): \frac{\log(x)}{\log(a)}
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z][^\{\}\(\)]*?)\}?(?:\\right\s*\))?\s*\}\{\s*\\?(?:log|ln)\s*(?:\\left\s*\()?\{?([a-zA-Z0-9]+)\}?(?:\\right\s*\))?\s*\}/g, (m, arg, base) => {
                 if (base === '10') return `\\lg\\left(${arg}\\right)`;
                 if (base === 'e' || base === 'E') return `\\ln\\left(${arg}\\right)`;
                 return `\\log_{${base}}\\left(${arg}\\right)`;
             });
-            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z][\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z0-9]+)\s*\\right\)\s*\}/gi, (m, arg, base) => {
+            s = s.replace(/\\frac\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z][\s\S]+?)\s*\\right\)\s*\}\{\s*\\?(?:log|ln)\s*\\left\(\s*([a-zA-Z0-9]+)\s*\\right\)\s*\}/g, (m, arg, base) => {
                 if (base === '10') return `\\lg\\left(${arg}\\right)`;
                 if (base === 'e' || base === 'E') return `\\ln\\left(${arg}\\right)`;
                 return `\\log_{${base}}\\left(${arg}\\right)`;
             });
 
-            // 4. 将分母中的导数/常数因子 \log(10) / \log(a) 规范化为自然对数 \ln 10 / \ln a (例如 1/(x ln 10))
-            s = s.replace(/\\log\s*\\left\(\s*(\d+|[a-zA-Z])\s*\\right\)/gi, '\\ln\\left($1\\right)');
-            s = s.replace(/\\log\s*\(\s*(\d+|[a-zA-Z])\s*\)/gi, '\\ln($1)');
-            s = s.replace(/\blog\s*\(\s*(\d+)\s*\)/gi, '\\ln($1)');
+            // 3. 将导数/分母中的常数因子 \log(10) / \log(a) 规范化为自然对数 \ln 10 / \ln a (例如 1/(x ln 10))
+            s = s.replace(/\\log\s*\\left\(\s*(\d+|[a-zA-Z])\s*\\right\)/g, '\\ln\\left($1\\right)');
+            s = s.replace(/\\log\s*\(\s*(\d+|[a-zA-Z])\s*\)/g, '\\ln($1)');
 
-            // 5. Nerdamer 原生自带的所有无下标 \log(...) 全部规范化为自然对数 \ln(...)
-            s = s.replace(/\\log\b(?!\s*_)/g, '\\ln');
-            s = s.replace(/\blog\s*\(/gi, '\\ln(');
-            s = s.replace(/\blg\s*\(/gi, '\\lg(');
-            s = s.replace(/\bln\s*\(/gi, '\\ln(');
+            // 4. Nerdamer 原生自带的所有无下标 \log(...) 全部规范化为自然对数 \ln(...)
+            s = s.replace(/\\log\b(?!\s*_)/g, '\\ln ');
 
-            // 6. 统一添加 LaTeX 符号斜杠与美化
-            s = s.replace(/(^|[^\\])\bln\b/g, '$1\\ln ');
-            s = s.replace(/(^|[^\\])\blg\b/g, '$1\\lg ');
-            s = s.replace(/\\ln\s*\\left\(/g, '\\ln\\left(');
-            s = s.replace(/\\lg\s*\\left\(/g, '\\lg\\left(');
-            s = s.replace(/\\log\s*\\left\(/g, '\\log\\left(');
+            // 5. 规范化 LaTeX 字体宏标签
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*lg\s*\}/g, '\\lg ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*ln\s*\}/g, '\\ln ');
+            s = s.replace(/\\(?:operatorname|mathrm|text|mathit)\s*\{\s*log\s*\}/g, '\\ln ');
 
             return s;
         }
