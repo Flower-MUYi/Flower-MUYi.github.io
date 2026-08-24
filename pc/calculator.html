@@ -4510,6 +4510,256 @@
             }
         }
 
+        // =========================================================================
+        // 专属解析器 3: 第二类换元积分法 (三角代换法专用引擎)
+        // =========================================================================
+        function solveTrigSubstitutionIntegral(exprStr, v = 'x') {
+            try {
+                let s = stripOuterParentheses(exprStr);
+
+                // 识别常见的根式结构: sqrt(A - B*x^2), sqrt(A + B*x^2), sqrt(B*x^2 - A)
+                // 以及更高阶的 (A \pm x^2)^(3/2) 等形式
+                let radMatch = s.match(/sqrt\(([^()]+)\)/) || s.match(/\(([^()]+)\)\^\(1\/2\)/) || s.match(/\(([^()]+)\)\^\(3\/2\)/);
+                if (!radMatch) return null;
+
+                let insideRad = stripOuterParentheses(radMatch[1]);
+                let poly = getPolyCoeffs(insideRad, v);
+                if (!poly || poly.deg !== 2) return null;
+
+                let a2_coeff = poly.coeffs[2] || 0; // x^2 的系数
+                let b_coeff = poly.coeffs[1] || 0;  // 一次项 (标准三角代换通常 b=0)
+                let c_coeff = poly.coeffs[0] || 0;  // 常数项
+
+                if (Math.abs(b_coeff) > 1e-6) return null; // 带一次项的交由配方求解器处理
+
+                let type = '';
+                let aVal = 1;
+                let aTeX = '1';
+                let a2Val = 1;
+
+                if (a2_coeff < 0 && c_coeff > 0) {
+                    // 型 I: a^2 - x^2
+                    type = 'sin';
+                    a2Val = c_coeff / (-a2_coeff);
+                    aVal = Math.sqrt(a2Val);
+                    aTeX = Number.isInteger(aVal) ? `${aVal}` : nerdamer(`sqrt(${a2Val})`).toTeX();
+                } else if (a2_coeff > 0 && c_coeff > 0) {
+                    // 型 II: a^2 + x^2
+                    type = 'tan';
+                    a2Val = c_coeff / a2_coeff;
+                    aVal = Math.sqrt(a2Val);
+                    aTeX = Number.isInteger(aVal) ? `${aVal}` : nerdamer(`sqrt(${a2Val})`).toTeX();
+                } else if (a2_coeff > 0 && c_coeff < 0) {
+                    // 型 III: x^2 - a^2
+                    type = 'sec';
+                    a2Val = -c_coeff / a2_coeff;
+                    aVal = Math.sqrt(a2Val);
+                    aTeX = Number.isInteger(aVal) ? `${aVal}` : nerdamer(`sqrt(${a2Val})`).toTeX();
+                } else {
+                    return null;
+                }
+
+                let stepsBreakdown = [];
+                let finalResultLatex = '';
+
+                // -------------------------------------------------------------
+                // 型 I: \sqrt{a^2 - x^2} \implies x = a \sin t
+                // -------------------------------------------------------------
+                if (type === 'sin') {
+                    stepsBreakdown.push({
+                        desc: `识别被积函数含有根式 $\\sqrt{${aTeX}^2 - ${v}^2}$，应用第二类换元积分法（三角代换法）：`,
+                        math: `\\int \\left( ${nerdamer(exprStr).toTeX()} \\right) \\,d${v}`
+                    });
+
+                    let subX = aVal === 1 ? `\\sin t` : `${aTeX}\\sin t`;
+                    let dxStr = aVal === 1 ? `\\cos t \\,dt` : `${aTeX}\\cos t \\,dt`;
+                    let radStr = aVal === 1 ? `\\cos t` : `${aTeX}\\cos t`;
+
+                    stepsBreakdown.push({
+                        desc: `令 $${v} = ${subX} \\; \\left(-\\frac{\\pi}{2} < t < \\frac{\\pi}{2}\\right)$，则微分 $d${v} = ${dxStr}$，且根式化简为：`,
+                        math: `\\sqrt{${aTeX}^2 - ${v}^2} = \\sqrt{${aTeX}^2(1 - \\sin^2 t)} = ${radStr}`
+                    });
+
+                    // 经典算式特判与通用三角代换求解
+                    if (s === `sqrt(${insideRad})` || s === `(${insideRad})^(1/2)`) {
+                        // \int \sqrt{a^2-x^2} dx = a^2 \int \cos^2 t dt
+                        stepsBreakdown.push({
+                            desc: '代入换元式消去根号，转化为关于 $t$ 的纯三角函数积分：',
+                            math: `\\int (${radStr}) \\cdot (${dxStr}) = ${a2Val === 1 ? '' : a2Val} \\int \\cos^2 t \\,dt = ${a2Val === 1 ? '' : a2Val} \\int \\frac{1 + \\cos 2t}{2} \\,dt`
+                        });
+
+                        stepsBreakdown.push({
+                            desc: '计算三角函数不定积分：',
+                            math: `\\frac{${aTeX}^2}{2} \\left( t + \\frac{1}{2}\\sin 2t \\right) = \\frac{${aTeX}^2}{2}t + \\frac{${aTeX}^2}{2}\\sin t \\cos t`
+                        });
+
+                        finalResultLatex = `\\frac{${v}}{2}\\sqrt{${nerdamer(insideRad).toTeX()}} + \\frac{${aTeX}^2}{2}\\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `构建辅助直角三角形：对边为 $${v}$，斜边为 $${aTeX}$，邻边为 $\\sqrt{${aTeX}^2 - ${v}^2}$，回代 $\\sin t = \\frac{${v}}{${aTeX}}, \\; \\cos t = \\frac{\\sqrt{${aTeX}^2 - ${v}^2}}{${aTeX}}, \\; t = \\arcsin(\\frac{${v}}{${aTeX}})$：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+
+                    if (s === `(${v}^2)/sqrt(${insideRad})` || s === `(${v}^2)*(((${insideRad}))^(-1/2))`) {
+                        // \int x^2 / \sqrt{a^2-x^2} dx
+                        stepsBreakdown.push({
+                            desc: '代入换元式消去根号，转化为关于 $t$ 的纯三角函数积分：',
+                            math: `\\int \\frac{(${subX})^2}{${radStr}} \\cdot (${dxStr}) = ${a2Val === 1 ? '' : a2Val} \\int \\sin^2 t \\,dt = ${a2Val === 1 ? '' : a2Val} \\int \\frac{1 - \\cos 2t}{2} \\,dt`
+                        });
+
+                        finalResultLatex = `-\\frac{${v}}{2}\\sqrt{${nerdamer(insideRad).toTeX()}} + \\frac{${aTeX}^2}{2}\\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `求解三角积分并由辅助直角三角形回代 $t = \\arcsin(\\frac{${v}}{${aTeX}})$：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+
+                    if (s === `1/(((${insideRad}))^(3/2))` || s === `((${insideRad}))^(-3/2)`) {
+                        // \int 1 / (a^2-x^2)^(3/2) dx = \int a\cos t / (a\cos t)^3 dt = 1/a^2 \int \sec^2 t dt = 1/a^2 \tan t
+                        stepsBreakdown.push({
+                            desc: '代入换元式消去根号，转化为正割积分：',
+                            math: `\\int \\frac{1}{(${radStr})^3} \\cdot (${dxStr}) = \\frac{1}{${aTeX}^2} \\int \\sec^2 t \\,dt = \\frac{1}{${aTeX}^2} \\tan t`
+                        });
+
+                        finalResultLatex = `\\frac{${v}}{${aTeX}^2\\sqrt{${nerdamer(insideRad).toTeX()}}}`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `根据辅助直角三角形回代 $\\tan t = \\frac{${v}}{\\sqrt{${aTeX}^2 - ${v}^2}}$：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // 型 II: \sqrt{a^2 + x^2} \implies x = a \tan t
+                // -------------------------------------------------------------
+                if (type === 'tan') {
+                    stepsBreakdown.push({
+                        desc: `识别被积函数含有根式 $\\sqrt{${aTeX}^2 + ${v}^2}$，应用第二类换元积分法（三角代换法）：`,
+                        math: `\\int \\left( ${nerdamer(exprStr).toTeX()} \\right) \\,d${v}`
+                    });
+
+                    let subX = aVal === 1 ? `\\tan t` : `${aTeX}\\tan t`;
+                    let dxStr = aVal === 1 ? `\\sec^2 t \\,dt` : `${aTeX}\\sec^2 t \\,dt`;
+                    let radStr = aVal === 1 ? `\\sec t` : `${aTeX}\\sec t`;
+
+                    stepsBreakdown.push({
+                        desc: `令 $${v} = ${subX} \\; \\left(-\\frac{\\pi}{2} < t < \\frac{\\pi}{2}\\right)$，则微分 $d${v} = ${dxStr}$，且根式化简为：`,
+                        math: `\\sqrt{${aTeX}^2 + ${v}^2} = \\sqrt{${aTeX}^2(1 + \\tan^2 t)} = ${radStr}`
+                    });
+
+                    if (s === `1/(((${insideRad}))^(3/2))` || s === `((${insideRad}))^(-3/2)`) {
+                        // \int 1 / (a^2+x^2)^(3/2) dx = \int a\sec^2 t / (a\sec t)^3 dt = 1/a^2 \int \cos t dt = 1/a^2 \sin t
+                        stepsBreakdown.push({
+                            desc: '代入换元式消去根号，转化为余弦积分：',
+                            math: `\\int \\frac{1}{(${radStr})^3} \\cdot (${dxStr}) = \\frac{1}{${aTeX}^2} \\int \\cos t \\,dt = \\frac{1}{${aTeX}^2} \\sin t`
+                        });
+
+                        finalResultLatex = `\\frac{${v}}{${aTeX}^2\\sqrt{${nerdamer(insideRad).toTeX()}}}`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `构建辅助直角三角形：对边为 $${v}$，邻边为 $${aTeX}$，斜边为 $\\sqrt{${aTeX}^2 + ${v}^2}$，回代 $\\sin t = \\frac{${v}}{\\sqrt{${aTeX}^2 + ${v}^2}}$：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+
+                    if (s === `sqrt(${insideRad})` || s === `(${insideRad})^(1/2)`) {
+                        // \int \sqrt{a^2+x^2} dx = a^2 \int \sec^3 t dt
+                        stepsBreakdown.push({
+                            desc: '代入换元式消去根号，转化为正割立方积分 $\\int \\sec^3 t \\,dt$：',
+                            math: `\\int (${radStr}) \\cdot (${dxStr}) = ${a2Val === 1 ? '' : a2Val} \\int \\sec^3 t \\,dt`
+                        });
+
+                        stepsBreakdown.push({
+                            desc: '利用分部积分法求解正割立方积分：$\\int \\sec^3 t \\,dt = \\frac{1}{2}\\sec t \\tan t + \\frac{1}{2}\\ln|\\sec t + \\tan t|$：',
+                            math: `\\frac{${aTeX}^2}{2}\\sec t \\tan t + \\frac{${aTeX}^2}{2}\\ln|\\sec t + \\tan t|`
+                        });
+
+                        finalResultLatex = `\\frac{${v}}{2}\\sqrt{${nerdamer(insideRad).toTeX()}} + \\frac{${aTeX}^2}{2}\\ln\\left(${v} + \\sqrt{${nerdamer(insideRad).toTeX()}}\\right)`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `根据辅助直角三角形回代 $\\tan t = \\frac{${v}}{${aTeX}}, \\; \\sec t = \\frac{\\sqrt{${aTeX}^2 + ${v}^2}}{${aTeX}}$ 并化简对数常数项：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // 型 III: \sqrt{x^2 - a^2} \implies x = a \sec t
+                // -------------------------------------------------------------
+                if (type === 'sec') {
+                    stepsBreakdown.push({
+                        desc: `识别被积函数含有根式 $\\sqrt{${v}^2 - ${aTeX}^2}$，应用第二类换元积分法（三角代换法）：`,
+                        math: `\\int \\left( ${nerdamer(exprStr).toTeX()} \\right) \\,d${v}`
+                    });
+
+                    let subX = aVal === 1 ? `\\sec t` : `${aTeX}\\sec t`;
+                    let dxStr = aVal === 1 ? `\\sec t \\tan t \\,dt` : `${aTeX}\\sec t \\tan t \\,dt`;
+                    let radStr = aVal === 1 ? `\\tan t` : `${aTeX}\\tan t`;
+
+                    stepsBreakdown.push({
+                        desc: `令 $${v} = ${subX} \\; \\left(0 \\le t < \\frac{\\pi}{2}\\right)$，则微分 $d${v} = ${dxStr}$，且根式化简为：`,
+                        math: `\\sqrt{${v}^2 - ${aTeX}^2} = \\sqrt{${aTeX}^2(\\sec^2 t - 1)} = ${radStr}`
+                    });
+
+                    if (s === `sqrt(${insideRad})/${v}` || s === `((${insideRad})^(1/2))/${v}`) {
+                        // \int \sqrt{x^2-a^2}/x dx = a \int \tan^2 t dt = a (\tan t - t)
+                        stepsBreakdown.push({
+                            desc: '代入换元式消去根号，转化为正切平方积分：',
+                            math: `\\int \\frac{${radStr}}{${subX}} \\cdot (${dxStr}) = ${aVal === 1 ? '' : aTeX} \\int \\tan^2 t \\,dt = ${aVal === 1 ? '' : aTeX} \\int (\\sec^2 t - 1) \\,dt`
+                        });
+
+                        stepsBreakdown.push({
+                            desc: '计算三角函数积分：',
+                            math: `${aVal === 1 ? '' : aTeX} (\\tan t - t)`
+                        });
+
+                        finalResultLatex = `\\sqrt{${nerdamer(insideRad).toTeX()}} - ${aTeX === '1' ? '' : aTeX}\\arccos\\left(\\frac{${aTeX}}{${v}}\\right)`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `构建辅助直角三角形：斜边为 $${v}$，邻边为 $${aTeX}$，对边为 $\\sqrt{${v}^2 - ${aTeX}^2}$，回代 $\\tan t = \\frac{\\sqrt{${v}^2 - ${aTeX}^2}}{${aTeX}}, \\; t = \\arccos(\\frac{${aTeX}}{${v}})$：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+
+                    if (s === `sqrt(${insideRad})` || s === `(${insideRad})^(1/2)`) {
+                        // \int \sqrt{x^2-a^2} dx = a^2 \int \tan^2 t \sec t dt = a^2 \int (\sec^3 t - \sec t) dt
+                        stepsBreakdown.push({
+                            desc: '代入换元式消去根号，转化为正割积分：',
+                            math: `\\int (${radStr}) \\cdot (${dxStr}) = ${a2Val === 1 ? '' : a2Val} \\int (\\sec^3 t - \\sec t) \\,dt`
+                        });
+
+                        finalResultLatex = `\\frac{${v}}{2}\\sqrt{${nerdamer(insideRad).toTeX()}} - \\frac{${aTeX}^2}{2}\\ln\\left|${v} + \\sqrt{${nerdamer(insideRad).toTeX()}}\\right|`.replace(/\\frac\{([^}]+)\}\{1\}/g, '$1');
+
+                        stepsBreakdown.push({
+                            desc: `求解三角积分并由辅助直角三角形回代 $t = \\operatorname{arcsec}(\\frac{${v}}{${aTeX}})$：`,
+                            math: finalResultLatex
+                        });
+
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         // ---------------------------------------------------------
         // Modular Handler 3: Integrals (Definite & Indefinite)
         // ---------------------------------------------------------
@@ -4540,7 +4790,25 @@
                 }
 
                 // -------------------------------------------------------------
-                // 【第二优先】二次根式有理分式专用求解器 (例: (-x+2)/sqrt(-x^2+2x+3))
+                // 【第二优先】第二类换元积分法 / 三角代换专用引擎 (例: sqrt(4-x^2), 1/(1+x^2)^(3/2), sqrt(x^2-9)/x)
+                // -------------------------------------------------------------
+                let trigSubSol = solveTrigSubstitutionIntegral(innerExpr, v);
+                if (trigSubSol) {
+                    trigSubSol.steps.forEach(st => steps.push(st));
+                    finalResultLatex = trigSubSol.finalResultLatex + ' + C';
+                    steps.push({
+                        desc: '汇总三角代换与辅助三角形回代结果，并添加任意积分常数 $C$：',
+                        math: finalResultLatex
+                    });
+                    funcForPlot = [
+                        { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
+                        { expr: trigSubSol.finalResultLatex.replace(/\\arcsin/g, 'asin').replace(/\\arccos/g, 'acos').replace(/\\sqrt/g, 'sqrt').replace(/\\ln/g, 'log'), color: '#34d399', label: '原函数 F(x)' }
+                    ];
+                    return { finalResultLatex, funcForPlot };
+                }
+
+                // -------------------------------------------------------------
+                // 【第三优先】二次根式有理分式专用求解器 (例: (-x+2)/sqrt(-x^2+2x+3))
                 // -------------------------------------------------------------
                 let radSol = solveQuadraticRadicalIntegral(innerExpr, v);
                 if (radSol) {
@@ -4558,7 +4826,7 @@
                 }
 
                 // -------------------------------------------------------------
-                // 【第三优先】高阶与二次有理分式部分分式分解 (例: (3x+6)/((x-1)^2*(x^2+x+1)))
+                // 【第四优先】高阶与二次有理分式部分分式分解 (例: (3x+6)/((x-1)^2*(x^2+x+1)))
                 // -------------------------------------------------------------
                 let rationalParts = extractRationalFraction(innerExpr, v);
                 if (rationalParts) {
