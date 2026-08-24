@@ -2201,25 +2201,51 @@
         function getSuspectedParameters(formulaStr) {
             let s = formulaStr || '';
 
-            // 1. 去除末尾的定义域大括号内容
-            s = s.replace(/(?:\\left\s*)?(?:\\lbrace|\\\{)\s*([\s\S]+?)\s*(?:\\right\s*)?(?:\\rbrace|\\\})\s*$/, '');
+            // 1. 去除定义域大括号 / 区间条件
+            s = s.replace(/(?:\\left\s*)?(?:\\lbrace|\\\{)\s*[\s\S]+?\s*(?:\\right\s*)?(?:\\rbrace|\\\})/g, ' ');
 
-            // 2. 彻底抹除所有以反斜杠开头的 LaTeX 命令 (消灭 \mathrm, \rightarrow, \alpha 等导致的字母碎渣)
+            // 2. 完整剥除 LaTeX 容器/字体宏及其花括号内容 (消灭 \mathrm{e}, \text{otherwise}, \operatorname{...} 等遗留碎渣)
+            s = s.replace(/\\(operatorname|mathrm|mathit|mathbf|text|textbf|textit|mathbb|mathcal|begin|end)\s*\{[^{}]*\}/gi, ' ');
+
+            // 3. 剥除微分与导数算子及函数符号
+            s = s.replace(/\\frac\{\s*d\^?\d*\s*[a-zA-Z]*\s*\}\{\s*d\s*[a-zA-Z]*\^?\d*\s*\}/gi, ' ');
+            s = s.replace(/\\frac\{\s*\\partial\^?\d*\s*[a-zA-Z]*\s*\}\{\s*\\partial\s*[a-zA-Z]*\^?\d*\s*\}/gi, ' ');
+            s = s.replace(/\\bf\s*'+/gi, ' ');
+            s = s.replace(/\\by\s*'+/gi, ' ');
+            s = s.replace(/\b[fghuy]\s*\(\s*x\s*\)/gi, ' ');
+            s = s.replace(/\b[fghuy]\s*'+/gi, ' ');
+            s = s.replace(/\bY_D[0-4]\b/g, ' ');
+
+            // 4. 彻底抹除所有以反斜杠开头的 LaTeX 命令关键字 (如 \sin, \cos, \ln, \lim, \int, \frac, \left, \right, \infty 等)
             s = s.replace(/\\[a-zA-Z]+/g, ' ');
 
-            // 3. 抹除可能未带反斜杠的纯文本数学函数和算子符号
-            const KNOWN_WORDS = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'sec', 'csc', 'cot', 'log', 'ln', 'exp', 'sqrt', 'abs', 'lim', 'limit', 'min', 'max', 'pi', 'dx', 'dy', 'dt', 'du', 'dv', 'd', 'to', 'begin', 'end', 'cases', 'matrix', 'pmatrix', 'bmatrix', 'vmatrix', 'array', 'placeholder', 'text'];
+            // 5. 抹除微分增量符号 (dx, dy, dz, dt, du, dv, dw, dr, ds 等)
+            s = s.replace(/\bd[xyzuvwtrs]\b/gi, ' ');
+
+            // 6. 全面抹除所有已知的数学函数名、算子符号、常量、计算机语法关键字
+            const KNOWN_WORDS = [
+                'sin', 'cos', 'tan', 'sec', 'csc', 'cot',
+                'asin', 'acos', 'atan', 'arcsin', 'arccos', 'arctan', 'arcsec', 'arccsc', 'arccot',
+                'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth',
+                'ln', 'lg', 'log', 'log10', 'exp', 'sqrt', 'cbrt', 'root', 'abs',
+                'min', 'max', 'gcd', 'lcm', 'mod', 'det', 'dim', 'ker', 'deg', 'rad',
+                'diff', 'derivative', 'integrate', 'int', 'defint', 'sum', 'prod',
+                'polydiv', 'longdiv', 'div', 'limit', 'lim',
+                'infty', 'inf', 'infinity', 'nan', 'undefined',
+                'otherwise', 'else', 'if', 'true', 'false', 'in', 'to', 'placeholder',
+                'left', 'right', 'pi', 'dx', 'dy', 'dt', 'du', 'dv', 'dz', 'dr', 'ds'
+            ];
             const wordRegex = new RegExp(`\\b(?:${KNOWN_WORDS.join('|')})\\b`, 'gi');
             s = s.replace(wordRegex, ' ');
 
-            // 4. 从绝对干净的字符串中提取单个字母
-            let letters = s.match(/[a-zA-Z]/g) || [];
+            // 7. 从绝对纯净的数学表达式中提取真正的可调节参数 (例如 a, b, c, k, m, n, C_1, C_2)
+            let tokens = s.match(/[a-zA-Z](?:_[0-9]+)?/g) || [];
             const params = new Set();
-            letters.forEach(l => {
-                let lower = l.toLowerCase();
-                // 排除预留自变量与常量
-                if (!['x', 'y', 'e', 'i'].includes(lower)) {
-                    params.add(l);
+            const RESERVED = new Set(['x', 'y', 'e', 'i', 'j', 'd', 'f', 'pi']);
+            tokens.forEach(tok => {
+                let base = tok.split('_')[0].toLowerCase();
+                if (!RESERVED.has(base)) {
+                    params.add(tok);
                 }
             });
             return Array.from(params);
