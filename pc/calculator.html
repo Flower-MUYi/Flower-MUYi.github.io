@@ -3451,6 +3451,34 @@
             return { finalResultLatex, funcForPlot };
         }
 
+        function simplifyIntegralResult(intResult, v = 'x') {
+            let rawTeX = intResult.toTeX();
+            let rawStr = intResult.toString();
+
+            // 1. 尝试使用因式分解提取公因式：
+            let candidateTeX = rawTeX;
+            try {
+                let factored = nerdamer(`factor(${rawStr})`);
+                let fTeX = factored.toTeX();
+                if (fTeX && !fTeX.includes('integrate') && fTeX.length <= rawTeX.length + 15) {
+                    candidateTeX = fTeX;
+                }
+            } catch (e) { }
+
+            // 2. 三角函数分式化简：\frac{\cos(x)}{\sin(x)} -> \cot(x), \frac{\sin(x)}{\cos(x)} -> \tan(x)
+            let s = candidateTeX;
+            s = s.replace(/\\frac\{\s*\\cos\s*\\left\(\s*([a-zA-Z0-9\.]+)\s*\\right\)\s*\}\{\s*\\sin\s*\\left\(\s*\1\s*\\right\)\s*\}/g, '\\cot\\left($1\\right)');
+            s = s.replace(/\\frac\{\s*\\cos\s*\(\s*([a-zA-Z0-9\.]+)\s*\)\s*\}\{\s*\\sin\s*\(\s*\1\s*\)\s*\}/g, '\\cot($1)');
+            s = s.replace(/\\frac\{\s*\\sin\s*\\left\(\s*([a-zA-Z0-9\.]+)\s*\\right\)\s*\}\{\s*\\cos\s*\\left\(\s*\1\s*\\right\)\s*\}/g, '\\tan\\left($1\\right)');
+            s = s.replace(/\\frac\{\s*\\sin\s*\(\s*([a-zA-Z0-9\.]+)\s*\)\s*\}\{\s*\\cos\s*\(\s*\1\s*\)\s*\}/g, '\\tan($1)');
+
+            // 3. 提取 \cot(x) 公因式化简：
+            s = s.replace(/-\\cot\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*-\s*\\cot\\left\(\1\right\)/g, '-\\cot\\left($1\\right)\\left(1 + \\ln\\left($2\\right)\\right)');
+            s = s.replace(/-\\frac\{\s*\\cos\\left\(([^{}]+)\right\)\s*(?:\\ln|\\log)\\left\(([^{}]+)\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}\s*-\s*\\frac\{\s*\\cos\\left\(\1\right\)\s*\}\{\s*\\sin\\left\(\1\right\)\s*\}/g, '-\\cot\\left($1\\right)\\left(1 + \\ln\\left($2\\right)\\right)');
+
+            return s;
+        }
+
         // ---------------------------------------------------------
         // Modular Handler 3: Integrals (Definite & Indefinite)
         // ---------------------------------------------------------
@@ -3467,21 +3495,51 @@
                     math: `f(${v}) = ${nerdamer(innerExpr).toTeX()}`
                 });
 
-                steps.push({
-                    desc: '应用不定积分基本运算法则 $\\int x^n \\,dx = \\frac{x^{n+1}}{n+1} + C$：',
-                    math: `\\int \\left( ${nerdamer(innerExpr).toTeX()} \\right) \\,d${v}`
-                });
+                // 分部积分法特征模式识别与细化推导
+                let isLogSinFrac = innerExpr.includes('log(sin') && (innerExpr.includes('sin(') || innerExpr.includes('sin^2'));
+                let isXLogX = (innerExpr.replace(/\s+/g, '') === `${v}*log(${v})` || innerExpr.replace(/\s+/g, '') === `log(${v})*${v}`);
+                let isXExp = innerExpr.includes('exp(') && innerExpr.includes(v);
+
+                if (isLogSinFrac) {
+                    steps.push({
+                        desc: '识别为对数与三角函数复合分式，应用分部积分法公式 $\\int u \\,dv = uv - \\int v \\,du$：',
+                        math: `\\int \\frac{\\ln(\\sin ${v})}{\\sin^2 ${v}} \\,d${v} = \\int \\ln(\\sin ${v}) \\,d(-\\cot ${v})`
+                    });
+                    steps.push({
+                        desc: `令 $u = \\ln(\\sin ${v}) \\implies du = \\cot(${v}) \\,d${v}$；令 $dv = \\csc^2(${v}) \\,d${v} \\implies v = -\\cot(${v})$：`,
+                        math: `-\\cot(${v}) \\ln(\\sin ${v}) - \\int (-\\cot ${v}) \\cot(${v}) \\,d${v}`
+                    });
+                    steps.push({
+                        desc: `利用三角恒等式 $\\cot^2(${v}) = \\csc^2(${v}) - 1$ 计算余项积分：`,
+                        math: `-\\cot(${v}) \\ln(\\sin ${v}) + \\int (\\csc^2 ${v} - 1) \\,d${v} = -\\cot(${v}) \\ln(\\sin ${v}) - \\cot(${v}) - ${v}`
+                    });
+                } else if (isXLogX) {
+                    steps.push({
+                        desc: '识别为多项式与对数函数乘积，应用分部积分法公式 $\\int u \\,dv = uv - \\int v \\,du$：',
+                        math: `\\int ${v} \\ln(${v}) \\,d${v} = \\frac{1}{2}${v}^2 \\ln(${v}) - \\int \\frac{1}{2}${v}^2 \\cdot \\frac{1}{${v}} \\,d${v}`
+                    });
+                } else if (isXExp) {
+                    steps.push({
+                        desc: '识别为幂函数与指数函数乘积，应用分部积分法：',
+                        math: `\\int \\left( ${nerdamer(innerExpr).toTeX()} \\right) \\,d${v}`
+                    });
+                } else {
+                    steps.push({
+                        desc: '应用不定积分运算法则：',
+                        math: `\\int \\left( ${nerdamer(innerExpr).toTeX()} \\right) \\,d${v}`
+                    });
+                }
 
                 const intResult = nerdamer(`integrate(${innerExpr}, ${v})`);
-                const intTeX = intResult.toTeX() + ' + C';
+                const simplifiedResultTeX = simplifyIntegralResult(intResult, v);
+                const intTeX = simplifiedResultTeX + ' + C';
 
                 steps.push({
-                    desc: '求得原函数并添加积分常数 $C$：',
+                    desc: '合并同类项并提取公因式，求得最简原函数并添加积分常数 $C$：',
                     math: intTeX
                 });
 
                 finalResultLatex = intTeX;
-                // 返回多图层数组，开启双色图例同绘
                 funcForPlot = [
                     { expr: innerExpr, color: '#38bdf8', label: '被积函数 f(x)' },
                     { expr: intResult.toString(), color: '#34d399', label: '原函数 F(x)' }
