@@ -3580,7 +3580,123 @@
                 let polyQ = getPolyCoeffs(denStr, v);
                 let polyP = getPolyCoeffs(numStr, v);
 
-                if (!polyQ || polyQ.deg !== 2 || !polyP || polyP.deg > 1) {
+                if (!polyQ || !polyP) return null;
+
+                // -------------------------------------------------------------
+                // Mode A: 双二次有理分式降阶换元积分 (Biquadratic u = x^2)
+                // 形如 \int \frac{A x^3 + B x}{a x^4 + b x^2 + c} dx
+                // -------------------------------------------------------------
+                if (polyQ.deg === 4 && (!polyQ.coeffs[3] && !polyQ.coeffs[1]) && polyP.deg <= 3 && (!polyP.coeffs[2] && !polyP.coeffs[0])) {
+                    let a = polyQ.coeffs[4] || 0;
+                    let b = polyQ.coeffs[2] || 0;
+                    let c = polyQ.coeffs[0] || 0;
+
+                    if (a === 0) return null;
+
+                    let A = polyP.coeffs[3] || 0;
+                    let B = polyP.coeffs[1] || 0;
+
+                    let delta = b * b - 4 * a * c;
+                    let stepsBreakdown = [];
+                    let resultLatex = '';
+
+                    stepsBreakdown.push({
+                        desc: '识别被积函数为双二次有理分式，分子含有微分项 $' + v + ' \\,d' + v + ' = \\frac{1}{2} d(' + v + '^2)$：',
+                        math: `\\int \\frac{${nerdamer(numStr).toTeX()}}{${nerdamer(denStr).toTeX()}} \\,d${v}`
+                    });
+
+                    let uVar = 'u';
+                    let uEq = `${v}^2`;
+                    let numUStr = A !== 0 ? (B !== 0 ? `${A}*${uVar} + ${B}` : `${A}*${uVar}`) : `${B}`;
+                    let denUStr = `${a}*${uVar}^2 + ${b}*${uVar} + ${c}`;
+
+                    stepsBreakdown.push({
+                        desc: `采用第一类换元积分法（凑微分法），令 $u = ${v}^2 \\implies du = 2${v} \\,d${v}$，将被积函数降阶为：`,
+                        math: `\\frac{1}{2} \\int \\frac{${nerdamer(numUStr).toTeX()}}{${nerdamer(denUStr).toTeX()}} \\,d${uVar}`
+                    });
+
+                    // 1. Delta < 0 (不可约二次因式，标准配方与反正切形式)
+                    if (delta < -1e-6) {
+                        let negDelta = -delta;
+                        let sqrtNegDelta = Math.sqrt(negDelta);
+                        let k = sqrtNegDelta / (2 * Math.abs(a));
+                        let x0 = -b / (2 * a);
+
+                        let kLatex = Number.isInteger(k) ? `${k}` : nerdamer(`sqrt(${negDelta}) / (2*${Math.abs(a)})`).toTeX();
+                        let x0Latex = Number.isInteger(x0) ? `${x0}` : nerdamer(`-${b} / (2*${a})`).toTeX();
+
+                        let shiftSign = x0 > 0 ? `- ${x0}` : (x0 < 0 ? `+ ${-x0}` : '');
+                        let compSquareTeX = a === 1 ? (x0 !== 0 ? `(${uVar} ${shiftSign})^2 + ${k}^2` : `${uVar}^2 + ${k}^2`) : `${a}\\left[ (${uVar} ${shiftSign})^2 + ${k}^2 \\right]`;
+
+                        stepsBreakdown.push({
+                            desc: `分析分母判别式 $\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${delta} < 0$，配方得恒正形式：`,
+                            math: `${nerdamer(denUStr).toTeX()} = ${compSquareTeX} > 0`
+                        });
+
+                        let diffCoeff = A / (2 * a);
+                        let constRem = B - (A * b) / (2 * a);
+
+                        if (A !== 0) {
+                            let diffPart = a === 1 ? `(2${uVar} ${b >= 0 ? '+ ' + b : '- ' + (-b)})` : `(${2*a}${uVar} ${b >= 0 ? '+ ' + b : '- ' + (-b)})`;
+                            let diffCoeffTeX = nerdamer(diffCoeff).toTeX();
+                            let constRemTeX = nerdamer(constRem).toTeX();
+
+                            stepsBreakdown.push({
+                                desc: '采用凑微分拆项法，将关于 $u$ 的分子拆项：',
+                                math: `\\frac{${nerdamer(numUStr).toTeX()}}{${nerdamer(denUStr).toTeX()}} = ${diffCoeffTeX} \\cdot \\frac{${diffPart}}{${nerdamer(denUStr).toTeX()}} + \\frac{${constRemTeX}}{${compSquareTeX}}`
+                            });
+                        }
+
+                        // 对数项（乘以外部 1/2）
+                        let logTermLatex = '';
+                        if (A !== 0) {
+                            let totalDiffCoeff = diffCoeff * 0.5;
+                            let coeffStr = nerdamer(totalDiffCoeff).toTeX();
+                            if (coeffStr === '1') logTermLatex = `\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+                            else if (coeffStr === '-1') logTermLatex = `-\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+                            else logTermLatex = `${coeffStr}\\ln\\left(${nerdamer(denStr).toTeX()}\\right)`;
+
+                            stepsBreakdown.push({
+                                desc: '求解第一项对数积分（因分母 $\\Delta < 0$ 恒正，无需绝对值）：',
+                                math: `\\frac{1}{2} \\int \\frac{${nerdamer(diffCoeff).toTeX()}(${2*a}${uVar} ${b >= 0 ? '+' : ''}${b})}{${nerdamer(denUStr).toTeX()}} \\,d${uVar} = ${logTermLatex}`
+                            });
+                        }
+
+                        // 反正切项（乘以外部 1/2）
+                        let totalAtanCoeffVal = (constRem / (a * k)) * 0.5;
+                        let atanCoeffStr = nerdamer(totalAtanCoeffVal).toTeX();
+                        let atanArgTeX = `\\frac{${uEq} ${shiftSign}}{${kLatex}}`.replace(/\\frac\{([^}]+)\}\{1\}/, '$1');
+                        if (x0 === 0 && k === 1) atanArgTeX = `${uEq}`;
+
+                        let atanTermLatex = '';
+                        if (atanCoeffStr === '1') atanTermLatex = `\\arctan\\left(${atanArgTeX}\\right)`;
+                        else if (atanCoeffStr === '-1') atanTermLatex = `-\\arctan\\left(${atanArgTeX}\\right)`;
+                        else atanTermLatex = `${atanCoeffStr}\\arctan\\left(${atanArgTeX}\\right)`;
+
+                        stepsBreakdown.push({
+                            desc: '求解第二项反正切积分并回代 $u = ' + uEq + '$：',
+                            math: `\\frac{1}{2} \\int \\frac{${nerdamer(constRem).toTeX()}}{${compSquareTeX}} \\,d${uVar} = ${atanTermLatex}`
+                        });
+
+                        if (logTermLatex && atanTermLatex) {
+                            resultLatex = `${logTermLatex} + ${atanTermLatex}`;
+                        } else if (logTermLatex) {
+                            resultLatex = logTermLatex;
+                        } else {
+                            resultLatex = atanTermLatex;
+                        }
+
+                        return {
+                            finalResultLatex: resultLatex,
+                            steps: stepsBreakdown
+                        };
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // Mode B: 标准一/二次真分式有理函数积分
+                // -------------------------------------------------------------
+                if (polyQ.deg !== 2 || polyP.deg > 1) {
                     return null;
                 }
 
