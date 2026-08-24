@@ -2099,60 +2099,56 @@
         // 2. Desmos-grade Domain Restriction & Variable Sliders Engine
         // =========================================================================
 
-        let currentDomain = null; // { min, max, minOp: 'le'|'lt', maxOp: 'le'|'lt', raw: '...' }
+        let currentDomain = null; // { intervals: [...], paramConstraints: {...}, raw: '...' }
 
         const slidersState = new Map();
         let animationFrameId = null;
 
         /**
          * Parses and extracts domain restriction from \left\lbrace ... \right\rbrace or \{ ... \} or { ... } at the end of formula
+         * Supports union `∪` / `\cup`, comma, semicolon, multi-brace conditions and parameter constraints (e.g. a > 0)
          */
         function extractDomainFromLatex(latexStr) {
             let s = (latexStr || '').trim();
             if (!s) return { cleanFormula: '', domain: null };
 
-            // 匹配末尾的大括号或区间定义域模式 (例如 \left\lbrace x \in (-2\pi, 2\pi) \right\rbrace 或 \{ -2\pi \le x \le 2\pi \} 或 , x \in [...])
-            let domainMatch = s.match(/(?:\\left\s*)?(?:\\lbrace|\\\{)\s*([\s\S]+?)\s*(?:\\right\s*)?(?:\\rbrace|\\\})\s*$/);
-            if (!domainMatch) {
-                domainMatch = s.match(/(?:\\left\s*)?\{\s*([^\\{}]+?)\s*(?:\\right\s*)?\}\s*$/);
-            }
-            if (!domainMatch) {
-                // 兼容裸写在末尾的 `, x \in (...)` 或 `; x \in [...]` 形式
-                domainMatch = s.match(/(?:,|;)?\s*([a-zA-Z]\s*(?:\\in|\bin\b)\s*(?:\\left\s*)?[\(\[][^\)\],]+,[^\)\],]+(?:\\right\s*)?[\)\]])\s*$/);
+            // 匹配末尾连续的所有 { ... } 或 \left\lbrace ... \right\rbrace
+            const braceBlockRegex = /(?:\\left\s*)?(?:\\lbrace|\\\{)\s*([\s\S]+?)\s*(?:\\right\s*)?(?:\\rbrace|\\\})\s*$/;
+            let rawConditions = [];
+            let cleanFormula = s;
+
+            while (braceBlockRegex.test(cleanFormula)) {
+                let match = cleanFormula.match(braceBlockRegex);
+                rawConditions.unshift(match[1].trim());
+                cleanFormula = cleanFormula.substring(0, match.index).trim();
+                if (cleanFormula.endsWith(',') || cleanFormula.endsWith(';')) {
+                    cleanFormula = cleanFormula.substring(0, cleanFormula.length - 1).trim();
+                }
             }
 
-            if (!domainMatch) {
+            // 兼容末尾没有大括号但带逗号/分号的区间/不等式，如 `x \in [0, 1]`
+            if (rawConditions.length === 0) {
+                let bareMatch = cleanFormula.match(/(?:,|;)\s*([a-zA-Z]\s*(?:\\in|\bin\b|<=|<|>=|>)\s*[\s\S]+)$/);
+                if (bareMatch) {
+                    rawConditions.push(bareMatch[1].trim());
+                    cleanFormula = cleanFormula.substring(0, bareMatch.index).trim();
+                }
+            }
+
+            if (rawConditions.length === 0) {
                 return { cleanFormula: s, domain: null };
             }
 
-            let fullMatch = domainMatch[0];
-            let dContent = domainMatch[1].trim();
-
-            // 验证是否是合法的定义域约束 (包含变量字母，且含有 \in 或 不等号)
-            let hasVarX = /\b[a-zA-Z]\b/.test(dContent);
-            let hasIn = /\\in|\bin\b/.test(dContent);
-            let hasComp = /(?:\\le|\\ge|\\lt|\\gt|<=|>=|<|>|\\leq|\\geq|\\leqslant|\\geqslant|\\neq|!=)/.test(dContent);
-
-            if (!hasVarX || (!hasIn && !hasComp)) {
-                return { cleanFormula: s, domain: null };
-            }
-
-            let matchIdx = s.lastIndexOf(fullMatch);
-            let cleanFormula = matchIdx > 0 ? s.substring(0, matchIdx).trim() : s.trim();
-            if (cleanFormula.endsWith(',') || cleanFormula.endsWith(';')) {
-                cleanFormula = cleanFormula.substring(0, cleanFormula.length - 1).trim();
-            }
-
-            // 规范化 dContent
-            let norm = dContent
-                .replace(/\\left\s*/g, '')
-                .replace(/\\right\s*/g, '')
+            const fullConditionStr = rawConditions.join(' , ');
+            // 规范化并集符号与不等号
+            let norm = fullConditionStr
+                .replace(/\\cup|\\bigcup|∪/g, ' __UNION__ ')
+                .replace(/\\left\s*|\\right\s*/g, '')
                 .replace(/\\(le|leq|leqslant)/g, '<=')
                 .replace(/\\(ge|geq|geqslant)/g, '>=')
                 .replace(/\\lt/g, '<')
                 .replace(/\\gt/g, '>')
-                .replace(/\\neq/g, '!=')
-                .replace(/\s+/g, ' ');
+                .replace(/\\neq/g, '!=');
 
             // 规范化分式如 \frac{\pi}{2} -> (pi/2)
             let fracRegex = /\\frac\{([^{}]+)\}\{([^{}]+)\}/g;
@@ -2160,98 +2156,105 @@
                 norm = norm.replace(fracRegex, '(($1)/($2))');
             }
 
-            // ==============================================================
-            // 模式 1：集合与区间形式 x ∈ (a, b) / x ∈ [a, b] / x ∈ (a, b] / x ∈ [a, b)
-            // ==============================================================
-            let inPattern = norm.match(/([a-zA-Z])\s*(?:\\in|\bin\b)\s*([\(\[])\s*([^,]+?)\s*,\s*([^,]+?)\s*([\)\]])/);
-            if (inPattern) {
-                let leftBracket = inPattern[2];
-                let lowerStr = inPattern[3].trim();
-                let upperStr = inPattern[4].trim();
-                let rightBracket = inPattern[5];
+            // 切分各个子条件（支持逗号、分号及并集符号切分）
+            let clauses = norm.split(/[,;]|__UNION__/).map(c => c.trim()).filter(Boolean);
 
-                let minOp = leftBracket === '[' ? 'le' : 'lt';
-                let maxOp = rightBracket === ']' ? 'le' : 'lt';
+            let intervals = []; // x 的定义域区间列表 (并集)
+            let paramConstraints = {}; // 参数约束字典: { 'a': { min: 0, max: 10, minOp: 'lt', maxOp: 'le' } }
 
-                let minVal = parseNumOrPi(lowerStr);
-                let maxVal = parseNumOrPi(upperStr);
-                return {
-                    cleanFormula: cleanFormula,
-                    domain: { min: minVal, max: maxVal, minOp: minOp, maxOp: maxOp, raw: dContent }
-                };
-            }
+            clauses.forEach(clause => {
+                // 匹配区间形式: var \in (a, b) 或 var \in [a, b]
+                let inMatch = clause.match(/([a-zA-Z])\s*(?:\\in|\bin\b)\s*([\(\[])\s*([^,]+?)\s*,\s*([^,]+?)\s*([\)\]])/);
+                if (inMatch) {
+                    let v = inMatch[1];
+                    let minOp = inMatch[2] === '[' ? 'le' : 'lt';
+                    let maxOp = inMatch[5] === ']' ? 'le' : 'lt';
+                    let minVal = parseNumOrPi(inMatch[3]);
+                    let maxVal = parseNumOrPi(inMatch[4]);
+                    let item = { min: minVal, max: maxVal, minOp, maxOp, raw: clause };
 
-            // ==============================================================
-            // 模式 2：双侧不等式形式 -2pi <= x <= 2pi
-            // ==============================================================
-            let doubleBound = norm.match(/(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)\s*(<=|<)\s*([a-zA-Z])\s*(<=|<)\s*(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)/);
-            if (doubleBound) {
-                let minVal = parseNumOrPi(doubleBound[1]);
-                let maxVal = parseNumOrPi(doubleBound[5]);
-                let minOp = doubleBound[2] === '<' ? 'lt' : 'le';
-                let maxOp = doubleBound[4] === '<' ? 'lt' : 'le';
-                return {
-                    cleanFormula: cleanFormula,
-                    domain: { min: minVal, max: maxVal, minOp: minOp, maxOp: maxOp, raw: dContent }
-                };
-            }
-
-            // 双侧不等式反向 2pi >= x >= -2pi
-            let doubleBoundRev = norm.match(/(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)\s*(>=|>)\s*([a-zA-Z])\s*(>=|>)\s*(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)/);
-            if (doubleBoundRev) {
-                let maxVal = parseNumOrPi(doubleBoundRev[1]);
-                let minVal = parseNumOrPi(doubleBoundRev[5]);
-                let maxOp = doubleBoundRev[2] === '>' ? 'lt' : 'le';
-                let minOp = doubleBoundRev[4] === '>' ? 'lt' : 'le';
-                return {
-                    cleanFormula: cleanFormula,
-                    domain: { min: minVal, max: maxVal, minOp: minOp, maxOp: maxOp, raw: dContent }
-                };
-            }
-
-            // ==============================================================
-            // 模式 3：单侧不等式形式 x >= 0 / x < 5
-            // ==============================================================
-            let singleBound = norm.match(/([a-zA-Z])\s*(>=|>|<=|<)\s*(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)/);
-            if (singleBound) {
-                let op = singleBound[2];
-                let val = parseNumOrPi(singleBound[3]);
-                if (op === '>=' || op === '>') {
-                    let minOp = op === '>' ? 'lt' : 'le';
-                    return {
-                        cleanFormula: cleanFormula,
-                        domain: { min: val, max: 100, minOp: minOp, maxOp: 'le', raw: dContent }
-                    };
-                } else {
-                    let maxOp = op === '<' ? 'lt' : 'le';
-                    return {
-                        cleanFormula: cleanFormula,
-                        domain: { min: -100, max: val, minOp: 'le', maxOp: maxOp, raw: dContent }
-                    };
+                    if (v === 'x') {
+                        intervals.push(item);
+                    } else {
+                        paramConstraints[v] = item;
+                    }
+                    return;
                 }
-            }
 
-            // 单侧不等式反向 0 <= x / -5 < x
-            let singleBoundInv = norm.match(/(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)\s*(<=|<|>=|>)\s*([a-zA-Z])/);
-            if (singleBoundInv) {
-                let val = parseNumOrPi(singleBoundInv[1]);
-                let op = singleBoundInv[2];
-                if (op === '<=' || op === '<') {
-                    let minOp = op === '<' ? 'lt' : 'le';
-                    return {
-                        cleanFormula: cleanFormula,
-                        domain: { min: val, max: 100, minOp: minOp, maxOp: 'le', raw: dContent }
+                // 匹配双侧不等式: min <= var <= max
+                let doubleMatch = clause.match(/(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)\s*(<=|<)\s*([a-zA-Z])\s*(<=|<)\s*(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)/);
+                if (doubleMatch) {
+                    let v = doubleMatch[3];
+                    let item = {
+                        min: parseNumOrPi(doubleMatch[1]),
+                        max: parseNumOrPi(doubleMatch[5]),
+                        minOp: doubleMatch[2] === '<' ? 'lt' : 'le',
+                        maxOp: doubleMatch[4] === '<' ? 'lt' : 'le',
+                        raw: clause
                     };
-                } else {
-                    let maxOp = op === '>' ? 'lt' : 'le';
-                    return {
-                        cleanFormula: cleanFormula,
-                        domain: { min: -100, max: val, minOp: 'le', maxOp: maxOp, raw: dContent }
-                    };
+                    if (v === 'x') intervals.push(item);
+                    else paramConstraints[v] = item;
+                    return;
                 }
-            }
 
-            return { cleanFormula: cleanFormula, domain: null };
+                // 匹配双侧不等式反向: max >= var >= min
+                let doubleMatchRev = clause.match(/(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)\s*(>=|>)\s*([a-zA-Z])\s*(>=|>)\s*(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)/);
+                if (doubleMatchRev) {
+                    let v = doubleMatchRev[3];
+                    let item = {
+                        min: parseNumOrPi(doubleMatchRev[5]),
+                        max: parseNumOrPi(doubleMatchRev[1]),
+                        minOp: doubleMatchRev[4] === '>' ? 'lt' : 'le',
+                        maxOp: doubleMatchRev[2] === '>' ? 'lt' : 'le',
+                        raw: clause
+                    };
+                    if (v === 'x') intervals.push(item);
+                    else paramConstraints[v] = item;
+                    return;
+                }
+
+                // 匹配单侧不等式: var > val 或 var <= val
+                let singleMatch = clause.match(/([a-zA-Z])\s*(>=|>|<=|<)\s*(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)/);
+                if (singleMatch) {
+                    let v = singleMatch[1];
+                    let op = singleMatch[2];
+                    let val = parseNumOrPi(singleMatch[3]);
+                    let item;
+                    if (op === '>=' || op === '>') {
+                        item = { min: val, max: 100, minOp: op === '>' ? 'lt' : 'le', maxOp: 'le', raw: clause };
+                    } else {
+                        item = { min: -100, max: val, minOp: 'le', maxOp: op === '<' ? 'lt' : 'le', raw: clause };
+                    }
+                    if (v === 'x') intervals.push(item);
+                    else paramConstraints[v] = item;
+                    return;
+                }
+
+                // 匹配单侧不等式反向: val <= var 或 val > var
+                let singleMatchInv = clause.match(/(-?[0-9\.\a-zA-Z\*\/\+\-\(\)]+)\s*(<=|<|>=|>)\s*([a-zA-Z])/);
+                if (singleMatchInv) {
+                    let val = parseNumOrPi(singleMatchInv[1]);
+                    let op = singleMatchInv[2];
+                    let v = singleMatchInv[3];
+                    let item;
+                    if (op === '<=' || op === '<') {
+                        item = { min: val, max: 100, minOp: op === '<' ? 'lt' : 'le', maxOp: 'le', raw: clause };
+                    } else {
+                        item = { min: -100, max: val, minOp: 'le', maxOp: op === '>' ? 'lt' : 'le', raw: clause };
+                    }
+                    if (v === 'x') intervals.push(item);
+                    else paramConstraints[v] = item;
+                }
+            });
+
+            return {
+                cleanFormula: cleanFormula,
+                domain: (intervals.length > 0 || Object.keys(paramConstraints).length > 0) ? {
+                    intervals: intervals,
+                    paramConstraints: paramConstraints,
+                    raw: fullConditionStr
+                } : null
+            };
         }
 
         function parseNumOrPi(str) {
@@ -2275,6 +2278,35 @@
                 } catch (e2) {
                     return parseFloat(str) || 0;
                 }
+            }
+        }
+
+        function applyParamConstraintsToSliders() {
+            if (!currentDomain || !currentDomain.paramConstraints) return;
+
+            let changed = false;
+            Object.entries(currentDomain.paramConstraints).forEach(([param, limit]) => {
+                if (!slidersState.has(param)) {
+                    let initialVal = limit.min > -100 ? (limit.min >= 0 ? limit.min + 1 : 1) : 1;
+                    slidersState.set(param, {
+                        value: initialVal,
+                        min: limit.min > -100 ? limit.min : -10,
+                        max: limit.max < 100 ? limit.max : 10,
+                        step: 0.1,
+                        isPlaying: false,
+                        dir: 1
+                    });
+                    changed = true;
+                } else {
+                    let slider = slidersState.get(param);
+                    if (limit.min > -100 && slider.min !== limit.min) { slider.min = limit.min; changed = true; }
+                    if (limit.max < 100 && slider.max !== limit.max) { slider.max = limit.max; changed = true; }
+                    if (slider.value < slider.min) { slider.value = slider.min + (limit.minOp === 'lt' ? 0.1 : 0); changed = true; }
+                    if (slider.value > slider.max) { slider.value = slider.max - (limit.maxOp === 'lt' ? 0.1 : 0); changed = true; }
+                }
+            });
+            if (changed) {
+                renderSlidersList();
             }
         }
 
@@ -2343,6 +2375,8 @@
                     slidersDeleted = true;
                 }
             });
+
+            applyParamConstraintsToSliders();
 
             if (slidersDeleted) {
                 recompilePlotFunc();
@@ -2959,6 +2993,7 @@
             const domainRes = extractDomainFromLatex(rawLatex);
             let s = domainRes.cleanFormula;
             currentDomain = domainRes.domain;
+            applyParamConstraintsToSliders();
 
             if (!s) return { type: 'empty' };
 
@@ -5006,7 +5041,35 @@
                     }
                 }
 
-                // 5. \int \frac{1}{ax + b} dx 或 \int \frac{1}{x - a} dx
+                // 6. \int \frac{x^2}{\sqrt{a^2 - x^2}} dx 或 \int \frac{x^2}{\sqrt{x^2 \pm a^2}} dx
+                let fracX2SqrtMatch = clean.match(/^\(?([a-zA-Z])\^2\)?\/sqrt\(\(?([a-zA-Z0-9]+)\^2\-([a-zA-Z])\^2\)?\)$/) ||
+                                      clean.match(/^\(?([a-zA-Z])\^2\)?\/\(\(?([a-zA-Z0-9]+)\^2\-([a-zA-Z])\^2\)?\)\^\(1\/2\)$/) ||
+                                      clean.match(/^\(?([a-zA-Z])\^2\)?\/sqrt\(\(?([a-zA-Z0-9]+)\-([a-zA-Z])\^2\)?\)$/);
+                if (fracX2SqrtMatch) {
+                    let vParam = fracX2SqrtMatch[1];
+                    let aParam = fracX2SqrtMatch[2];
+                    let v2Param = fracX2SqrtMatch[3] || vParam;
+                    if (vParam === v && v2Param === v && aParam !== v) {
+                        let aTeX = nerdamer(aParam).toTeX();
+                        let isAPositive = currentDomain?.paramConstraints?.[aParam]?.min >= 0;
+                        let aDenom = isAPositive ? aTeX : `|${aTeX}|`;
+
+                        let stepsBreakdown = [
+                            {
+                                desc: `识别为含常数参数 $${aTeX}$ 的二次根式分式积分，采用三角代换 $${v} = ${aTeX}\\sin t$：`,
+                                math: `\\int \\frac{${v}^2}{\\sqrt{${aTeX}^2 - ${v}^2}} \\,d${v}`
+                            },
+                            {
+                                desc: `代入化简得 $\\int ${aTeX}^2\\sin^2 t\\,dt = \\frac{${aTeX}^2}{2}\\left(t - \\sin t\\cos t\\right)$，由辅助直角三角形回代：`,
+                                math: `-\\frac{${v}}{2}\\sqrt{${aTeX}^2 - ${v}^2} + \\frac{${aTeX}^2}{2}\\arcsin\\left(\\frac{${v}}{${aDenom}}\\right)`
+                            }
+                        ];
+                        let finalResultLatex = `-\\frac{${v}}{2}\\sqrt{${aTeX}^2 - ${v}^2} + \\frac{${aTeX}^2}{2}\\arcsin\\left(\\frac{${v}}{${aDenom}}\\right)`;
+                        return { finalResultLatex, steps: stepsBreakdown };
+                    }
+                }
+
+                // 7. \int \frac{1}{ax + b} dx 或 \int \frac{1}{x - a} dx
                 let linearFracMatch = clean.match(/^\(?1\)?\/\(?([a-zA-Z0-9]+)\*([a-zA-Z])([\+\-][a-zA-Z0-9]+)?\)?$/) ||
                                       clean.match(/^\(?1\)?\/\(?([a-zA-Z])([\+\-][a-zA-Z0-9]+)\)?$/);
                 if (linearFracMatch) {
@@ -6990,12 +7053,14 @@
         // 全新的单点核心求值器，能够接收任意指定的编译函数
         function evalNode(xVal, targetFunc) {
             if (!targetFunc) return null;
-            // Enforce Formula-based Domain Restriction
-            if (currentDomain) {
-                if (currentDomain.minOp === 'le' && xVal < currentDomain.min) return null;
-                if (currentDomain.minOp === 'lt' && xVal <= currentDomain.min) return null;
-                if (currentDomain.maxOp === 'le' && xVal > currentDomain.max) return null;
-                if (currentDomain.maxOp === 'lt' && xVal >= currentDomain.max) return null;
+            // Enforce Formula-based Domain Restriction (Multi-interval Union)
+            if (currentDomain && currentDomain.intervals && currentDomain.intervals.length > 0) {
+                const inAnyInterval = currentDomain.intervals.some(inter => {
+                    const leftOk = inter.minOp === 'le' ? xVal >= inter.min : xVal > inter.min;
+                    const rightOk = inter.maxOp === 'le' ? xVal <= inter.max : xVal < inter.max;
+                    return leftOk && rightOk;
+                });
+                if (!inAnyInterval) return null;
             }
             try {
                 const args = compiledVars.map(v => v === 'x' ? xVal : (slidersState.get(v) ? slidersState.get(v).value : 1));
@@ -7212,12 +7277,15 @@
             ctx.fillRect(0, 0, w, h);
 
             // Update Domain Badge on Canvas
-            if (currentDomain) {
-                const leftB = currentDomain.minOp === 'le' ? '[' : '(';
-                const rightB = currentDomain.maxOp === 'le' ? ']' : ')';
-                let minTxt = currentDomain.min <= -100 ? '-∞' : formatPiMultiple(currentDomain.min / Math.PI).replace(/\\pi/g, 'π').replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2');
-                let maxTxt = currentDomain.max >= 100 ? '+∞' : formatPiMultiple(currentDomain.max / Math.PI).replace(/\\pi/g, 'π').replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2');
-                domainBadge.textContent = `定义域约束: x ∈ ${leftB}${minTxt}, ${maxTxt}${rightB}`;
+            if (currentDomain && currentDomain.intervals && currentDomain.intervals.length > 0) {
+                let badgeTexts = currentDomain.intervals.map(inter => {
+                    const leftB = inter.minOp === 'le' ? '[' : '(';
+                    const rightB = inter.maxOp === 'le' ? ']' : ')';
+                    let minTxt = inter.min <= -100 ? '-∞' : formatPiMultiple(inter.min / Math.PI).replace(/\\pi/g, 'π').replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2');
+                    let maxTxt = inter.max >= 100 ? '+∞' : formatPiMultiple(inter.max / Math.PI).replace(/\\pi/g, 'π').replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2');
+                    return `${leftB}${minTxt}, ${maxTxt}${rightB}`;
+                });
+                domainBadge.textContent = `定义域约束: x ∈ ${badgeTexts.join(' ∪ ')}`;
                 domainBadge.style.display = 'block';
             } else {
                 domainBadge.style.display = 'none';
@@ -7240,34 +7308,41 @@
 
             coordsLabel.textContent = `X: [${leftMath.toFixed(1)}, ${rightMath.toFixed(1)}] | Y: [${bottomMath.toFixed(1)}, ${topMath.toFixed(1)}]`;
 
-            // Draw Domain Restriction Shading & Bounds
-            if (currentDomain) {
-                const domMinX = Math.max(-200, currentDomain.min);
-                const domMaxX = Math.min(200, currentDomain.max);
-                const domMinScreen = (domMinX - view.centerX) * view.scale + w / 2;
-                const domMaxScreen = (domMaxX - view.centerX) * view.scale + w / 2;
+            // Draw Domain Restriction Shading & Bounds (Multi-interval Union)
+            if (currentDomain && currentDomain.intervals && currentDomain.intervals.length > 0) {
+                currentDomain.intervals.forEach(inter => {
+                    const domMin = inter.min <= -100 ? leftMath : inter.min;
+                    const domMax = inter.max >= 100 ? rightMath : inter.max;
 
-                ctx.fillStyle = domainShadeColor;
-                ctx.fillRect(domMinScreen, 0, domMaxScreen - domMinScreen, h);
+                    const domMinScreen = Math.max(0, (domMin - view.centerX) * view.scale + w / 2);
+                    const domMaxScreen = Math.min(w, (domMax - view.centerX) * view.scale + w / 2);
 
-                ctx.lineWidth = 1.5;
-                ctx.setLineDash([4, 4]);
-                ctx.strokeStyle = domainBorderColor;
+                    if (domMaxScreen > domMinScreen) {
+                        ctx.fillStyle = domainShadeColor;
+                        ctx.fillRect(domMinScreen, 0, domMaxScreen - domMinScreen, h);
+                    }
 
-                if (currentDomain.min > -100) {
-                    ctx.beginPath();
-                    ctx.moveTo(domMinScreen, 0);
-                    ctx.lineTo(domMinScreen, h);
-                    ctx.stroke();
-                }
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = domainBorderColor;
 
-                if (currentDomain.max < 100) {
-                    ctx.beginPath();
-                    ctx.moveTo(domMaxScreen, 0);
-                    ctx.lineTo(domMaxScreen, h);
-                    ctx.stroke();
-                }
-                ctx.setLineDash([]);
+                    if (inter.min > -100) {
+                        const px = (inter.min - view.centerX) * view.scale + w / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(px, 0);
+                        ctx.lineTo(px, h);
+                        ctx.stroke();
+                    }
+
+                    if (inter.max < 100) {
+                        const px = (inter.max - view.centerX) * view.scale + w / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(px, 0);
+                        ctx.lineTo(px, h);
+                        ctx.stroke();
+                    }
+                    ctx.setLineDash([]);
+                });
             }
 
             // Origin screen coordinates (inlined)
