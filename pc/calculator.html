@@ -4856,6 +4856,85 @@
                     }
                 }
 
+                // 5. \int \frac{\sqrt{x^2 \pm a^2}}{x^2} dx 或 \int \frac{\sqrt{a^2 - x^2}}{x^2} dx (含参数 a)
+                let sNorm = stripOuterParentheses(clean);
+                let fracRadX2 = null;
+                let divIdx = sNorm.lastIndexOf('/');
+                if (divIdx !== -1) {
+                    let top = stripOuterParentheses(sNorm.substring(0, divIdx));
+                    let bot = stripOuterParentheses(sNorm.substring(divIdx + 1));
+                    if (bot === `${v}^2`) {
+                        let rM = top.match(/^sqrt\((.+)\)$/) || top.match(/^\((.+)\)\^\(1\/2\)$/);
+                        if (rM) fracRadX2 = { inside: stripOuterParentheses(rM[1]) };
+                    }
+                }
+
+                if (fracRadX2) {
+                    let radInside = fracRadX2.inside;
+                    let plusMatch = radInside.match(/^([a-zA-Z0-9]+)\^2\+([a-zA-Z0-9]+)\^2$/) ||
+                                    radInside.match(/^([a-zA-Z0-9]+)\+([a-zA-Z0-9]+)\^2$/) ||
+                                    radInside.match(/^([a-zA-Z0-9]+)\^2\+([a-zA-Z0-9]+)$/);
+                    let minusMatch = radInside.match(/^([a-zA-Z0-9]+)\^2\-([a-zA-Z0-9]+)\^2$/) ||
+                                     radInside.match(/^([a-zA-Z0-9]+)\^2\-([a-zA-Z0-9]+)$/) ||
+                                     radInside.match(/^([a-zA-Z0-9]+)\-([a-zA-Z0-9]+)\^2$/);
+
+                    if (plusMatch) {
+                        let p1 = plusMatch[1], p2 = plusMatch[2];
+                        let aParam = (p1 === v) ? p2 : ((p2 === v) ? p1 : '');
+                        if (aParam && aParam !== v) {
+                            let aTeX = nerdamer(aParam).toTeX();
+                            let radTeX = `\\sqrt{${v}^2 + ${aTeX}^2}`;
+                            let stepsBreakdown = [
+                                {
+                                    desc: `识别为含参根式有理分式，采用分部积分法：令 $u = ${radTeX},\\; dv = \\frac{1}{${v}^2}\\,d${v}$`,
+                                    math: `\\int \\frac{${radTeX}}{${v}^2} \\,d${v} = -\\frac{${radTeX}}{${v}} - \\int \\left(-\\frac{1}{${v}}\\right) \\frac{${v}}{${radTeX}} \\,d${v} = -\\frac{${radTeX}}{${v}} + \\int \\frac{1}{${radTeX}} \\,d${v}`
+                                },
+                                {
+                                    desc: `应用标准对数根式积分公式 $\\int \\frac{1}{\\sqrt{${v}^2 + a^2}}\\,d${v} = \\ln\\left(${v} + \\sqrt{${v}^2 + a^2}\\right)$：`,
+                                    math: `-\\frac{${radTeX}}{${v}} + \\ln\\left(${v} + ${radTeX}\\right)`
+                                }
+                            ];
+                            let finalResultLatex = `-\\frac{${radTeX}}{${v}} + \\ln\\left(${v} + ${radTeX}\\right)`;
+                            return { finalResultLatex, steps: stepsBreakdown };
+                        }
+                    } else if (minusMatch) {
+                        let p1 = minusMatch[1], p2 = minusMatch[2];
+                        if (p1 === v && p2 !== v) {
+                            // \sqrt{x^2 - a^2} / x^2
+                            let aTeX = nerdamer(p2).toTeX();
+                            let radTeX = `\\sqrt{${v}^2 - ${aTeX}^2}`;
+                            let stepsBreakdown = [
+                                {
+                                    desc: `识别为含参根式有理分式，采用分部积分法：令 $u = ${radTeX},\\; dv = \\frac{1}{${v}^2}\\,d${v}$`,
+                                    math: `\\int \\frac{${radTeX}}{${v}^2} \\,d${v} = -\\frac{${radTeX}}{${v}} + \\int \\frac{1}{${radTeX}} \\,d${v}`
+                                },
+                                {
+                                    desc: `应用标准对数根式积分公式 $\\int \\frac{1}{\\sqrt{${v}^2 - a^2}}\\,d${v} = \\ln\\left|${v} + \\sqrt{${v}^2 - a^2}\\right|$：`,
+                                    math: `-\\frac{${radTeX}}{${v}} + \\ln\\left|${v} + ${radTeX}\\right|`
+                                }
+                            ];
+                            let finalResultLatex = `-\\frac{${radTeX}}{${v}} + \\ln\\left|${v} + ${radTeX}\\right|`;
+                            return { finalResultLatex, steps: stepsBreakdown };
+                        } else if (p2 === v && p1 !== v) {
+                            // \sqrt{a^2 - x^2} / x^2
+                            let aTeX = nerdamer(p1).toTeX();
+                            let radTeX = `\\sqrt{${aTeX}^2 - ${v}^2}`;
+                            let stepsBreakdown = [
+                                {
+                                    desc: `识别为含参根式有理分式，采用分部积分法：令 $u = ${radTeX},\\; dv = \\frac{1}{${v}^2}\\,d${v}$`,
+                                    math: `\\int \\frac{${radTeX}}{${v}^2} \\,d${v} = -\\frac{${radTeX}}{${v}} - \\int \\frac{1}{${radTeX}} \\,d${v}`
+                                },
+                                {
+                                    desc: `应用标准反正弦积分公式 $\\int \\frac{1}{\\sqrt{a^2 - ${v}^2}}\\,d${v} = \\arcsin\\left(\\frac{${v}}{a}\\right)$：`,
+                                    math: `-\\frac{${radTeX}}{${v}} - \\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`
+                                }
+                            ];
+                            let finalResultLatex = `-\\frac{${radTeX}}{${v}} - \\arcsin\\left(\\frac{${v}}{${aTeX}}\\right)`;
+                            return { finalResultLatex, steps: stepsBreakdown };
+                        }
+                    }
+                }
+
                 // 5. \int \frac{1}{ax + b} dx 或 \int \frac{1}{x - a} dx
                 let linearFracMatch = clean.match(/^\(?1\)?\/\(?([a-zA-Z0-9]+)\*([a-zA-Z])([\+\-][a-zA-Z0-9]+)?\)?$/) ||
                                       clean.match(/^\(?1\)?\/\(?([a-zA-Z])([\+\-][a-zA-Z0-9]+)\)?$/);
