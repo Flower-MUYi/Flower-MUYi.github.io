@@ -1770,6 +1770,55 @@
             }
         }
 
+        function setupMathLiveShortcuts() {
+            if (!mathField) return;
+            const functionShortcuts = {
+                'cos': '\\cos(#?)',
+                'sin': '\\sin(#?)',
+                'tan': '\\tan(#?)',
+                'arccos': '\\arccos(#?)',
+                'arcsin': '\\arcsin(#?)',
+                'arctan': '\\arctan(#?)',
+                'sec': '\\sec(#?)',
+                'csc': '\\csc(#?)',
+                'cot': '\\cot(#?)',
+                'arcsec': '\\operatorname{arcsec}(#?)',
+                'arccsc': '\\operatorname{arccsc}(#?)',
+                'arccot': '\\operatorname{arccot}(#?)',
+                'sinh': '\\sinh(#?)',
+                'cosh': '\\cosh(#?)',
+                'tanh': '\\tanh(#?)',
+                'lim': '\\lim_{x \\to #?} (#?)',
+                'ln': '\\ln(#?)',
+                'lg': '\\lg(#?)',
+                'log': '\\log_{#?}(#?)'
+            };
+
+            try {
+                if (mathField.inlineShortcuts) {
+                    mathField.inlineShortcuts = {
+                        ...mathField.inlineShortcuts,
+                        ...functionShortcuts
+                    };
+                } else if (mathField.setOptions) {
+                    mathField.setOptions({
+                        inlineShortcuts: functionShortcuts
+                    });
+                }
+            } catch (e) {
+                console.warn('inlineShortcuts init error:', e);
+            }
+
+            if (window.MathfieldElement && window.MathfieldElement.inlineShortcuts) {
+                try {
+                    window.MathfieldElement.inlineShortcuts = {
+                        ...window.MathfieldElement.inlineShortcuts,
+                        ...functionShortcuts
+                    };
+                } catch (e) { }
+            }
+        }
+
         function renderKeypad(tabName) {
             const keys = KEYPAD_DEFINITIONS[tabName] || KEYPAD_DEFINITIONS.basic;
             keypadGrid.innerHTML = '';
@@ -4822,6 +4871,7 @@
             } catch (e) { }
 
             setupMathLiveChineseMenu();
+            setupMathLiveShortcuts();
 
             // 3. 初始公式注入 (若为空时加载默认示例)
             if (!mathField.getValue()) {
@@ -4841,6 +4891,7 @@
             renderStaticKaTeX();
             setTimeout(() => {
                 setupMathLiveChineseMenu();
+                setupMathLiveShortcuts();
                 renderStaticKaTeX();
                 resizeCanvas();
                 processCalculation('auto');
