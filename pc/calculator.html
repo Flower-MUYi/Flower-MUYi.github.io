@@ -3508,112 +3508,182 @@
                 const leftStr = ast.left;
                 const rightStr = ast.right;
 
+                let foundVars = (leftStr + rightStr).match(/[a-zA-Z]/g) || [];
+                const hasX = foundVars.includes('x');
+                const hasY = foundVars.includes('y');
+                const isImplicit2DCurve = hasX && hasY;
+
                 let eqVar = 'x';
-                let foundVars = (leftStr + rightStr).match(/[a-zA-Z]/g);
-                if (foundVars) {
-                    if (foundVars.includes('x')) {
-                        eqVar = 'x';
-                    } else if (foundVars.includes('y')) {
-                        eqVar = 'y';
-                    } else if (foundVars.includes('t')) {
-                        eqVar = 't';
-                    } else {
-                        let nonConstVars = foundVars.filter(v => !['e', 'i', 'p', 'd', 's', 'c', 'l'].includes(v.toLowerCase()));
-                        let nonSliderVars = nonConstVars.filter(v => !slidersState.has(v));
-                        if (nonSliderVars.length > 0) {
-                            eqVar = nonSliderVars[0];
-                        } else if (nonConstVars.length > 0) {
-                            eqVar = nonConstVars[0];
-                        }
+                if (isImplicit2DCurve) {
+                    eqVar = 'y'; // 隐函数方程统一优先解出 y = f(x)
+                } else if (hasX) {
+                    eqVar = 'x';
+                } else if (hasY) {
+                    eqVar = 'y';
+                } else if (foundVars.includes('t')) {
+                    eqVar = 't';
+                } else {
+                    let nonConstVars = foundVars.filter(v => !['e', 'i', 'p', 'd', 's', 'c', 'l'].includes(v.toLowerCase()));
+                    let nonSliderVars = nonConstVars.filter(v => !slidersState.has(v));
+                    if (nonSliderVars.length > 0) {
+                        eqVar = nonSliderVars[0];
+                    } else if (nonConstVars.length > 0) {
+                        eqVar = nonConstVars[0];
                     }
                 }
 
-                steps.push({
-                    desc: `识别为待求解方程（未知数 $${eqVar}$），原方程为：`,
-                    math: `${nerdamer(leftStr).toTeX()} = ${nerdamer(rightStr).toTeX()}`
-                });
+                if (isImplicit2DCurve) {
+                    steps.push({
+                        desc: `识别为二元隐函数方程（自变量 $x$，因变量 $y$），原方程为：`,
+                        math: `${nerdamer(leftStr).toTeX()} = ${nerdamer(rightStr).toTeX()}`
+                    });
+                } else {
+                    steps.push({
+                        desc: `识别为待求解方程（未知数 $${eqVar}$），原方程为：`,
+                        math: `${nerdamer(leftStr).toTeX()} = ${nerdamer(rightStr).toTeX()}`
+                    });
+                }
 
                 const stdExpr = `(${leftStr}) - (${rightStr})`;
                 const simplifiedStd = nerdamer(stdExpr).expand().toString();
 
-                steps.push({
-                    desc: `移项并将方程转化为标准零点形式 $f(${eqVar}) = 0$：`,
-                    math: `${nerdamer(simplifiedStd).toTeX()} = 0`
-                });
+                if (isImplicit2DCurve) {
+                    steps.push({
+                        desc: `移项整理为标准隐式零点形式 $F(x, y) = 0$：`,
+                        math: `${nerdamer(simplifiedStd).toTeX()} = 0`
+                    });
+                } else {
+                    steps.push({
+                        desc: `移项并将方程转化为标准零点形式 $f(${eqVar}) = 0$：`,
+                        math: `${nerdamer(simplifiedStd).toTeX()} = 0`
+                    });
+                }
 
                 let solLatex = '';
 
-                if (currentDomain && isFinite(currentDomain.min) && isFinite(currentDomain.max)) {
-                    let domMin = currentDomain.min;
-                    let domMax = currentDomain.max;
-                    let numericalRoots = findDomainRoots(simplifiedStd, domMin, domMax);
-
-                    if (numericalRoots.length > 0) {
-                        let formattedRoots = numericalRoots.map(r => formatPiMultiple(r / Math.PI));
-                        solLatex = `${eqVar} \\in \\left\\{ ${formattedRoots.join(', \\; ')} \\right\\}`;
-                        steps.push({
-                            desc: `在指定定义域区间 $[${domMin.toFixed(2)}, ${domMax.toFixed(2)}]$ 内求解方程所有零点：`,
-                            math: solLatex
-                        });
-                    }
-                }
-
-                if (!solLatex) {
+                if (isImplicit2DCurve) {
                     try {
-                        const roots = nerdamer.solveEquations(`${leftStr} = ${rightStr}`, eqVar);
-                        if (Array.isArray(roots)) {
+                        const roots = nerdamer.solveEquations(`${leftStr} = ${rightStr}`, 'y');
+                        if (Array.isArray(roots) && roots.length > 0) {
                             const rootsTeX = roots.map(sol => nerdamer(sol).toTeX());
                             if (roots.length === 1) {
-                                solLatex = `${eqVar} = ${rootsTeX[0]}`;
+                                solLatex = `y = ${rootsTeX[0]}`;
                                 steps.push({
-                                    desc: `通过系数化简或移项逆运算求解未知数 $${eqVar}$：`,
+                                    desc: '通过代数变换求解得到显式函数关系式 $y = f(x)$：',
                                     math: solLatex
                                 });
-                            } else if (roots.length === 2) {
-                                solLatex = rootsTeX.map((r, i) => `${eqVar}_${i + 1} = ${r}`).join('\\quad \\text{或} \\quad ');
-                                steps.push({
-                                    desc: `应用一元二次方程求根公式 $${eqVar} = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ 求出实数解：`,
-                                    math: solLatex
-                                });
+                                funcForPlot = roots[0].toString();
                             } else {
-                                solLatex = `${eqVar} \\in \\left\\{ ${rootsTeX.join(', \\; ')} \\right\\}`;
+                                solLatex = rootsTeX.map((r, i) => `y_{${i + 1}} = ${r}`).join('\\quad \\text{或} \\quad ');
                                 steps.push({
-                                    desc: '因式分解或多项式求根算法求出所有根：',
+                                    desc: '通过代数变换求解得到多分支显式函数关系式 $y = f(x)$：',
+                                    math: solLatex
+                                });
+                                funcForPlot = roots.map((r, i) => ({
+                                    expr: r.toString(),
+                                    color: i === 0 ? '#38bdf8' : (i === 1 ? '#34d399' : '#f43f5e'),
+                                    label: `y_{${i + 1}}(x)`
+                                }));
+                            }
+                        } else {
+                            // 尝试解出 x = g(y)
+                            const rootsX = nerdamer.solveEquations(`${leftStr} = ${rightStr}`, 'x');
+                            if (Array.isArray(rootsX) && rootsX.length > 0) {
+                                const rootsXTeX = rootsX.map(sol => nerdamer(sol).toTeX());
+                                solLatex = `x = ${rootsXTeX.join(', ')}`;
+                                steps.push({
+                                    desc: '解出反函数显式表达式 $x = g(y)$：',
                                     math: solLatex
                                 });
                             }
-                        } else {
-                            solLatex = `${eqVar} = ${nerdamer(roots).toTeX()}`;
-                            steps.push({
-                                desc: '计算求解结果：',
-                                math: solLatex
-                            });
                         }
-                    } catch (err) {
-                        let numericalRoots = findDomainRoots(simplifiedStd, -10, 10);
+                    } catch (e) { }
+
+                    if (!solLatex) {
+                        solLatex = `${nerdamer(simplifiedStd).toTeX()} = 0`;
+                        steps.push({
+                            desc: '保持隐函数代数方程形式：',
+                            math: solLatex
+                        });
+                    }
+                    finalResultLatex = solLatex;
+                    if (!funcForPlot) {
+                        funcForPlot = simplifiedStd;
+                    }
+                } else {
+                    // 一元方程求解（含单自变量或带参数情况）
+                    if (currentDomain && isFinite(currentDomain.min) && isFinite(currentDomain.max)) {
+                        let domMin = currentDomain.min;
+                        let domMax = currentDomain.max;
+                        let numericalRoots = findDomainRoots(simplifiedStd, domMin, domMax);
+
                         if (numericalRoots.length > 0) {
                             let formattedRoots = numericalRoots.map(r => formatPiMultiple(r / Math.PI));
                             solLatex = `${eqVar} \\in \\left\\{ ${formattedRoots.join(', \\; ')} \\right\\}`;
                             steps.push({
-                                desc: '通过数值零点搜寻算法求出所有实数根：',
+                                desc: `在指定定义域区间 $[${domMin.toFixed(2)}, ${domMax.toFixed(2)}]$ 内求解方程所有零点：`,
                                 math: solLatex
                             });
-                        } else {
-                            solLatex = '\\text{无实数解 (No Real Solution)}';
                         }
                     }
-                }
 
-                finalResultLatex = solLatex;
+                    if (!solLatex) {
+                        try {
+                            const roots = nerdamer.solveEquations(`${leftStr} = ${rightStr}`, eqVar);
+                            if (Array.isArray(roots)) {
+                                const rootsTeX = roots.map(sol => nerdamer(sol).toTeX());
+                                if (roots.length === 1) {
+                                    solLatex = `${eqVar} = ${rootsTeX[0]}`;
+                                    steps.push({
+                                        desc: `通过系数化简或移项逆运算求解未知数 $${eqVar}$：`,
+                                        math: solLatex
+                                    });
+                                } else if (roots.length === 2) {
+                                    solLatex = rootsTeX.map((r, i) => `${eqVar}_${i + 1} = ${r}`).join('\\quad \\text{或} \\quad ');
+                                    steps.push({
+                                        desc: `应用一元二次方程求根公式 $${eqVar} = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ 求出实数解：`,
+                                        math: solLatex
+                                    });
+                                } else {
+                                    solLatex = `${eqVar} \\in \\left\\{ ${rootsTeX.join(', \\; ')} \\right\\}`;
+                                    steps.push({
+                                        desc: '因式分解或多项式求根算法求出所有根：',
+                                        math: solLatex
+                                    });
+                                }
+                            } else {
+                                solLatex = `${eqVar} = ${nerdamer(roots).toTeX()}`;
+                                steps.push({
+                                    desc: '计算求解结果：',
+                                    math: solLatex
+                                });
+                            }
+                        } catch (err) {
+                            let numericalRoots = findDomainRoots(simplifiedStd, -10, 10);
+                            if (numericalRoots.length > 0) {
+                                let formattedRoots = numericalRoots.map(r => formatPiMultiple(r / Math.PI));
+                                solLatex = `${eqVar} \\in \\left\\{ ${formattedRoots.join(', \\; ')} \\right\\}`;
+                                steps.push({
+                                    desc: '通过数值零点搜寻算法求出所有实数根：',
+                                    math: solLatex
+                                });
+                            } else {
+                                solLatex = '\\text{无实数解 (No Real Solution)}';
+                            }
+                        }
+                    }
 
-                let cleanLeft = leftStr.replace(/\s/g, '');
-                let cleanRight = rightStr.replace(/\s/g, '');
-                if (cleanLeft === 'y' || cleanLeft === 'f*(x)' || cleanLeft === 'f(x)') {
-                    funcForPlot = rightStr;
-                } else if (cleanRight === 'y' || cleanRight === 'f*(x)' || cleanRight === 'f(x)') {
-                    funcForPlot = leftStr;
-                } else {
-                    funcForPlot = simplifiedStd;
+                    finalResultLatex = solLatex;
+
+                    let cleanLeft = leftStr.replace(/\s/g, '');
+                    let cleanRight = rightStr.replace(/\s/g, '');
+                    if (cleanLeft === 'y' || cleanLeft === 'f*(x)' || cleanLeft === 'f(x)') {
+                        funcForPlot = rightStr;
+                    } else if (cleanRight === 'y' || cleanRight === 'f*(x)' || cleanRight === 'f(x)') {
+                        funcForPlot = leftStr;
+                    } else {
+                        funcForPlot = simplifiedStd;
+                    }
                 }
             }
 
