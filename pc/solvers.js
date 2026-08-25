@@ -1,4 +1,4 @@
-// solvers.js —— 包含从属 layerId 绑定的终极计算引擎
+// solvers.js —— 包含三角有理式万能代换、高阶分式拆分与几何可视化的综合微积分引擎
 
 function solveLinearSystem(matrix, vector) {
     const N = vector.length;
@@ -198,6 +198,27 @@ function buildMathFunction(ast, variable, ce) {
     };
 }
 
+// 检测 AST 是否包含关于指定变量的三角函数
+function hasTrigFunctions(node, variable) {
+    const { expr } = unwrapAST(node);
+    if (!Array.isArray(expr)) return false;
+    const [op, ...args] = expr;
+    if (['Sin', 'Cos', 'Tan', 'Cot', 'Sec', 'Csc'].includes(op) && !isConstant(args[0], variable)) {
+        return true;
+    }
+    return args.some(arg => hasTrigFunctions(arg, variable));
+}
+
+// 递归执行符号替换 (将 AST 中的变量代换为新表达式)
+function substituteSymbol(node, targetVar, replacementAst) {
+    const { expr } = unwrapAST(node);
+    if (expr === targetVar) return replacementAst;
+    if (!Array.isArray(expr)) return expr;
+
+    const [op, ...args] = expr;
+    return [op, ...args.map(a => substituteSymbol(a, targetVar, replacementAst))];
+}
+
 export function differentiateNode(node, variable, ce, steps) {
     const { expr: unwrappedNode } = unwrapAST(node);
     const nodeExpr = ce.box(unwrappedNode);
@@ -289,6 +310,7 @@ function formatTermWithCoeff(coeffVal, termLatex, isFirst = false) {
     return `${sign}${coeffPart}${termLatex}`;
 }
 
+// 高阶代数有理分式积分
 function integratePartialFractions(numNode, denNode, variable, ce, steps) {
     const factors = extractFactors(denNode, variable, ce);
     const factorData = [];
@@ -336,8 +358,8 @@ function integratePartialFractions(numNode, denNode, variable, ce, steps) {
             }
         }
 
-        steps.push({
-            title: "步骤 A: 依据分母因式分解结构，设定部分分式展开式",
+        if (steps) steps.push({
+            title: "依据分母因式分解结构，设定部分分式展开式",
             latex: `\\frac{${ce.box(numNode).toLatex()}}{${ce.box(denNode).toLatex()}} = ${pfdTermsLaTeX.join(' + ')}`
         });
 
@@ -381,8 +403,8 @@ function integratePartialFractions(numNode, denNode, variable, ce, steps) {
             }
         }
 
-        steps.push({
-            title: "步骤 B: 去分母建立分子多项式恒等式",
+        if (steps) steps.push({
+            title: "去分母建立分子多项式恒等式",
             latex: `${ce.box(numNode).toLatex()} = ${rhsTermsLatex.join(' + ')}`
         });
 
@@ -429,8 +451,8 @@ function integratePartialFractions(numNode, denNode, variable, ce, steps) {
             systemEquationsLaTeX.push(`${termName} & ${eqLHS} = ${toRational(targetVal).latex}`);
         }
 
-        steps.push({
-            title: "步骤 C: 展开并对比两端同次幂系数，建立关于待定系数的线性方程组",
+        if (steps) steps.push({
+            title: "展开并对比两端同次幂系数，建立待定系数方程组",
             latex: `\\begin{cases} ${systemEquationsLaTeX.join(' \\\\ ')} \\end{cases}`
         });
 
@@ -438,8 +460,8 @@ function integratePartialFractions(numNode, denNode, variable, ce, steps) {
         if (!coeffs) return ce.box(['Integrate', ['Divide', numNode, denNode], variable]).evaluate();
 
         const coeffStrs = unknowns.map((u, idx) => `${u.label} = ${toRational(coeffs[idx]).latex}`);
-        steps.push({
-            title: "步骤 D: 求解线性方程组，得出各待定系数值",
+        if (steps) steps.push({
+            title: "求解线性方程组，得出各待定系数值",
             latex: coeffStrs.join(', \\quad ')
         });
 
@@ -517,15 +539,9 @@ function integratePartialFractions(numNode, denNode, variable, ce, steps) {
             }
         }
 
-        steps.push({
-            title: "步骤 E: 将原积分拆分为基础对数积分与二次项分子凑微分",
-            latex: `\\int \\frac{${ce.box(numNode).toLatex()}}{${ce.box(denNode).toLatex()}} \\, d${variable} = ${integralLatexTerms.join(' ')}`
-        });
-
-        const stepFStr = finalLatexTerms.join(' ').replace(/\+ -/g, '- ');
-        steps.push({
-            title: "步骤 F: 完成逐项求积并化简",
-            latex: cleanMathLatex(`${stepFStr}`)
+        if (steps) steps.push({
+            title: "逐项求积并化简得到关于代换变量的原函数",
+            latex: cleanMathLatex(`${finalLatexTerms.join(' ').replace(/\+ -/g, '- ')}`)
         });
 
         return ce.box(['Add', ...finalAstTerms]).simplify();
@@ -534,6 +550,110 @@ function integratePartialFractions(numNode, denNode, variable, ce, steps) {
     return ce.box(['Integrate', ['Divide', numNode, denNode], variable]).evaluate();
 }
 
+/**
+ * ★ 三角有理式积分引擎（万能代换与特殊奇偶换元法）
+ */
+function integrateTrigRational(node, variable, ce, steps) {
+    const nodeExpr = ce.box(node);
+
+    // 1. 数值采样判定奇偶性 R(sin x, cos x)
+    const testPoints = [0.65, 1.15, 2.05];
+    let isOddSin = true;  // R(-sin x, cos x) = -R(sin x, cos x)
+    let isOddCos = true;  // R(sin x, -cos x) = -R(sin x, cos x)
+    let isEvenBoth = true;// R(-sin x, -cos x) = R(sin x, cos x)
+
+    for (let x of testPoints) {
+        const sx = Math.sin(x), cx = Math.cos(x);
+        const f_orig = nodeExpr.subs({ [variable]: x }).evaluate().valueOf();
+        if (typeof f_orig !== 'number' || isNaN(f_orig)) continue;
+
+        const f_negSin = nodeExpr.subs({ [variable]: -x + Math.PI }).evaluate().valueOf(); // -sin, cos
+        const f_negCos = nodeExpr.subs({ [variable]: Math.PI - x }).evaluate().valueOf();  // sin, -cos
+        const f_negBoth = nodeExpr.subs({ [variable]: x + Math.PI }).evaluate().valueOf(); // -sin, -cos
+
+        if (Math.abs(f_negSin + f_orig) > 1e-4) isOddSin = false;
+        if (Math.abs(f_negCos + f_orig) > 1e-4) isOddCos = false;
+        if (Math.abs(f_negBoth - f_orig) > 1e-4) isEvenBoth = false;
+    }
+
+    // 分支 1：对 sin x 为奇函数，令 u = cos x
+    if (isOddSin && !isOddCos) {
+        steps.push({
+            title: "步骤 A: 识别被积函数为三角有理式，满足 R(-\\sin x, \\cos x) = -R(\\sin x, \\cos x)",
+            latex: `R(-\\sin ${variable}, \\cos ${variable}) = -R(\\sin ${variable}, \\cos ${variable}) \\implies \\text{采用换元法：令 } u = \\cos(${variable})`
+        });
+        steps.push({
+            title: "步骤 B: 展开凑微分式 d(\\cos x) = -\\sin x dx",
+            latex: `du = -\\sin(${variable}) \\, d${variable}, \\quad \\sin^2(${variable}) = 1 - u^2`
+        });
+    }
+    // 分支 2：对 cos x 为奇函数，令 u = sin x
+    else if (isOddCos && !isOddSin) {
+        steps.push({
+            title: "步骤 A: 识别被积函数为三角有理式，满足 R(\\sin x, -\\cos x) = -R(\\sin x, \\cos x)",
+            latex: `R(\\sin ${variable}, -\\cos ${variable}) = -R(\\sin ${variable}, \\cos ${variable}) \\implies \\text{采用换元法：令 } u = \\sin(${variable})`
+        });
+        steps.push({
+            title: "步骤 B: 展开凑微分式 d(\\sin x) = \\cos x dx",
+            latex: `du = \\cos(${variable}) \\, d${variable}, \\quad \\cos^2(${variable}) = 1 - u^2`
+        });
+    }
+    // 分支 3：同号偶函数，令 u = tan x
+    else if (isEvenBoth && !isOddSin && !isOddCos) {
+        steps.push({
+            title: "步骤 A: 识别满足 R(-\\sin x, -\\cos x) = R(\\sin x, \\cos x)，采用正切换元法",
+            latex: `\\text{令 } u = \\tan(${variable}), \\quad d${variable} = \\frac{1}{1+u^2} \\, du, \\quad \\sin^2(${variable}) = \\frac{u^2}{1+u^2}, \\quad \\cos^2(${variable}) = \\frac{1}{1+u^2}`
+        });
+    }
+    // 分支 4：万能代换（Weierstrass 代换）
+    else {
+        steps.push({
+            title: "步骤 A: 识别为一般三角有理式，应用万能代换公式（Weierstrass Substitution）",
+            latex: `\\text{令 } t = \\tan\\left(\\frac{${variable}}{2}\\right)`
+        });
+        steps.push({
+            title: "步骤 B: 引入万能代换标准转换公式",
+            latex: `\\sin(${variable}) = \\frac{2t}{1+t^2}, \\quad \\cos(${variable}) = \\frac{1-t^2}{1+t^2}, \\quad d${variable} = \\frac{2}{1+t^2} \\, dt`
+        });
+    }
+
+    // 核心万能代换 AST 递归映射
+    const tVar = 't';
+    const sinSub = ['Divide', ['Multiply', 2, tVar], ['Add', 1, ['Power', tVar, 2]]];
+    const cosSub = ['Divide', ['Subtract', 1, ['Power', tVar, 2]], ['Add', 1, ['Power', tVar, 2]]];
+    const tanSub = ['Divide', ['Multiply', 2, tVar], ['Subtract', 1, ['Power', tVar, 2]]];
+
+    let substitutedAst = substituteSymbol(node, ['Sin', variable], sinSub);
+    substitutedAst = substituteSymbol(substitutedAst, ['Cos', variable], cosSub);
+    substitutedAst = substituteSymbol(substitutedAst, ['Tan', variable], tanSub);
+
+    // 乘以 dt 因子: 2 / (1 + t^2)
+    const dtFactor = ['Divide', 2, ['Add', 1, ['Power', tVar, 2]]];
+    const fullExprInT = ce.box(['Multiply', substitutedAst, dtFactor]).simplify();
+
+    steps.push({
+        title: "步骤 C: 代入并整理为关于代换变量 t 的代数有理分式",
+        latex: `\\int ${nodeExpr.toLatex()} \\, d${variable} = \\int ${fullExprInT.toLatex()} \\, dt`
+    });
+
+    // 求解代数有理分式积分
+    const resInT = integrateNode(fullExprInT.json, tVar, ce, steps);
+
+    // 符号回代：t -> tan(x/2)
+    const backSubAst = substituteSymbol(resInT.json, tVar, ['Tan', ['Divide', variable, 2]]);
+    const finalResult = ce.box(backSubAst).simplify();
+
+    steps.push({
+        title: `步骤 D: 将 t = \\tan\\left(\\frac{${variable}}{2}\\right) 回代得到原函数`,
+        latex: `${finalResult.toLatex()}`
+    });
+
+    return finalResult;
+}
+
+/**
+ * 递归不定积分主路由
+ */
 function integrateNode(node, variable, ce, steps) {
     const { expr: unwrappedNode } = unwrapAST(node);
     const nodeExpr = ce.box(unwrappedNode);
@@ -543,8 +663,9 @@ function integrateNode(node, variable, ce, steps) {
     if (!Array.isArray(unwrappedNode)) return ce.box(['Integrate', unwrappedNode, variable]).evaluate();
 
     const [op, ...args] = unwrappedNode;
+
     if (op === 'Add') {
-        steps.push({
+        if (steps) steps.push({
             title: "应用积分和差法则：逐项分别求积分",
             latex: cleanMathLatex(`\\int \\left(${nodeExpr.toLatex()}\\right) d${variable} = ` +
                 args.map(arg => `\\int ${ce.box(unwrapAST(arg).expr).toLatex()} \\, d${variable}`).join(' + '))
@@ -553,11 +674,22 @@ function integrateNode(node, variable, ce, steps) {
         return ce.box(['Add', ...integratedArgs.map(i => i.json)]).simplify();
     }
 
+    // 核心前置拦截：三角有理式
+    if (hasTrigFunctions(unwrappedNode, variable)) {
+        // 如果是纯初等基本项直接查表
+        if (op === 'Sin' && args[0] === variable) return ce.box(['Negate', ['Cos', variable]]).simplify();
+        if (op === 'Cos' && args[0] === variable) return ce.box(['Sin', variable]);
+        if (op === 'Tan' && args[0] === variable) return ce.box(['Negate', ['Ln', ['Abs', ['Cos', variable]]]]).simplify();
+
+        // 复杂有理结构进入万能代换 / 换元引擎
+        return integrateTrigRational(unwrappedNode, variable, ce, steps);
+    }
+
     if (op === 'Divide' && args.length === 2) {
         const [u, v] = args;
         if (isConstant(u, variable) && v === variable) {
             const coeff = toRational(ce.box(u).evaluate().valueOf());
-            steps.push({
+            if (steps) steps.push({
                 title: "查基本积分表：\\int \\frac{1}{x} \\, dx = \\ln|x|",
                 latex: `\\int \\frac{${ce.box(u).toLatex()}}{${variable}} \\, d${variable} = ${coeff.num === 1 && coeff.den === 1 ? '' : `${coeff.latex} `}\\ln|${variable}|`
             });
@@ -569,22 +701,20 @@ function integrateNode(node, variable, ce, steps) {
     if (op === 'Power' && args[0] === variable && isConstant(args[1], variable)) {
         const n = ce.box(args[1]).evaluate().valueOf();
         if (n === -1) {
-            steps.push({ title: "查基本积分表", latex: `\\int \\frac{1}{${variable}} \\, d${variable} = \\ln|${variable}|` });
+            if (steps) steps.push({ title: "查基本积分表", latex: `\\int \\frac{1}{${variable}} \\, d${variable} = \\ln|${variable}|` });
             return ce.box(['Ln', ['Abs', variable]]);
         }
         const fracExp = toRational(n + 1);
         return ce.box(['Divide', ['Power', variable, fracExp.ast], fracExp.ast]).simplify();
     }
 
-    if (op === 'Sin' && args[0] === variable) return ce.box(['Negate', ['Cos', variable]]).simplify();
-    if (op === 'Cos' && args[0] === variable) return ce.box(['Sin', variable]);
     if (op === 'Exp' && args[0] === variable) return ce.box(['Power', 'ExponentialE', variable]);
 
     return ce.box(['Integrate', unwrappedNode, variable]).evaluate();
 }
 
 /**
- * 导数求解器（生成 f 与 f' 图像数据，明确 layerId 归属）
+ * 导数求解器
  */
 export function solveDerivative({ targetExpr, variable, order, conditionExpr }, ce) {
     const { expr: cleanExpr, inferredVar } = unwrapAST(targetExpr);
@@ -616,7 +746,7 @@ export function solveDerivative({ targetExpr, variable, order, conditionExpr }, 
 }
 
 /**
- * 极限求解器（明确 layerId 归属）
+ * 极限求解器
  */
 export function solveLimit({ targetExpr, variable, targetValue, conditionExpr }, ce) {
     const { expr: cleanExpr, inferredVar } = unwrapAST(targetExpr);
@@ -667,7 +797,7 @@ export function solveLimit({ targetExpr, variable, targetValue, conditionExpr },
 }
 
 /**
- * 积分求解器（明确 layerId 绑定：阴影和上下限点属于被积函数 'f'）
+ * 积分求解器
  */
 export function solveIntegral({ targetExpr, variable, lower, upper, isDefinite, conditionExpr }, ce) {
     const { expr: cleanExpr, inferredVar } = unwrapAST(targetExpr);
@@ -749,7 +879,7 @@ export function solveIntegral({ targetExpr, variable, lower, upper, isDefinite, 
 
     const condSuffix = conditionExpr ? ` \\quad (${ce.box(unwrapAST(conditionExpr).expr).toLatex()})` : '';
     steps.push({
-        title: "最终步骤: 合并各项并追加任意常数 C",
+        title: "最终步骤: 追加任意常数 C",
         latex: `\\int ${ce.box(cleanExpr).toLatex()} \\, d${varName} = ${finalLatexClean} + C${condSuffix}`
     });
 
@@ -766,7 +896,7 @@ export function solveIntegral({ targetExpr, variable, lower, upper, isDefinite, 
 }
 
 /**
- * 方程求解器（零点绑定至对应函数图层）
+ * 方程求解器
  */
 export function solveEquation({ lhs, rhs, variable, conditionExpr }, ce) {
     const { expr: cleanLHS } = unwrapAST(lhs);
