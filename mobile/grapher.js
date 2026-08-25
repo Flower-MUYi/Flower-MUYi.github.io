@@ -27,19 +27,19 @@ export class InteractiveGrapher {
 
     initDOM() {
         this.container.innerHTML = `
-            <div class="graph-wrapper" style="position: relative; width: 100%; height: 420px; background: #0f172a; border-radius: 12px; overflow: hidden; border: 1px solid #334155; user-select: none;">
+            <div class="graph-wrapper" style="position: relative; width: 100%; height: 320px; background: #0f172a; border-radius: 12px; overflow: hidden; border: 1px solid #334155; user-select: none; touch-action: none;">
                 <canvas id="graph-canvas" style="display: block; width: 100%; height: 100%; cursor: grab;"></canvas>
                 
-                <div id="graph-legend" style="position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 8px; z-index: 10;"></div>
+                <div id="graph-legend" style="position: absolute; top: 10px; left: 10px; display: flex; flex-wrap: wrap; gap: 6px; z-index: 10; max-width: calc(100% - 60px);"></div>
 
-                <div style="position: absolute; bottom: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10;">
-                    <button id="btn-zoom-in" title="放大" style="width: 32px; height: 32px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">+</button>
-                    <button id="btn-zoom-out" title="缩小" style="width: 32px; height: 32px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">−</button>
-                    <button id="btn-reset" title="复位原点" style="width: 32px; height: 32px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;">⟲</button>
-                    <button id="btn-autofit" title="自适应居中" style="width: 32px; height: 32px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;">⊡</button>
+                <div style="position: absolute; bottom: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 10;">
+                    <button id="btn-zoom-in" title="放大" style="width: 36px; height: 36px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; touch-action: manipulation;">+</button>
+                    <button id="btn-zoom-out" title="缩小" style="width: 36px; height: 36px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; touch-action: manipulation;">−</button>
+                    <button id="btn-reset" title="复位原点" style="width: 36px; height: 36px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; touch-action: manipulation;">⟲</button>
+                    <button id="btn-autofit" title="自适应居中" style="width: 36px; height: 36px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; touch-action: manipulation;">⊡</button>
                 </div>
 
-                <div id="graph-tooltip" style="position: absolute; display: none; pointer-events: none; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(4px); color: #f8fafc; border: 1px solid #475569; padding: 6px 10px; border-radius: 6px; font-size: 12px; line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 20;"></div>
+                <div id="graph-tooltip" style="position: absolute; display: none; pointer-events: none; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(4px); color: #f8fafc; border: 1px solid #475569; padding: 6px 10px; border-radius: 6px; font-size: 12px; line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 20;"></div>
             </div>
         `;
 
@@ -76,6 +76,71 @@ export class InteractiveGrapher {
                 this.canvas.style.cursor = this.hoveredPoint ? 'pointer' : 'grab';
             }
         });
+
+        // 移动端触摸交互支持 (单指平移、双指捏合缩放、点击特征点查看提示)
+        let touchMode = null;
+        let initialPinchDist = 0;
+        let initialScale = 40;
+        let pinchCenterMath = { x: 0, y: 0 };
+        let pinchCenterScreen = { x: 0, y: 0 };
+
+        const getTouchDist = (t1, t2) => Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        const getTouchCenter = (t1, t2) => ({ x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 });
+
+        this.canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchMode = 'drag';
+                const t = e.touches[0];
+                this.isDragging = true;
+                this.dragStart = { x: t.clientX, y: t.clientY };
+                this.viewStart = { x: this.view.centerX, y: this.view.centerY };
+                this.handleMouseMove(t);
+            } else if (e.touches.length === 2) {
+                touchMode = 'pinch';
+                this.isDragging = false;
+                initialPinchDist = getTouchDist(e.touches[0], e.touches[1]);
+                initialScale = this.view.scale;
+
+                const center = getTouchCenter(e.touches[0], e.touches[1]);
+                const rect = this.canvas.getBoundingClientRect();
+                pinchCenterScreen = { x: center.x - rect.left, y: center.y - rect.top };
+                pinchCenterMath = {
+                    x: this.screenToMathX(pinchCenterScreen.x),
+                    y: this.screenToMathY(pinchCenterScreen.y)
+                };
+            }
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (touchMode === 'drag' && e.touches.length === 1) {
+                const t = e.touches[0];
+                const dx = t.clientX - this.dragStart.x;
+                const dy = t.clientY - this.dragStart.y;
+                this.view.centerX = this.viewStart.x - dx / this.view.scale;
+                this.view.centerY = this.viewStart.y + dy / this.view.scale;
+                this.render();
+                this.handleMouseMove(t);
+            } else if (touchMode === 'pinch' && e.touches.length === 2) {
+                const currentDist = getTouchDist(e.touches[0], e.touches[1]);
+                if (initialPinchDist > 0) {
+                    const factor = currentDist / initialPinchDist;
+                    const newScale = Math.min(Math.max(initialScale * factor, 5), 1000);
+                    this.view.centerX = pinchCenterMath.x - (pinchCenterScreen.x - this.width / 2) / newScale;
+                    this.view.centerY = pinchCenterMath.y + (pinchCenterScreen.y - this.height / 2) / newScale;
+                    this.view.scale = newScale;
+                    this.render();
+                }
+            }
+        }, { passive: false });
+
+        const endTouch = () => {
+            touchMode = null;
+            this.isDragging = false;
+        };
+
+        this.canvas.addEventListener('touchend', endTouch);
+        this.canvas.addEventListener('touchcancel', endTouch);
 
         this.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
