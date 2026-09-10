@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>公式 AST 语法树解析</title>
 
+    <!-- KaTeX 数学排版引擎 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -128,6 +132,22 @@
             font-size: 1.3rem;
             border: 1px solid #334155;
             border-radius: 8px;
+        }
+
+        /* KaTeX 公式在图例与图像浮窗中的优化排版 */
+        #graph-legend .katex {
+            font-size: 1.05em;
+            color: #f8fafc;
+        }
+
+        #graph-tooltip .katex {
+            font-size: 1.15em;
+            color: #38bdf8;
+        }
+
+        #graph-tooltip .katex-html,
+        #graph-legend .katex-html {
+            white-space: nowrap;
         }
     </style>
 </head>

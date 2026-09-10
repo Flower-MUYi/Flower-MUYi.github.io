@@ -13,6 +13,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- KaTeX 数学排版引擎 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
     <script>
         (function () {
             var t = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
@@ -382,6 +386,22 @@
         .toast.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+        }
+
+        /* KaTeX 公式在图例与图像浮窗中的优化排版 */
+        #graph-legend .katex {
+            font-size: 1.0em;
+            color: #f8fafc;
+        }
+
+        #graph-tooltip .katex {
+            font-size: 1.1em;
+            color: #38bdf8;
+        }
+
+        #graph-tooltip .katex-html,
+        #graph-legend .katex-html {
+            white-space: nowrap;
         }
     </style>
 </head>

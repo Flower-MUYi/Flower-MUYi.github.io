@@ -552,8 +552,8 @@ export function solveDerivative({ targetExpr, variable, order, conditionExpr }, 
 
     const plotData = {
         layers: [
-            { id: 'f', label: `f(${varName}) = ${cleanMathLatex(ce.box(cleanExpr).toLatex())}`, color: '#38bdf8', visible: true, fn },
-            { id: 'df', label: `f'(${varName}) = ${cleanMathLatex(finalSimplified.toLatex())}`, color: '#f97316', dash: [5, 4], visible: true, fn: dfn }
+            { id: 'f', label: `f(${varName}) = ${cleanMathLatex(ce.box(cleanExpr).toLatex())}`, name: `原函数 f(${varName})`, latex: `f(${varName}) = ${cleanMathLatex(ce.box(cleanExpr).toLatex())}`, color: '#38bdf8', visible: true, fn },
+            { id: 'df', label: `f'(${varName}) = ${cleanMathLatex(finalSimplified.toLatex())}`, name: `导函数 f'(${varName})`, latex: `f'(${varName}) = ${cleanMathLatex(finalSimplified.toLatex())}`, color: '#f97316', dash: [5, 4], visible: true, fn: dfn }
         ],
         points: []
     };
@@ -1211,7 +1211,7 @@ export function solveIntegral({ targetExpr, variable, lower, upper, isDefinite, 
                                     return formatOutput({
                                         resultLatex: `\\text{积分发散 (在 } ${varName} = ${toRational(rootVal).latex} \\text{ 处存在奇点)}`,
                                         steps,
-                                        plotData: { layers: [{ id: 'f', label: '被积函数 f(x)', color: '#38bdf8', visible: true, fn: integrandFn }] }
+                                        plotData: { layers: [{ id: 'f', label: '被积函数 f(x)', name: '被积函数', latex: 'f(x)', color: '#38bdf8', visible: true, fn: integrandFn }] }
                                     });
                                 }
                             }
@@ -1235,15 +1235,15 @@ export function solveIntegral({ targetExpr, variable, lower, upper, isDefinite, 
         const primitiveFn = buildMathFunction(finalF.json, varName, ce);
         const plotData = {
             layers: [
-                { id: 'f', label: `被积函数 f(${varName})`, color: '#38bdf8', visible: true, fn: integrandFn },
-                { id: 'F', label: `原函数 F(${varName})`, color: '#c084fc', visible: true, fn: primitiveFn }
+                { id: 'f', label: `被积函数 f(${varName})`, name: '被积函数', latex: `f(${varName})`, color: '#38bdf8', visible: true, fn: integrandFn },
+                { id: 'F', label: `原函数 F(${varName})`, name: '原函数', latex: `F(${varName})`, color: '#c084fc', visible: true, fn: primitiveFn }
             ],
             areas: (typeof numL === 'number' && typeof numU === 'number') ? [
                 { layerId: 'f', from: Math.min(numL, numU), to: Math.max(numL, numU), topFn: integrandFn, bottomFn: () => 0, color: 'rgba(56, 189, 248, 0.25)' }
             ] : [],
             points: (typeof numL === 'number' && typeof numU === 'number') ? [
-                { layerId: 'f', x: numL, y: integrandFn(numL), label: `积分下限 a=${numL}`, style: 'solid', color: '#38bdf8' },
-                { layerId: 'f', x: numU, y: integrandFn(numU), label: `积分上限 b=${numU}`, style: 'solid', color: '#38bdf8' }
+                { layerId: 'f', x: numL, y: integrandFn(numL), label: `积分下限 a=${numL}`, name: '积分下限', latex: `a = ${numL}`, style: 'solid', color: '#38bdf8' },
+                { layerId: 'f', x: numU, y: integrandFn(numU), label: `积分上限 b=${numU}`, name: '积分上限', latex: `b = ${numU}`, style: 'solid', color: '#38bdf8' }
             ] : []
         };
 
@@ -1268,8 +1268,8 @@ export function solveIntegral({ targetExpr, variable, lower, upper, isDefinite, 
     const primitiveFn = buildMathFunction(finalF.json, varName, ce);
     const plotData = {
         layers: [
-            { id: 'f', label: `被积函数 f(${varName})`, color: '#38bdf8', visible: true, fn: integrandFn },
-            { id: 'F', label: `原函数 F(${varName}) [C=0]`, color: '#c084fc', visible: true, fn: primitiveFn }
+            { id: 'f', label: `被积函数 f(${varName})`, name: '被积函数', latex: `f(${varName})`, color: '#38bdf8', visible: true, fn: integrandFn },
+            { id: 'F', label: `原函数 F(${varName}) [C=0]`, name: '原函数 (C=0)', latex: `F(${varName})`, color: '#c084fc', visible: true, fn: primitiveFn }
         ],
         points: []
     };
@@ -1340,6 +1340,8 @@ export function solveLimit({ targetExpr, variable, targetValue, conditionExpr },
                 y: limitNum,
                 layerId: 'f',
                 label: `极限值 L = ${toRational(limitNum).latex}`,
+                name: '极限值',
+                latex: `L = ${toRational(limitNum).latex}`,
                 style: 'hollow',
                 color: '#ef4444'
             });
@@ -1350,7 +1352,7 @@ export function solveLimit({ targetExpr, variable, targetValue, conditionExpr },
         }
 
         const plotData = {
-            layers: [{ id: 'f', label: `f(${varName})`, color: '#38bdf8', visible: true, fn }],
+            layers: [{ id: 'f', label: `f(${varName})`, name: `函数 f(${varName})`, latex: `f(${varName})`, color: '#38bdf8', visible: true, fn }],
             points: limitPoints
         };
         return formatOutput({ resultLatex: cleanMathLatex(directVal.toLatex()), steps, plotData });
@@ -1485,6 +1487,8 @@ export function solveEquation({ lhs, rhs, variable, conditionExpr }, ce) {
         x: r,
         y: 0,
         label: `实根 (${toRational(r).latex}, 0)`,
+        name: '方程实根',
+        latex: `\\left(${toRational(r).latex}, 0\\right)`,
         style: 'solid',
         color: '#22c55e'
     }));
@@ -1494,6 +1498,9 @@ export function solveEquation({ lhs, rhs, variable, conditionExpr }, ce) {
         x: d.val,
         y: 0,
         label: `增根 (${toRational(d.val).latex}): ${d.reason}`,
+        name: '舍去增根',
+        latex: `x = ${toRational(d.val).latex}`,
+        note: d.reason,
         style: 'hollow',
         color: '#ef4444'
     }));
@@ -1503,8 +1510,8 @@ export function solveEquation({ lhs, rhs, variable, conditionExpr }, ce) {
 
     const plotData = {
         layers: [
-            { id: 'lhs', label: `LHS = ${cleanMathLatex(ce.box(cleanLHS).toLatex())}`, color: '#38bdf8', visible: true, fn: fLHS },
-            { id: 'rhs', label: `RHS = ${cleanMathLatex(ce.box(cleanRHS).toLatex())}`, color: '#f43f5e', dash: [4, 4], visible: true, fn: fRHS }
+            { id: 'lhs', label: `LHS = ${cleanMathLatex(ce.box(cleanLHS).toLatex())}`, name: '左侧方程 LHS', latex: `\\text{LHS} = ${cleanMathLatex(ce.box(cleanLHS).toLatex())}`, color: '#38bdf8', visible: true, fn: fLHS },
+            { id: 'rhs', label: `RHS = ${cleanMathLatex(ce.box(cleanRHS).toLatex())}`, name: '右侧方程 RHS', latex: `\\text{RHS} = ${cleanMathLatex(ce.box(cleanRHS).toLatex())}`, color: '#f43f5e', dash: [4, 4], visible: true, fn: fRHS }
         ],
         points: [...rootPoints, ...discardedPoints]
     };
@@ -1545,6 +1552,8 @@ export function solveFunctionDeclaration({ name, expr, conditionExpr }, ce) {
             x: 0,
             y: yIntercept,
             label: `Y轴截距 (0, ${toRational(yIntercept).latex})`,
+            name: 'Y轴截距',
+            latex: `\\left(0, ${toRational(yIntercept).latex}\\right)`,
             style: 'solid',
             color: '#38bdf8'
         });
@@ -1573,6 +1582,8 @@ export function solveFunctionDeclaration({ name, expr, conditionExpr }, ce) {
                             x: rx,
                             y: ry,
                             label: `驻点 (${toRational(rx).latex}, ${toRational(ry).latex})`,
+                            name: '极值驻点',
+                            latex: `\\left(${toRational(rx).latex}, ${toRational(ry).latex}\\right)`,
                             style: 'solid',
                             color: '#eab308'
                         });
@@ -1588,7 +1599,7 @@ export function solveFunctionDeclaration({ name, expr, conditionExpr }, ce) {
 
     const plotData = {
         layers: [
-            { id: 'f', label: `f(x) = ${cleanMathLatex(exprBox.toLatex())}`, color: '#38bdf8', visible: true, fn }
+            { id: 'f', label: `f(x) = ${cleanMathLatex(exprBox.toLatex())}`, name: '函数 f(x)', latex: `f(x) = ${cleanMathLatex(exprBox.toLatex())}`, color: '#38bdf8', visible: true, fn }
         ],
         points
     };
@@ -1674,9 +1685,9 @@ export function solveFirstOrderODE({ lhs, rhs, conditionExpr }, ce) {
 
     const plotData = {
         layers: [
-            { id: 'c0', label: '特解 (C = 0)', color: '#38bdf8', visible: true, fn: fnC0 },
-            { id: 'c1', label: '积分曲线 (C = 1)', color: '#a855f7', dash: [4, 4], visible: true, fn: fnC1 },
-            { id: 'cn1', label: '积分曲线 (C = -1)', color: '#f97316', dash: [4, 4], visible: true, fn: fnCN1 }
+            { id: 'c0', label: '特解 (C = 0)', name: '特解', latex: 'y(x) \\; [C=0]', color: '#38bdf8', visible: true, fn: fnC0 },
+            { id: 'c1', label: '积分曲线 (C = 1)', name: '积分曲线', latex: 'y(x) \\; [C=1]', color: '#a855f7', dash: [4, 4], visible: true, fn: fnC1 },
+            { id: 'cn1', label: '积分曲线 (C = -1)', name: '积分曲线', latex: 'y(x) \\; [C=-1]', color: '#f97316', dash: [4, 4], visible: true, fn: fnCN1 }
         ],
         points: []
     };

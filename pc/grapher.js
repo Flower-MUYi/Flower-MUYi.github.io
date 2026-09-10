@@ -1,5 +1,71 @@
 // grapher.js —— 交互式 2D Canvas 可视化引擎 (含 RAF 帧节流与 LOD 动态降采样优化)
 
+function escapeHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+export function parseMathString(str) {
+    if (!str && str !== 0) return { name: '', latex: '' };
+    str = String(str).trim();
+
+    // 匹配中文/分类名称前缀，例如：驻点 (1/2, 0), Y轴截距 (0, 1), 积分下限 a=1, 特解 (C = 0)
+    const match = str.match(/^([\u4e00-\u9fa5A-Za-z0-9_]+轴?[\u4e00-\u9fa5\w\s]*?)\s*[:：]?\s*([\(（\[].*|L\s*=.*|a\s*=.*|b\s*=.*|f\(.*|F\(.*|y\(.*|C\s*=.*)$/);
+    if (match) {
+        let name = match[1].trim();
+        let latex = match[2].trim();
+        let note = '';
+        const noteMatch = latex.match(/^(.*?)\s*[:：]\s*([\u4e00-\u9fa5\w\s]+)$/);
+        if (noteMatch) {
+            latex = noteMatch[1].trim();
+            note = noteMatch[2].trim();
+        }
+        return { name, latex, note };
+    }
+
+    return { name: '', latex: str };
+}
+
+export function renderMath(latex, options = {}) {
+    if (!latex && latex !== 0) return '';
+    let formula = String(latex).trim();
+    if (!formula) return '';
+
+    // 若全局 KaTeX 引擎可用，进行高质量排版输出
+    if (typeof window !== 'undefined' && window.katex && typeof window.katex.renderToString === 'function') {
+        try {
+            return window.katex.renderToString(formula, {
+                displayMode: options.displayMode || false,
+                throwOnError: false
+            });
+        } catch (e) {
+            console.warn('KaTeX render warning:', e);
+        }
+    }
+
+    // 兜底：若 KaTeX 暂未加载，动态拉取并在加载完成后广播事件
+    if (typeof document !== 'undefined' && !window.__katexLoading && !window.katex) {
+        window.__katexLoading = true;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css';
+        document.head.appendChild(link);
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js';
+        script.onload = () => {
+            window.dispatchEvent(new CustomEvent('katex-loaded'));
+        };
+        document.head.appendChild(script);
+    }
+
+    return `<span class="raw-math">${escapeHtml(formula)}</span>`;
+}
+
 export class InteractiveGrapher {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
@@ -16,6 +82,7 @@ export class InteractiveGrapher {
 
         this.plotData = { layers: [], points: [], areas: [] };
         this.hoveredPoint = null;
+        this.hoveredCurve = null;
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
         this.viewStart = { x: 0, y: 0 };
@@ -24,6 +91,12 @@ export class InteractiveGrapher {
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
+
+        // 当 KaTeX 动态加载就绪后自动重绘刷新公式
+        window.addEventListener('katex-loaded', () => {
+            this.updateLegend();
+            this.requestRender();
+        });
     }
 
     initDOM() {
@@ -31,7 +104,7 @@ export class InteractiveGrapher {
             <div class="graph-wrapper" style="position: relative; width: 100%; height: 420px; background: #0f172a; border-radius: 12px; overflow: hidden; border: 1px solid #334155; user-select: none;">
                 <canvas id="graph-canvas" style="display: block; width: 100%; height: 100%; cursor: grab;"></canvas>
                 
-                <div id="graph-legend" style="position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 8px; z-index: 10;"></div>
+                <div id="graph-legend" style="position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 8px; z-index: 10; max-width: calc(100% - 60px);"></div>
 
                 <div style="position: absolute; bottom: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 10;">
                     <button id="btn-zoom-in" title="放大" style="width: 32px; height: 32px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">+</button>
@@ -40,7 +113,7 @@ export class InteractiveGrapher {
                     <button id="btn-autofit" title="自适应居中" style="width: 32px; height: 32px; background: #1e293b; color: #94a3b8; border: 1px solid #475569; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;">⊡</button>
                 </div>
 
-                <div id="graph-tooltip" style="position: absolute; display: none; pointer-events: none; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(4px); color: #f8fafc; border: 1px solid #475569; padding: 6px 10px; border-radius: 6px; font-size: 12px; line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 20;"></div>
+                <div id="graph-tooltip" style="position: absolute; display: none; pointer-events: none; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); color: #f8fafc; border: 1px solid rgba(148, 163, 184, 0.35); padding: 8px 12px; border-radius: 8px; font-size: 12px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 30; max-width: 320px; transition: opacity 0.15s ease;"></div>
             </div>
         `;
 
@@ -195,35 +268,53 @@ export class InteractiveGrapher {
 
     updateLegend() {
         this.legendContainer.innerHTML = '';
-        if (!this.plotData.layers) return;
+        if (!this.plotData.layers || this.plotData.layers.length === 0) return;
 
         this.plotData.layers.forEach((layer) => {
             const item = document.createElement('div');
+            item.className = 'graph-legend-item';
             item.style.cssText = `
-                display: flex; align-items: center; gap: 6px; background: rgba(30, 41, 59, 0.85);
-                backdrop-filter: blur(4px); border: 1px solid #475569; padding: 4px 8px;
-                border-radius: 6px; font-size: 12px; color: #cbd5e1; cursor: pointer; transition: all 0.2s;
+                display: inline-flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.88);
+                backdrop-filter: blur(8px); border: 1px solid rgba(71, 85, 105, 0.75); padding: 4px 10px;
+                border-radius: 8px; font-size: 12px; color: #e2e8f0; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3); user-select: none;
             `;
 
             const colorBadge = document.createElement('span');
-            colorBadge.style.cssText = `width: 12px; height: 12px; border-radius: 3px; background: ${layer.color}; display: inline-block;`;
+            colorBadge.style.cssText = `width: 10px; height: 10px; border-radius: 3px; background: ${layer.color}; display: inline-block; flex-shrink: 0; box-shadow: 0 0 6px ${layer.color}88;`;
 
-            const label = document.createElement('span');
-            label.textContent = layer.label;
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'graph-legend-formula';
+            labelSpan.style.cssText = `display: inline-flex; align-items: center; gap: 4px; line-height: 1.2;`;
+
+            const parsed = layer.latex ? { name: layer.name, latex: layer.latex } : parseMathString(layer.label);
+            let contentHtml = '';
+            if (parsed.name) {
+                contentHtml += `<span style="font-size: 11px; color: #94a3b8; font-weight: 500;">${escapeHtml(parsed.name)}</span>`;
+            }
+            if (parsed.latex) {
+                contentHtml += `<span class="katex-formula" style="color: #f8fafc;">${renderMath(parsed.latex)}</span>`;
+            } else if (!parsed.name) {
+                contentHtml = escapeHtml(layer.label || '');
+            }
+            labelSpan.innerHTML = contentHtml;
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = layer.visible !== false;
             checkbox.style.cursor = 'pointer';
+            checkbox.style.accentColor = layer.color || '#38bdf8';
+            checkbox.style.margin = '0';
 
             item.appendChild(checkbox);
             item.appendChild(colorBadge);
-            item.appendChild(label);
+            item.appendChild(labelSpan);
 
             item.onclick = (e) => {
                 if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
                 layer.visible = checkbox.checked;
-                item.style.opacity = layer.visible ? '1' : '0.5';
+                item.style.opacity = layer.visible ? '1' : '0.45';
+                item.style.filter = layer.visible ? 'none' : 'grayscale(0.6)';
                 this.detectIntersections();
                 this.requestRender();
             };
@@ -262,10 +353,15 @@ export class InteractiveGrapher {
                         const rootX = (l + r) / 2;
                         const rootY = f1(rootX);
                         if (!isNaN(rootY) && Math.abs(rootY) < 1e5) {
+                            const name1 = activeLayers[i].name || activeLayers[i].label;
+                            const name2 = activeLayers[j].name || activeLayers[j].label;
                             this.detectedIntersections.push({
                                 x: rootX,
                                 y: rootY,
-                                label: `交点 (${activeLayers[i].label} ∩ ${activeLayers[j].label})`,
+                                label: `交点 (${name1} ∩ ${name2})`,
+                                name: '曲线交点',
+                                latex: `\\left(${rootX.toFixed(2)}, ${rootY.toFixed(2)}\\right)`,
+                                note: `${name1} ∩ ${name2}`,
                                 type: 'intersection',
                                 style: 'solid',
                                 color: '#eab308'
@@ -286,8 +382,9 @@ export class InteractiveGrapher {
         const sy = e.clientY - rect.top;
 
         const allVisiblePoints = this.getVisiblePoints();
-        const hitRadius = 8;
+        const hitRadius = 9;
 
+        // 1. 优先吸附已有几何特征点 (极值点、截距、方程根、交点等)
         const clustered = allVisiblePoints.filter(p => {
             const px = this.mathToScreenX(p.x);
             const py = this.mathToScreenY(p.y);
@@ -296,33 +393,124 @@ export class InteractiveGrapher {
 
         if (clustered.length > 0) {
             this.hoveredPoint = clustered;
+            this.hoveredCurve = null;
             this.canvas.style.cursor = 'pointer';
 
             const p0 = clustered[0];
             const px = this.mathToScreenX(p0.x);
             const py = this.mathToScreenY(p0.y);
 
-            const labelsHtml = clustered.map(p => `
-                <div style="margin-bottom: 2px;">
-                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color || '#38bdf8'};margin-right:4px;"></span>
-                    <b>${p.label || '特征点'}</b>
+            const labelsHtml = clustered.map(p => {
+                const parsed = p.latex ? { name: p.name, latex: p.latex, note: p.note } : parseMathString(p.label);
+                const titleText = parsed.name || p.name || '特征点';
+                const formulaHtml = parsed.latex ? renderMath(parsed.latex) : '';
+                const noteHtml = (p.note || parsed.note) ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px;">${escapeHtml(p.note || parsed.note)}</div>` : '';
+
+                return `
+                    <div style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color || '#38bdf8'};flex-shrink:0;box-shadow:0 0 6px ${p.color || '#38bdf8'};"></span>
+                            <span style="font-weight:600;font-size:12px;color:#f1f5f9;">${escapeHtml(titleText)}</span>
+                        </div>
+                        ${formulaHtml ? `<div style="font-size:13px;color:#38bdf8;padding:2px 0;">${formulaHtml}</div>` : ''}
+                        ${noteHtml}
+                    </div>
+                `;
+            }).join('');
+
+            const coordHtml = `
+                <div style="display:flex;gap:12px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:4px;">
+                    <span>x: <b style="color:#e2e8f0;">${p0.x.toFixed(3)}</b></span>
+                    <span>y: <b style="color:#e2e8f0;">${p0.y.toFixed(3)}</b></span>
                 </div>
-            `).join('');
+            `;
+
+            this.tooltip.innerHTML = labelsHtml + coordHtml;
+            this.tooltip.style.display = 'block';
+
+            const tipWidth = this.tooltip.offsetWidth || 180;
+            const tipHeight = this.tooltip.offsetHeight || 60;
+            let left = px + 14;
+            let top = py - tipHeight / 2;
+            if (left + tipWidth > this.width - 10) left = px - tipWidth - 14;
+            if (left < 10) left = 10;
+            if (top + tipHeight > this.height - 10) top = this.height - tipHeight - 10;
+            if (top < 10) top = 10;
+
+            this.tooltip.style.left = `${left}px`;
+            this.tooltip.style.top = `${top}px`;
+            this.requestRender();
+            return;
+        }
+
+        // 2. 若未吸附到特征点，检测鼠标是否靠近可见曲线 (曲线悬停与吸附追踪)
+        let nearestCurve = null;
+        let minCurveDist = 10;
+        const mathX = this.screenToMathX(sx);
+
+        const activeLayers = (this.plotData.layers || []).filter(l => l.visible !== false && typeof l.fn === 'function');
+        for (const layer of activeLayers) {
+            try {
+                const mathY = layer.fn(mathX);
+                if (typeof mathY === 'number' && !isNaN(mathY) && isFinite(mathY)) {
+                    const screenY = this.mathToScreenY(mathY);
+                    const dist = Math.abs(screenY - sy);
+                    if (dist < minCurveDist) {
+                        minCurveDist = dist;
+                        nearestCurve = {
+                            layer,
+                            x: mathX,
+                            y: mathY,
+                            screenX: sx,
+                            screenY: screenY
+                        };
+                    }
+                }
+            } catch (e) { }
+        }
+
+        if (nearestCurve) {
+            this.hoveredPoint = null;
+            this.hoveredCurve = nearestCurve;
+            this.canvas.style.cursor = 'crosshair';
+
+            const layer = nearestCurve.layer;
+            const parsed = layer.latex ? { name: layer.name, latex: layer.latex } : parseMathString(layer.label);
+            const formulaHtml = parsed.latex ? renderMath(parsed.latex) : escapeHtml(layer.label || '');
 
             this.tooltip.innerHTML = `
-                ${labelsHtml}
-                <div style="color: #94a3b8; font-family: monospace; font-size: 11px; margin-top: 4px;">
-                    x = ${p0.x.toFixed(3)}, y = ${p0.y.toFixed(3)}
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${layer.color || '#38bdf8'};flex-shrink:0;box-shadow:0 0 6px ${layer.color || '#38bdf8'};"></span>
+                    <span style="font-weight:600;font-size:12px;color:#f1f5f9;">${escapeHtml(parsed.name || '函数曲线')}</span>
+                </div>
+                <div style="font-size:13px;color:#38bdf8;padding:2px 0;margin-bottom:4px;">
+                    ${formulaHtml}
+                </div>
+                <div style="display:flex;gap:12px;color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:11px;">
+                    <span>x: <b style="color:#e2e8f0;">${nearestCurve.x.toFixed(3)}</b></span>
+                    <span>y: <b style="color:#e2e8f0;">${nearestCurve.y.toFixed(3)}</b></span>
                 </div>
             `;
             this.tooltip.style.display = 'block';
-            this.tooltip.style.left = `${Math.min(px + 12, this.width - 160)}px`;
-            this.tooltip.style.top = `${Math.max(py - 20, 10)}px`;
+
+            const tipWidth = this.tooltip.offsetWidth || 180;
+            const tipHeight = this.tooltip.offsetHeight || 60;
+            let left = sx + 14;
+            let top = nearestCurve.screenY - tipHeight / 2;
+            if (left + tipWidth > this.width - 10) left = sx - tipWidth - 14;
+            if (left < 10) left = 10;
+            if (top + tipHeight > this.height - 10) top = this.height - tipHeight - 10;
+            if (top < 10) top = 10;
+
+            this.tooltip.style.left = `${left}px`;
+            this.tooltip.style.top = `${top}px`;
         } else {
             this.hoveredPoint = null;
+            this.hoveredCurve = null;
             this.canvas.style.cursor = 'grab';
             this.tooltip.style.display = 'none';
         }
+
         this.requestRender();
     }
 
@@ -520,5 +708,28 @@ export class InteractiveGrapher {
                 ctx.stroke();
             }
         });
+
+        // 若当前鼠标吸附在某条曲线上，渲染动态吸附追踪圆点
+        if (this.hoveredCurve && !this.hoveredPoint) {
+            const hc = this.hoveredCurve;
+            const sx = this.mathToScreenX(hc.x);
+            const sy = this.mathToScreenY(hc.y);
+            const color = hc.layer.color || '#38bdf8';
+
+            // 外发光光晕
+            ctx.fillStyle = color.startsWith('#') ? `${color}44` : 'rgba(56, 189, 248, 0.3)';
+            ctx.beginPath();
+            ctx.arc(sx, sy, 9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 中心实心圆点与白色边框
+            ctx.beginPath();
+            ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
     }
 }
