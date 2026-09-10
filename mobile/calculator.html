@@ -17,6 +17,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 
+    <!-- MathLive: 所见即所得数学公式排版与交互输入引擎 (先行载入自定义元素) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
+    <script>
+        // MathLive CDN 容灾降级检测：若 jsdelivr 源未就绪则动态降级拉取 unpkg 备用源
+        window.addEventListener('error', function (e) {
+            if (e.target && e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('cdn.jsdelivr.net/npm/mathlive')) {
+                console.warn('Jsdelivr MathLive 加载异常，正在尝试 unpkg 备用源...');
+                var fb = document.createElement('script');
+                fb.defer = true;
+                fb.src = 'https://unpkg.com/mathlive';
+                document.head.appendChild(fb);
+            }
+        }, true);
+    </script>
+
     <script>
         (function () {
             var t = localStorage.getItem('flowermuyi_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
@@ -424,8 +439,8 @@
                 <span style="font-size: 0.75rem; color: var(--primary);">支持拖拽与触控输入</span>
             </div>
 
-            <!-- 公式输入框（开启自动移动端虚拟键盘支持） -->
-            <math-field id="myMathInput" math-virtual-keyboard-policy="auto"></math-field>
+            <!-- 公式输入框（开启自动移动端虚拟键盘支持并预置示例） -->
+            <math-field id="myMathInput" math-virtual-keyboard-policy="auto">x^2 - 4 = 0</math-field>
 
             <!-- 移动端快捷数学键栏 -->
             <div class="quick-toolbar-wrapper">
@@ -499,10 +514,97 @@
     <!-- 复制提示 Toast -->
     <div id="toast" class="toast">已复制到剪贴板</div>
 
-    <!-- 使用 ES Module 现代模块化方式引入 -->
+    <!-- 基础交互逻辑：即时响应快捷符号、清空、退格与主题切换（兼容 file:// 与无网络环境） -->
+    <script>
+        (function() {
+            const mathInput = document.getElementById('myMathInput');
+            const resultOutput = document.getElementById('resultOutput');
+            const copyResultBtn = document.getElementById('copyResultBtn');
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const toast = document.getElementById('toast');
+
+            function showToast(msg) {
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            }
+
+            // 主题切换
+            function updateThemeIcon(t) {
+                if (themeToggleBtn) {
+                    themeToggleBtn.innerHTML = t === 'dark' ? '☀️' : '🌙';
+                }
+            }
+
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            updateThemeIcon(currentTheme);
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+                    const next = cur === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('flowermuyi_theme', next); } catch (e) { }
+                    updateThemeIcon(next);
+                });
+            }
+
+            // 移动端快捷符号点击插入 (兼容多种输入模式)
+            document.querySelectorAll('.quick-btn[data-insert]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const latex = btn.getAttribute('data-insert');
+                    mathInput.focus();
+                    if (typeof mathInput.executeCommand === 'function') {
+                        mathInput.executeCommand(['insert', latex]);
+                    } else {
+                        mathInput.value = (mathInput.value || '') + latex;
+                        mathInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+            });
+
+            // 清空与退格
+            document.getElementById('btnClear')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                mathInput.setValue ? mathInput.setValue('') : (mathInput.value = '');
+                mathInput.focus();
+                mathInput.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+
+            document.getElementById('btnBackspace')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                mathInput.focus();
+                if (typeof mathInput.executeCommand === 'function') {
+                    mathInput.executeCommand('deleteBackward');
+                } else {
+                    mathInput.value = (mathInput.value || '').slice(0, -1);
+                    mathInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+
+            // 复制计算结果 LaTeX
+            if (copyResultBtn) {
+                copyResultBtn.addEventListener('click', async () => {
+                    const val = resultOutput ? resultOutput.value : '';
+                    if (!val || val === '等待计算...' || val === '请输入有效的公式') {
+                        showToast('暂无可复制的结果');
+                        return;
+                    }
+                    try {
+                        await navigator.clipboard.writeText(val);
+                        showToast('已复制 LaTeX 公式');
+                    } catch (e) {
+                        showToast('复制失败，请手动长按复制');
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <!-- 使用 ES Module 现代模块化方式引入分步求解与 2D 绘图引擎 -->
     <script type="module">
-        import { MathfieldElement } from 'https://unpkg.com/mathlive?module';
-        import { ComputeEngine } from 'https://unpkg.com/@cortex-js/compute-engine?module';
         import { routeCalculation } from './router.js';
         import { InteractiveGrapher } from './grapher.js';
 
@@ -511,151 +613,136 @@
         const calcBtn = document.getElementById('calcBtn');
         const resultOutput = document.getElementById('resultOutput');
         const stepsContainer = document.getElementById('stepsContainer');
-        const copyResultBtn = document.getElementById('copyResultBtn');
-        const themeToggleBtn = document.getElementById('themeToggleBtn');
-        const toast = document.getElementById('toast');
         const grapher = new InteractiveGrapher('graphContainer');
 
-        function showToast(msg) {
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
-        }
+        let ce = null;
 
-        // 主题切换
-        function updateThemeIcon(t) {
-            if (themeToggleBtn) {
-                themeToggleBtn.innerHTML = t === 'dark' ? '☀️' : '🌙';
-            }
-        }
-
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-        updateThemeIcon(currentTheme);
-
-        themeToggleBtn.addEventListener('click', () => {
-            const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-            const next = cur === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            try { localStorage.setItem('flowermuyi_theme', next); } catch (e) { }
-            updateThemeIcon(next);
-        });
-
-        // 移动端快捷符号点击插入
-        document.querySelectorAll('.quick-btn[data-insert]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const latex = btn.getAttribute('data-insert');
-                mathInput.focus();
-                mathInput.executeCommand(['insert', latex]);
-            });
-        });
-
-        // 清空与退格
-        document.getElementById('btnClear').addEventListener('click', (e) => {
-            e.preventDefault();
-            mathInput.setValue('');
-            mathInput.focus();
-        });
-
-        document.getElementById('btnBackspace').addEventListener('click', (e) => {
-            e.preventDefault();
-            mathInput.focus();
-            mathInput.executeCommand('deleteBackward');
-        });
-
-        // 复制计算结果 LaTeX
-        copyResultBtn.addEventListener('click', async () => {
-            const val = resultOutput.value;
-            if (!val || val === '等待计算...' || val === '请输入有效的公式') {
-                showToast('暂无可复制的结果');
-                return;
-            }
+        function updateAST() {
+            let mathJSON = null;
             try {
-                await navigator.clipboard.writeText(val);
-                showToast('已复制 LaTeX 公式');
-            } catch (e) {
-                showToast('复制失败，请手动长按复制');
-            }
-        });
-
-        try {
-            const ce = new ComputeEngine();
-            MathfieldElement.computeEngine = ce;
-
-            function updateAST() {
-                let mathJSON;
                 if (mathInput.expression && mathInput.expression.json) {
                     mathJSON = mathInput.expression.json;
-                } else {
+                } else if (typeof mathInput.getValue === 'function') {
                     mathJSON = mathInput.getValue('math-json');
                 }
-
-                if (typeof mathJSON === 'string') {
-                    try { mathJSON = JSON.parse(mathJSON); } catch (e) { }
-                }
-
-                ASTOutput.textContent = JSON.stringify(mathJSON, null, 2);
+            } catch (e) {
+                mathJSON = { error: e.message };
             }
 
-            mathInput.addEventListener('input', updateAST);
-            mathInput.addEventListener('DOMContentLoaded', updateAST);
-
-            if (mathInput.expression) {
-                updateAST();
-            } else {
-                setTimeout(updateAST, 300);
+            if (typeof mathJSON === 'string') {
+                try { mathJSON = JSON.parse(mathJSON); } catch (e) { }
             }
 
-            // 计算与渲染逻辑
-            calcBtn.addEventListener('click', () => {
-                const currentAST = mathInput.expression ? mathInput.expression.json : null;
-                if (!currentAST) {
-                    resultOutput.value = "请输入有效的公式";
-                    return;
-                }
-
-                // 调用路由器分发任务
-                const output = routeCalculation(currentAST, ce);
-
-                // 渲染最终结果
-                resultOutput.value = output.resultLatex;
-
-                // 动态生成可视化的推导步骤 (采用和结果一致的 math-field 组件)
-                stepsContainer.innerHTML = '';
-                if (output.steps && output.steps.length > 0) {
-                    output.steps.forEach(step => {
-                        const item = document.createElement('div');
-                        item.className = 'step-item';
-
-                        const label = document.createElement('div');
-                        label.className = 'step-item-title';
-                        label.textContent = step.title;
-
-                        const stepField = document.createElement('math-field');
-                        stepField.setAttribute('readonly', '');
-                        stepField.className = 'step-math';
-                        stepField.value = step.latex;
-
-                        item.appendChild(label);
-                        item.appendChild(stepField);
-                        stepsContainer.appendChild(item);
-                    });
-                } else {
-                    stepsContainer.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-muted); padding: 8px 0;">已直接计算出最终结果</div>';
-                }
-
-                // 联动更新 2D 交互画布
-                if (output.plotData) {
-                    grapher.setData(output.plotData);
-                } else {
-                    grapher.setData(null);
-                }
-            });
-
-        } catch (error) {
-            ASTOutput.textContent = "脚本运行中断：\n" + error.message;
-            grapher.setData(null);
+            ASTOutput.textContent = mathJSON ? JSON.stringify(mathJSON, null, 2) : '等待输入有效公式...';
         }
+
+        mathInput.addEventListener('input', updateAST);
+
+        // 弹性双源载入 MathfieldElement 与 ComputeEngine (后台异步无阻塞)
+        async function loadComputeEngine() {
+            let MathfieldElement = window.MathfieldElement;
+            if (!MathfieldElement) {
+                try {
+                    const ml = await import('https://cdn.jsdelivr.net/npm/mathlive/+esm');
+                    MathfieldElement = ml.MathfieldElement;
+                } catch (e1) {
+                    try {
+                        const ml = await import('https://unpkg.com/mathlive?module');
+                        MathfieldElement = ml.MathfieldElement;
+                    } catch (e2) { }
+                }
+            }
+
+            let ComputeEngineClass = null;
+            try {
+                const ceModule = await import('https://cdn.jsdelivr.net/npm/@cortex-js/compute-engine/+esm');
+                ComputeEngineClass = ceModule.ComputeEngine;
+            } catch (e1) {
+                console.warn('Jsdelivr ComputeEngine 模块加载失败，切换至 unpkg...', e1);
+                try {
+                    const ceModule = await import('https://unpkg.com/@cortex-js/compute-engine?module');
+                    ComputeEngineClass = ceModule.ComputeEngine;
+                } catch (e2) {
+                    console.error('所有 CDN 载入 ComputeEngine 均失败:', e2);
+                }
+            }
+
+            if (ComputeEngineClass) {
+                ce = new ComputeEngineClass();
+                if (MathfieldElement) {
+                    MathfieldElement.computeEngine = ce;
+                }
+                updateAST();
+            }
+            return ce;
+        }
+
+        const ceLoadingPromise = loadComputeEngine();
+
+        // 初始 AST 更新
+        updateAST();
+
+        // 计算与渲染逻辑
+        calcBtn.addEventListener('click', async () => {
+            if (!ce) {
+                resultOutput.value = "计算引擎载入中，请稍候...";
+                await ceLoadingPromise;
+            }
+
+            let currentAST = null;
+            try {
+                if (mathInput.expression && mathInput.expression.json) {
+                    currentAST = mathInput.expression.json;
+                } else if (typeof mathInput.getValue === 'function') {
+                    currentAST = mathInput.getValue('math-json');
+                }
+                if (typeof currentAST === 'string') {
+                    try { currentAST = JSON.parse(currentAST); } catch (e) { }
+                }
+            } catch (e) { }
+
+            if (!currentAST || currentAST === 'Nothing') {
+                resultOutput.value = "请输入有效的公式";
+                return;
+            }
+
+            // 调用路由器分发任务
+            const output = routeCalculation(currentAST, ce);
+
+            // 渲染最终结果
+            resultOutput.value = output.resultLatex;
+
+            // 动态生成可视化的推导步骤 (采用和结果一致的 math-field 组件)
+            stepsContainer.innerHTML = '';
+            if (output.steps && output.steps.length > 0) {
+                output.steps.forEach(step => {
+                    const item = document.createElement('div');
+                    item.className = 'step-item';
+
+                    const label = document.createElement('div');
+                    label.className = 'step-item-title';
+                    label.textContent = step.title;
+
+                    const stepField = document.createElement('math-field');
+                    stepField.setAttribute('readonly', '');
+                    stepField.className = 'step-math';
+                    stepField.value = step.latex;
+
+                    item.appendChild(label);
+                    item.appendChild(stepField);
+                    stepsContainer.appendChild(item);
+                });
+            } else {
+                stepsContainer.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-muted); padding: 8px 0;">已直接计算出最终结果</div>';
+            }
+
+            // 联动更新 2D 交互画布
+            if (output.plotData) {
+                grapher.setData(output.plotData);
+            } else {
+                grapher.setData(null);
+            }
+        });
     </script>
 
 </body>
