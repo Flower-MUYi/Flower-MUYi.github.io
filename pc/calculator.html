@@ -10,21 +10,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 
-    <!-- MathLive: 所见即所得数学公式排版与交互输入引擎 (先行载入自定义元素) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
-    <script>
-        // MathLive CDN 容灾降级检测：若 jsdelivr 源未就绪则动态降级拉取 unpkg 备用源
-        window.addEventListener('error', function (e) {
-            if (e.target && e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('cdn.jsdelivr.net/npm/mathlive')) {
-                console.warn('Jsdelivr MathLive 加载异常，正在尝试 unpkg 备用源...');
-                var fb = document.createElement('script');
-                fb.defer = true;
-                fb.src = 'https://unpkg.com/mathlive';
-                document.head.appendChild(fb);
-            }
-        }, true);
-    </script>
-
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -164,90 +149,6 @@
         #graph-legend .katex-html {
             white-space: nowrap;
         }
-
-        /* 快捷数学键栏与工具栏 */
-        .pc-quick-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 10px;
-            margin-bottom: 8px;
-        }
-
-        .quick-btn {
-            padding: 6px 10px;
-            background: #f8fafc;
-            color: #334155;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-family: 'JetBrains Mono', system-ui, sans-serif;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            user-select: none;
-        }
-
-        .quick-btn:hover {
-            background: #e2e8f0;
-            border-color: #94a3b8;
-            color: #0f172a;
-        }
-
-        .quick-btn:active {
-            transform: scale(0.95);
-        }
-
-        .quick-btn.btn-action {
-            color: #ef4444;
-            background: #fef2f2;
-            border-color: #fecaca;
-        }
-
-        .quick-btn.btn-action:hover {
-            background: #fee2e2;
-            border-color: #fca5a5;
-        }
-
-        .quick-btn.btn-keyboard {
-            color: #0284c7;
-            background: #f0f9ff;
-            border-color: #bae6fd;
-            font-weight: 500;
-        }
-
-        .quick-btn.btn-keyboard:hover {
-            background: #e0f2fe;
-            border-color: #7dd3fc;
-        }
-
-        /* 预设示例标签 */
-        .presets-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-            margin-bottom: 12px;
-            font-size: 0.82rem;
-            color: #64748b;
-        }
-
-        .preset-badge {
-            padding: 2px 8px;
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #475569;
-            transition: all 0.15s ease;
-            user-select: none;
-        }
-
-        .preset-badge:hover {
-            background: #e0f2fe;
-            color: #0369a1;
-            border-color: #bae6fd;
-        }
     </style>
 </head>
 
@@ -256,45 +157,8 @@
     <div class="card">
         <h3 style="margin-top: 0; color: #334155;">公式输入框</h3>
 
-        <!-- 输入框展示与交互配置 (预置示例公式，确保DOM解析即刻可交互) -->
-        <math-field id="myMathInput" math-virtual-keyboard-policy="auto">x^2 - 4 = 0</math-field>
-
-        <!-- 快捷数学键栏与虚拟键盘开关 -->
-        <div class="pc-quick-toolbar">
-            <button class="quick-btn btn-keyboard" id="btnToggleKeyboard" title="展开/收起 MathLive 虚拟数学键盘">⌨️ 虚拟键盘</button>
-            <button class="quick-btn" data-insert="x">x</button>
-            <button class="quick-btn" data-insert="y">y</button>
-            <button class="quick-btn" data-insert="+">+</button>
-            <button class="quick-btn" data-insert="-">-</button>
-            <button class="quick-btn" data-insert="\cdot">×</button>
-            <button class="quick-btn" data-insert="\frac{#?}{#?}">÷</button>
-            <button class="quick-btn" data-insert="^2">x²</button>
-            <button class="quick-btn" data-insert="^{#?}">xʸ</button>
-            <button class="quick-btn" data-insert="\sqrt{#?}">√</button>
-            <button class="quick-btn" data-insert="\int #? dx">∫</button>
-            <button class="quick-btn" data-insert="\int_{#?}^{#?} #? dx">∫ₐᵇ</button>
-            <button class="quick-btn" data-insert="\lim_{x \to 0} #?">lim</button>
-            <button class="quick-btn" data-insert="\frac{d}{dx}\left(#?\right)">d/dx</button>
-            <button class="quick-btn" data-insert="\sin\left(#?\right)">sin</button>
-            <button class="quick-btn" data-insert="\cos\left(#?\right)">cos</button>
-            <button class="quick-btn" data-insert="\ln\left(#?\right)">ln</button>
-            <button class="quick-btn" data-insert="\pi">π</button>
-            <button class="quick-btn" data-insert="e">e</button>
-            <button class="quick-btn" data-insert="\left(#?\right)">( )</button>
-            <button class="quick-btn btn-action" id="btnBackspace" title="退格删除">⌫ 退格</button>
-            <button class="quick-btn btn-action" id="btnClear" title="清空输入框">清空</button>
-        </div>
-
-        <!-- 常用示例预设 -->
-        <div class="presets-row">
-            <span>快捷示例：</span>
-            <span class="preset-badge" data-formula="x^2 - 4 = 0">方程求解</span>
-            <span class="preset-badge" data-formula="\int x \sin(x) dx">分部积分</span>
-            <span class="preset-badge" data-formula="\int_{0}^{1} x^2 dx">定积分</span>
-            <span class="preset-badge" data-formula="\lim_{x \to 0} \frac{\sin x}{x}">极限计算</span>
-            <span class="preset-badge" data-formula="f(x) = x^3 - 3x">函数分析</span>
-            <span class="preset-badge" data-formula="y' + 2y = 4x">微分方程</span>
-        </div>
+        <!-- 输入框默认展示（空则不展示） -->
+        <math-field id="myMathInput"></math-field>
 
         <!-- 可折叠 AST 语法树结构展示区 -->
         <details class="ast-collapsible">
@@ -319,78 +183,10 @@
         <div id="stepsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;"></div>
     </div>
 
-    <!-- 基础交互逻辑：即时响应快捷符号、虚拟键盘、清空与退格（完全兼容 file:// 与无网络离线环境） -->
-    <script>
-        (function() {
-            const mathInput = document.getElementById('myMathInput');
-            const calcBtn = document.getElementById('calcBtn');
-
-            // 快捷数学按键输入绑定
-            document.querySelectorAll('.quick-btn[data-insert]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const latex = btn.getAttribute('data-insert');
-                    mathInput.focus();
-                    if (typeof mathInput.executeCommand === 'function') {
-                        mathInput.executeCommand(['insert', latex]);
-                    } else {
-                        mathInput.value = (mathInput.value || '') + latex;
-                        mathInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                });
-            });
-
-            // 虚拟键盘开关
-            const btnToggleKeyboard = document.getElementById('btnToggleKeyboard');
-            if (btnToggleKeyboard) {
-                btnToggleKeyboard.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    mathInput.focus();
-                    if (window.mathVirtualKeyboard) {
-                        if (window.mathVirtualKeyboard.visible) {
-                            window.mathVirtualKeyboard.hide();
-                        } else {
-                            window.mathVirtualKeyboard.show();
-                        }
-                    }
-                });
-            }
-
-            // 清空与退格
-            document.getElementById('btnClear')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                mathInput.value = '';
-                mathInput.focus();
-                mathInput.dispatchEvent(new Event('input', { bubbles: true }));
-            });
-
-            document.getElementById('btnBackspace')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                mathInput.focus();
-                if (typeof mathInput.executeCommand === 'function') {
-                    mathInput.executeCommand('deleteBackward');
-                } else {
-                    mathInput.value = (mathInput.value || '').slice(0, -1);
-                    mathInput.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            });
-
-            // 预设示例点击快捷填充
-            document.querySelectorAll('.preset-badge[data-formula]').forEach(badge => {
-                badge.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const formula = badge.getAttribute('data-formula');
-                    mathInput.value = formula;
-                    mathInput.focus();
-                    mathInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    calcBtn?.click();
-                });
-            });
-        })();
-    </script>
-
-    <!-- 使用 ES Module 现代模块化方式引入分步求解与 2D 绘图引擎 -->
+    <!-- 使用 ES Module 现代模块化方式引入 -->
     <script type="module">
+        import { MathfieldElement } from 'https://unpkg.com/mathlive?module';
+        import { ComputeEngine } from 'https://unpkg.com/@cortex-js/compute-engine?module';
         import { routeCalculation } from './router.js';
         import { InteractiveGrapher } from './grapher.js';
 
@@ -401,132 +197,85 @@
         const stepsContainer = document.getElementById('stepsContainer');
         const grapher = new InteractiveGrapher('graphContainer');
 
-        let ce = null;
+        try {
+            const ce = new ComputeEngine();
+            MathfieldElement.computeEngine = ce;
 
-        function updateAST() {
-            let mathJSON = null;
-            try {
+            function updateAST() {
+                let mathJSON;
                 if (mathInput.expression && mathInput.expression.json) {
                     mathJSON = mathInput.expression.json;
-                } else if (typeof mathInput.getValue === 'function') {
+                } else {
                     mathJSON = mathInput.getValue('math-json');
                 }
-            } catch (e) {
-                mathJSON = { error: e.message };
-            }
 
-            if (typeof mathJSON === 'string') {
-                try { mathJSON = JSON.parse(mathJSON); } catch (e) { }
-            }
-
-            ASTOutput.textContent = mathJSON ? JSON.stringify(mathJSON, null, 2) : '等待输入有效公式...';
-        }
-
-        mathInput.addEventListener('input', updateAST);
-
-        // 后台异步无阻塞加载 ComputeEngine 与 MathLive ES 模块 (双源容灾降级)
-        async function loadComputeEngine() {
-            let MathfieldElement = window.MathfieldElement;
-            if (!MathfieldElement) {
-                try {
-                    const ml = await import('https://cdn.jsdelivr.net/npm/mathlive/+esm');
-                    MathfieldElement = ml.MathfieldElement;
-                } catch (e1) {
-                    try {
-                        const ml = await import('https://unpkg.com/mathlive?module');
-                        MathfieldElement = ml.MathfieldElement;
-                    } catch (e2) { }
+                if (typeof mathJSON === 'string') {
+                    try { mathJSON = JSON.parse(mathJSON); } catch (e) { }
                 }
+
+                ASTOutput.textContent = JSON.stringify(mathJSON, null, 2);
             }
 
-            let ComputeEngineClass = null;
-            try {
-                const ceModule = await import('https://cdn.jsdelivr.net/npm/@cortex-js/compute-engine/+esm');
-                ComputeEngineClass = ceModule.ComputeEngine;
-            } catch (e1) {
-                console.warn('Jsdelivr ComputeEngine 模块加载失败，切换至 unpkg...', e1);
-                try {
-                    const ceModule = await import('https://unpkg.com/@cortex-js/compute-engine?module');
-                    ComputeEngineClass = ceModule.ComputeEngine;
-                } catch (e2) {
-                    console.error('所有 CDN 载入 ComputeEngine 均失败:', e2);
-                }
-            }
+            mathInput.addEventListener('input', updateAST);
 
-            if (ComputeEngineClass) {
-                ce = new ComputeEngineClass();
-                if (MathfieldElement) {
-                    MathfieldElement.computeEngine = ce;
-                }
+            // 等待 math-field 组件完全准备就绪后再执行第一次渲染
+            mathInput.addEventListener('DOMContentLoaded', updateAST);
+
+            // 如果组件已经加载完，直接执行；没加载完则通过 setTimeout 兜底
+            if (mathInput.expression) {
                 updateAST();
-            }
-            return ce;
-        }
-
-        const ceLoadingPromise = loadComputeEngine();
-
-        // 立即展示一次默认 AST
-        updateAST();
-
-        // 3. 计算与渲染逻辑
-        calcBtn.addEventListener('click', async () => {
-            if (!ce) {
-                resultOutput.value = "计算引擎载入中，请稍候...";
-                await ceLoadingPromise;
-            }
-
-            let currentAST = null;
-            try {
-                if (mathInput.expression && mathInput.expression.json) {
-                    currentAST = mathInput.expression.json;
-                } else if (typeof mathInput.getValue === 'function') {
-                    currentAST = mathInput.getValue('math-json');
-                }
-                if (typeof currentAST === 'string') {
-                    try { currentAST = JSON.parse(currentAST); } catch (e) { }
-                }
-            } catch (e) { }
-
-            if (!currentAST || currentAST === 'Nothing') {
-                resultOutput.value = "请输入有效的公式";
-                return;
-            }
-
-            // 调用路由器分发任务
-            const output = routeCalculation(currentAST, ce);
-
-            // 渲染最终结果
-            resultOutput.value = output.resultLatex;
-
-            // 动态生成可视化的推导步骤 (采用和结果一致的 math-field 组件)
-            stepsContainer.innerHTML = '';
-            if (output.steps && output.steps.length > 0) {
-                output.steps.forEach(step => {
-                    const stepItem = document.createElement('div');
-                    stepItem.className = 'step-item';
-
-                    const label = document.createElement('div');
-                    label.className = 'step-item-title';
-                    label.textContent = step.title;
-
-                    const stepField = document.createElement('math-field');
-                    stepField.setAttribute('readonly', '');
-                    stepField.style.cssText = "background: #1e293b; color: #38bdf8; min-height: 48px; font-size: 1.3rem;";
-                    stepField.value = step.latex;
-
-                    stepItem.appendChild(label);
-                    stepItem.appendChild(stepField);
-                    stepsContainer.appendChild(stepItem);
-                });
-            }
-
-            // 联动更新 2D 交互画布
-            if (output.plotData) {
-                grapher.setData(output.plotData);
             } else {
-                grapher.setData(null);
+                setTimeout(updateAST, 300);
             }
-        });
+
+            // 计算与渲染逻辑
+            calcBtn.addEventListener('click', () => {
+                const currentAST = mathInput.expression ? mathInput.expression.json : null;
+                if (!currentAST) {
+                    resultOutput.value = "请输入有效的公式";
+                    return;
+                }
+
+                // 调用路由器分发任务
+                const output = routeCalculation(currentAST, ce);
+
+                // 渲染最终结果
+                resultOutput.value = output.resultLatex;
+
+                // 动态生成可视化的推导步骤 (采用和结果一致的 math-field 组件)
+                stepsContainer.innerHTML = '';
+                if (output.steps && output.steps.length > 0) {
+                    output.steps.forEach(step => {
+                        const stepItem = document.createElement('div');
+                        stepItem.className = 'step-item';
+
+                        const label = document.createElement('div');
+                        label.className = 'step-item-title';
+                        label.textContent = step.title;
+
+                        const stepField = document.createElement('math-field');
+                        stepField.setAttribute('readonly', '');
+                        stepField.style.cssText = "background: #1e293b; color: #38bdf8; min-height: 48px; font-size: 1.3rem;";
+                        stepField.value = step.latex;
+
+                        stepItem.appendChild(label);
+                        stepItem.appendChild(stepField);
+                        stepsContainer.appendChild(stepItem);
+                    });
+                }
+
+                // 联动更新 2D 交互画布
+                if (output.plotData) {
+                    grapher.setData(output.plotData);
+                } else {
+                    grapher.setData(null);
+                }
+            });
+
+        } catch (error) {
+            ASTOutput.textContent = "脚本运行中断：\n" + error.message;
+            grapher.setData(null);
+        }
     </script>
 
 </body>
