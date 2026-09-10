@@ -600,7 +600,7 @@
                 // 渲染最终结果
                 resultOutput.value = output.resultLatex;
 
-                // 动态生成可视化的推导步骤
+                // 动态生成可视化的推导步骤 (采用和结果一致的 math-field 组件)
                 stepsContainer.innerHTML = '';
                 if (output.steps && output.steps.length > 0) {
                     output.steps.forEach(step => {

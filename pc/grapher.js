@@ -1,4 +1,4 @@
-// grapher.js —— 交互式 2D Canvas 可视化引擎 (含图层与特征点/阴影联动过滤)
+// grapher.js —— 交互式 2D Canvas 可视化引擎 (含 RAF 帧节流与 LOD 动态降采样优化)
 
 export class InteractiveGrapher {
     constructor(containerId) {
@@ -20,6 +20,7 @@ export class InteractiveGrapher {
         this.dragStart = { x: 0, y: 0 };
         this.viewStart = { x: 0, y: 0 };
         this.detectedIntersections = [];
+        this.renderPending = false; // RAF 节流标志位
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
@@ -49,6 +50,17 @@ export class InteractiveGrapher {
         this.tooltip = this.container.querySelector('#graph-tooltip');
     }
 
+    // 核心优化 1：使用 requestAnimationFrame 进行帧同步节流
+    requestRender() {
+        if (!this.renderPending) {
+            this.renderPending = true;
+            requestAnimationFrame(() => {
+                this.render();
+                this.renderPending = false;
+            });
+        }
+    }
+
     initEvents() {
         this.canvas.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
@@ -56,6 +68,7 @@ export class InteractiveGrapher {
             this.canvas.style.cursor = 'grabbing';
             this.dragStart = { x: e.clientX, y: e.clientY };
             this.viewStart = { x: this.view.centerX, y: this.view.centerY };
+            if (this.tooltip) this.tooltip.style.display = 'none';
         });
 
         window.addEventListener('mousemove', (e) => {
@@ -64,7 +77,7 @@ export class InteractiveGrapher {
                 const dy = e.clientY - this.dragStart.y;
                 this.view.centerX = this.viewStart.x - dx / this.view.scale;
                 this.view.centerY = this.viewStart.y + dy / this.view.scale;
-                this.render();
+                this.requestRender();
             } else {
                 this.handleMouseMove(e);
             }
@@ -74,6 +87,8 @@ export class InteractiveGrapher {
             if (this.isDragging) {
                 this.isDragging = false;
                 this.canvas.style.cursor = this.hoveredPoint ? 'pointer' : 'grab';
+                // 拖拽停止后，自动执行一次 2px 高精重绘
+                this.requestRender();
             }
         });
 
@@ -93,7 +108,7 @@ export class InteractiveGrapher {
             this.view.centerY = mathY + (mouseScreenY - this.height / 2) / newScale;
             this.view.scale = newScale;
 
-            this.render();
+            this.requestRender();
             this.handleMouseMove(e);
         }, { passive: false });
 
@@ -105,14 +120,14 @@ export class InteractiveGrapher {
 
     zoom(factor) {
         this.view.scale = Math.min(Math.max(this.view.scale * factor, 5), 1000);
-        this.render();
+        this.requestRender();
     }
 
     resetView() {
         this.view.centerX = 0;
         this.view.centerY = 0;
         this.view.scale = 40;
-        this.render();
+        this.requestRender();
     }
 
     autoFit() {
@@ -139,7 +154,7 @@ export class InteractiveGrapher {
         const scaleY = (this.height * 0.7) / (maxY - minY);
         this.view.scale = Math.min(Math.max(Math.min(scaleX, scaleY), 10), 200);
 
-        this.render();
+        this.requestRender();
     }
 
     resize() {
@@ -152,7 +167,7 @@ export class InteractiveGrapher {
         this.canvas.height = this.height * this.dpr;
         this.ctx.scale(this.dpr, this.dpr);
 
-        this.render();
+        this.requestRender();
     }
 
     screenToMathX(sx) { return this.view.centerX + (sx - this.width / 2) / this.view.scale; }
@@ -160,14 +175,12 @@ export class InteractiveGrapher {
     mathToScreenX(mx) { return this.width / 2 + (mx - this.view.centerX) * this.view.scale; }
     mathToScreenY(my) { return this.height / 2 - (my - this.view.centerY) * this.view.scale; }
 
-    // 判断图层是否可见
     isLayerVisible(layerId) {
         if (!layerId) return true;
         const layer = (this.plotData.layers || []).find(l => l.id === layerId);
         return layer ? layer.visible !== false : true;
     }
 
-    // 动态提取当前所有处于可见状态的特征点
     getVisiblePoints() {
         const staticPoints = (this.plotData.points || []).filter(p => this.isLayerVisible(p.layerId));
         return [...staticPoints, ...(this.detectedIntersections || [])];
@@ -177,7 +190,7 @@ export class InteractiveGrapher {
         this.plotData = plotData || { layers: [], points: [], areas: [] };
         this.updateLegend();
         this.detectIntersections();
-        this.render();
+        this.requestRender();
     }
 
     updateLegend() {
@@ -211,8 +224,8 @@ export class InteractiveGrapher {
                 if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
                 layer.visible = checkbox.checked;
                 item.style.opacity = layer.visible ? '1' : '0.5';
-                this.detectIntersections(); // 图层切换时重新计算交点
-                this.render();
+                this.detectIntersections();
+                this.requestRender();
             };
 
             this.legendContainer.appendChild(item);
@@ -226,7 +239,7 @@ export class InteractiveGrapher {
 
         const xMin = this.screenToMathX(0);
         const xMax = this.screenToMathX(this.width);
-        const step = (xMax - xMin) / 300;
+        const step = (xMax - xMin) / 120; // 优化采样点数
 
         for (let i = 0; i < activeLayers.length; i++) {
             for (let j = i + 1; j < activeLayers.length; j++) {
@@ -240,7 +253,7 @@ export class InteractiveGrapher {
                     const diff = f1(x) - f2(x);
                     if (!isNaN(prevDiff) && !isNaN(diff) && prevDiff * diff <= 0 && Math.abs(diff - prevDiff) < 50) {
                         let l = x - step, r = x;
-                        for (let k = 0; k < 12; k++) {
+                        for (let k = 0; k < 8; k++) { // 8次二分即可达到像素级精度
                             const mid = (l + r) / 2;
                             const midDiff = f1(mid) - f2(mid);
                             if (midDiff * (f1(l) - f2(l)) <= 0) r = mid;
@@ -267,11 +280,11 @@ export class InteractiveGrapher {
     }
 
     handleMouseMove(e) {
+        if (this.isDragging) return; // 拖动中不进行碰撞检测
         const rect = this.canvas.getBoundingClientRect();
         const sx = e.clientX - rect.left;
         const sy = e.clientY - rect.top;
 
-        // 仅对可见特征点执行拾取
         const allVisiblePoints = this.getVisiblePoints();
         const hitRadius = 8;
 
@@ -307,10 +320,10 @@ export class InteractiveGrapher {
             this.tooltip.style.top = `${Math.max(py - 20, 10)}px`;
         } else {
             this.hoveredPoint = null;
-            this.canvas.style.cursor = this.isDragging ? 'grabbing' : 'grab';
+            this.canvas.style.cursor = 'grab';
             this.tooltip.style.display = 'none';
         }
-        this.render();
+        this.requestRender();
     }
 
     render() {
@@ -397,7 +410,6 @@ export class InteractiveGrapher {
         const ctx = this.ctx;
 
         this.plotData.areas.forEach(area => {
-            // 联动判断：如果关联图层被关闭，则不绘制对应面积
             if (area.layerId && !this.isLayerVisible(area.layerId)) return;
 
             const fromX = Math.max(area.from, this.screenToMathX(0));
@@ -407,7 +419,8 @@ export class InteractiveGrapher {
             ctx.fillStyle = area.color || 'rgba(56, 189, 248, 0.2)';
             ctx.beginPath();
 
-            const step = (toX - fromX) / 100;
+            // 优化 2：拖拽时减少积分阴影的计算采样
+            const step = (toX - fromX) / (this.isDragging ? 20 : 60);
             ctx.moveTo(this.mathToScreenX(fromX), this.mathToScreenY(area.bottomFn ? area.bottomFn(fromX) : 0));
 
             for (let x = fromX; x <= toX; x += step) {
@@ -427,7 +440,9 @@ export class InteractiveGrapher {
     drawLayers() {
         if (!this.plotData.layers) return;
         const ctx = this.ctx;
-        const pixelStep = 2;
+
+        // 核心优化 3：LOD 动态采样 —— 拖拽时 8px 快速绘制，静止时 2px 超精细平滑
+        const pixelStep = this.isDragging ? 8 : 2;
 
         this.plotData.layers.forEach(layer => {
             if (layer.visible === false || typeof layer.fn !== 'function') return;

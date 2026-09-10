@@ -20,9 +20,20 @@ export class InteractiveGrapher {
         this.dragStart = { x: 0, y: 0 };
         this.viewStart = { x: 0, y: 0 };
         this.detectedIntersections = [];
+        this.renderPending = false;
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
+    }
+
+    requestRender() {
+        if (!this.renderPending) {
+            this.renderPending = true;
+            requestAnimationFrame(() => {
+                this.requestRender();
+                this.renderPending = false;
+            });
+        }
     }
 
     initDOM() {
@@ -64,7 +75,7 @@ export class InteractiveGrapher {
                 const dy = e.clientY - this.dragStart.y;
                 this.view.centerX = this.viewStart.x - dx / this.view.scale;
                 this.view.centerY = this.viewStart.y + dy / this.view.scale;
-                this.render();
+                this.requestRender();
             } else {
                 this.handleMouseMove(e);
             }
@@ -74,6 +85,7 @@ export class InteractiveGrapher {
             if (this.isDragging) {
                 this.isDragging = false;
                 this.canvas.style.cursor = this.hoveredPoint ? 'pointer' : 'grab';
+                this.requestRender();
             }
         });
 
@@ -119,7 +131,7 @@ export class InteractiveGrapher {
                 const dy = t.clientY - this.dragStart.y;
                 this.view.centerX = this.viewStart.x - dx / this.view.scale;
                 this.view.centerY = this.viewStart.y + dy / this.view.scale;
-                this.render();
+                this.requestRender();
                 this.handleMouseMove(t);
             } else if (touchMode === 'pinch' && e.touches.length === 2) {
                 const currentDist = getTouchDist(e.touches[0], e.touches[1]);
@@ -129,14 +141,17 @@ export class InteractiveGrapher {
                     this.view.centerX = pinchCenterMath.x - (pinchCenterScreen.x - this.width / 2) / newScale;
                     this.view.centerY = pinchCenterMath.y + (pinchCenterScreen.y - this.height / 2) / newScale;
                     this.view.scale = newScale;
-                    this.render();
+                    this.requestRender();
                 }
             }
         }, { passive: false });
 
         const endTouch = () => {
             touchMode = null;
-            this.isDragging = false;
+            if (this.isDragging) {
+                this.isDragging = false;
+                this.requestRender();
+            }
         };
 
         this.canvas.addEventListener('touchend', endTouch);
@@ -158,7 +173,7 @@ export class InteractiveGrapher {
             this.view.centerY = mathY + (mouseScreenY - this.height / 2) / newScale;
             this.view.scale = newScale;
 
-            this.render();
+            this.requestRender();
             this.handleMouseMove(e);
         }, { passive: false });
 
@@ -170,14 +185,14 @@ export class InteractiveGrapher {
 
     zoom(factor) {
         this.view.scale = Math.min(Math.max(this.view.scale * factor, 5), 1000);
-        this.render();
+        this.requestRender();
     }
 
     resetView() {
         this.view.centerX = 0;
         this.view.centerY = 0;
         this.view.scale = 40;
-        this.render();
+        this.requestRender();
     }
 
     autoFit() {
@@ -204,7 +219,7 @@ export class InteractiveGrapher {
         const scaleY = (this.height * 0.7) / (maxY - minY);
         this.view.scale = Math.min(Math.max(Math.min(scaleX, scaleY), 10), 200);
 
-        this.render();
+        this.requestRender();
     }
 
     resize() {
@@ -217,7 +232,7 @@ export class InteractiveGrapher {
         this.canvas.height = this.height * this.dpr;
         this.ctx.scale(this.dpr, this.dpr);
 
-        this.render();
+        this.requestRender();
     }
 
     screenToMathX(sx) { return this.view.centerX + (sx - this.width / 2) / this.view.scale; }
@@ -242,7 +257,7 @@ export class InteractiveGrapher {
         this.plotData = plotData || { layers: [], points: [], areas: [] };
         this.updateLegend();
         this.detectIntersections();
-        this.render();
+        this.requestRender();
     }
 
     updateLegend() {
@@ -277,7 +292,7 @@ export class InteractiveGrapher {
                 layer.visible = checkbox.checked;
                 item.style.opacity = layer.visible ? '1' : '0.5';
                 this.detectIntersections(); // 图层切换时重新计算交点
-                this.render();
+                this.requestRender();
             };
 
             this.legendContainer.appendChild(item);
@@ -375,7 +390,7 @@ export class InteractiveGrapher {
             this.canvas.style.cursor = this.isDragging ? 'grabbing' : 'grab';
             this.tooltip.style.display = 'none';
         }
-        this.render();
+        this.requestRender();
     }
 
     render() {
@@ -472,7 +487,7 @@ export class InteractiveGrapher {
             ctx.fillStyle = area.color || 'rgba(56, 189, 248, 0.2)';
             ctx.beginPath();
 
-            const step = (toX - fromX) / 100;
+            const step = (toX - fromX) / (this.isDragging ? 20 : 60);
             ctx.moveTo(this.mathToScreenX(fromX), this.mathToScreenY(area.bottomFn ? area.bottomFn(fromX) : 0));
 
             for (let x = fromX; x <= toX; x += step) {
@@ -492,7 +507,7 @@ export class InteractiveGrapher {
     drawLayers() {
         if (!this.plotData.layers) return;
         const ctx = this.ctx;
-        const pixelStep = 2;
+        const pixelStep = this.isDragging ? 8 : 2;
 
         this.plotData.layers.forEach(layer => {
             if (layer.visible === false || typeof layer.fn !== 'function') return;

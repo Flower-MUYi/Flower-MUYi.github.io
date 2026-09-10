@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>公式 AST 语法树解析</title>
 
-    <!-- 删除了传统 script 引入，全部转移到底部使用模块化引入 -->
-
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -15,15 +13,16 @@
             display: flex;
             justify-content: center;
             padding-top: 50px;
+            padding-bottom: 50px;
         }
 
         .card {
             background: #ffffff;
             padding: 24px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             width: 100%;
-            max-width: 600px;
+            max-width: 640px;
         }
 
         /* 固定输入框大小与外观美化 */
@@ -32,7 +31,7 @@
             width: 100%;
             box-sizing: border-box;
             min-height: 64px;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             padding: 12px;
             border: 2px solid #cbd5e1;
             border-radius: 8px;
@@ -110,6 +109,26 @@
             border-radius: 0 0 8px 8px;
             max-height: 280px;
         }
+
+        /* 推导步骤样式 */
+        .step-item {
+            margin-top: 6px;
+        }
+
+        .step-item-title {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .step-item math-field {
+            background: #1e293b;
+            color: #38bdf8;
+            min-height: 48px;
+            font-size: 1.3rem;
+            border: 1px solid #334155;
+            border-radius: 8px;
+        }
     </style>
 </head>
 
@@ -132,7 +151,7 @@
 
         <!-- 计算触发与结果展示 -->
         <button id="calcBtn"
-            style="margin-top: 16px; padding: 10px 20px; background: #38bdf8; color: white; border: none; border-radius: 6px; cursor: pointer;">开始分步计算</button>
+            style="margin-top: 16px; padding: 10px 20px; background: #38bdf8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">开始分步计算</button>
 
         <div style="margin-top: 16px; color: #64748b; font-size: 0.9rem;">最终计算结果：</div>
         <math-field id="resultOutput" readonly style="background: #1e293b; color: #ffffff;">等待计算...</math-field>
@@ -203,27 +222,34 @@
                 // 渲染最终结果
                 resultOutput.value = output.resultLatex;
 
-                // 动态生成可视化的推导步骤
+                // 动态生成可视化的推导步骤 (采用和结果一致的 math-field 组件)
                 stepsContainer.innerHTML = '';
-                output.steps.forEach(step => {
-                    const label = document.createElement('div');
-                    label.style.cssText = "font-size: 0.85rem; color: #64748b; margin-top: 4px;";
-                    label.textContent = step.title;
+                if (output.steps && output.steps.length > 0) {
+                    output.steps.forEach(step => {
+                        const stepItem = document.createElement('div');
+                        stepItem.className = 'step-item';
 
-                    const stepField = document.createElement('math-field');
-                    stepField.setAttribute('readonly', '');
-                    stepField.style.cssText = "background: #1e293b; color: #38bdf8; min-height: 48px; font-size: 1.3rem;";
-                    stepField.value = step.latex;
+                        const label = document.createElement('div');
+                        label.className = 'step-item-title';
+                        label.textContent = step.title;
 
-                    stepsContainer.appendChild(label);
-                    stepsContainer.appendChild(stepField);
-                    // 联动更新 2D 交互画布
-                    if (output.plotData) {
-                        grapher.setData(output.plotData);
-                    } else {
-                        grapher.setData(null);
-                    }
-                });
+                        const stepField = document.createElement('math-field');
+                        stepField.setAttribute('readonly', '');
+                        stepField.style.cssText = "background: #1e293b; color: #38bdf8; min-height: 48px; font-size: 1.3rem;";
+                        stepField.value = step.latex;
+
+                        stepItem.appendChild(label);
+                        stepItem.appendChild(stepField);
+                        stepsContainer.appendChild(stepItem);
+                    });
+                }
+
+                // 联动更新 2D 交互画布
+                if (output.plotData) {
+                    grapher.setData(output.plotData);
+                } else {
+                    grapher.setData(null);
+                }
             });
 
         } catch (error) {
