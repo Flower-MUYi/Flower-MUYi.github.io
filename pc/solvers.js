@@ -927,11 +927,6 @@ export function integrateByParts(uNode, dvNode, variable, ce, steps) {
 export function integrateTrigRational(node, variable, ce, steps) {
     const nodeExpr = ce.box(node);
 
-    if (steps) steps.push({
-        title: "识别为三角有理式，应用万能代换公式（Weierstrass Substitution）",
-        latex: `\\text{令 } t = \\tan\\left(\\frac{${variable}}{2}\\right) \\implies \\sin(${variable}) = \\frac{2t}{1+t^2}, \\quad \\cos(${variable}) = \\frac{1-t^2}{1+t^2}, \\quad d${variable} = \\frac{2}{1+t^2} \\, dt`
-    });
-
     const tVar = 't';
     let numPolyT = 2;
     let denPolyT = null;
@@ -944,7 +939,7 @@ export function integrateTrigRational(node, variable, ce, steps) {
         const vPi = denBox.subs({ [variable]: Math.PI }).evaluate().valueOf();
         const vHalfPi = denBox.subs({ [variable]: Math.PI / 2 }).evaluate().valueOf();
 
-        if (typeof v0 === 'number' && typeof vPi === 'number' && typeof vHalfPi === 'number') {
+        if (typeof v0 === 'number' && typeof vPi === 'number' && typeof vHalfPi === 'number' && !isNaN(v0) && !isNaN(vPi) && !isNaN(vHalfPi)) {
             const B = (v0 - vPi) / 2;
             const C = (v0 + vPi) / 2;
             const A = vHalfPi - C;
@@ -966,22 +961,31 @@ export function integrateTrigRational(node, variable, ce, steps) {
                 const n0 = numBox.subs({ [variable]: 0 }).evaluate().valueOf();
                 const nPi = numBox.subs({ [variable]: Math.PI }).evaluate().valueOf();
                 const nHalfPi = numBox.subs({ [variable]: Math.PI / 2 }).evaluate().valueOf();
-                const nB = (n0 - nPi) / 2;
-                const nC = (n0 + nPi) / 2;
-                const nA = nHalfPi - nC;
-                const na2 = 2 * (nC - nB), na1 = 4 * nA, na0 = 2 * (nC + nB);
-                const nTerms = [];
-                if (Math.abs(na2) > 1e-7) nTerms.push(na2 === 1 ? t2 : ['Multiply', toRational(na2).ast, t2]);
-                if (Math.abs(na1) > 1e-7) nTerms.push(na1 === 1 ? tVar : ['Multiply', toRational(na1).ast, tVar]);
-                if (Math.abs(na0) > 1e-7) nTerms.push(toRational(na0).ast);
-                numPolyT = nTerms.length === 0 ? 0 : (nTerms.length === 1 ? nTerms[0] : ['Add', ...nTerms]);
+                if (typeof n0 === 'number' && typeof nPi === 'number' && typeof nHalfPi === 'number' && !isNaN(n0) && !isNaN(nPi) && !isNaN(nHalfPi)) {
+                    const nB = (n0 - nPi) / 2;
+                    const nC = (n0 + nPi) / 2;
+                    const nA = nHalfPi - nC;
+                    const na2 = 2 * (nC - nB), na1 = 4 * nA, na0 = 2 * (nC + nB);
+                    const nTerms = [];
+                    if (Math.abs(na2) > 1e-7) nTerms.push(na2 === 1 ? t2 : ['Multiply', toRational(na2).ast, t2]);
+                    if (Math.abs(na1) > 1e-7) nTerms.push(na1 === 1 ? tVar : ['Multiply', toRational(na1).ast, tVar]);
+                    if (Math.abs(na0) > 1e-7) nTerms.push(toRational(na0).ast);
+                    numPolyT = nTerms.length === 0 ? 0 : (nTerms.length === 1 ? nTerms[0] : ['Add', ...nTerms]);
+                } else {
+                    denPolyT = null;
+                }
             }
         }
     }
 
     if (!denPolyT) {
-        return ce.box(['Integrate', node, variable]).evaluate();
+        return null;
     }
+
+    if (steps) steps.push({
+        title: "识别为三角有理式，应用万能代换公式（Weierstrass Substitution）",
+        latex: `\\text{令 } t = \\tan\\left(\\frac{${variable}}{2}\\right) \\implies \\sin(${variable}) = \\frac{2t}{1+t^2}, \\quad \\cos(${variable}) = \\frac{1-t^2}{1+t^2}, \\quad d${variable} = \\frac{2}{1+t^2} \\, dt`
+    });
 
     if (steps) steps.push({
         title: "代入并通分整理为关于代换变量 t 的标准有理分式",
@@ -1118,22 +1122,30 @@ export function integrateNode(node, variable, ce, steps) {
             return ce.box(['Ln', ['Abs', ['Sin', variable]]]).simplify();
         }
 
-        if (op === 'Power' && args[0] === ['Sin', variable] && args[1] === 2) {
-            if (steps) steps.push({
-                title: "应用三角二倍角降幂公式: \\sin^2(x) = \\frac{1 - \\cos(2x)}{2}",
-                latex: `\\int \\sin^2(${variable}) \\, d${variable} = \\int \\frac{1 - \\cos(2${variable})}{2} \\, d${variable} = \\frac{${variable}}{2} - \\frac{\\sin(2${variable})}{4}`
-            });
-            return ce.box(['Subtract', ['Divide', variable, 2], ['Divide', ['Sin', ['Multiply', 2, variable]], 4]]).simplify();
-        }
-        if (op === 'Power' && args[0] === ['Cos', variable] && args[1] === 2) {
-            if (steps) steps.push({
-                title: "应用三角二倍角降幂公式: \\cos^2(x) = \\frac{1 + \\cos(2x)}{2}",
-                latex: `\\int \\cos^2(${variable}) \\, d${variable} = \\int \\frac{1 + \\cos(2${variable})}{2} \\, d${variable} = \\frac{${variable}}{2} + \\frac{\\sin(2${variable})}{4}`
-            });
-            return ce.box(['Add', ['Divide', variable, 2], ['Divide', ['Sin', ['Multiply', 2, variable]], 4]]).simplify();
+        const baseExpr = unwrapAST(args[0]).expr;
+        const isExp2 = args[1] === 2 || args[1] === '2' || (typeof args[1] === 'number' && Math.abs(args[1] - 2) < 1e-9);
+
+        if ((op === 'Power' && isExp2) || op === 'Square') {
+            const isBaseSin = Array.isArray(baseExpr) && baseExpr[0] === 'Sin' && unwrapAST(baseExpr[1]).expr === variable;
+            const isBaseCos = Array.isArray(baseExpr) && baseExpr[0] === 'Cos' && unwrapAST(baseExpr[1]).expr === variable;
+            if (isBaseSin) {
+                if (steps) steps.push({
+                    title: "应用三角二倍角降幂公式: \\sin^2(x) = \\frac{1 - \\cos(2x)}{2}",
+                    latex: `\\int \\sin^2(${variable}) \\, d${variable} = \\int \\frac{1 - \\cos(2${variable})}{2} \\, d${variable} = \\frac{${variable}}{2} - \\frac{\\sin(2${variable})}{4}`
+                });
+                return ce.box(['Subtract', ['Divide', variable, 2], ['Divide', ['Sin', ['Multiply', 2, variable]], 4]]).simplify();
+            }
+            if (isBaseCos) {
+                if (steps) steps.push({
+                    title: "应用三角二倍角降幂公式: \\cos^2(x) = \\frac{1 + \\cos(2x)}{2}",
+                    latex: `\\int \\cos^2(${variable}) \\, d${variable} = \\int \\frac{1 + \\cos(2${variable})}{2} \\, d${variable} = \\frac{${variable}}{2} + \\frac{\\sin(2${variable})}{4}`
+                });
+                return ce.box(['Add', ['Divide', variable, 2], ['Divide', ['Sin', ['Multiply', 2, variable]], 4]]).simplify();
+            }
         }
 
-        return integrateTrigRational(unwrappedNode, variable, ce, steps);
+        const trigRationalRes = integrateTrigRational(unwrappedNode, variable, ce, steps);
+        if (trigRationalRes) return trigRationalRes;
     }
 
     // 8. 分式与部分分式
