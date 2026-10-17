@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>3D 中国象棋 · 极简公园版 (Material Xiangqi 3D)</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -181,278 +181,6 @@
       color: #f8fafc;
       border: 1.5px solid #94a3b8;
     }
-
-    /* =====================================================================
-     * 响应式视口基础增强 & 触摸行为控制
-     * ===================================================================== */
-    html, body {
-      height: 100%;
-      height: 100dvh;
-      overscroll-behavior: none;
-      touch-action: none;
-    }
-
-    #canvas-container {
-      touch-action: none;
-    }
-
-    /* 适配全面屏安全区域 (Notch / Home Indicator) */
-    header {
-      padding-top: max(0.625rem, env(safe-area-inset-top)) !important;
-      padding-left: max(0.625rem, env(safe-area-inset-left)) !important;
-      padding-right: max(0.625rem, env(safe-area-inset-right)) !important;
-    }
-
-    footer {
-      padding-bottom: max(0.625rem, env(safe-area-inset-bottom)) !important;
-      padding-left: max(0.625rem, env(safe-area-inset-left)) !important;
-      padding-right: max(0.625rem, env(safe-area-inset-right)) !important;
-    }
-
-    /* 隐藏移动端横向滚动条但保留滑动能力 */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-
-    /* =====================================================================
-     * 触控设备交互优化 (粗指针设备：手机 / 平板触摸屏)
-     * ===================================================================== */
-    @media (hover: none) and (pointer: coarse) {
-      .md-btn {
-        touch-action: manipulation;
-        min-height: 34px;
-      }
-      /* 禁用触控设备上的悬停浮起残留，强化按压反馈 */
-      .md-btn:hover:not(:disabled) {
-        transform: none;
-        box-shadow: none;
-      }
-      .md-btn:active:not(:disabled) {
-        transform: scale(0.94);
-      }
-      .captured-chip:hover {
-        transform: none;
-      }
-    }
-
-    /* =====================================================================
-     * 媒体查询 1：手机端及小尺寸视口 (最大宽度 <= 640px)
-     * ===================================================================== */
-    @media screen and (max-width: 640px) {
-      header {
-        gap: 0.35rem !important;
-      }
-
-      /* 顶部第一行：品牌卡片、模式切换与回合徽章紧凑化 */
-      header > div:first-child {
-        gap: 0.35rem !important;
-      }
-
-      header .md-card {
-        padding: 0.35rem 0.6rem !important;
-        border-radius: 0.875rem !important;
-      }
-
-      /* 缩小左上角“帥”字图标尺寸 */
-      header > div:first-child > div:first-child > div:first-child {
-        width: 1.85rem !important;
-        height: 1.85rem !important;
-        font-size: 0.95rem !important;
-        border-radius: 0.5rem !important;
-      }
-
-      #scene-badge {
-        display: none; /* 手机竖屏隐藏“竹林石桌”副标签以节省横向空间 */
-      }
-
-      /* 模式选择按钮组紧凑排列 */
-      div[role="group"][aria-label="对局模式切换"] {
-        padding: 0.2rem !important;
-        gap: 0.2rem !important;
-      }
-
-      div[role="group"][aria-label="对局模式切换"] .md-btn {
-        padding: 0.28rem 0.48rem !important;
-        font-size: 11px !important;
-        border-radius: 0.65rem !important;
-        min-height: 30px;
-      }
-
-      div[role="group"][aria-label="对局模式切换"] .material-symbols-rounded {
-        font-size: 14px !important;
-      }
-
-      /* 顶部第二行：战果托盘与胜率评估条优化 */
-      header > div:nth-child(2) {
-        gap: 0.3rem !important;
-      }
-
-      header > div:nth-child(2) > .md-card {
-        min-height: 28px !important;
-        padding: 0.2rem 0.5rem !important;
-      }
-
-      #captured-by-red,
-      #captured-by-black {
-        flex-wrap: nowrap !important;
-        overflow-x: auto;
-        max-width: 26vw;
-        scrollbar-width: none;
-      }
-      #captured-by-red::-webkit-scrollbar,
-      #captured-by-black::-webkit-scrollbar {
-        display: none;
-      }
-
-      .captured-chip {
-        width: 19px;
-        height: 19px;
-        font-size: 10px;
-        flex-shrink: 0;
-      }
-
-      #ai-telemetry-text {
-        max-width: 34vw;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 10px !important;
-      }
-
-      /* 循环着法警告横幅紧凑化 */
-      #cycle-warning-banner {
-        padding: 0.4rem 0.65rem !important;
-        gap: 0.4rem !important;
-      }
-      #cycle-rule-desc {
-        display: none; /* 手机端仅展示标签与倒数步数徽章，避免遮挡棋盘上沿 */
-      }
-      #cycle-countdown-badge {
-        width: 100%;
-        text-align: center;
-        font-size: 11px !important;
-        padding: 0.25rem 0.5rem !important;
-      }
-
-      /* 违规走法浮动提示框位置下移避让顶部栏 */
-      #illegal-move-toast {
-        top: 6.8rem !important;
-        width: 94vw !important;
-      }
-
-      /* 中央“将军/绝杀”大字横幅适配手机屏幕 */
-      #center-callout-inner {
-        padding: 0.65rem 1.35rem !important;
-        font-size: 1.55rem !important;
-        border-radius: 1.25rem !important;
-      }
-
-      /* 底部控制栏紧凑单层布局 */
-      footer > .md-card {
-        width: 96vw;
-        padding: 0.4rem 0.5rem !important;
-        border-radius: 1.25rem !important;
-        gap: 0.35rem !important;
-      }
-
-      footer .md-btn {
-        padding: 0.35rem 0.55rem !important;
-        font-size: 11px !important;
-        border-radius: 0.75rem !important;
-      }
-
-      /* 绝杀大招抽屉面板：支持内部滚动且不超出底部控制栏 */
-      #vfx-drawer {
-        bottom: calc(4.8rem + env(safe-area-inset-bottom)) !important;
-        width: 95vw !important;
-      }
-      #vfx-drawer > .md-card {
-        max-height: 54dvh;
-        overflow-y: auto;
-        padding: 0.75rem !important;
-        border-radius: 1.25rem !important;
-      }
-
-      /* 终局结算弹窗小屏适配 */
-      #gameover-modal {
-        padding: 0.75rem !important;
-      }
-      #gameover-modal > .md-card {
-        padding: 1.15rem !important;
-        max-height: 88dvh;
-        overflow-y: auto;
-      }
-    }
-
-    /* =====================================================================
-     * 媒体查询 2：超小屏手机 (最大宽度 <= 380px，如 iPhone SE / 小折叠外屏)
-     * ===================================================================== */
-    @media screen and (max-width: 380px) {
-      /* 在超窄屏下仅保留底部视角切换的图标或紧凑文字，防止折成三行 */
-      footer .md-btn span:not(.material-symbols-rounded) {
-        font-size: 10px;
-      }
-      div[role="group"][aria-label="对局模式切换"] .md-btn span.material-symbols-rounded {
-        display: none;
-      }
-      #ai-telemetry-text {
-        display: none;
-      }
-    }
-
-    /* =====================================================================
-     * 媒体查询 3：手机横屏模式 (高度 <= 540px 且为横屏)
-     * ===================================================================== */
-    @media screen and (max-height: 540px) and (orientation: landscape) {
-      header {
-        padding: 0.35rem max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left)) !important;
-        gap: 0.25rem !important;
-      }
-
-      /* 横屏下隐藏第二行战果栏，最大化留出3D棋盘纵向视野 */
-      header > div:nth-child(2) {
-        display: none !important;
-      }
-
-      footer {
-        padding-bottom: max(0.35rem, env(safe-area-inset-bottom)) !important;
-      }
-
-      footer > .md-card {
-        padding: 0.25rem 0.65rem !important;
-        gap: 0.35rem !important;
-      }
-
-      #vfx-drawer {
-        bottom: 3.4rem !important;
-      }
-      #vfx-drawer > .md-card {
-        max-height: 68dvh;
-        overflow-y: auto;
-      }
-
-      #gameover-modal > .md-card {
-        max-height: 90dvh;
-        overflow-y: auto;
-        padding: 1rem 1.25rem !important;
-      }
-    }
-
-    /* =====================================================================
-     * 媒体查询 4：平板端适配 (641px ~ 1024px)
-     * ===================================================================== */
-    @media screen and (min-width: 641px) and (max-width: 1024px) {
-      header {
-        max-width: 96vw !important;
-      }
-      footer > .md-card {
-        padding: 0.5rem 1rem !important;
-      }
-    }
   </style>
 </head>
 <body class="relative select-none overflow-hidden">
@@ -611,10 +339,38 @@
     </div>
   </header>
 
+  <!-- 自定义残局编辑器：紧凑浮动工具箱 -->
+  <section id="custom-endgame-panel" class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-24 w-[min(340px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/80 shadow-xl overflow-hidden" style="background:rgba(255,251,235,.96);backdrop-filter:blur(14px);">
+    <div class="flex items-center gap-2 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-amber-100/95 to-orange-50/95">
+      <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm"><span class="material-symbols-rounded text-[19px]">edit_square</span></div>
+      <div class="min-w-0 flex-1"><h2 class="serif-cn font-black text-slate-800 text-sm leading-tight">残局工坊</h2><p class="text-[10px] text-slate-500 leading-tight">选棋子，再点击棋盘放置</p></div>
+      <button id="editor-collapse-btn" class="md-btn shrink-0 rounded-lg px-2 py-1 bg-white/80 border border-amber-200 text-slate-700 text-xs" onclick="window.gameApp.toggleEditorTools()" title="收起或展开工具">收起</button>
+      <button id="editor-start-btn" class="md-btn shrink-0 rounded-lg px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-extrabold shadow-sm whitespace-nowrap" onclick="window.gameApp.exitEndgameEditor(true)" title="完成摆设并开始对局"><span class="material-symbols-rounded align-middle text-[15px]">play_arrow</span> 开始</button>
+      <button class="md-btn shrink-0 rounded-lg w-7 h-7 bg-white/80 border border-amber-200 text-slate-600 flex items-center justify-center" onclick="window.gameApp.exitEndgameEditor(false)" title="关闭残局编辑"><span class="material-symbols-rounded text-[17px]">close</span></button>
+    </div>
+    <div id="editor-tools-content" class="p-2.5 space-y-2 max-h-[27vh] overflow-y-auto">
+      <div class="rounded-xl bg-white/75 border border-red-100 p-2">
+        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-red-500"></span><span class="text-[11px] font-extrabold text-red-700">红方</span><span class="text-[10px] text-slate-400">选择棋子</span></div>
+        <div class="grid grid-cols-7 gap-1">
+          <button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','k')">帥</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','a')">仕</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','n')">馬</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','r')">車</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','c')">炮</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','p')">兵</button>
+        </div>
+      </div>
+      <div class="rounded-xl bg-white/75 border border-slate-200 p-2">
+        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-slate-700"></span><span class="text-[11px] font-extrabold text-slate-700">黑方</span><span class="text-[10px] text-slate-400">选择棋子</span></div>
+        <div class="grid grid-cols-7 gap-1">
+          <button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','k')">將</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','a')">士</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','b')">象</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','n')">馬</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','r')">車</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','c')">炮</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','p')">卒</button>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5"><span id="editor-piece-status" class="flex-1 min-w-0 text-[11px] text-slate-600 truncate px-2 py-1.5 rounded-lg bg-white border border-slate-200">当前工具：红帥</span><button class="md-btn rounded-lg px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-[11px] font-bold" onclick="window.gameApp.setEditorErase()">橡皮擦</button><button class="md-btn rounded-lg px-2.5 py-1.5 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold" onclick="window.gameApp.clearEditorBoard()">清空</button></div>
+      <p class="text-[10px] text-slate-400 text-center">拖动顶部标题栏可移动窗口 · 点击同一格可移除棋子</p>
+    </div>
+  </section>
+
   <!-- SINGLE-LAYER NAVIGATION UI: BOTTOM FLOATING DOCK -->
   <footer class="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-2.5 md:p-4 flex justify-center">
     <div class="pointer-events-auto md-card rounded-3xl px-3 py-2 md:px-4 md:py-2 flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5">
       
+      <button id="btn-endgame-editor" onclick="window.gameApp.enterEndgameEditor()" class="md-btn px-3 py-1.5 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold border border-amber-300">残局编辑</button>
       <!-- Undo Button -->
       <button id="btn-undo" onclick="window.gameApp.undoMove()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80">
         <span class="material-symbols-rounded text-[18px]">undo</span>
@@ -628,9 +384,15 @@
       </button>
 
       <!-- Restart Standard Game Button -->
-      <button id="btn-restart" onclick="window.gameApp.restartGame()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80" title="开始32子标准象棋新局">
+      <button id="btn-restart" onclick="window.gameApp.handleRestartButton()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80" title="开始32子标准象棋新局">
         <span id="restart-icon" class="material-symbols-rounded text-[18px]">restart_alt</span>
         <span id="restart-label">新局</span>
+      </button>
+
+      <!-- Always-available standard opening reset, independent of custom endgame replay -->
+      <button id="btn-standard-new-game" onclick="window.gameApp.restartStandardGame()" class="md-btn px-3 py-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1 border border-slate-600" title="放弃当前残局，恢复32子标准象棋开局">
+        <span class="material-symbols-rounded text-[18px]">refresh</span>
+        <span>标准新局</span>
       </button>
 
       <!-- Ultimate Checkmate VFX Showcase Toggle -->
@@ -765,7 +527,7 @@
           <span class="material-symbols-rounded text-[18px] text-red-700">auto_awesome</span>
           <span>重播绝杀特效</span>
         </button>
-        <button onclick="window.gameApp.restartGame()" class="md-btn px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 shadow-lg">
+        <button onclick="window.gameApp.replayEndgame()" class="md-btn px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 shadow-lg">
           <span class="material-symbols-rounded text-[18px]">replay</span>
           <span>再来一局</span>
         </button>
@@ -2068,6 +1830,25 @@
             blackScore -= (2 - blackElephants) * redCannons * 35;
           }
 
+          // 动态残局评估：子力减少后提高过河兵、将帅机动性和逼将价值，避免宗师残局判断失真。
+          let totalPieces = 0;
+          for (let r = 0; r < 10; r++) for (let c = 0; c < 9; c++) if (board[r][c]) totalPieces++;
+          if (totalPieces <= 16) {
+            const phase = totalPieces <= 8 ? 1.0 : (16 - totalPieces) / 8;
+            for (let r = 0; r < 10; r++) for (let c = 0; c < 9; c++) {
+              const p = board[r][c]; if (!p) continue;
+              const advance = p.color === RED ? 9 - r : r;
+              if (p.type === 'p') {
+                const crossed = p.color === RED ? r <= 4 : r >= 5;
+                const bonus = (crossed ? 28 : 0) + advance * 3;
+                if (p.color === RED) redScore += bonus * phase; else blackScore += bonus * phase;
+              } else if (p.type === 'k') {
+                const centrality = 4 - Math.abs(4 - c);
+                const mobilityBonus = (centrality * 5 + (p.color === RED ? 9 - r : r) * 2) * phase;
+                if (p.color === RED) redScore += mobilityBonus; else blackScore += mobilityBonus;
+              }
+            }
+          }
           const diff = redScore - blackScore;
           return perspectiveColor === RED ? diff : -diff;
         }
@@ -2368,16 +2149,20 @@
             }
           }
 
+          let pieceCount = 0;
+          for (let r = 0; r < 10; r++) for (let c = 0; c < 9; c++) if (board[r][c]) pieceCount++;
+          const isEndgame = pieceCount <= 16;
+          const isDeepEndgame = pieceCount <= 10;
           if (difficulty === 'easy') {
-            maxTimeMs = 260;
+            maxTimeMs = isEndgame ? 340 : 260;
           } else if (difficulty === 'hard') {
-            maxTimeMs = 680;
+            maxTimeMs = isDeepEndgame ? 1050 : (isEndgame ? 850 : 680);
           } else {
-            // INFERNO GRANDMASTER (炼狱宗师)
-            maxTimeMs = 1650;
+            // 炼狱宗师：残局分支更少，主动增加搜索预算，避免进入残局后“降难度”
+            maxTimeMs = isDeepEndgame ? 3200 : (isEndgame ? 2500 : 1650);
           }
 
-          const maxTargetDepth = difficulty === 'easy' ? 2 : (difficulty === 'hard' ? 4 : 9);
+          const maxTargetDepth = difficulty === 'easy' ? 2 : (difficulty === 'hard' ? (isDeepEndgame ? 6 : 4) : (isDeepEndgame ? 13 : (isEndgame ? 11 : 9)));
           const { lo, hi } = computeBoardHash(board, turn);
 
           // Decay history table slightly between searches
@@ -3903,6 +3688,10 @@
         this.gameMode = 'inferno'; // 'pvp' | 'easy' | 'hard' | 'inferno'
         this.isBusy = false;
         this.gameOver = false;
+        this.endgameEditor = false;
+        this.editorPiece = { color: RED, type: 'k' };
+        this.editorErase = false;
+        this.customEndgameSnapshot = null;
 
         this.selectedSquare = null;
         this.legalMovesForSelected = [];
@@ -4008,95 +3797,13 @@
         }
       }
 
-      // 根据当前视口宽高比（Aspect Ratio）与预设视角，计算自适应的相机参数与缩放边界
-      getResponsiveCameraConfig(preset = this.currentCameraPreset || 'red') {
-        const w = window.innerWidth || 1;
-        const h = window.innerHeight || 1;
-        const aspect = w / h;
-        const isMobile = w <= 768 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-        const isLandscapeMobile = isMobile && aspect > 1.2 && h <= 540;
-
-        const basePresets = {
-          red:   { radius: 17.5, phi: 0.72, theta: 0 },
-          top:   { radius: 16.5, phi: 0.14, theta: 0 },
-          orbit: { radius: 20.5, phi: 0.85, theta: 0.65 }
-        };
-        const base = basePresets[preset] || basePresets.red;
-
-        // 核心算法：当竖屏 aspect < 0.88 时，水平视场角变窄，按比例拉远相机 radius 确保 11.0 宽度的棋盘完整入画
-        let radiusScale = 1.0;
-        let fov = 42;
-        let targetZ = 0.3;
-
-        if (aspect < 0.88) {
-          // 竖屏手机自适应系数（例如 aspect=0.46 时，拉远约 1.48 倍并适度增大垂直 FOV）
-          radiusScale = Math.min(1.78, Math.pow(0.88 / Math.max(0.36, aspect), 0.68));
-          fov = THREE.MathUtils.clamp(42 + (0.88 - aspect) * 14, 42, 50);
-          // 竖屏顶部导航栏较高，将观察焦点略微向黑方（负Z）偏移，使棋盘整体视觉下移居中
-          targetZ = preset === 'top' ? -0.35 : -0.15;
-        } else if (isLandscapeMobile) {
-          // 手机横屏稍微拉远，留出上下 UI 悬浮空间
-          radiusScale = 1.08;
-          fov = 44;
-          targetZ = 0.2;
-        }
-
-        const adaptedRadius = base.radius * radiusScale;
-        return {
-          radius: adaptedRadius,
-          phi: base.phi,
-          theta: base.theta,
-          fov,
-          targetZ,
-          minRadius: Math.max(8.5, 9.5 * (aspect < 0.88 ? radiusScale * 0.72 : 1.0)),
-          maxRadius: Math.max(28.0, adaptedRadius * 1.45),
-          isMobile
-        };
-      }
-
-      // 动态更新 3D 视口尺寸、像素比与相机视距
-      updateViewportScale(resetRadius = false) {
-        if (!this.camera || !this.renderer) return;
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const cfg = this.getResponsiveCameraConfig(this.currentCameraPreset || 'red');
-
-        this.camera.aspect = w / h;
-        this.camera.fov = cfg.fov;
-        this.camera.updateProjectionMatrix();
-
-        // 移动端限制最高 1.75 倍 DPR，兼顾视网膜清晰度与 60FPS 流畅度与低发热
-        const maxDPR = cfg.isMobile ? 1.75 : 2.0;
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDPR));
-        this.renderer.setSize(w, h);
-
-        this.minZoomRadius = cfg.minRadius;
-        this.maxZoomRadius = cfg.maxRadius;
-        this.camTarget.z = cfg.targetZ;
-
-        if (resetRadius) {
-          this.desiredSpherical.radius = cfg.radius;
-        } else {
-          this.desiredSpherical.radius = THREE.MathUtils.clamp(
-            this.desiredSpherical.radius,
-            this.minZoomRadius,
-            this.maxZoomRadius
-          );
-        }
-      }
-
       initThree() {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xdce8dc);
         this.scene.fog = new THREE.FogExp2(0xdce8dc, 0.015);
 
-        this.currentCameraPreset = 'red';
-        const initCfg = this.getResponsiveCameraConfig('red');
-        this.minZoomRadius = initCfg.minRadius;
-        this.maxZoomRadius = initCfg.maxRadius;
-
         this.camera = new THREE.PerspectiveCamera(
-          initCfg.fov,
+          42,
           window.innerWidth / window.innerHeight,
           0.1,
           150
@@ -4104,18 +3811,18 @@
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, initCfg.isMobile ? 1.75 : 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.container.appendChild(this.renderer.domElement);
 
-        // 初始化自适应球坐标与观察焦点
-        this.camTarget = new THREE.Vector3(0, 0, initCfg.targetZ);
+        // Spherical camera orbit coordinates
+        this.camTarget = new THREE.Vector3(0, 0, 0.3);
         this.camSpherical = {
-          radius: initCfg.radius,
-          phi: initCfg.phi,
-          theta: initCfg.theta
+          radius: 17.5,
+          phi: 0.72,   // polar angle from top (0 = straight down)
+          theta: 0     // azimuth angle (0 = Red perspective at bottom)
         };
         this.desiredSpherical = { ...this.camSpherical };
         this.cameraShake = 0;
@@ -4128,8 +3835,8 @@
         this.sunLight = new THREE.DirectionalLight(0xfff5e0, 1.15);
         this.sunLight.position.set(12, 22, 14);
         this.sunLight.castShadow = true;
-        this.sunLight.shadow.mapSize.width = initCfg.isMobile ? 1536 : 2048;
-        this.sunLight.shadow.mapSize.height = initCfg.isMobile ? 1536 : 2048;
+        this.sunLight.shadow.mapSize.width = 2048;
+        this.sunLight.shadow.mapSize.height = 2048;
         this.sunLight.shadow.camera.near = 2;
         this.sunLight.shadow.camera.far = 55;
         const d = 16;
@@ -4140,6 +3847,7 @@
         this.sunLight.shadow.bias = -0.0005;
         this.scene.add(this.sunLight);
 
+        // Soft fill light from opposite side so obsidian pieces gleam
         const fillLight = new THREE.DirectionalLight(0xdbeafe, 0.45);
         fillLight.position.set(-14, 12, -10);
         this.scene.add(fillLight);
@@ -4608,10 +4316,6 @@
         this.selectedRing.position.set(selPos.x, 0.022, selPos.z);
         this.selectedRing.visible = true;
 
-        // 触控设备适当扩大透明碰撞柱半径（0.58 vs 0.52），提升手指点击落点的命中率
-        const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-        const hitRadius = isTouch ? 0.58 : 0.52;
-
         // 1. Render valid legal moves (green dots & red capture rings)
         for (const m of moves) {
           const pos = gridToWorld(m.tr, m.tc);
@@ -4645,7 +4349,8 @@
             holder.add(dot);
           }
 
-          const hitGeo = new THREE.CylinderGeometry(hitRadius, hitRadius, 0.45, 16);
+          // Invisible hit target cylinder for easy clicking/tapping
+          const hitGeo = new THREE.CylinderGeometry(0.52, 0.52, 0.45, 16);
           const hitMat = new THREE.MeshBasicMaterial({ visible: false });
           const hitMesh = new THREE.Mesh(hitGeo, hitMat);
           hitMesh.position.y = 0.2;
@@ -4656,7 +4361,8 @@
           this.moveIndicators.push(holder);
         }
 
-        // 2. Forbidden pseudo-legal move markers
+        // 2. Also detect pseudo-legal squares that are forbidden (due to Check, Pin, Flying General, Perpetual Check, or Repetition)
+        // and place subtle warning markers so clicking them immediately triggers the explanatory popup!
         const pseudoMoves = this.engine.getPseudoMoves(r, c, this.engine.board);
         for (const pm of pseudoMoves) {
           const isLegal = moves.some(lm => lm.tr === pm.tr && lm.tc === pm.tc);
@@ -4666,6 +4372,7 @@
           const holder = new THREE.Group();
           holder.position.set(pos.x, 0.025, pos.z);
 
+          // Subtle amber/crimson dashed-feel warning ring on forbidden pseudo-legal squares
           const warnGeo = new THREE.RingGeometry(0.22, 0.30, 6);
           const warnMat = new THREE.MeshBasicMaterial({
             color: 0xd97706,
@@ -4677,7 +4384,7 @@
           warnRing.rotation.x = -Math.PI / 2;
           holder.add(warnRing);
 
-          const hitGeo = new THREE.CylinderGeometry(hitRadius, hitRadius, 0.45, 16);
+          const hitGeo = new THREE.CylinderGeometry(0.52, 0.52, 0.45, 16);
           const hitMat = new THREE.MeshBasicMaterial({ visible: false });
           const hitMesh = new THREE.Mesh(hitGeo, hitMat);
           hitMesh.position.y = 0.2;
@@ -6163,9 +5870,106 @@
         });
       }
 
+      toggleEditorTools() {
+        const content = document.getElementById('editor-tools-content');
+        const button = document.getElementById('editor-collapse-btn');
+        if (!content || !button) return;
+        const collapsed = content.classList.toggle('hidden');
+        button.textContent = collapsed ? '展开' : '收起';
+        button.setAttribute('aria-expanded', String(!collapsed));
+      }
+
+      enterEndgameEditor() {
+        if (this.isBusy) return;
+        this.endgameEditor = true;
+        this.gameOver = false;
+        this.isBusy = false;
+        this.aiCallback = null;
+        this.selectedSquare = null;
+        this.clearLegalMoveIndicators();
+        this.clearCheckmateVFX();
+        this.clearCheckmateHighlights();
+        document.getElementById('custom-endgame-panel').classList.remove('hidden');
+        document.getElementById('editor-tools-content')?.classList.remove('hidden');
+        const collapseBtn = document.getElementById('editor-collapse-btn');
+        if (collapseBtn) { collapseBtn.textContent = '收起'; collapseBtn.setAttribute('aria-expanded', 'true'); }
+        this.chooseEditorPiece('r', 'k');
+      }
+
+      chooseEditorPiece(color, type) {
+        this.editorPiece = { color, type };
+        this.editorErase = false;
+        const chars = PIECE_CHARS[color][type];
+        const status = document.getElementById('editor-piece-status');
+        if (status) status.textContent = `当前工具：${color === RED ? '红' : '黑'}${chars}`;
+      }
+
+      setEditorErase() {
+        this.editorErase = true;
+        const status = document.getElementById('editor-piece-status');
+        if (status) status.textContent = '当前工具：橡皮擦（点击棋子移除）';
+      }
+
+      clearEditorBoard() {
+        if (!this.endgameEditor) return;
+        this.engine.board = Array.from({ length: 10 }, () => Array(9).fill(null));
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.syncPiecesFromEngine();
+        this.updateUI(false);
+      }
+
+      editBoardSquare(r, c) {
+        if (!this.endgameEditor) return false;
+        const old = this.engine.board[r][c];
+        if (this.editorErase || (old && !this.editorErase && old.color === this.editorPiece.color && old.type === this.editorPiece.type)) {
+          this.engine.board[r][c] = null;
+        } else {
+          this.engine.board[r][c] = { id: Date.now() + r * 9 + c, color: this.editorPiece.color, type: this.editorPiece.type, char: PIECE_CHARS[this.editorPiece.color][this.editorPiece.type] };
+        }
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.selectedSquare = null;
+        this.clearLegalMoveIndicators();
+        this.syncPiecesFromEngine();
+        this.updateUI(false);
+        return true;
+      }
+
+      exitEndgameEditor(startGame) {
+        if (!this.endgameEditor) return;
+        if (startGame) {
+          let redKing = false, blackKing = false;
+          for (const row of this.engine.board) for (const p of row) if (p && p.type === 'k') { if (p.color === RED) redKing = true; else blackKing = true; }
+          if (!redKing || !blackKing) {
+            alert('开始残局前，棋盘上必须各有一个红帥和黑將。');
+            return;
+          }
+        }
+        if (startGame) {
+          // Keep the exact custom setup so “再来一局” replays this puzzle, not the standard opening.
+          this.customEndgameSnapshot = this.engine.board.map(row => row.map(piece => piece ? { ...piece } : null));
+        }
+        this.endgameEditor = false;
+        document.getElementById('custom-endgame-panel').classList.add('hidden');
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.gameOver = false;
+        this.selectedSquare = null;
+        this.syncPiecesFromEngine();
+        this.updateUI(this.engine.isInCheck(this.engine.turn));
+        if (startGame) {
+          this.setGameMode('inferno');
+          const label = document.getElementById('restart-label');
+          if (label) label.textContent = '重置残局';
+          const restartBtn = document.getElementById('btn-restart');
+          if (restartBtn) restartBtn.title = '恢复当前自定义残局的初始布局';
+        }
+      }
+
       handleBoardClick(clientX, clientY) {
-        if (this.isBusy || this.gameOver) return;
-        if (this.gameMode !== 'pvp' && this.engine.turn === BLACK) return;
+        if (this.isBusy || (this.gameOver && !this.endgameEditor)) return;
+        if (!this.endgameEditor && this.gameMode !== 'pvp' && this.engine.turn === BLACK) return;
 
         // If user was previewing a checkmate VFX in the middle of a game, clear it on click
         if (this.checkmateVFXGroup && this.checkmateVFXGroup.children.length > 0) {
@@ -6219,6 +6023,7 @@
           const r = Math.round(intersectPt.z / CELL_SIZE + 4.5);
 
           if (this.engine.inBounds(r, c)) {
+            if (this.endgameEditor) { this.editBoardSquare(r, c); return; }
             const clickedPiece = this.engine.board[r][c];
 
             // If user clicked the currently selected piece itself -> deselect and drop it back
@@ -6273,155 +6078,54 @@
       }
 
       setupControlsAndEvents() {
+        let isDragging = false;
+        let pointerDownPos = { x: 0, y: 0 };
+        let prevPointerPos = { x: 0, y: 0 };
+
         const dom = this.renderer.domElement;
 
-        // 多点触控指针追踪表 (支持单指旋转、双指捏合缩放、双指平移、智能轻触防抖)
-        const activePointers = new Map();
-        let primaryDownPos = { x: 0, y: 0 };
-        let primaryDownTime = 0;
-        let maxTouchMoveDist = 0;
-        let hadMultiTouch = false;
-        let prevPinchDist = 0;
-        let prevPinchCenter = { x: 0, y: 0 };
-        let lastTapTime = 0;
-
-        const getTwoFingerState = () => {
-          const pts = Array.from(activePointers.values());
-          const dx = pts[0].x - pts[1].x;
-          const dy = pts[0].y - pts[1].y;
-          return {
-            dist: Math.hypot(dx, dy),
-            center: {
-              x: (pts[0].x + pts[1].x) * 0.5,
-              y: (pts[0].y + pts[1].y) * 0.5
-            }
-          };
-        };
-
         dom.addEventListener('pointerdown', (e) => {
-          if (e.pointerType === 'mouse' && e.button !== 0) return;
-          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY, pointerType: e.pointerType });
-
-          if (activePointers.size === 1) {
-            primaryDownPos = { x: e.clientX, y: e.clientY };
-            primaryDownTime = performance.now();
-            maxTouchMoveDist = 0;
-            hadMultiTouch = false;
-          } else if (activePointers.size >= 2) {
-            hadMultiTouch = true;
-            const state = getTwoFingerState();
-            prevPinchDist = state.dist;
-            prevPinchCenter = state.center;
-          }
+          isDragging = true;
+          pointerDownPos = { x: e.clientX, y: e.clientY };
+          prevPointerPos = { x: e.clientX, y: e.clientY };
         });
 
         window.addEventListener('pointermove', (e) => {
-          if (!activePointers.has(e.pointerId)) return;
-          const prevPt = activePointers.get(e.pointerId);
-          const curPt = { x: e.clientX, y: e.clientY, pointerType: e.pointerType };
-          activePointers.set(e.pointerId, curPt);
+          if (!isDragging) return;
+          const dx = e.clientX - prevPointerPos.x;
+          const dy = e.clientY - prevPointerPos.y;
+          prevPointerPos = { x: e.clientX, y: e.clientY };
 
-          if (activePointers.size === 1 && !hadMultiTouch) {
-            const dx = curPt.x - prevPt.x;
-            const dy = curPt.y - prevPt.y;
-            const totalDist = Math.hypot(curPt.x - primaryDownPos.x, curPt.y - primaryDownPos.y);
-            maxTouchMoveDist = Math.max(maxTouchMoveDist, totalDist);
+          this.desiredSpherical.theta -= dx * 0.007;
+          this.desiredSpherical.phi = THREE.MathUtils.clamp(
+            this.desiredSpherical.phi - dy * 0.006,
+            0.12,
+            1.28
+          );
+        });
 
-            // 触控手指轻触时若位移小于 8px 不触发相机晃动，保证点击选子稳定
-            const dragDeadzone = e.pointerType === 'touch' ? 7 : 2;
-            if (maxTouchMoveDist > dragDeadzone) {
-              const sensitivity = e.pointerType === 'touch' ? 0.0085 : 0.007;
-              this.desiredSpherical.theta -= dx * sensitivity;
-              this.desiredSpherical.phi = THREE.MathUtils.clamp(
-                this.desiredSpherical.phi - dy * (sensitivity * 0.85),
-                0.12,
-                1.28
-              );
-            }
-          } else if (activePointers.size >= 2) {
-            // 双指捏合缩放 (Pinch-to-Zoom) + 双指微调观察焦点 (Two-Finger Pan)
-            const state = getTwoFingerState();
-            if (prevPinchDist > 10) {
-              const pinchDelta = prevPinchDist - state.dist;
-              const zoomFactor = (this.desiredSpherical.radius / 18) * 0.042;
-              this.desiredSpherical.radius = THREE.MathUtils.clamp(
-                this.desiredSpherical.radius + pinchDelta * zoomFactor,
-                this.minZoomRadius || 9.5,
-                this.maxZoomRadius || 32.0
-              );
-
-              // 双指同步滑动时轻微平移观察焦点，方便放大查看局部残局
-              const panDx = state.center.x - prevPinchCenter.x;
-              const panDy = state.center.y - prevPinchCenter.y;
-              const panScale = 0.009;
-              const cosT = Math.cos(this.camSpherical.theta);
-              const sinT = Math.sin(this.camSpherical.theta);
-              this.camTarget.x = THREE.MathUtils.clamp(
-                this.camTarget.x - (panDx * cosT + panDy * sinT) * panScale,
-                -3.5,
-                3.5
-              );
-              this.camTarget.z = THREE.MathUtils.clamp(
-                this.camTarget.z - (-panDx * sinT + panDy * cosT) * panScale,
-                -4.0,
-                4.0
-              );
-            }
-            prevPinchDist = state.dist;
-            prevPinchCenter = state.center;
+        window.addEventListener('pointerup', (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+          if (dist < 6) {
+            this.handleBoardClick(e.clientX, e.clientY);
           }
         });
 
-        const onPointerEnd = (e) => {
-          if (!activePointers.has(e.pointerId)) return;
-          activePointers.delete(e.pointerId);
-
-          if (activePointers.size === 0 && !hadMultiTouch) {
-            const elapsedMs = performance.now() - primaryDownTime;
-            // 移动端触控放宽点击位移容差至 14px，桌面鼠标保持 6px
-            const tapThreshold = e.pointerType === 'touch' ? 14 : 6;
-            if (maxTouchMoveDist <= tapThreshold && elapsedMs < 450) {
-              this.handleBoardClick(e.clientX, e.clientY);
-
-              // 触控端在非选子状态下快速双击空白处可一键重置最佳视角
-              const now = performance.now();
-              if (e.pointerType === 'touch' && !this.selectedSquare && (now - lastTapTime < 280)) {
-                this.setCameraPreset(this.currentCameraPreset || 'red');
-              }
-              lastTapTime = now;
-            }
-          } else if (activePointers.size >= 2) {
-            const state = getTwoFingerState();
-            prevPinchDist = state.dist;
-            prevPinchCenter = state.center;
-          }
-        };
-
-        window.addEventListener('pointerup', onPointerEnd);
-        window.addEventListener('pointercancel', (e) => {
-          activePointers.delete(e.pointerId);
-        });
-
-        // 阻止 iOS Safari 默认双指手势引发页面整体缩放
-        dom.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
-        dom.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
-
-        // 桌面端滚轮缩放（自动遵循响应式缩放上下限）
         dom.addEventListener('wheel', (e) => {
           e.preventDefault();
           this.desiredSpherical.radius = THREE.MathUtils.clamp(
             this.desiredSpherical.radius + e.deltaY * 0.012,
-            this.minZoomRadius || 9.5,
-            this.maxZoomRadius || 32.0
+            9.5,
+            28.0
           );
         }, { passive: false });
 
-        // 窗口尺寸变化或手机横竖屏旋转时，自动重算视口与最佳视距
         window.addEventListener('resize', () => {
-          this.updateViewportScale(true);
-        });
-        window.addEventListener('orientationchange', () => {
-          setTimeout(() => this.updateViewportScale(true), 120);
+          this.camera.aspect = window.innerWidth / window.innerHeight;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
       }
 
@@ -6800,6 +6504,69 @@
         this.updateUI(this.engine.isInCheck(this.engine.turn));
       }
 
+      handleRestartButton() {
+        // The contextual button must do what its label promises: replay the saved puzzle.
+        if (this.customEndgameSnapshot) {
+          this.replayEndgame();
+          return;
+        }
+        this.restartGame();
+      }
+
+      restartStandardGame() {
+        // Explicitly leave custom-endgame mode and restore the normal 32-piece opening.
+        this.customEndgameSnapshot = null;
+        this.endgameEditor = false;
+        const panel = document.getElementById('custom-endgame-panel');
+        if (panel) panel.classList.add('hidden');
+        const label = document.getElementById('restart-label');
+        if (label) label.textContent = '新局';
+        const btn = document.getElementById('btn-restart');
+        if (btn) btn.title = '重新开始当前标准象棋对局';
+        this.restartGame();
+      }
+
+      replayEndgame() {
+        if (!this.customEndgameSnapshot) {
+          this.restartGame();
+          return;
+        }
+        this.sfx.playSelect();
+        this.isBusy = false;
+        this.aiCallback = null;
+        this.activeAnimations = [];
+        const aiBadge = document.getElementById('ai-thinking');
+        if (aiBadge) { aiBadge.classList.add('hidden'); aiBadge.classList.remove('inline-flex'); }
+        this.closeModalOnly();
+        this.toggleVFXDrawer(false);
+        this.clearCheckmateHighlights();
+        this.clearCheckmateVFX();
+        this.updateCycleWarningUI(null);
+        this.gameOver = false;
+        this.endgameEditor = false;
+        this.selectedSquare = null;
+        this.clearLegalMoveIndicators();
+        this.lastFromRing.visible = false;
+        this.lastToRing.visible = false;
+        this.engine.board = this.customEndgameSnapshot.map(row => row.map(piece => piece ? { ...piece } : null));
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.syncPiecesFromEngine();
+        this.setGameMode('inferno');
+        this.updateUI(this.engine.isInCheck(this.engine.turn));
+        const label = document.getElementById('restart-label');
+        if (label) label.textContent = '重置残局';
+        const restartBtn = document.getElementById('btn-restart');
+        if (restartBtn) restartBtn.title = '恢复当前自定义残局的初始布局';
+        const evalBar = document.getElementById('eval-bar-red');
+        if (evalBar) evalBar.style.width = '50%';
+        const telEl = document.getElementById('ai-telemetry-text');
+        if (telEl) {
+          telEl.textContent = '残局重开 · 重新评估';
+          telEl.className = 'text-[11px] font-mono font-medium text-slate-600 border-l border-slate-300 pl-2';
+        }
+      }
+
       restartGame() {
         this.sfx.playSelect();
         this.isBusy = false;
@@ -6834,22 +6601,19 @@
 
       setCameraPreset(preset) {
         this.sfx.playSelect();
-        this.currentCameraPreset = preset;
         ['red', 'top', 'orbit'].forEach(p => {
           const btn = document.getElementById(`cam-${p}`);
           if (p === preset) btn.classList.add('seg-active');
           else btn.classList.remove('seg-active');
         });
 
-        const cfg = this.getResponsiveCameraConfig(preset);
-        this.minZoomRadius = cfg.minRadius;
-        this.maxZoomRadius = cfg.maxRadius;
-        this.camTarget.set(0, 0, cfg.targetZ);
-        this.desiredSpherical = {
-          radius: cfg.radius,
-          phi: cfg.phi,
-          theta: cfg.theta
-        };
+        if (preset === 'red') {
+          this.desiredSpherical = { radius: 17.5, phi: 0.72, theta: 0 };
+        } else if (preset === 'top') {
+          this.desiredSpherical = { radius: 16.5, phi: 0.14, theta: 0 };
+        } else if (preset === 'orbit') {
+          this.desiredSpherical = { radius: 20.5, phi: 0.85, theta: 0.65 };
+        }
       }
 
       toggleSound() {
@@ -6863,6 +6627,50 @@
     // Start the 3D application once window loads
     window.onload = function () {
       window.gameApp = new Xiangqi3DApp();
+
+      // Draggable endgame workshop: drag the title bar; action buttons remain clickable.
+      (() => {
+        const panel = document.getElementById('custom-endgame-panel');
+        const header = panel?.firstElementChild;
+        if (!panel || !header) return;
+        header.style.cursor = 'grab';
+        header.style.touchAction = 'none';
+        let drag = null;
+        header.addEventListener('pointerdown', (event) => {
+          if (event.target.closest('button')) return;
+          const rect = panel.getBoundingClientRect();
+          drag = { pointerId: event.pointerId, dx: event.clientX - rect.left, dy: event.clientY - rect.top };
+          panel.style.left = `${rect.left}px`;
+          panel.style.top = `${rect.top}px`;
+          panel.style.right = 'auto';
+          panel.style.bottom = 'auto';
+          header.style.cursor = 'grabbing';
+          try { header.setPointerCapture(event.pointerId); } catch (_) {}
+          event.preventDefault();
+        });
+        header.addEventListener('pointermove', (event) => {
+          if (!drag || event.pointerId !== drag.pointerId) return;
+          const maxX = Math.max(0, window.innerWidth - panel.offsetWidth);
+          const maxY = Math.max(0, window.innerHeight - Math.min(panel.offsetHeight, window.innerHeight));
+          panel.style.left = `${Math.min(maxX, Math.max(0, event.clientX - drag.dx))}px`;
+          panel.style.top = `${Math.min(maxY, Math.max(0, event.clientY - drag.dy))}px`;
+        });
+        const stopDrag = (event) => {
+          if (drag && (!event || event.pointerId === drag.pointerId)) {
+            drag = null;
+            header.style.cursor = 'grab';
+          }
+        };
+        header.addEventListener('pointerup', stopDrag);
+        header.addEventListener('pointercancel', stopDrag);
+        window.addEventListener('resize', () => {
+          if (panel.style.left || panel.style.top) {
+            const rect = panel.getBoundingClientRect();
+            panel.style.left = `${Math.min(Math.max(0, window.innerWidth - panel.offsetWidth), Math.max(0, rect.left))}px`;
+            panel.style.top = `${Math.min(Math.max(0, window.innerHeight - panel.offsetHeight), Math.max(0, rect.top))}px`;
+          }
+        });
+      })();
     };
   </script>
 </body>
