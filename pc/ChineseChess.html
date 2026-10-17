@@ -339,10 +339,38 @@
     </div>
   </header>
 
+  <!-- 自定义残局编辑器：紧凑浮动工具箱 -->
+  <section id="custom-endgame-panel" class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-24 w-[min(340px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/80 shadow-xl overflow-hidden" style="background:rgba(255,251,235,.96);backdrop-filter:blur(14px);">
+    <div class="flex items-center gap-2 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-amber-100/95 to-orange-50/95">
+      <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm"><span class="material-symbols-rounded text-[19px]">edit_square</span></div>
+      <div class="min-w-0 flex-1"><h2 class="serif-cn font-black text-slate-800 text-sm leading-tight">残局工坊</h2><p class="text-[10px] text-slate-500 leading-tight">选棋子，再点击棋盘放置</p></div>
+      <button id="editor-collapse-btn" class="md-btn shrink-0 rounded-lg px-2 py-1 bg-white/80 border border-amber-200 text-slate-700 text-xs" onclick="window.gameApp.toggleEditorTools()" title="收起或展开工具">收起</button>
+      <button id="editor-start-btn" class="md-btn shrink-0 rounded-lg px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-extrabold shadow-sm whitespace-nowrap" onclick="window.gameApp.exitEndgameEditor(true)" title="完成摆设并开始对局"><span class="material-symbols-rounded align-middle text-[15px]">play_arrow</span> 开始</button>
+      <button class="md-btn shrink-0 rounded-lg w-7 h-7 bg-white/80 border border-amber-200 text-slate-600 flex items-center justify-center" onclick="window.gameApp.exitEndgameEditor(false)" title="关闭残局编辑"><span class="material-symbols-rounded text-[17px]">close</span></button>
+    </div>
+    <div id="editor-tools-content" class="p-2.5 space-y-2 max-h-[27vh] overflow-y-auto">
+      <div class="rounded-xl bg-white/75 border border-red-100 p-2">
+        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-red-500"></span><span class="text-[11px] font-extrabold text-red-700">红方</span><span class="text-[10px] text-slate-400">选择棋子</span></div>
+        <div class="grid grid-cols-7 gap-1">
+          <button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','k')">帥</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','a')">仕</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','n')">馬</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','r')">車</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','c')">炮</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','p')">兵</button>
+        </div>
+      </div>
+      <div class="rounded-xl bg-white/75 border border-slate-200 p-2">
+        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-slate-700"></span><span class="text-[11px] font-extrabold text-slate-700">黑方</span><span class="text-[10px] text-slate-400">选择棋子</span></div>
+        <div class="grid grid-cols-7 gap-1">
+          <button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','k')">將</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','a')">士</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','b')">象</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','n')">馬</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','r')">車</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','c')">炮</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','p')">卒</button>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5"><span id="editor-piece-status" class="flex-1 min-w-0 text-[11px] text-slate-600 truncate px-2 py-1.5 rounded-lg bg-white border border-slate-200">当前工具：红帥</span><button class="md-btn rounded-lg px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-[11px] font-bold" onclick="window.gameApp.setEditorErase()">橡皮擦</button><button class="md-btn rounded-lg px-2.5 py-1.5 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold" onclick="window.gameApp.clearEditorBoard()">清空</button></div>
+      <p class="text-[10px] text-slate-400 text-center">拖动顶部标题栏可移动窗口 · 点击同一格可移除棋子</p>
+    </div>
+  </section>
+
   <!-- SINGLE-LAYER NAVIGATION UI: BOTTOM FLOATING DOCK -->
   <footer class="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-2.5 md:p-4 flex justify-center">
     <div class="pointer-events-auto md-card rounded-3xl px-3 py-2 md:px-4 md:py-2 flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5">
       
+      <button id="btn-endgame-editor" onclick="window.gameApp.enterEndgameEditor()" class="md-btn px-3 py-1.5 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold border border-amber-300">残局编辑</button>
       <!-- Undo Button -->
       <button id="btn-undo" onclick="window.gameApp.undoMove()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80">
         <span class="material-symbols-rounded text-[18px]">undo</span>
@@ -356,9 +384,15 @@
       </button>
 
       <!-- Restart Standard Game Button -->
-      <button id="btn-restart" onclick="window.gameApp.restartGame()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80" title="开始32子标准象棋新局">
+      <button id="btn-restart" onclick="window.gameApp.handleRestartButton()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80" title="开始32子标准象棋新局">
         <span id="restart-icon" class="material-symbols-rounded text-[18px]">restart_alt</span>
         <span id="restart-label">新局</span>
+      </button>
+
+      <!-- Always-available standard opening reset, independent of custom endgame replay -->
+      <button id="btn-standard-new-game" onclick="window.gameApp.restartStandardGame()" class="md-btn px-3 py-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1 border border-slate-600" title="放弃当前残局，恢复32子标准象棋开局">
+        <span class="material-symbols-rounded text-[18px]">refresh</span>
+        <span>标准新局</span>
       </button>
 
       <!-- Ultimate Checkmate VFX Showcase Toggle -->
@@ -493,7 +527,7 @@
           <span class="material-symbols-rounded text-[18px] text-red-700">auto_awesome</span>
           <span>重播绝杀特效</span>
         </button>
-        <button onclick="window.gameApp.restartGame()" class="md-btn px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 shadow-lg">
+        <button onclick="window.gameApp.replayEndgame()" class="md-btn px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 shadow-lg">
           <span class="material-symbols-rounded text-[18px]">replay</span>
           <span>再来一局</span>
         </button>
@@ -1796,6 +1830,25 @@
             blackScore -= (2 - blackElephants) * redCannons * 35;
           }
 
+          // 动态残局评估：子力减少后提高过河兵、将帅机动性和逼将价值，避免宗师残局判断失真。
+          let totalPieces = 0;
+          for (let r = 0; r < 10; r++) for (let c = 0; c < 9; c++) if (board[r][c]) totalPieces++;
+          if (totalPieces <= 16) {
+            const phase = totalPieces <= 8 ? 1.0 : (16 - totalPieces) / 8;
+            for (let r = 0; r < 10; r++) for (let c = 0; c < 9; c++) {
+              const p = board[r][c]; if (!p) continue;
+              const advance = p.color === RED ? 9 - r : r;
+              if (p.type === 'p') {
+                const crossed = p.color === RED ? r <= 4 : r >= 5;
+                const bonus = (crossed ? 28 : 0) + advance * 3;
+                if (p.color === RED) redScore += bonus * phase; else blackScore += bonus * phase;
+              } else if (p.type === 'k') {
+                const centrality = 4 - Math.abs(4 - c);
+                const mobilityBonus = (centrality * 5 + (p.color === RED ? 9 - r : r) * 2) * phase;
+                if (p.color === RED) redScore += mobilityBonus; else blackScore += mobilityBonus;
+              }
+            }
+          }
           const diff = redScore - blackScore;
           return perspectiveColor === RED ? diff : -diff;
         }
@@ -2096,16 +2149,20 @@
             }
           }
 
+          let pieceCount = 0;
+          for (let r = 0; r < 10; r++) for (let c = 0; c < 9; c++) if (board[r][c]) pieceCount++;
+          const isEndgame = pieceCount <= 16;
+          const isDeepEndgame = pieceCount <= 10;
           if (difficulty === 'easy') {
-            maxTimeMs = 260;
+            maxTimeMs = isEndgame ? 340 : 260;
           } else if (difficulty === 'hard') {
-            maxTimeMs = 680;
+            maxTimeMs = isDeepEndgame ? 1050 : (isEndgame ? 850 : 680);
           } else {
-            // INFERNO GRANDMASTER (炼狱宗师)
-            maxTimeMs = 1650;
+            // 炼狱宗师：残局分支更少，主动增加搜索预算，避免进入残局后“降难度”
+            maxTimeMs = isDeepEndgame ? 3200 : (isEndgame ? 2500 : 1650);
           }
 
-          const maxTargetDepth = difficulty === 'easy' ? 2 : (difficulty === 'hard' ? 4 : 9);
+          const maxTargetDepth = difficulty === 'easy' ? 2 : (difficulty === 'hard' ? (isDeepEndgame ? 6 : 4) : (isDeepEndgame ? 13 : (isEndgame ? 11 : 9)));
           const { lo, hi } = computeBoardHash(board, turn);
 
           // Decay history table slightly between searches
@@ -3631,6 +3688,10 @@
         this.gameMode = 'inferno'; // 'pvp' | 'easy' | 'hard' | 'inferno'
         this.isBusy = false;
         this.gameOver = false;
+        this.endgameEditor = false;
+        this.editorPiece = { color: RED, type: 'k' };
+        this.editorErase = false;
+        this.customEndgameSnapshot = null;
 
         this.selectedSquare = null;
         this.legalMovesForSelected = [];
@@ -5809,9 +5870,106 @@
         });
       }
 
+      toggleEditorTools() {
+        const content = document.getElementById('editor-tools-content');
+        const button = document.getElementById('editor-collapse-btn');
+        if (!content || !button) return;
+        const collapsed = content.classList.toggle('hidden');
+        button.textContent = collapsed ? '展开' : '收起';
+        button.setAttribute('aria-expanded', String(!collapsed));
+      }
+
+      enterEndgameEditor() {
+        if (this.isBusy) return;
+        this.endgameEditor = true;
+        this.gameOver = false;
+        this.isBusy = false;
+        this.aiCallback = null;
+        this.selectedSquare = null;
+        this.clearLegalMoveIndicators();
+        this.clearCheckmateVFX();
+        this.clearCheckmateHighlights();
+        document.getElementById('custom-endgame-panel').classList.remove('hidden');
+        document.getElementById('editor-tools-content')?.classList.remove('hidden');
+        const collapseBtn = document.getElementById('editor-collapse-btn');
+        if (collapseBtn) { collapseBtn.textContent = '收起'; collapseBtn.setAttribute('aria-expanded', 'true'); }
+        this.chooseEditorPiece('r', 'k');
+      }
+
+      chooseEditorPiece(color, type) {
+        this.editorPiece = { color, type };
+        this.editorErase = false;
+        const chars = PIECE_CHARS[color][type];
+        const status = document.getElementById('editor-piece-status');
+        if (status) status.textContent = `当前工具：${color === RED ? '红' : '黑'}${chars}`;
+      }
+
+      setEditorErase() {
+        this.editorErase = true;
+        const status = document.getElementById('editor-piece-status');
+        if (status) status.textContent = '当前工具：橡皮擦（点击棋子移除）';
+      }
+
+      clearEditorBoard() {
+        if (!this.endgameEditor) return;
+        this.engine.board = Array.from({ length: 10 }, () => Array(9).fill(null));
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.syncPiecesFromEngine();
+        this.updateUI(false);
+      }
+
+      editBoardSquare(r, c) {
+        if (!this.endgameEditor) return false;
+        const old = this.engine.board[r][c];
+        if (this.editorErase || (old && !this.editorErase && old.color === this.editorPiece.color && old.type === this.editorPiece.type)) {
+          this.engine.board[r][c] = null;
+        } else {
+          this.engine.board[r][c] = { id: Date.now() + r * 9 + c, color: this.editorPiece.color, type: this.editorPiece.type, char: PIECE_CHARS[this.editorPiece.color][this.editorPiece.type] };
+        }
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.selectedSquare = null;
+        this.clearLegalMoveIndicators();
+        this.syncPiecesFromEngine();
+        this.updateUI(false);
+        return true;
+      }
+
+      exitEndgameEditor(startGame) {
+        if (!this.endgameEditor) return;
+        if (startGame) {
+          let redKing = false, blackKing = false;
+          for (const row of this.engine.board) for (const p of row) if (p && p.type === 'k') { if (p.color === RED) redKing = true; else blackKing = true; }
+          if (!redKing || !blackKing) {
+            alert('开始残局前，棋盘上必须各有一个红帥和黑將。');
+            return;
+          }
+        }
+        if (startGame) {
+          // Keep the exact custom setup so “再来一局” replays this puzzle, not the standard opening.
+          this.customEndgameSnapshot = this.engine.board.map(row => row.map(piece => piece ? { ...piece } : null));
+        }
+        this.endgameEditor = false;
+        document.getElementById('custom-endgame-panel').classList.add('hidden');
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.gameOver = false;
+        this.selectedSquare = null;
+        this.syncPiecesFromEngine();
+        this.updateUI(this.engine.isInCheck(this.engine.turn));
+        if (startGame) {
+          this.setGameMode('inferno');
+          const label = document.getElementById('restart-label');
+          if (label) label.textContent = '重置残局';
+          const restartBtn = document.getElementById('btn-restart');
+          if (restartBtn) restartBtn.title = '恢复当前自定义残局的初始布局';
+        }
+      }
+
       handleBoardClick(clientX, clientY) {
-        if (this.isBusy || this.gameOver) return;
-        if (this.gameMode !== 'pvp' && this.engine.turn === BLACK) return;
+        if (this.isBusy || (this.gameOver && !this.endgameEditor)) return;
+        if (!this.endgameEditor && this.gameMode !== 'pvp' && this.engine.turn === BLACK) return;
 
         // If user was previewing a checkmate VFX in the middle of a game, clear it on click
         if (this.checkmateVFXGroup && this.checkmateVFXGroup.children.length > 0) {
@@ -5865,6 +6023,7 @@
           const r = Math.round(intersectPt.z / CELL_SIZE + 4.5);
 
           if (this.engine.inBounds(r, c)) {
+            if (this.endgameEditor) { this.editBoardSquare(r, c); return; }
             const clickedPiece = this.engine.board[r][c];
 
             // If user clicked the currently selected piece itself -> deselect and drop it back
@@ -6345,6 +6504,69 @@
         this.updateUI(this.engine.isInCheck(this.engine.turn));
       }
 
+      handleRestartButton() {
+        // The contextual button must do what its label promises: replay the saved puzzle.
+        if (this.customEndgameSnapshot) {
+          this.replayEndgame();
+          return;
+        }
+        this.restartGame();
+      }
+
+      restartStandardGame() {
+        // Explicitly leave custom-endgame mode and restore the normal 32-piece opening.
+        this.customEndgameSnapshot = null;
+        this.endgameEditor = false;
+        const panel = document.getElementById('custom-endgame-panel');
+        if (panel) panel.classList.add('hidden');
+        const label = document.getElementById('restart-label');
+        if (label) label.textContent = '新局';
+        const btn = document.getElementById('btn-restart');
+        if (btn) btn.title = '重新开始当前标准象棋对局';
+        this.restartGame();
+      }
+
+      replayEndgame() {
+        if (!this.customEndgameSnapshot) {
+          this.restartGame();
+          return;
+        }
+        this.sfx.playSelect();
+        this.isBusy = false;
+        this.aiCallback = null;
+        this.activeAnimations = [];
+        const aiBadge = document.getElementById('ai-thinking');
+        if (aiBadge) { aiBadge.classList.add('hidden'); aiBadge.classList.remove('inline-flex'); }
+        this.closeModalOnly();
+        this.toggleVFXDrawer(false);
+        this.clearCheckmateHighlights();
+        this.clearCheckmateVFX();
+        this.updateCycleWarningUI(null);
+        this.gameOver = false;
+        this.endgameEditor = false;
+        this.selectedSquare = null;
+        this.clearLegalMoveIndicators();
+        this.lastFromRing.visible = false;
+        this.lastToRing.visible = false;
+        this.engine.board = this.customEndgameSnapshot.map(row => row.map(piece => piece ? { ...piece } : null));
+        this.engine.history = [];
+        this.engine.turn = RED;
+        this.syncPiecesFromEngine();
+        this.setGameMode('inferno');
+        this.updateUI(this.engine.isInCheck(this.engine.turn));
+        const label = document.getElementById('restart-label');
+        if (label) label.textContent = '重置残局';
+        const restartBtn = document.getElementById('btn-restart');
+        if (restartBtn) restartBtn.title = '恢复当前自定义残局的初始布局';
+        const evalBar = document.getElementById('eval-bar-red');
+        if (evalBar) evalBar.style.width = '50%';
+        const telEl = document.getElementById('ai-telemetry-text');
+        if (telEl) {
+          telEl.textContent = '残局重开 · 重新评估';
+          telEl.className = 'text-[11px] font-mono font-medium text-slate-600 border-l border-slate-300 pl-2';
+        }
+      }
+
       restartGame() {
         this.sfx.playSelect();
         this.isBusy = false;
@@ -6405,6 +6627,50 @@
     // Start the 3D application once window loads
     window.onload = function () {
       window.gameApp = new Xiangqi3DApp();
+
+      // Draggable endgame workshop: drag the title bar; action buttons remain clickable.
+      (() => {
+        const panel = document.getElementById('custom-endgame-panel');
+        const header = panel?.firstElementChild;
+        if (!panel || !header) return;
+        header.style.cursor = 'grab';
+        header.style.touchAction = 'none';
+        let drag = null;
+        header.addEventListener('pointerdown', (event) => {
+          if (event.target.closest('button')) return;
+          const rect = panel.getBoundingClientRect();
+          drag = { pointerId: event.pointerId, dx: event.clientX - rect.left, dy: event.clientY - rect.top };
+          panel.style.left = `${rect.left}px`;
+          panel.style.top = `${rect.top}px`;
+          panel.style.right = 'auto';
+          panel.style.bottom = 'auto';
+          header.style.cursor = 'grabbing';
+          try { header.setPointerCapture(event.pointerId); } catch (_) {}
+          event.preventDefault();
+        });
+        header.addEventListener('pointermove', (event) => {
+          if (!drag || event.pointerId !== drag.pointerId) return;
+          const maxX = Math.max(0, window.innerWidth - panel.offsetWidth);
+          const maxY = Math.max(0, window.innerHeight - Math.min(panel.offsetHeight, window.innerHeight));
+          panel.style.left = `${Math.min(maxX, Math.max(0, event.clientX - drag.dx))}px`;
+          panel.style.top = `${Math.min(maxY, Math.max(0, event.clientY - drag.dy))}px`;
+        });
+        const stopDrag = (event) => {
+          if (drag && (!event || event.pointerId === drag.pointerId)) {
+            drag = null;
+            header.style.cursor = 'grab';
+          }
+        };
+        header.addEventListener('pointerup', stopDrag);
+        header.addEventListener('pointercancel', stopDrag);
+        window.addEventListener('resize', () => {
+          if (panel.style.left || panel.style.top) {
+            const rect = panel.getBoundingClientRect();
+            panel.style.left = `${Math.min(Math.max(0, window.innerWidth - panel.offsetWidth), Math.max(0, rect.left))}px`;
+            panel.style.top = `${Math.min(Math.max(0, window.innerHeight - panel.offsetHeight), Math.max(0, rect.top))}px`;
+          }
+        });
+      })();
     };
   </script>
 </body>
