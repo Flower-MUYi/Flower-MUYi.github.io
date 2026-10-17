@@ -2004,6 +2004,11 @@
         // Quiescence Search to prevent horizon blunders
         function quiescence(board, alpha, beta, color, qDepth) {
           nodesSearched++;
+          // Hard safety bounds: checking sequences can otherwise recurse indefinitely
+          // because the normal quiescence depth limit is skipped while in check.
+          if ((nodesSearched & 255) === 0 && Date.now() - startTime > maxTimeMs) stopSearch = true;
+          if (stopSearch) return 0;
+          if (qDepth <= -8) return evaluate(board, color);
           const inChk = isInCheck(color, board);
 
           if (!inChk) {
@@ -2041,15 +2046,17 @@
 
         // Principal Variation Search (PVS) with Zobrist TT, Null-Move & LMR
         function pvs(board, depth, alpha, beta, color, hashLo, hashHi, ply, canNull) {
-          if ((nodesSearched & 2047) === 0) {
-            if (Date.now() - startTime > maxTimeMs) {
-              stopSearch = true;
-            }
+          // Check the deadline frequently; a large branching factor must not
+          // leave the UI stuck in "Grandmaster thinking" for a long time.
+          if ((nodesSearched & 255) === 0 && Date.now() - startTime > maxTimeMs) {
+            stopSearch = true;
           }
           if (stopSearch) return 0;
+          if (ply >= 64) return evaluate(board, color);
 
           const inChk = isInCheck(color, board);
-          if (inChk) depth++; // Check extension!
+          // Limit check extensions to avoid endless depth-preserving checking chains.
+          if (inChk && ply < 8) depth++;
 
           if (depth <= 0) {
             return quiescence(board, alpha, beta, color, 0);
@@ -3843,6 +3850,17 @@
               }
             }
           };
+          this.aiWorker.onerror = (err) => {
+            console.error('宗师 AI Worker 运行失败，启用安全走法：', err);
+            const cb = this.aiCallback;
+            this.aiCallback = null;
+            if (cb) {
+              const legal = this.engine.getAllLegalMoves(this.engine.turn);
+              cb(legal[0] || null);
+            }
+            try { this.aiWorker.terminate(); } catch (_) {}
+            this.aiWorker = null;
+          };
         } catch (err) {
           console.warn('Web Worker fallback active:', err);
         }
@@ -3881,14 +3899,34 @@
           this.aiCallback = callback;
           const historyMoves = this.engine.history.map(h => h.move);
           const forbiddenMoves = this.engine.getForbiddenRepetitionMoves(color);
-          this.aiWorker.postMessage({
-            board: this.engine.board,
-            turn: color,
-            difficulty,
-            historyMoves,
-            useBook: true,
-            forbiddenMoves
-          });
+          try {
+            this.aiWorker.postMessage({
+              board: this.engine.board,
+              turn: color,
+              difficulty,
+              historyMoves,
+              useBook: true,
+              forbiddenMoves
+            });
+            // Recover if a worker unexpectedly stops responding.
+            const workerAtRequest = this.aiWorker;
+            const callbackAtRequest = callback;
+            setTimeout(() => {
+              if (this.aiWorker === workerAtRequest && this.aiCallback === callbackAtRequest) {
+                console.warn('宗师 AI 推演超时，使用合法走法恢复对局。');
+                this.aiCallback = null;
+                try { workerAtRequest.terminate(); } catch (_) {}
+                this.aiWorker = null;
+                const legal = this.engine.getAllLegalMoves(color);
+                callbackAtRequest(legal[0] || null);
+              }
+            }, difficulty === 'inferno' ? 8000 : 4000);
+          } catch (err) {
+            console.error('AI Worker 发送请求失败：', err);
+            this.aiCallback = null;
+            const legal = this.engine.getAllLegalMoves(color);
+            setTimeout(() => callback(legal[0] || null), 0);
+          }
         } else {
           // Safe fallback if Worker is blocked
           const allMoves = this.engine.getAllLegalMoves(color);
