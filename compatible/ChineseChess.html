@@ -450,18 +450,24 @@
     header h1 { white-space: nowrap; }
     #ai-telemetry-text { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     @media (max-width: 640px) {
-      header { padding: 9px 11px !important; gap: 8px !important; align-items: stretch !important; }
-      header > div:first-child { gap: 8px !important; flex: 1 1 100%; width:100%; }
-      header > div:first-child > div:first-child { width: 34px !important; height: 34px !important; flex: 0 0 34px !important; }
-      header h1 { font-size: 15px !important; line-height: 1.2 !important; }
-      #ai-telemetry-text { font-size: 10px !important; line-height: 1.25 !important; }
-      header [role="group"] { display:flex !important; width:100%; justify-content:stretch !important; gap:4px !important; }
-      header [role="group"] button { flex:1 1 0; min-width:0 !important; padding:7px 3px !important; font-size:11px !important; white-space:nowrap; }
-      #turn-badge { flex:0 0 auto; padding:5px 8px !important; font-size:11px !important; }
+      /* 手机标题栏：第一行品牌与状态，第二行模式按钮；避免绝对定位和挤压 */
+      header { padding: 7px 9px !important; gap: 7px !important; display:flex !important; flex-wrap:wrap !important; align-items:center !important; }
+      header > div:first-child { flex:1 1 calc(100% - 8px) !important; width:100% !important; gap:8px !important; align-items:center !important; }
+      header > div:first-child > div:first-child { width:34px !important; height:34px !important; flex:0 0 34px !important; }
+      header h1 { font-size:14px !important; line-height:1.15 !important; }
+      #ai-telemetry-text { font-size:9px !important; line-height:1.2 !important; max-width: min(68vw, 260px) !important; }
+      header [role="group"] { display:flex !important; flex:1 1 100% !important; width:100% !important; max-width:none !important; justify-content:stretch !important; gap:5px !important; margin:0 !important; }
+      header [role="group"] button { flex:1 1 0 !important; min-width:0 !important; padding:7px 2px !important; font-size:11px !important; line-height:1.1 !important; white-space:nowrap !important; border-radius:10px !important; }
+      #turn-badge { flex:0 0 auto; padding:4px 7px !important; font-size:10px !important; }
       #captured-content:not(.hidden) { flex-wrap:wrap; }
       #captured-row { align-items:flex-start; }
     }
     #captured-content.hidden { display: none !important; }
+    @media (max-width: 640px) {
+      footer > div { max-width: calc(100vw - 12px) !important; flex-wrap: wrap !important; justify-content: center !important; gap: 4px !important; }
+      footer > div > button { flex: 0 1 auto; min-width: 0; }
+      #btn-offer-draw, #btn-resign { padding: 5px 7px !important; }
+    }
 </style>
 </head>
 
@@ -755,6 +761,8 @@
       </button>
 
       <!-- 4. 好友联机 -->
+      <button id="btn-offer-draw" onclick="window.gameApp.requestDraw()" class="hidden md-btn px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-900 text-xs font-semibold border border-amber-200">求和</button>
+      <button id="btn-resign" onclick="window.gameApp.resignOnline()" class="hidden md-btn px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-800 text-xs font-semibold border border-rose-200">认输</button>
       <button id="btn-online-p2p" onclick="window.gameApp.toggleOnlineModal()"
         class="md-btn px-2.5 py-1.5 rounded-xl bg-indigo-50/90 hover:bg-indigo-100 text-indigo-950 text-xs font-bold flex items-center gap-1 border border-indigo-200">
         <span id="online-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
@@ -814,6 +822,11 @@
         <p class="text-[10px] leading-relaxed text-slate-500">用手机相机扫描二维码，打开邀请链接即可自动加入。</p>
         <button onclick="window.gameApp.copyInviteLink()"
           class="md-btn rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">复制邀请链接</button>
+      </div>
+      <div id="room-side-choice" class="flex items-center gap-3 rounded-xl border border-indigo-200 bg-white/80 px-3 py-2 text-xs">
+        <span class="font-bold text-slate-700">创建方执棋：</span>
+        <label class="flex items-center gap-1"><input type="radio" name="room-side" value="red" checked> <span class="text-red-700 font-bold">红方</span></label>
+        <label class="flex items-center gap-1"><input type="radio" name="room-side" value="black"> <span class="text-slate-800 font-bold">黑方</span></label>
       </div>
       <button id="btn-create-room" onclick="window.gameApp.createOnlineRoom()"
         class="md-btn w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm">创建房间并生成二维码（扫码加入）</button>
@@ -6422,7 +6435,27 @@
         }
       }
 
+      requestDraw() {
+        if (!this.onlineRole || !this.conn?.open) { this.showCenterCallout('请先连接好友房间', RED); return; }
+        if (!window.confirm('确定向对方提出求和申请吗？')) return;
+        this.conn.send({ type: 'draw_request' });
+        this.showCenterCallout('已发送求和申请，等待对方回应', this.onlineRole);
+      }
+
+      resignOnline() {
+        if (!this.onlineRole || !this.conn?.open) { this.showCenterCallout('请先连接好友房间', RED); return; }
+        if (!window.confirm('确定认输吗？认输后本局将结束。')) return;
+        this.conn.send({ type: 'resign', side: this.onlineRole === RED ? 'red' : 'black' });
+        this.gameOver = true;
+        this.showCenterCallout('你已认输，本局结束', this.onlineRole);
+        this.updateUI(this.engine.isInCheck(this.engine.turn));
+      }
+
       handleRestartButton() {
+        if (this.onlineRole && this.conn?.open) {
+          this.showCenterCallout('联机中请使用「求和」或「认输」，不能单方面重置棋局', this.onlineRole);
+          return;
+        }
         if (this.customEndgameSnapshot) {
           this.replayEndgame();
           return;
@@ -6650,6 +6683,11 @@
         document.getElementById('online-status-dot').className = `w-2 h-2 rounded-full ${connected ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`;
         document.getElementById('online-btn-label').textContent = connected ? '联机中' : '联机';
         document.getElementById('btn-disconnect-p2p')?.classList.toggle('hidden', !this.peer && !this.conn);
+        const inRoom = Boolean(this.onlineRole && this.conn?.open);
+        document.getElementById('btn-offer-draw')?.classList.toggle('hidden', !inRoom);
+        document.getElementById('btn-resign')?.classList.toggle('hidden', !inRoom);
+        const restartLabel = document.getElementById('restart-label');
+        if (restartLabel) restartLabel.textContent = inRoom ? '求和/认输' : (this.customEndgameSnapshot ? '重置残局' : '新局');
       }
 
       createOnlineRoom() {
@@ -6660,7 +6698,8 @@
         this.disconnectOnline(true);
         const code = Math.random().toString(36).slice(2, 8).toUpperCase();
         this.roomCode = code;
-        this.onlineRole = RED;
+        const selectedSide = document.querySelector('input[name="room-side"]:checked')?.value || 'red';
+        this.onlineRole = selectedSide === 'black' ? BLACK : RED;
         const codeEl = document.getElementById('my-room-code');
         if (codeEl) codeEl.textContent = code;
         this.updateOnlineStatusUI('正在创建房间…', false);
@@ -6752,6 +6791,7 @@
           this.setGameMode('pvp');
           this.updateOnlineStatusUI(`已连入房间 ${this.roomCode}`, true);
           this.toggleOnlineModal(false);
+          this.conn.send({ type: 'role_info', role: this.onlineRole === RED ? 'red' : 'black' });
           if (this.onlineRole === RED) {
             this.conn.send({ type: 'sync_board', fen: this.exportBoardToFEN() });
           } else {
@@ -6767,7 +6807,25 @@
         });
         this.conn.on('data', data => {
           if (!data?.type) return;
-          if (data.type === 'request_sync' && this.onlineRole === RED && this.conn?.open) {
+          if (data.type === 'role_info') {
+            // 房主可选择红/黑，加入者自动执相反颜色；只有红方负责初始棋盘同步。
+            if (this.onlineRole !== (data.role === 'red' ? BLACK : RED)) this.onlineRole = data.role === 'red' ? BLACK : RED;
+            this.desiredSpherical.theta = this.onlineRole === BLACK ? Math.PI : 0;
+            this.updatePiecesOrientation();
+            this.updateOnlineStatusUI(`已连入房间 ${this.roomCode}（${this.onlineRole === RED ? '红方' : '黑方'}）`, true);
+            if (this.onlineRole === RED && this.conn?.open) this.conn.send({ type: 'sync_board', fen: this.exportBoardToFEN() });
+            else if (this.onlineRole === BLACK && this.conn?.open) this.conn.send({ type: 'request_sync' });
+          } else if (data.type === 'draw_request') {
+            const accepted = window.confirm('对方提出求和，是否同意？');
+            this.conn?.send({ type: accepted ? 'draw_accept' : 'draw_reject' });
+            if (accepted) { this.gameOver = true; this.showCenterCallout('双方和棋', this.onlineRole || RED); this.updateUI(this.engine.isInCheck(this.engine.turn)); }
+          } else if (data.type === 'draw_accept') {
+            this.gameOver = true; this.showCenterCallout('对方同意求和，本局和棋', this.onlineRole || RED); this.updateUI(this.engine.isInCheck(this.engine.turn));
+          } else if (data.type === 'draw_reject') {
+            this.showCenterCallout('对方拒绝求和', this.onlineRole || RED);
+          } else if (data.type === 'resign') {
+            this.gameOver = true; this.showCenterCallout(`${data.side === 'red' ? '红方' : '黑方'}认输，本局结束`, this.onlineRole || RED); this.updateUI(this.engine.isInCheck(this.engine.turn));
+          } else if (data.type === 'request_sync' && this.onlineRole === RED && this.conn?.open) {
             this.conn.send({ type: 'sync_board', fen: this.exportBoardToFEN() });
           } else if (data.type === 'sync_board' && data.fen) {
             this.loadBoardFromFEN(data.fen);
