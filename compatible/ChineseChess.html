@@ -6597,8 +6597,11 @@
           this.peer = new Peer(`xq3d-room-${code}`, {
             debug: 1,
             config: { iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:global.stun.twilio.com:3478' }
+              { urls: 'stun:stun.relay.metered.ca:80' },
+              { urls: 'turn:global.relay.metered.ca:80', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' },
+              { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' },
+              { urls: 'turn:global.relay.metered.ca:443', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' },
+              { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' }
             ] }
           });
           this.peer.on('open', () => {
@@ -6646,9 +6649,12 @@
 
         try {
           this.peer = new Peer(undefined, { debug: 1, config: { iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' }
-          ] } });
+              { urls: 'stun:stun.relay.metered.ca:80' },
+              { urls: 'turn:global.relay.metered.ca:80', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' },
+              { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' },
+              { urls: 'turn:global.relay.metered.ca:443', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' },
+              { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '27751b623aee80f0bb21e94f', credential: 'Wt12ytaTNfCYW92L' }
+            ] } });
           this.peer.on('open', () => {
             this.updateOnlineStatusUI(`正在连接房间 ${code}…`, false);
             this.conn = this.peer.connect(`xq3d-room-${code}`, { reliable: true, serialization: 'json' });
