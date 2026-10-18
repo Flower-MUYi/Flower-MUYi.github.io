@@ -468,6 +468,80 @@
       footer > div > button { flex: 0 1 auto; min-width: 0; }
       #btn-offer-draw, #btn-resign { padding: 5px 7px !important; }
     }
+
+
+    /* 手机标题栏重排：品牌、模式、回合状态分行，避免互相挤压 */
+    @media (max-width: 640px) {
+      header {
+        left: 0 !important; right: 0 !important;
+        width: 100% !important; max-width: none !important;
+        padding: max(6px, env(safe-area-inset-top, 0px)) 7px 0 !important;
+        gap: 6px !important;
+      }
+      header > div.pointer-events-auto.md-card {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        gap: 7px !important;
+        padding: 9px 10px 10px !important;
+        border-radius: 16px !important;
+        overflow: visible !important;
+      }
+      header > div.pointer-events-auto.md-card > div:first-child {
+        grid-row: 1 !important;
+        width: 100% !important; min-width: 0 !important;
+        flex: none !important; gap: 9px !important;
+      }
+      header > div.pointer-events-auto.md-card > div:first-child > div:first-child {
+        width: 36px !important; height: 36px !important; flex: 0 0 36px !important;
+        border-radius: 11px !important;
+      }
+      header h1 { font-size: 15px !important; line-height: 1.25 !important; white-space: nowrap !important; }
+      #ai-telemetry-text { max-width: min(70vw, 280px) !important; font-size: 10px !important; line-height: 1.25 !important; }
+      header [role="group"] {
+        grid-row: 2 !important;
+        display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        width: 100% !important; max-width: none !important; min-width: 0 !important;
+        margin: 0 !important; padding: 3px !important; gap: 4px !important;
+        flex: none !important; justify-content: stretch !important;
+      }
+      header [role="group"] button {
+        min-width: 0 !important; width: 100% !important; flex: none !important;
+        justify-content: center !important; gap: 3px !important;
+        padding: 8px 2px !important; font-size: 11px !important; line-height: 1.15 !important;
+        border-radius: 9px !important; white-space: nowrap !important;
+      }
+      header [role="group"] button .material-symbols-rounded { font-size: 13px !important; }
+      header > div.pointer-events-auto.md-card > div:nth-of-type(3) {
+        grid-row: 3 !important;
+        display: flex !important; width: 100% !important; min-width: 0 !important;
+        justify-content: flex-start !important; align-items: center !important;
+        flex-wrap: wrap !important; gap: 6px !important;
+      }
+      #turn-badge { max-width: 100% !important; min-width: 0 !important; padding: 5px 9px !important; }
+      #turn-text { white-space: nowrap !important; font-size: 11px !important; }
+      #ai-thinking { min-width: 0 !important; max-width: 58vw !important; }
+      #ai-thinking-label { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+      #check-badge { padding: 5px 8px !important; }
+      #captured-row { margin-top: 0 !important; }
+    }
+    @media (max-width: 360px) {
+      header > div.pointer-events-auto.md-card { padding: 7px 7px 9px !important; gap: 6px !important; }
+      header h1 { font-size: 14px !important; }
+      header [role="group"] button { font-size: 10px !important; padding: 7px 1px !important; }
+    }
+
+
+    /* 移动端提示层防残留：隐藏状态以最高优先级生效，避免 inline/flex 样式覆盖 */
+    #cycle-warning-banner[data-force-hidden="true"],
+    #illegal-move-toast[data-force-hidden="true"] { display: none !important; visibility: hidden !important; pointer-events: none !important; opacity: 0 !important; }
+    @media (max-width: 767px) {
+      #cycle-warning-banner.hidden, #illegal-move-toast.toast-hidden { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+      #cycle-warning-banner { z-index: 60; }
+      #illegal-move-toast { z-index: 61; }
+    }
 </style>
 </head>
 
@@ -4452,7 +4526,7 @@
 
       hideIllegalMovePrompt() {
         const toastEl = document.getElementById('illegal-move-toast');
-        if (toastEl) toastEl.classList.add('toast-hidden');
+        if (toastEl) { toastEl.dataset.forceHidden = 'true'; toastEl.classList.add('toast-hidden'); toastEl.style.display = 'none'; }
         if (this.illegalToastTimer) {
           clearTimeout(this.illegalToastTimer);
           this.illegalToastTimer = null;
@@ -4482,6 +4556,8 @@
             barEl.style.animation = '';
           }
 
+          delete toastEl.dataset.forceHidden;
+          toastEl.style.removeProperty('display');
           toastEl.classList.remove('toast-hidden');
           if (this.illegalToastTimer) clearTimeout(this.illegalToastTimer);
           this.illegalToastTimer = setTimeout(() => this.hideIllegalMovePrompt(), duration);
@@ -5715,8 +5791,10 @@
       hideCycleWarningBanner() {
         const banner = document.getElementById('cycle-warning-banner');
         if (banner) {
+          banner.dataset.forceHidden = 'true';
           banner.classList.add('hidden');
           banner.classList.remove('flex');
+          banner.style.display = 'none';
         }
         if (this.cycleBannerTimer) {
           clearTimeout(this.cycleBannerTimer);
@@ -5734,8 +5812,10 @@
         }
 
         if (!cycleStatus || cycleStatus.remainingSteps <= 0) {
+          banner.dataset.forceHidden = 'true';
           banner.classList.add('hidden');
           banner.classList.remove('flex');
+          banner.style.display = 'none';
           return;
         }
 
@@ -5744,6 +5824,9 @@
         document.getElementById('cycle-rule-desc').textContent = cycleStatus.ruleExplanation;
         document.getElementById('cycle-countdown-badge').textContent = `⚠️ 再走 ${cycleStatus.remainingSteps} 步判负`;
 
+        delete banner.dataset.forceHidden;
+        banner.style.removeProperty('display');
+        banner.style.display = 'flex';
         banner.classList.remove('hidden');
         banner.classList.add('flex');
 
@@ -6293,12 +6376,11 @@
         if (blackCard) blackCard.classList.toggle('hidden', !hasBlackCaptures);
         if (capturedRow) capturedRow.classList.toggle('hidden', !hasRedCaptures && !hasBlackCaptures);
 
-        if (hasRedCaptures) {
-          redTray.innerHTML = this.engine.capturedBlack.map(p => `<span class="captured-chip chip-obsidian">${p.char}</span>`).join('');
-        }
-        if (hasBlackCaptures) {
-          blackTray.innerHTML = this.engine.capturedRed.map(p => `<span class="captured-chip chip-ivory">${p.char}</span>`).join('');
-        }
+        // 每次完整重绘，空数组时也清空 DOM，避免新局残留上一局的被吃棋子。
+        if (redTray) redTray.innerHTML = hasRedCaptures
+          ? this.engine.capturedBlack.map(p => `<span class="captured-chip chip-obsidian">${p.char}</span>`).join('') : '';
+        if (blackTray) blackTray.innerHTML = hasBlackCaptures
+          ? this.engine.capturedRed.map(p => `<span class="captured-chip chip-ivory">${p.char}</span>`).join('') : '';
       }
 
       toggleCapturedTray() {
@@ -6478,6 +6560,9 @@
 
       replayEndgame(isRemote = false) {
         if (!this.customEndgameSnapshot) { this.restartGame(); return; }
+        // 再来一局残局时同样清除旧的循环裁决/非法着法提示。
+        this.hideCycleWarningBanner();
+        this.hideIllegalMovePrompt();
         this.sfx.playSelect();
         this.isBusy = false;
         this.aiCallback = null;
@@ -6486,6 +6571,9 @@
         this.toggleVFXDrawer(false);
         this.clearCheckmateHighlights();
         this.clearCheckmateVFX();
+        // 清理上局最后一步的蓝色起点/终点标记，避免重开后残留。
+        if (this.lastFromRing) this.lastFromRing.visible = false;
+        if (this.lastToRing) this.lastToRing.visible = false;
         this.gameOver = false;
         this.endgameEditor = false;
         this.selectedSquare = null;
@@ -6502,6 +6590,9 @@
       }
 
       restartGame() {
+        // 新局必须清理上一局的循环裁决横幅和非法着法提示，避免旧警告残留。
+        this.hideCycleWarningBanner();
+        this.hideIllegalMovePrompt();
         this.sfx.playSelect();
         this.isBusy = false;
         this.aiCallback = null;
@@ -6510,6 +6601,9 @@
         this.toggleVFXDrawer(false);
         this.clearCheckmateHighlights();
         this.clearCheckmateVFX();
+        // 清理上局最后一步的蓝色起点/终点标记，避免重开后残留。
+        if (this.lastFromRing) this.lastFromRing.visible = false;
+        if (this.lastToRing) this.lastToRing.visible = false;
         this.gameOver = false;
         this.selectedSquare = null;
         this.clearLegalMoveIndicators();
