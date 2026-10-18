@@ -444,6 +444,20 @@
       footer > div { padding: 3px !important; gap: 3px !important; }
       footer > div > button { padding: 3px 2px !important; }
     }
+
+    /* 标题栏保持单行：窄屏时允许内容压缩，不让动态文本撑开换行 */
+    header > div:first-child { min-width: 0; }
+    header h1 { white-space: nowrap; }
+    #ai-telemetry-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @media (max-width: 640px) {
+      header > div:first-child { gap: 5px !important; }
+      header > div:first-child > div:first-child { width: 30px !important; height: 30px !important; }
+      header [role="group"] button { padding-left: 5px !important; padding-right: 5px !important; }
+      #turn-badge { padding-left: 6px !important; padding-right: 6px !important; }
+      #captured-content:not(.hidden) { flex-wrap: wrap; }
+      #captured-row { align-items: flex-start; }
+    }
+    #captured-content.hidden { display: none !important; }
 </style>
 </head>
 
@@ -493,16 +507,16 @@
   <header
     class="pointer-events-none fixed top-0 left-0 right-0 z-20 p-2 md:p-3.5 flex flex-col gap-1.5 max-w-5xl mx-auto">
     <div
-      class="pointer-events-auto md-card relative overflow-hidden rounded-2xl px-3 py-1.5 md:px-4 md:py-2 flex flex-wrap items-center justify-between gap-2">
+      class="pointer-events-auto md-card relative overflow-hidden rounded-2xl px-3 py-1.5 md:px-4 md:py-2 flex flex-nowrap items-center justify-between gap-2 min-w-0">
 
       <!-- 左侧：品牌标识 + 极简AI遥测状态 -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 min-w-0 shrink">
         <div
           class="w-8 h-8 rounded-xl bg-gradient-to-br from-red-700 to-amber-700 flex items-center justify-center text-amber-50 shadow-inner serif-cn font-bold text-base shrink-0">
           帥
         </div>
-        <div class="leading-tight">
-          <div class="flex items-center gap-1.5">
+        <div class="leading-tight min-w-0">
+          <div class="flex flex-nowrap items-center gap-1.5 whitespace-nowrap">
             <h1 class="serif-cn font-bold text-slate-800 text-xs sm:text-sm md:text-base">中国象棋 3D</h1>
             <span id="scene-badge"
               class="hidden md:inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-800/10 text-emerald-900 border border-emerald-800/15">
@@ -516,7 +530,7 @@
       </div>
 
       <!-- 中部：紧凑型分段模式选择器 -->
-      <div class="flex items-center bg-slate-200/65 p-0.5 rounded-xl gap-0.5" role="group" aria-label="对局模式切换">
+      <div class="flex flex-nowrap shrink-0 items-center bg-slate-200/65 p-0.5 rounded-xl gap-0.5" role="group" aria-label="对局模式切换">
         <button id="mode-pvp" onclick="window.gameApp.setGameMode('pvp')"
           class="md-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[14px] hidden sm:inline">group</span>
@@ -538,7 +552,7 @@
       </div>
 
       <!-- 右侧：回合指示器与将军徽章 -->
-      <div class="flex items-center gap-1.5">
+      <div class="flex items-center gap-1.5 shrink-0">
         <div id="turn-badge"
           class="rounded-xl bg-white/60 border border-white/80 px-2.5 py-1 flex items-center gap-1.5 transition-all duration-300">
           <span id="turn-dot" class="w-2.5 h-2.5 rounded-full bg-red-600 ring-4 ring-red-600/20"></span>
@@ -564,8 +578,10 @@
       </div>
     </div>
 
-    <!-- 按需显示的吃子战果胶囊栏 (未吃子时完全隐身，不遮挡视野) -->
+    <!-- 可折叠吃子战果栏 -->
     <div id="captured-row" class="hidden items-center justify-between gap-2 pointer-events-none px-0.5">
+      <button id="captured-toggle" type="button" onclick="window.gameApp.toggleCapturedTray()" class="pointer-events-auto md-card rounded-lg px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm shrink-0">被吃棋子 ▾</button>
+      <div id="captured-content" class="flex flex-1 min-w-0 items-center justify-between gap-2">
       <div id="captured-red-card"
         class="hidden pointer-events-auto md-card rounded-xl px-2.5 py-1 items-center gap-1.5">
         <span class="text-[10px] font-bold text-red-800 shrink-0">红俘:</span>
@@ -575,6 +591,7 @@
         class="hidden pointer-events-auto md-card rounded-xl px-2.5 py-1 items-center gap-1.5 ml-auto">
         <span class="text-[10px] font-bold text-slate-800 shrink-0">黑俘:</span>
         <div id="captured-by-black" class="flex flex-wrap items-center gap-0.5 serif-cn"></div>
+      </div>
       </div>
     </div>
 
@@ -6241,6 +6258,14 @@
         }
       }
 
+      toggleCapturedTray() {
+        const content = document.getElementById('captured-content');
+        const button = document.getElementById('captured-toggle');
+        if (!content || !button) return;
+        const collapsed = content.classList.toggle('hidden');
+        button.textContent = collapsed ? '被吃棋子 ▸' : '被吃棋子 ▾';
+      }
+
       showCenterCallout(text, color) {
         const container = document.getElementById('center-callout');
         const inner = document.getElementById('center-callout-inner');
@@ -6318,12 +6343,24 @@
           if (!this.conn?.open || this.pendingUndoRequest) return;
           this.pendingUndoRequest = true;
           this.sfx.playSelect();
-          this.conn.send({ type: 'undo_request' });
-          this.showCenterCallout('已发送悔棋申请', this.onlineRole);
+          try {
+            this.conn.send({ type: 'undo_request' });
+            this.showCenterCallout('已发送悔棋申请', this.onlineRole);
+            this.undoRequestTimeout = setTimeout(() => {
+              if (!this.pendingUndoRequest) return;
+              this.pendingUndoRequest = false;
+              this.showCenterCallout('悔棋申请暂无回应', this.onlineRole);
+              this.updateUI(this.engine.isInCheck(this.engine.turn));
+            }, 15000);
+          } catch (err) {
+            this.pendingUndoRequest = false;
+            this.updateOnlineStatusUI('悔棋申请发送失败，请检查联机状态', false);
+          }
           this.updateUI(this.engine.isInCheck(this.engine.turn));
           return;
         }
         this.pendingUndoRequest = false;
+        clearTimeout(this.undoRequestTimeout);
         this.sfx.playSelect();
         this.gameOver = false;
         this.closeModalOnly();
@@ -6702,6 +6739,22 @@
             this.loadBoardFromFEN(data.fen);
             this.setGameMode('pvp');
             this.updatePiecesOrientation();
+            this.updateUI(this.engine.isInCheck(this.engine.turn));
+          } else if (data.type === 'undo_request') {
+            if (this.engine.history.length > 0 && !this.isBusy) {
+              document.getElementById('undo-request-modal')?.classList.remove('hidden');
+            } else if (this.conn?.open) {
+              this.conn.send({ type: 'undo_reject', reason: '当前无法悔棋' });
+            }
+          } else if (data.type === 'undo_accept') {
+            this.pendingUndoRequest = false;
+            clearTimeout(this.undoRequestTimeout);
+            this.undoMove(true);
+            this.showCenterCallout('对方已同意悔棋', this.onlineRole || RED);
+          } else if (data.type === 'undo_reject') {
+            this.pendingUndoRequest = false;
+            clearTimeout(this.undoRequestTimeout);
+            this.showCenterCallout('对方拒绝了悔棋申请', this.onlineRole || RED);
             this.updateUI(this.engine.isInCheck(this.engine.turn));
           } else if (data.type === 'move' && data.move) {
             this.executeMoveAnimated(data.move, null, true);
