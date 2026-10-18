@@ -453,7 +453,7 @@
       <div class="rounded-xl bg-white/75 border border-red-100 p-2">
         <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-red-500"></span><span class="text-[11px] font-extrabold text-red-700">红方</span><span class="text-[10px] text-slate-400">选择棋子</span></div>
         <div class="grid grid-cols-7 gap-1">
-          <button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','k')">帥</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','a')">仕</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','n')">馬</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','r')">車</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','c')">炮</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','p')">兵</button>
+          <button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','k')">帥</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','a')">仕</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','n')">馬</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','r')">俥</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','c')">炮</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','p')">兵</button>
         </div>
       </div>
       <div class="rounded-xl bg-white/75 border border-slate-200 p-2">
@@ -1057,7 +1057,7 @@
     const BLACK = 'b';
 
     const PIECE_CHARS = {
-      r: { k: '帥', a: '仕', b: '相', n: '馬', r: '車', c: '炮', p: '兵' },
+      r: { k: '帥', a: '仕', b: '相', n: '馬', r: '俥', c: '炮', p: '兵' },
       b: { k: '將', a: '士', b: '象', n: '馬', r: '車', c: '炮', p: '卒' }
     };
 
@@ -4380,7 +4380,9 @@
         });
         const topDisc = new THREE.Mesh(topDiscGeo, topDiscMat);
         topDisc.rotation.x = -Math.PI / 2;
-        // Rotate Black pieces 180 deg in PvP if desired, or keep upright for readability; let's keep upright for Red player clarity
+        // 联机执黑时所有棋子文字朝向黑方；本地双人模式下黑棋文字朝向黑方。
+        const flipForBlack = (this.onlineRole === BLACK) || (!this.onlineRole && this.gameMode === 'pvp' && pieceData.color === BLACK);
+        topDisc.rotation.z = flipForBlack ? Math.PI : 0;
         topDisc.position.y = height + 0.002;
         group.add(topDisc);
 
@@ -4406,6 +4408,7 @@
           r,
           c,
           auraMat,
+          topDisc,
           baseY: 0
         };
 
@@ -4428,6 +4431,15 @@
               this.pieceMeshes.set(p.id, mesh);
             }
           }
+        }
+      }
+
+      // 根据当前玩家身份刷新所有棋子顶面文字朝向。
+      updatePiecesOrientation() {
+        for (const mesh of this.pieceMeshes.values()) {
+          if (!mesh.userData || !mesh.userData.topDisc) continue;
+          const flipForBlack = (this.onlineRole === BLACK) || (!this.onlineRole && this.gameMode === 'pvp' && mesh.userData.color === BLACK);
+          mesh.userData.topDisc.rotation.z = flipForBlack ? Math.PI : 0;
         }
       }
 
@@ -6875,15 +6887,16 @@
           else btn.classList.remove('seg-active');
         });
 
+        const baseTheta = this.onlineRole === BLACK ? Math.PI : 0;
         if (preset === 'red') {
           this.basePresetRadius = 17.5;
-          this.desiredSpherical = { radius: 17.5, phi: 0.72, theta: 0 };
+          this.desiredSpherical = { radius: 17.5, phi: 0.72, theta: baseTheta };
         } else if (preset === 'top') {
           this.basePresetRadius = 16.5;
-          this.desiredSpherical = { radius: 16.5, phi: 0.14, theta: 0 };
+          this.desiredSpherical = { radius: 16.5, phi: 0.14, theta: baseTheta };
         } else if (preset === 'orbit') {
           this.basePresetRadius = 20.5;
-          this.desiredSpherical = { radius: 20.5, phi: 0.85, theta: 0.65 };
+          this.desiredSpherical = { radius: 20.5, phi: 0.85, theta: baseTheta + 0.65 };
         }
         this.updateViewportScale(true);
 
@@ -7034,8 +7047,14 @@
           this.setGameMode('pvp');
           this.updateOnlineStatusUI(`已连接房间 ${this.roomCode}，${this.onlineRole === RED ? '你执红' : '你执黑'}`, true);
           this.toggleOnlineModal(false);
-          if (this.onlineRole === RED) this.conn.send({type:'sync_board', fen:this.exportBoardToFEN()});
-          else { this.desiredSpherical.theta = Math.PI; this.conn.send({type:'request_sync'}); }
+          if (this.onlineRole === RED) {
+            this.updatePiecesOrientation();
+            this.conn.send({type:'sync_board', fen:this.exportBoardToFEN()});
+          } else {
+            this.desiredSpherical.theta = Math.PI;
+            this.updatePiecesOrientation();
+            this.conn.send({type:'request_sync'});
+          }
           this.updateUI(this.engine.isInCheck(this.engine.turn));
         });
         this.conn.on('data', data => {
@@ -7048,6 +7067,8 @@
         });
         this.conn.on('close', () => {
           this.onlineRole = null; this.conn = null;
+          this.updatePiecesOrientation();
+          this.desiredSpherical.theta = 0;
           this.updateOnlineStatusUI('对方已断开联机', false);
           this.updateUI(this.engine.isInCheck(this.engine.turn));
         });
@@ -7060,6 +7081,7 @@
         try { if (peer) peer.destroy(); } catch (_) {}
         const code = document.getElementById('my-room-code');
         if (code) code.textContent = '未创建';
+        this.updatePiecesOrientation();
         if (!silent) {
           this.desiredSpherical.theta = 0;
           this.updateOnlineStatusUI('已断开联机', false);
