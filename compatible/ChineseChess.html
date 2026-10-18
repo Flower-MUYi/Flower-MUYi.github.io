@@ -402,6 +402,48 @@
     #invite-qr { min-height:180px; }
     #invite-qr img, #invite-qr canvas { display:block; width:160px !important; height:160px !important; max-width:100%; margin:0 auto; }
 
+
+    /* 移动端底栏重排：窄屏允许换行，超小屏采用紧凑网格，避免横向溢出 */
+    @media (max-width: 640px) {
+      footer {
+        padding: 0 0 max(0.3rem, env(safe-area-inset-bottom, 0px)) !important;
+        align-items: flex-end !important;
+      }
+      footer > div {
+        width: calc(100vw - 12px) !important;
+        max-width: 520px !important;
+        box-sizing: border-box !important;
+        display: grid !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        gap: 4px !important;
+        padding: 5px !important;
+        border-radius: 14px !important;
+      }
+      footer > div > button {
+        min-width: 0 !important;
+        width: 100% !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+      }
+      footer > div > button .material-symbols-rounded { font-size: 16px !important; }
+      footer > div > button span:not(.material-symbols-rounded) { overflow: hidden; text-overflow: ellipsis; }
+      footer > div > div[ class*="h-4 w-[1px]" ] { display: none !important; }
+    }
+    @media (max-width: 390px) {
+      footer > div {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 4px !important;
+      }
+      footer > div > button { padding: 5px 2px !important; font-size: 10px !important; }
+      footer > div > button#btn-sound { grid-column: auto; }
+    }
+    @media (max-height: 520px) and (orientation: landscape) and (max-width: 900px) {
+      footer > div { padding: 3px !important; gap: 3px !important; }
+      footer > div > button { padding: 3px 2px !important; }
+    }
 </style>
 </head>
 
@@ -6540,21 +6582,50 @@
       }
 
       createOnlineRoom() {
-        if (typeof Peer === 'undefined') return;
+        if (typeof Peer === 'undefined') {
+          this.updateOnlineStatusUI('联机组件加载失败，请刷新页面后重试', false);
+          return;
+        }
         this.disconnectOnline(true);
         const code = Math.random().toString(36).slice(2, 8).toUpperCase();
         this.roomCode = code;
         this.onlineRole = RED;
-        document.getElementById('my-room-code').textContent = code;
-        this.peer = new Peer(`xq3d-room-${code}`, { config: { iceServers: [{ urls: 'stun:stun.relay.metered.ca:80' }] } });
-        this.peer.on('open', () => {
-          const inviteUrl = new URL(window.location.href);
-          inviteUrl.searchParams.set('room', code);
-          this.inviteLink = inviteUrl.toString();
-          this.renderInviteQRCode(this.inviteLink);
-          this.updateOnlineStatusUI(`房间 ${code} 就绪`, false);
-        });
-        this.peer.on('connection', conn => { this.conn = conn; this.setupPeerConnection(); });
+        const codeEl = document.getElementById('my-room-code');
+        if (codeEl) codeEl.textContent = code;
+        this.updateOnlineStatusUI('正在创建房间…', false);
+        try {
+          this.peer = new Peer(`xq3d-room-${code}`, {
+            debug: 1,
+            config: { iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ] }
+          });
+          this.peer.on('open', () => {
+            const inviteUrl = new URL(window.location.href);
+            inviteUrl.searchParams.set('room', code);
+            this.inviteLink = inviteUrl.toString();
+            this.renderInviteQRCode(this.inviteLink);
+            this.updateOnlineStatusUI(`房间 ${code} 已创建，等待好友加入`, false);
+          });
+          this.peer.on('connection', conn => {
+            this.conn = conn;
+            this.setupPeerConnection();
+          });
+          this.peer.on('error', err => {
+            const messages = {
+              'unavailable-id': '房间号冲突，请重新创建房间',
+              'peer-unavailable': '找不到该房间，请确认房间号仍有效',
+              'network': '联机服务器连接失败，请检查网络或稍后重试',
+              'server-error': '联机服务器暂时不可用，请稍后重试',
+              'socket-error': '联机信令连接失败，可能被网络或浏览器拦截',
+              'socket-closed': '联机信令连接已关闭，请重新创建房间'
+            };
+            this.updateOnlineStatusUI(messages[err?.type] || `创建房间失败：${err?.type || '未知错误'}`, false);
+          });
+        } catch (err) {
+          this.updateOnlineStatusUI('创建房间失败，请刷新页面后重试', false);
+        }
       }
 
       joinOnlineRoomFromInput() {
@@ -6573,11 +6644,29 @@
         this.desiredSpherical.theta = Math.PI;
         this.updatePiecesOrientation();
 
-        this.peer = new Peer(undefined, { config: { iceServers: [{ urls: 'stun:stun.relay.metered.ca:80' }] } });
-        this.peer.on('open', () => {
-          this.conn = this.peer.connect(`xq3d-room-${code}`, { reliable: true });
-          this.setupPeerConnection();
-        });
+        try {
+          this.peer = new Peer(undefined, { debug: 1, config: { iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+          ] } });
+          this.peer.on('open', () => {
+            this.updateOnlineStatusUI(`正在连接房间 ${code}…`, false);
+            this.conn = this.peer.connect(`xq3d-room-${code}`, { reliable: true, serialization: 'json' });
+            this.setupPeerConnection();
+          });
+          this.peer.on('error', err => {
+            const messages = {
+              'peer-unavailable': '房间不存在或创建者已离线，请让好友重新创建房间',
+              'network': '联机服务器连接失败，请检查网络后重试',
+              'server-error': '联机服务器暂时不可用，请稍后重试',
+              'socket-error': '联机信令连接失败，可能被网络或浏览器拦截',
+              'socket-closed': '联机信令连接已关闭，请重新加入'
+            };
+            this.updateOnlineStatusUI(messages[err?.type] || `加入房间失败：${err?.type || '未知错误'}`, false);
+          });
+        } catch (err) {
+          this.updateOnlineStatusUI('加入房间失败，请检查房间号并重试', false);
+        }
       }
 
       setupPeerConnection() {
@@ -6592,6 +6681,12 @@
             this.conn.send({ type: 'request_sync' });
           }
           this.updateUI(this.engine.isInCheck(this.engine.turn));
+        });
+        this.conn.on('error', err => {
+          this.updateOnlineStatusUI(`连接异常：${err?.type || '请重新连接'}`, false);
+        });
+        this.conn.on('close', () => {
+          this.updateOnlineStatusUI('好友连接已断开', false);
         });
         this.conn.on('data', data => {
           if (!data?.type) return;
