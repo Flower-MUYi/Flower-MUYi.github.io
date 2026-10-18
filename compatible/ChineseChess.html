@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>3D 中国象棋 · 极简公园版 (Material Xiangqi 3D)</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,11 +15,8 @@
   <!-- Google Fonts & Material Symbols -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0" rel="stylesheet" />
 
   <style>
     :root {
@@ -38,8 +33,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body,
-    html {
+    body, html {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -79,16 +73,13 @@
     .md-btn {
       transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
     }
-
     .md-btn:hover:not(:disabled) {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
-
     .md-btn:active:not(:disabled) {
       transform: translateY(0px) scale(0.97);
     }
-
     .md-btn:disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -110,151 +101,60 @@
 
     /* Check Alert Pulse Animation */
     @keyframes checkPulse {
-
-      0%,
-      100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
-      }
-
-      50% {
-        transform: scale(1.04);
-        box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
-      }
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+      50% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
     }
-
     .check-badge-pulse {
       animation: checkPulse 1.5s infinite ease-in-out;
     }
 
     /* Callout Banner Pop Animation */
     @keyframes calloutPop {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.6);
-      }
-
-      18% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.08);
-      }
-
-      32% {
-        transform: translate(-50%, -50%) scale(1.0);
-      }
-
-      82% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.0);
-      }
-
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -60%) scale(0.92);
-      }
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+      18% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+      32% { transform: translate(-50%, -50%) scale(1.0); }
+      82% { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+      100% { opacity: 0; transform: translate(-50%, -60%) scale(0.92); }
     }
-
     .callout-animate {
       animation: calloutPop 1.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     /* Traditional Seal Stamp Animation */
     @keyframes sealStamp {
-      0% {
-        opacity: 0;
-        transform: scale(2.2) rotate(-12deg);
-      }
-
-      60% {
-        opacity: 1;
-        transform: scale(0.94) rotate(-4deg);
-      }
-
-      80% {
-        opacity: 1;
-        transform: scale(1.03) rotate(-6deg);
-      }
-
-      100% {
-        opacity: 1;
-        transform: scale(1) rotate(-5deg);
-      }
+      0% { opacity: 0; transform: scale(2.2) rotate(-12deg); }
+      60% { opacity: 1; transform: scale(0.94) rotate(-4deg); }
+      80% { opacity: 1; transform: scale(1.03) rotate(-6deg); }
+      100% { opacity: 1; transform: scale(1) rotate(-5deg); }
     }
-
     .seal-stamp-anim {
       animation: sealStamp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     /* Fullscreen Ultimate Impact Flash & Vignette */
     @keyframes impactFlashAnim {
-      0% {
-        opacity: 0;
-      }
-
-      12% {
-        opacity: 0.85;
-      }
-
-      28% {
-        opacity: 0.25;
-      }
-
-      45% {
-        opacity: 0.55;
-      }
-
-      100% {
-        opacity: 0;
-      }
+      0% { opacity: 0; }
+      12% { opacity: 0.85; }
+      28% { opacity: 0.25; }
+      45% { opacity: 0.55; }
+      100% { opacity: 0; }
     }
-
     .vfx-flash-active {
       animation: impactFlashAnim 1.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     /* Illegal Move Toast Shake & Pop Animation */
     @keyframes toastShakePop {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -16px) scale(0.92);
-      }
-
-      18% {
-        opacity: 1;
-        transform: translate(-50%, 0px) scale(1.02);
-      }
-
-      26% {
-        transform: translate(calc(-50% - 7px), 0px);
-      }
-
-      34% {
-        transform: translate(calc(-50% + 7px), 0px);
-      }
-
-      42% {
-        transform: translate(calc(-50% - 4px), 0px);
-      }
-
-      50% {
-        transform: translate(calc(-50% + 4px), 0px);
-      }
-
-      58% {
-        transform: translate(-50%, 0px) scale(1);
-      }
-
-      88% {
-        opacity: 1;
-        transform: translate(-50%, 0px) scale(1);
-      }
-
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -10px) scale(0.96);
-      }
+      0% { opacity: 0; transform: translate(-50%, -16px) scale(0.92); }
+      18% { opacity: 1; transform: translate(-50%, 0px) scale(1.02); }
+      26% { transform: translate(calc(-50% - 7px), 0px); }
+      34% { transform: translate(calc(-50% + 7px), 0px); }
+      42% { transform: translate(calc(-50% - 4px), 0px); }
+      50% { transform: translate(calc(-50% + 4px), 0px); }
+      58% { transform: translate(-50%, 0px) scale(1); }
+      88% { opacity: 1; transform: translate(-50%, 0px) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -10px) scale(0.96); }
     }
-
     .toast-illegal-anim {
       animation: toastShakePop 3.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
@@ -269,38 +169,32 @@
       justify-content: center;
       font-size: 12px;
       font-weight: 700;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.18);
       transition: transform 0.2s ease;
     }
-
     .captured-chip:hover {
       transform: scale(1.15);
     }
-
     .chip-ivory {
       background: radial-gradient(circle at 30% 30%, #fffdf7, #ebe2ce);
       color: #b91c1c;
       border: 1.5px solid #d4af37;
     }
-
     .chip-obsidian {
       background: radial-gradient(circle at 30% 30%, #334155, #0f172a);
       color: #f8fafc;
       border: 1.5px solid #94a3b8;
     }
-
+  
     /* 1. 锁定移动端视口与 3D 画布手势，防止下拉刷新和双击缩放 */
-    html,
-    body {
-      height: 100dvh;
-      /* 适配移动端动态地址栏高度 */
+    html, body {
+      height: 100dvh; /* 适配移动端动态地址栏高度 */
       overscroll-behavior: none;
       touch-action: none;
     }
 
     #canvas-container {
-      touch-action: none;
-      /* 极其关键：禁止浏览器接管平移与双指缩放手势 */
+      touch-action: none; /* 极其关键：禁止浏览器接管平移与双指缩放手势 */
     }
 
     /* 适配全面屏顶部与底部安全区 (Safe Area) */
@@ -316,7 +210,6 @@
 
     /* 2. 手机端小屏适配 (最大宽度 640px) */
     @media (max-width: 640px) {
-
       /* 压缩顶部卡片内边距与字号，释放棋盘可视空间 */
       header .md-card {
         padding: 0.35rem 0.6rem !important;
@@ -324,18 +217,17 @@
       }
 
       /* 手机竖屏隐藏红黑双方吃子战果托盘，仅保留胜率评估条，防止顶部占满半屏 */
-      header>div:nth-child(2)>div:first-child,
-      header>div:nth-child(2)>div:last-child {
+      header > div:nth-child(2) > div:first-child,
+      header > div:nth-child(2) > div:last-child {
         display: none !important;
       }
-
-      header>div:nth-child(2)>div:nth-child(2) {
+      header > div:nth-child(2) > div:nth-child(2) {
         width: 100%;
         justify-content: center;
       }
 
       /* 底部悬浮 Dock 改为单行横向弹性滑动/紧凑排列，避免折行遮挡红方底线 */
-      footer>.md-card {
+      footer > .md-card {
         width: 96vw;
         padding: 0.4rem 0.5rem !important;
         border-radius: 1.25rem !important;
@@ -345,11 +237,9 @@
         justify-content: flex-start !important;
         scrollbar-width: none;
       }
-
-      footer>.md-card::-webkit-scrollbar {
+      footer > .md-card::-webkit-scrollbar {
         display: none;
       }
-
       footer button {
         flex-shrink: 0;
         padding: 0.35rem 0.55rem !important;
@@ -363,11 +253,9 @@
         width: 94vw !important;
         bottom: calc(4.2rem + env(safe-area-inset-bottom, 0px)) !important;
       }
-
       #vfx-drawer {
         bottom: calc(4.2rem + env(safe-area-inset-bottom, 0px)) !important;
       }
-
       #illegal-move-toast {
         top: 6.2rem !important;
       }
@@ -375,19 +263,15 @@
 
     /* 3. 移动端横屏模式适配 (高度受限 < 520px) */
     @media (max-height: 520px) and (orientation: landscape) {
-      header>div:nth-child(2) {
-        display: none !important;
-        /* 横屏隐藏次级状态栏，最大化垂直视野 */
+      header > div:nth-child(2) {
+        display: none !important; /* 横屏隐藏次级状态栏，最大化垂直视野 */
       }
-
       header {
         padding: 0.35rem 1rem !important;
       }
-
       footer {
         padding: 0.35rem 1rem !important;
       }
-
       #custom-endgame-panel #editor-tools-content {
         max-height: 42vh !important;
       }
@@ -402,33 +286,25 @@
     }
   </style>
 </head>
-
 <body class="relative select-none overflow-hidden">
 
   <!-- 3D Viewport Container -->
   <div id="canvas-container"></div>
 
   <!-- Fullscreen Impact Flash Overlay for Ultimate Checkmate VFX -->
-  <div id="vfx-screen-flash" class="pointer-events-none fixed inset-0 z-10 opacity-0"
-    style="background: radial-gradient(circle at 50% 45%, rgba(254, 240, 138, 0.55) 0%, rgba(220, 38, 38, 0.35) 45%, rgba(15, 23, 42, 0.75) 100%); mix-blend-mode: screen;">
-  </div>
+  <div id="vfx-screen-flash" class="pointer-events-none fixed inset-0 z-10 opacity-0" style="background: radial-gradient(circle at 50% 45%, rgba(254, 240, 138, 0.55) 0%, rgba(220, 38, 38, 0.35) 45%, rgba(15, 23, 42, 0.75) 100%); mix-blend-mode: screen;"></div>
 
   <!-- Center Dramatic Callout ("将军!" / "马后炮 · 绝杀!") -->
-  <div id="center-callout"
-    class="pointer-events-none fixed left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 z-30 hidden">
-    <div id="center-callout-inner"
-      class="serif-cn px-8 py-4 rounded-3xl text-3xl md:text-5xl font-black tracking-widest shadow-2xl border-2 text-center">
+  <div id="center-callout" class="pointer-events-none fixed left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 z-30 hidden">
+    <div id="center-callout-inner" class="serif-cn px-8 py-4 rounded-3xl text-3xl md:text-5xl font-black tracking-widest shadow-2xl border-2 text-center">
       将军！
     </div>
   </div>
 
   <!-- Illegal Move / Rule Violation Floating Toast Prompt (禁着与走法违规弹出提示) -->
-  <div id="illegal-move-toast"
-    class="pointer-events-none fixed left-1/2 top-28 md:top-24 -translate-x-1/2 z-40 hidden w-[92vw] max-w-md">
-    <div
-      class="md-card rounded-2xl px-4 py-3 border-2 border-red-600/80 bg-red-950/90 text-amber-50 shadow-2xl flex items-start gap-3">
-      <div
-        class="w-9 h-9 rounded-xl bg-red-600/90 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-inner">
+  <div id="illegal-move-toast" class="pointer-events-none fixed left-1/2 top-28 md:top-24 -translate-x-1/2 z-40 hidden w-[92vw] max-w-md">
+    <div class="md-card rounded-2xl px-4 py-3 border-2 border-red-600/80 bg-red-950/90 text-amber-50 shadow-2xl flex items-start gap-3">
+      <div class="w-9 h-9 rounded-xl bg-red-600/90 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-inner">
         <span id="illegal-toast-icon" class="material-symbols-rounded text-[21px]">gpp_maybe</span>
       </div>
       <div class="flex-1 min-w-0">
@@ -436,8 +312,7 @@
           <h3 id="illegal-toast-title" class="serif-cn font-black text-sm md:text-base text-amber-200 tracking-wide">
             禁着提示 · 移动后己方被将军
           </h3>
-          <span
-            class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/30 text-red-200 border border-red-400/30 shrink-0">
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/30 text-red-200 border border-red-400/30 shrink-0">
             不可移动
           </span>
         </div>
@@ -449,21 +324,18 @@
   </div>
 
   <!-- SINGLE-LAYER NAVIGATION UI: TOP BAR -->
-  <header
-    class="pointer-events-none fixed top-0 left-0 right-0 z-20 p-2.5 md:p-4 flex flex-col gap-2 max-w-7xl mx-auto">
+  <header class="pointer-events-none fixed top-0 left-0 right-0 z-20 p-2.5 md:p-4 flex flex-col gap-2 max-w-7xl mx-auto">
     <div class="flex flex-wrap items-center justify-between gap-2">
-
+      
       <!-- Brand & Park Scene Tag -->
       <div class="pointer-events-auto md-card rounded-2xl px-3.5 py-2 flex items-center gap-2.5">
-        <div
-          class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-700 to-amber-700 flex items-center justify-center text-amber-50 shadow-inner serif-cn font-bold text-lg">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-700 to-amber-700 flex items-center justify-center text-amber-50 shadow-inner serif-cn font-bold text-lg">
           帥
         </div>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="serif-cn font-bold text-slate-800 text-sm md:text-base leading-tight">中国象棋 3D</h1>
-            <span id="scene-badge"
-              class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-800/10 text-emerald-900 border border-emerald-800/15">
+            <span id="scene-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-800/10 text-emerald-900 border border-emerald-800/15">
               竹林石桌
             </span>
           </div>
@@ -472,25 +344,20 @@
       </div>
 
       <!-- Mode & AI Difficulty Segmented Control (Single-Layer) -->
-      <div class="pointer-events-auto md-card rounded-2xl p-1 flex flex-wrap items-center gap-1" role="group"
-        aria-label="对局模式切换">
-        <button id="mode-pvp" onclick="window.gameApp.setGameMode('pvp')"
-          class="md-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
+      <div class="pointer-events-auto md-card rounded-2xl p-1 flex flex-wrap items-center gap-1" role="group" aria-label="对局模式切换">
+        <button id="mode-pvp" onclick="window.gameApp.setGameMode('pvp')" class="md-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[16px]">group</span>
           <span>双人</span>
         </button>
-        <button id="mode-easy" onclick="window.gameApp.setGameMode('easy')"
-          class="md-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
+        <button id="mode-easy" onclick="window.gameApp.setGameMode('easy')" class="md-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[16px]">smart_toy</span>
           <span>简单 AI</span>
         </button>
-        <button id="mode-hard" onclick="window.gameApp.setGameMode('hard')"
-          class="md-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
+        <button id="mode-hard" onclick="window.gameApp.setGameMode('hard')" class="md-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[16px]">psychology</span>
           <span>困难 AI</span>
         </button>
-        <button id="mode-inferno" onclick="window.gameApp.setGameMode('inferno')"
-          class="md-btn seg-inferno-active px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
+        <button id="mode-inferno" onclick="window.gameApp.setGameMode('inferno')" class="md-btn seg-inferno-active px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[16px]">local_fire_department</span>
           <span>炼狱宗师</span>
         </button>
@@ -498,19 +365,16 @@
 
       <!-- Turn Status, AI Telemetry & Check Indicator Badge -->
       <div class="pointer-events-auto flex items-center gap-2">
-        <div id="turn-badge"
-          class="md-card rounded-2xl px-3.5 py-2 flex items-center gap-2 transition-all duration-300">
+        <div id="turn-badge" class="md-card rounded-2xl px-3.5 py-2 flex items-center gap-2 transition-all duration-300">
           <span id="turn-dot" class="w-3 h-3 rounded-full bg-red-600 ring-4 ring-red-600/20"></span>
           <span id="turn-text" class="serif-cn font-bold text-xs md:text-sm text-red-800">红方走棋 (象牙)</span>
-          <span id="ai-thinking"
-            class="hidden items-center gap-1.5 text-[11px] font-semibold text-amber-900 bg-amber-500/20 border border-amber-600/30 px-2.5 py-0.5 rounded-full">
+          <span id="ai-thinking" class="hidden items-center gap-1.5 text-[11px] font-semibold text-amber-900 bg-amber-500/20 border border-amber-600/30 px-2.5 py-0.5 rounded-full">
             <span class="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
             <span id="ai-thinking-label">宗师推演中...</span>
           </span>
         </div>
 
-        <div id="check-badge"
-          class="hidden md-card check-badge-pulse bg-red-600 text-white border-red-400 rounded-2xl px-3 py-2 items-center gap-1 shadow-lg">
+        <div id="check-badge" class="hidden md-card check-badge-pulse bg-red-600 text-white border-red-400 rounded-2xl px-3 py-2 items-center gap-1 shadow-lg">
           <span class="material-symbols-rounded text-[17px]">warning</span>
           <span class="serif-cn font-bold text-xs md:text-sm tracking-wider">将军!</span>
         </div>
@@ -534,13 +398,10 @@
       <div class="pointer-events-auto md-card rounded-xl px-3 py-1 flex items-center gap-2.5 min-h-[34px]">
         <span class="text-[11px] font-bold text-red-700">红</span>
         <div class="w-24 sm:w-36 h-2.5 rounded-full bg-slate-800 overflow-hidden flex p-0.5 shadow-inner">
-          <div id="eval-bar-red"
-            class="h-full bg-gradient-to-r from-red-600 to-amber-500 rounded-l-full transition-all duration-500"
-            style="width: 50%;"></div>
+          <div id="eval-bar-red" class="h-full bg-gradient-to-r from-red-600 to-amber-500 rounded-l-full transition-all duration-500" style="width: 50%;"></div>
         </div>
         <span class="text-[11px] font-bold text-slate-900">黑</span>
-        <span id="ai-telemetry-text"
-          class="text-[11px] font-mono font-medium text-slate-600 border-l border-slate-300 pl-2">
+        <span id="ai-telemetry-text" class="text-[11px] font-mono font-medium text-slate-600 border-l border-slate-300 pl-2">
           开局库就绪 · 均势
         </span>
       </div>
@@ -557,20 +418,16 @@
     </div>
 
     <!-- Third Row: Repetition Cycle Classification & Countdown Adjudication Warning Banner (循环着法性质判定与倒数裁决警告) -->
-    <div id="cycle-warning-banner"
-      class="hidden pointer-events-auto md-card rounded-2xl px-3.5 py-2 border-2 border-amber-500/90 bg-amber-950/90 text-amber-50 shadow-xl items-center justify-between gap-3 flex-wrap">
+    <div id="cycle-warning-banner" class="hidden pointer-events-auto md-card rounded-2xl px-3.5 py-2 border-2 border-amber-500/90 bg-amber-950/90 text-amber-50 shadow-xl items-center justify-between gap-3 flex-wrap">
       <div class="flex items-center gap-2.5">
-        <div
-          class="w-7 h-7 rounded-xl bg-amber-500/25 border border-amber-400/50 flex items-center justify-center text-amber-300 shrink-0">
+        <div class="w-7 h-7 rounded-xl bg-amber-500/25 border border-amber-400/50 flex items-center justify-center text-amber-300 shrink-0">
           <span class="material-symbols-rounded text-[18px]">gavel</span>
         </div>
         <div class="text-xs leading-snug">
           <div class="flex flex-wrap items-center gap-1.5 font-bold serif-cn">
-            <span id="cycle-red-tag"
-              class="px-2 py-0.5 rounded-md bg-red-500/30 border border-red-400/40 text-red-100">红方：长捉（禁止着法）</span>
+            <span id="cycle-red-tag" class="px-2 py-0.5 rounded-md bg-red-500/30 border border-red-400/40 text-red-100">红方：长捉（禁止着法）</span>
             <span class="text-amber-400/80">vs</span>
-            <span id="cycle-black-tag"
-              class="px-2 py-0.5 rounded-md bg-slate-700/80 border border-slate-500/50 text-slate-100">黑方：闲着（允许着法）</span>
+            <span id="cycle-black-tag" class="px-2 py-0.5 rounded-md bg-slate-700/80 border border-slate-500/50 text-slate-100">黑方：闲着（允许着法）</span>
           </div>
           <p id="cycle-rule-desc" class="text-[11px] text-amber-200/90 mt-0.5">
             一方为“禁止着法”，另一方为“允许着法”，走“禁止着法”方应变着，否则不变判负。
@@ -578,8 +435,7 @@
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <span id="cycle-countdown-badge"
-          class="px-3 py-1 rounded-xl bg-red-600 text-white font-black text-xs tracking-wide shadow-md animate-pulse">
+        <span id="cycle-countdown-badge" class="px-3 py-1 rounded-xl bg-red-600 text-white font-black text-xs tracking-wide shadow-md animate-pulse">
           ⚠️ 警告：再走 4 步不变将判【红方负】
         </span>
       </div>
@@ -587,138 +443,66 @@
   </header>
 
   <!-- 自定义残局编辑器：紧凑浮动工具箱 -->
-  <section id="custom-endgame-panel"
-    class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-24 w-[min(340px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/80 shadow-xl overflow-hidden"
-    style="background:rgba(255,251,235,.96);backdrop-filter:blur(14px);">
-    <div
-      class="flex items-center gap-2 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-amber-100/95 to-orange-50/95">
-      <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm"><span
-          class="material-symbols-rounded text-[19px]">edit_square</span></div>
-      <div class="min-w-0 flex-1">
-        <h2 class="serif-cn font-black text-slate-800 text-sm leading-tight">残局工坊</h2>
-        <p class="text-[10px] text-slate-500 leading-tight">选棋子，再点击棋盘放置</p>
-      </div>
-      <button id="editor-collapse-btn"
-        class="md-btn shrink-0 rounded-lg px-2 py-1 bg-white/80 border border-amber-200 text-slate-700 text-xs"
-        onclick="window.gameApp.toggleEditorTools()" title="收起或展开工具">收起</button>
-      <button id="editor-start-btn"
-        class="md-btn shrink-0 rounded-lg px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-extrabold shadow-sm whitespace-nowrap"
-        onclick="window.gameApp.exitEndgameEditor(true)" title="完成摆设并开始对局"><span
-          class="material-symbols-rounded align-middle text-[15px]">play_arrow</span> 开始</button>
-      <button
-        class="md-btn shrink-0 rounded-lg w-7 h-7 bg-white/80 border border-amber-200 text-slate-600 flex items-center justify-center"
-        onclick="window.gameApp.exitEndgameEditor(false)" title="关闭残局编辑"><span
-          class="material-symbols-rounded text-[17px]">close</span></button>
+  <section id="custom-endgame-panel" class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-24 w-[min(340px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/80 shadow-xl overflow-hidden" style="background:rgba(255,251,235,.96);backdrop-filter:blur(14px);">
+    <div class="flex items-center gap-2 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-amber-100/95 to-orange-50/95">
+      <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm"><span class="material-symbols-rounded text-[19px]">edit_square</span></div>
+      <div class="min-w-0 flex-1"><h2 class="serif-cn font-black text-slate-800 text-sm leading-tight">残局工坊</h2><p class="text-[10px] text-slate-500 leading-tight">选棋子，再点击棋盘放置</p></div>
+      <button id="editor-collapse-btn" class="md-btn shrink-0 rounded-lg px-2 py-1 bg-white/80 border border-amber-200 text-slate-700 text-xs" onclick="window.gameApp.toggleEditorTools()" title="收起或展开工具">收起</button>
+      <button id="editor-start-btn" class="md-btn shrink-0 rounded-lg px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-extrabold shadow-sm whitespace-nowrap" onclick="window.gameApp.exitEndgameEditor(true)" title="完成摆设并开始对局"><span class="material-symbols-rounded align-middle text-[15px]">play_arrow</span> 开始</button>
+      <button class="md-btn shrink-0 rounded-lg w-7 h-7 bg-white/80 border border-amber-200 text-slate-600 flex items-center justify-center" onclick="window.gameApp.exitEndgameEditor(false)" title="关闭残局编辑"><span class="material-symbols-rounded text-[17px]">close</span></button>
     </div>
     <div id="editor-tools-content" class="p-2.5 space-y-2 max-h-[27vh] overflow-y-auto">
       <div class="rounded-xl bg-white/75 border border-red-100 p-2">
-        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-red-500"></span><span
-            class="text-[11px] font-extrabold text-red-700">红方</span><span
-            class="text-[10px] text-slate-400">选择棋子</span></div>
+        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-red-500"></span><span class="text-[11px] font-extrabold text-red-700">红方</span><span class="text-[10px] text-slate-400">选择棋子</span></div>
         <div class="grid grid-cols-7 gap-1">
-          <button
-            class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','k')">帥</button><button
-            class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','a')">仕</button><button
-            class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button
-            class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','n')">馬</button><button
-            class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','r')">俥</button><button
-            class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','c')">炮</button><button
-            class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','p')">兵</button>
+          <button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','k')">帥</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','a')">仕</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','n')">馬</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','r')">俥</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','c')">炮</button><button class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-bold text-red-700" onclick="window.gameApp.chooseEditorPiece('r','p')">兵</button>
         </div>
       </div>
       <div class="rounded-xl bg-white/75 border border-slate-200 p-2">
-        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-slate-700"></span><span
-            class="text-[11px] font-extrabold text-slate-700">黑方</span><span
-            class="text-[10px] text-slate-400">选择棋子</span></div>
+        <div class="flex items-center gap-1.5 mb-1.5"><span class="w-1.5 h-4 rounded-full bg-slate-700"></span><span class="text-[11px] font-extrabold text-slate-700">黑方</span><span class="text-[10px] text-slate-400">选择棋子</span></div>
         <div class="grid grid-cols-7 gap-1">
-          <button
-            class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','k')">將</button><button
-            class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','a')">士</button><button
-            class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','b')">象</button><button
-            class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','n')">馬</button><button
-            class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','r')">車</button><button
-            class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','c')">炮</button><button
-            class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','p')">卒</button>
+          <button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','k')">將</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','a')">士</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','b')">象</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','n')">馬</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','r')">車</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','c')">炮</button><button class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-bold text-slate-800" onclick="window.gameApp.chooseEditorPiece('b','p')">卒</button>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-1.5"><span id="editor-piece-status"
-          class="flex-1 min-w-[105px] text-[11px] text-slate-600 truncate px-2 py-1.5 rounded-lg bg-white border border-slate-200">当前工具：红帥</span><button
-          id="editor-turn-btn"
-          class="md-btn rounded-lg px-2 py-1.5 bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold"
-          onclick="window.gameApp.toggleEditorTurn()" title="切换残局由谁先走">红先</button><button
-          class="md-btn rounded-lg px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-[11px] font-bold"
-          onclick="window.gameApp.setEditorErase()">橡皮擦</button><button
-          class="md-btn rounded-lg px-2.5 py-1.5 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold"
-          onclick="window.gameApp.clearEditorBoard()">清空</button></div>
+      <div class="flex flex-wrap items-center gap-1.5"><span id="editor-piece-status" class="flex-1 min-w-[105px] text-[11px] text-slate-600 truncate px-2 py-1.5 rounded-lg bg-white border border-slate-200">当前工具：红帥</span><button id="editor-turn-btn" class="md-btn rounded-lg px-2 py-1.5 bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold" onclick="window.gameApp.toggleEditorTurn()" title="切换残局由谁先走">红先</button><button class="md-btn rounded-lg px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-[11px] font-bold" onclick="window.gameApp.setEditorErase()">橡皮擦</button><button class="md-btn rounded-lg px-2.5 py-1.5 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold" onclick="window.gameApp.clearEditorBoard()">清空</button></div>
       <p class="text-[10px] text-slate-400 text-center">拖动顶部标题栏可移动窗口 · 点击同一格可移除棋子</p>
     </div>
   </section>
 
   <!-- SINGLE-LAYER NAVIGATION UI: BOTTOM FLOATING DOCK -->
   <footer class="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-2.5 md:p-4 flex justify-center">
-    <div
-      class="pointer-events-auto md-card rounded-3xl px-3 py-2 md:px-4 md:py-2 flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5">
+    <div class="pointer-events-auto md-card rounded-3xl px-3 py-2 md:px-4 md:py-2 flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5">
+      
+      <button id="btn-endgame-editor" onclick="window.gameApp.enterEndgameEditor()" class="md-btn px-3 py-1.5 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold border border-amber-300">残局编辑</button>
 
-      <button id="btn-endgame-editor" onclick="window.gameApp.enterEndgameEditor()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold border border-amber-300">残局编辑</button>
-
-      <button id="btn-share-endgame" onclick="window.gameApp.shareCurrentBoard()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-emerald-100 hover:bg-emerald-200 text-emerald-950 text-xs font-bold flex items-center gap-1 border border-emerald-300"
-        title="生成当前棋盘/残局分享链接"><span class="material-symbols-rounded text-[17px]">share</span><span>分享残局</span></button>
-      <button id="btn-online-p2p" onclick="window.gameApp.toggleOnlineModal()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-indigo-100 hover:bg-indigo-200 text-indigo-950 text-xs font-bold flex items-center gap-1 border border-indigo-300"
-        title="与异地朋友实时联机"><span id="online-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span><span
-          class="material-symbols-rounded text-[17px]">wifi_tethering</span><span
-          id="online-btn-label">好友联机</span></button>
+      <button id="btn-share-endgame" onclick="window.gameApp.shareCurrentBoard()" class="md-btn px-3 py-1.5 rounded-2xl bg-emerald-100 hover:bg-emerald-200 text-emerald-950 text-xs font-bold flex items-center gap-1 border border-emerald-300" title="生成当前棋盘/残局分享链接"><span class="material-symbols-rounded text-[17px]">share</span><span>分享残局</span></button>
+      <button id="btn-online-p2p" onclick="window.gameApp.toggleOnlineModal()" class="md-btn px-3 py-1.5 rounded-2xl bg-indigo-100 hover:bg-indigo-200 text-indigo-950 text-xs font-bold flex items-center gap-1 border border-indigo-300" title="与异地朋友实时联机"><span id="online-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span><span class="material-symbols-rounded text-[17px]">wifi_tethering</span><span id="online-btn-label">好友联机</span></button>
       <!-- Undo Button -->
-      <button id="btn-undo" onclick="window.gameApp.undoMove()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80">
+      <button id="btn-undo" onclick="window.gameApp.undoMove()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80">
         <span class="material-symbols-rounded text-[18px]">undo</span>
         <span>悔棋</span>
       </button>
 
       <!-- AI Hint / Let AI Move for Red -->
-      <button id="btn-hint" onclick="window.gameApp.requestRedGrandmasterMove()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80"
-        title="让炼狱宗师代走一步红棋">
+      <button id="btn-hint" onclick="window.gameApp.requestRedGrandmasterMove()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80" title="让炼狱宗师代走一步红棋">
         <span class="material-symbols-rounded text-[18px] text-amber-600">tips_and_updates</span>
         <span>宗师支招</span>
       </button>
 
       <!-- Restart Standard Game Button -->
-      <button id="btn-restart" onclick="window.gameApp.handleRestartButton()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80"
-        title="开始32子标准象棋新局">
+      <button id="btn-restart" onclick="window.gameApp.handleRestartButton()" class="md-btn px-3 py-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 text-xs font-semibold flex items-center gap-1 border border-slate-200/80" title="开始32子标准象棋新局">
         <span id="restart-icon" class="material-symbols-rounded text-[18px]">restart_alt</span>
         <span id="restart-label">新局</span>
       </button>
 
       <!-- Always-available standard opening reset, independent of custom endgame replay -->
-      <button id="btn-standard-new-game" onclick="window.gameApp.restartStandardGame()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1 border border-slate-600"
-        title="放弃当前残局，恢复32子标准象棋开局">
+      <button id="btn-standard-new-game" onclick="window.gameApp.restartStandardGame()" class="md-btn px-3 py-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1 border border-slate-600" title="放弃当前残局，恢复32子标准象棋开局">
         <span class="material-symbols-rounded text-[18px]">refresh</span>
         <span>标准新局</span>
       </button>
 
       <!-- Ultimate Checkmate VFX Showcase Toggle -->
-      <button id="btn-vfx-panel" onclick="window.gameApp.toggleVFXDrawer()"
-        class="md-btn px-3 py-1.5 rounded-2xl bg-gradient-to-r from-red-700 via-red-600 to-amber-600 text-amber-50 text-xs font-bold flex items-center gap-1 shadow-md border border-amber-300/40"
-        title="一键鉴赏全屏3D古谱绝杀大招">
+      <button id="btn-vfx-panel" onclick="window.gameApp.toggleVFXDrawer()" class="md-btn px-3 py-1.5 rounded-2xl bg-gradient-to-r from-red-700 via-red-600 to-amber-600 text-amber-50 text-xs font-bold flex items-center gap-1 shadow-md border border-amber-300/40" title="一键鉴赏全屏3D古谱绝杀大招">
         <span class="material-symbols-rounded text-[17px]">auto_awesome</span>
         <span>绝杀大招</span>
       </button>
@@ -727,27 +511,22 @@
 
       <!-- Camera View Presets (红方视角 / 俯视视角 / 全景环绕) -->
       <div class="flex items-center bg-slate-200/60 p-1 rounded-2xl gap-1">
-        <button id="cam-red" onclick="window.gameApp.setCameraPreset('red')"
-          class="md-btn seg-active px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
+        <button id="cam-red" onclick="window.gameApp.setCameraPreset('red')" class="md-btn seg-active px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[16px]">visibility</span>
           <span>正视</span>
         </button>
-        <button id="cam-top" onclick="window.gameApp.setCameraPreset('top')"
-          class="md-btn px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
+        <button id="cam-top" onclick="window.gameApp.setCameraPreset('top')" class="md-btn px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[16px]">grid_on</span>
           <span>俯视</span>
         </button>
-        <button id="cam-orbit" onclick="window.gameApp.setCameraPreset('orbit')"
-          class="md-btn px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
+        <button id="cam-orbit" onclick="window.gameApp.setCameraPreset('orbit')" class="md-btn px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1">
           <span class="material-symbols-rounded text-[16px]">3d_rotation</span>
           <span>环绕</span>
         </button>
       </div>
 
       <!-- Audio Mute/Unmute Toggle -->
-      <button id="btn-sound" onclick="window.gameApp.toggleSound()"
-        class="md-btn p-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-700 border border-slate-200/80"
-        title="音效开关">
+      <button id="btn-sound" onclick="window.gameApp.toggleSound()" class="md-btn p-1.5 rounded-2xl bg-white/85 hover:bg-white text-slate-700 border border-slate-200/80" title="音效开关">
         <span id="icon-sound" class="material-symbols-rounded text-[19px] block">volume_up</span>
       </button>
 
@@ -757,52 +536,24 @@
   <!-- PeerJS 异地好友实时联机面板 -->
   <div id="online-modal" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 hidden w-[92vw] max-w-md">
     <div class="md-card rounded-3xl p-4 border border-indigo-300/80 shadow-2xl space-y-3">
-      <div class="flex items-center justify-between gap-2">
-        <div>
-          <h3 class="serif-cn font-black text-slate-800 text-sm">异地好友实时联机 (P2P)</h3>
-          <p id="online-status-text" class="text-[11px] text-slate-500">支持标准局或当前残局 · 链接或扫码自动加入</p>
-        </div>
-        <button onclick="window.gameApp.toggleOnlineModal(false)"
-          class="md-btn w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center">×</button>
-      </div>
-      <div
-        class="flex items-center justify-between text-xs bg-indigo-950/5 px-3 py-2 rounded-xl border border-indigo-900/10">
-        <span class="font-semibold text-slate-700">房间号（点击号码直接复制）：</span><strong id="my-room-code"
-          onclick="window.gameApp.copyRoomCodeOnly()"
-          class="font-mono text-sm px-2.5 py-0.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 cursor-pointer hover:bg-indigo-50 active:scale-95 transition"
-          title="点击直接复制房间号">未创建</strong></div>
-      <div id="invite-qr-section"
-        class="hidden rounded-2xl border border-indigo-200 bg-white p-3 text-center space-y-2">
+      <div class="flex items-center justify-between gap-2"><div><h3 class="serif-cn font-black text-slate-800 text-sm">异地好友实时联机 (P2P)</h3><p id="online-status-text" class="text-[11px] text-slate-500">支持标准局或当前残局 · 链接或扫码自动加入</p></div>
+        <button onclick="window.gameApp.toggleOnlineModal(false)" class="md-btn w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center">×</button></div>
+      <div class="flex items-center justify-between text-xs bg-indigo-950/5 px-3 py-2 rounded-xl border border-indigo-900/10"><span class="font-semibold text-slate-700">房间号（点击号码直接复制）：</span><strong id="my-room-code" onclick="window.gameApp.copyRoomCodeOnly()" class="font-mono text-sm px-2.5 py-0.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 cursor-pointer hover:bg-indigo-50 active:scale-95 transition" title="点击直接复制房间号">未创建</strong></div>
+      <div id="invite-qr-section" class="hidden rounded-2xl border border-indigo-200 bg-white p-3 text-center space-y-2">
         <div class="text-xs font-bold text-slate-700">扫码加入房间</div>
         <div id="invite-qr" class="mx-auto flex min-h-[180px] w-full items-center justify-center overflow-hidden"></div>
         <p class="text-[10px] leading-relaxed text-slate-500">用手机相机扫描二维码，打开邀请链接即可自动加入。请确保此页面已部署到好友也能访问的 HTTPS 网站。</p>
-        <button onclick="window.gameApp.copyInviteLink()"
-          class="md-btn rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">复制邀请链接</button>
+        <button onclick="window.gameApp.copyInviteLink()" class="md-btn rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">复制邀请链接</button>
       </div>
-      <button id="btn-create-room" onclick="window.gameApp.createOnlineRoom()"
-        class="md-btn w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm">创建房间并复制邀请链接（朋友点开即连）</button>
-      <div id="manual-join-row" class="flex gap-2"><input id="join-room-input" maxlength="10" placeholder="或手动输入房间号加入"
-          class="min-w-0 flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono uppercase" /><button
-          onclick="window.gameApp.joinOnlineRoomFromInput()"
-          class="md-btn px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">加入</button></div>
-      <button id="btn-disconnect-p2p" onclick="window.gameApp.disconnectOnline()"
-        class="hidden md-btn w-full py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold">退出联机房间（恢复单机全部功能）</button>
+      <button id="btn-create-room" onclick="window.gameApp.createOnlineRoom()" class="md-btn w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm">创建房间并复制邀请链接（朋友点开即连）</button>
+      <div id="manual-join-row" class="flex gap-2"><input id="join-room-input" maxlength="10" placeholder="或手动输入房间号加入" class="min-w-0 flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono uppercase"/><button onclick="window.gameApp.joinOnlineRoomFromInput()" class="md-btn px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">加入</button></div>
+      <button id="btn-disconnect-p2p" onclick="window.gameApp.disconnectOnline()" class="hidden md-btn w-full py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold">退出联机房间（恢复单机全部功能）</button>
     </div>
   </div>
   <div id="undo-request-modal" class="fixed top-28 left-1/2 -translate-x-1/2 z-50 hidden w-[90vw] max-w-sm">
     <div class="md-card rounded-2xl p-4 border-2 border-amber-500 bg-amber-950/95 text-amber-50 shadow-2xl space-y-3">
-      <div class="flex items-center gap-2.5"><span
-          class="material-symbols-rounded text-amber-400 text-[22px]">history</span>
-        <div>
-          <h4 class="serif-cn font-black text-sm text-amber-200">对方请求悔棋一步</h4>
-          <p class="text-[11px] text-amber-100/80">是否同意撤回刚刚走出的最后一步棋？</p>
-        </div>
-      </div>
-      <div class="flex items-center justify-end gap-2"><button onclick="window.gameApp.respondUndoRequest(false)"
-          class="md-btn px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold">拒绝</button><button
-          onclick="window.gameApp.respondUndoRequest(true)"
-          class="md-btn px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md">同意悔棋</button>
-      </div>
+      <div class="flex items-center gap-2.5"><span class="material-symbols-rounded text-amber-400 text-[22px]">history</span><div><h4 class="serif-cn font-black text-sm text-amber-200">对方请求悔棋一步</h4><p class="text-[11px] text-amber-100/80">是否同意撤回刚刚走出的最后一步棋？</p></div></div>
+      <div class="flex items-center justify-end gap-2"><button onclick="window.gameApp.respondUndoRequest(false)" class="md-btn px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold">拒绝</button><button onclick="window.gameApp.respondUndoRequest(true)" class="md-btn px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md">同意悔棋</button></div>
     </div>
   </div>
 
@@ -815,59 +566,48 @@
           <span class="material-symbols-rounded text-red-700 text-[20px]">flare</span>
           <span class="serif-cn font-black text-slate-900 text-xs md:text-sm">古谱十八杀法 · 3D 终极特效鉴赏（点击即刻轰击九宫）</span>
         </div>
-        <button onclick="window.gameApp.toggleVFXDrawer(false)"
-          class="md-btn w-7 h-7 rounded-full bg-slate-200/80 hover:bg-slate-300 flex items-center justify-center text-slate-700">
+        <button onclick="window.gameApp.toggleVFXDrawer(false)" class="md-btn w-7 h-7 rounded-full bg-slate-200/80 hover:bg-slate-300 flex items-center justify-center text-slate-700">
           <span class="material-symbols-rounded text-[16px]">close</span>
         </button>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-        <button onclick="window.gameApp.previewUltimateVFX('iron_bolt', '铁门栓 · 绝杀', '玄铁蟠龙锁天门')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('iron_bolt', '铁门栓 · 绝杀', '玄铁蟠龙锁天门')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>🔥 铁门栓</span>
           <span class="text-[10px] text-amber-300/80 font-normal">蟠龙神栓坠落</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('heart_blade', '大刀剜心 · 绝杀', '轩辕巨阙剑气斩')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('heart_blade', '大刀剜心 · 绝杀', '轩辕巨阙剑气斩')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>⚔️ 大刀剜心</span>
           <span class="text-[10px] text-amber-300/80 font-normal">万剑归宗巨刃</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('heaven_earth', '天地炮 · 绝杀', '乾坤十字灭世炮')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('heaven_earth', '天地炮 · 绝杀', '乾坤十字灭世炮')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>🌌 天地炮</span>
           <span class="text-[10px] text-amber-300/80 font-normal">双螺旋通天柱</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('horse_cannon', '马后炮 · 绝杀', '红衣陨星连环轰')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('horse_cannon', '马后炮 · 绝杀', '红衣陨星连环轰')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>☄️ 马后炮/重炮</span>
           <span class="text-[10px] text-amber-300/80 font-normal">流星火雨核爆</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('double_lightning', '拔簧马 · 双将', '九天紫金雷劫风暴')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('double_lightning', '拔簧马 · 双将', '九天紫金雷劫风暴')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>⚡ 闪击双将</span>
           <span class="text-[10px] text-amber-300/80 font-normal">九天紫金雷暴</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('double_chariot', '双车错 · 绝杀', '烈焰双龙十字斩')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('double_chariot', '双车错 · 绝杀', '烈焰双龙十字斩')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>🐉 双车错</span>
           <span class="text-[10px] text-amber-300/80 font-normal">烈焰刀轨火柱</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('royal_gaze', '白脸将 · 对面笑', '九五龙皇贯穿波')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('royal_gaze', '白脸将 · 对面笑', '九五龙皇贯穿波')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>👑 白脸将</span>
           <span class="text-[10px] text-amber-300/80 font-normal">玉玺帝王龙波</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('smothered_cage', '闷宫 · 绝杀', '八荒黑曜困龙阵')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('smothered_cage', '闷宫 · 绝杀', '八荒黑曜困龙阵')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>⛓️ 闷宫困毙</span>
           <span class="text-[10px] text-amber-300/80 font-normal">八荒锁龙天牢</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('horse_stomp', '卧槽马 · 绝杀', '天马流星踏金枪')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('horse_stomp', '卧槽马 · 绝杀', '天马流星踏金枪')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>🐎 卧槽/挂角马</span>
           <span class="text-[10px] text-amber-300/80 font-normal">星虹枪林破阵</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('imperial_pawn', '双鬼拍门 / 老卒', '冥火神将冠冕降')"
-          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+        <button onclick="window.gameApp.previewUltimateVFX('imperial_pawn', '双鬼拍门 / 老卒', '冥火神将冠冕降')" class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
           <span>👻 双鬼/老卒</span>
           <span class="text-[10px] text-amber-300/80 font-normal">双龙炎柱加冕</span>
         </button>
@@ -876,21 +616,17 @@
   </div>
 
   <!-- Game Over & Checkmate Pattern Recognition Modal Overlay (Material Design 3 Dialog) -->
-  <div id="gameover-modal"
-    class="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div
-      class="md-card rounded-3xl max-w-lg w-full p-6 md:p-7 text-center border border-white/85 shadow-2xl transform transition-all relative overflow-hidden">
-
+  <div id="gameover-modal" class="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="md-card rounded-3xl max-w-lg w-full p-6 md:p-7 text-center border border-white/85 shadow-2xl transform transition-all relative overflow-hidden">
+      
       <!-- Traditional Chinese Cinnabar Seal Stamp (古谱绝杀印章) -->
-      <div id="checkmate-seal"
-        class="seal-stamp-anim mx-auto mb-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-red-800/10 border-2 border-red-800 text-red-900 serif-cn font-black text-xs md:text-sm tracking-widest shadow-sm">
+      <div id="checkmate-seal" class="seal-stamp-anim mx-auto mb-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-red-800/10 border-2 border-red-800 text-red-900 serif-cn font-black text-xs md:text-sm tracking-widest shadow-sm">
         <span class="material-symbols-rounded text-[18px] text-red-700">verified</span>
         <span id="checkmate-badge-text">古谱绝杀判定 · 铁门栓</span>
       </div>
 
       <div class="flex items-center justify-center gap-3 mb-2">
-        <div id="winner-icon"
-          class="w-14 h-14 rounded-2xl bg-red-700 text-amber-100 flex items-center justify-center serif-cn text-2xl font-black shadow-lg shrink-0">
+        <div id="winner-icon" class="w-14 h-14 rounded-2xl bg-red-700 text-amber-100 flex items-center justify-center serif-cn text-2xl font-black shadow-lg shrink-0">
           帥
         </div>
         <div class="text-left">
@@ -905,8 +641,7 @@
 
       <!-- Classical Poetic Epigram & Tactical Breakdown Box -->
       <div class="my-4 p-4 rounded-2xl bg-amber-950/5 border border-amber-900/15 text-left space-y-2">
-        <div id="checkmate-poem"
-          class="serif-cn text-sm md:text-base font-bold text-amber-950 border-l-4 border-red-700 pl-3 py-0.5 italic">
+        <div id="checkmate-poem" class="serif-cn text-sm md:text-base font-bold text-amber-950 border-l-4 border-red-700 pl-3 py-0.5 italic">
           “中炮镇神州，轻车破铁门；将士皆束手，寸步不能行。”
         </div>
         <p id="winner-desc" class="text-xs md:text-sm text-slate-700 leading-relaxed pt-1">
@@ -915,18 +650,15 @@
       </div>
 
       <div class="flex flex-wrap items-center justify-center gap-2.5 mt-5">
-        <button onclick="window.gameApp.closeModalOnly()"
-          class="md-btn px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-xs md:text-sm flex items-center gap-1">
+        <button onclick="window.gameApp.closeModalOnly()" class="md-btn px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-xs md:text-sm flex items-center gap-1">
           <span class="material-symbols-rounded text-[18px]">visibility</span>
           <span>观赏终局棋盘</span>
         </button>
-        <button onclick="window.gameApp.replayCheckmateVFX()"
-          class="md-btn px-4 py-2.5 rounded-2xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-950 border border-amber-600/30 font-bold text-xs md:text-sm flex items-center gap-1">
+        <button onclick="window.gameApp.replayCheckmateVFX()" class="md-btn px-4 py-2.5 rounded-2xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-950 border border-amber-600/30 font-bold text-xs md:text-sm flex items-center gap-1">
           <span class="material-symbols-rounded text-[18px] text-red-700">auto_awesome</span>
           <span>重播绝杀特效</span>
         </button>
-        <button onclick="window.gameApp.replayEndgame()"
-          class="md-btn px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 shadow-lg">
+        <button onclick="window.gameApp.replayEndgame()" class="md-btn px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 shadow-lg">
           <span class="material-symbols-rounded text-[18px]">replay</span>
           <span>再来一局</span>
         </button>
@@ -1354,75 +1086,75 @@
     // High-precision Piece-Square Tables (from Red's perspective: r=0 is Black base, r=9 is Red base)
     const PST = {
       p: [
-        [15, 20, 25, 35, 40, 35, 25, 20, 15],
-        [35, 45, 60, 80, 90, 80, 60, 45, 35],
-        [35, 45, 58, 72, 78, 72, 58, 45, 35],
-        [30, 40, 50, 60, 65, 60, 50, 40, 30],
-        [22, 30, 38, 48, 52, 48, 38, 30, 22],
-        [10, 0, 20, 0, 26, 0, 20, 0, 10],
-        [8, 0, 10, 0, 18, 0, 10, 0, 8],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        [ 15, 20, 25, 35, 40, 35, 25, 20, 15],
+        [ 35, 45, 60, 80, 90, 80, 60, 45, 35],
+        [ 35, 45, 58, 72, 78, 72, 58, 45, 35],
+        [ 30, 40, 50, 60, 65, 60, 50, 40, 30],
+        [ 22, 30, 38, 48, 52, 48, 38, 30, 22],
+        [ 10,  0, 20,  0, 26,  0, 20,  0, 10],
+        [  8,  0, 10,  0, 18,  0, 10,  0,  8],
+        [  0,  0,  0,  0,  0,  0,  0,  0,  0],
+        [  0,  0,  0,  0,  0,  0,  0,  0,  0],
+        [  0,  0,  0,  0,  0,  0,  0,  0,  0]
       ],
       n: [
-        [4, 8, 16, 12, 4, 12, 16, 8, 4],
-        [4, 16, 28, 32, 18, 32, 28, 16, 4],
-        [12, 24, 38, 46, 42, 46, 38, 24, 12],
-        [10, 26, 36, 40, 38, 40, 36, 26, 10],
-        [6, 22, 28, 34, 36, 34, 28, 22, 6],
-        [4, 14, 24, 26, 28, 26, 24, 14, 4],
-        [0, 8, 16, 18, 16, 18, 16, 8, 0],
-        [2, 0, 12, 10, 4, 10, 12, 0, 2],
-        [-8, -4, 4, 4, -6, 4, 4, -4, -8],
-        [-6, -10, -4, -4, -8, -4, -4, -10, -6]
+        [  4,  8, 16, 12,  4, 12, 16,  8,  4],
+        [  4, 16, 28, 32, 18, 32, 28, 16,  4],
+        [ 12, 24, 38, 46, 42, 46, 38, 24, 12],
+        [ 10, 26, 36, 40, 38, 40, 36, 26, 10],
+        [  6, 22, 28, 34, 36, 34, 28, 22,  6],
+        [  4, 14, 24, 26, 28, 26, 24, 14,  4],
+        [  0,  8, 16, 18, 16, 18, 16,  8,  0],
+        [  2,  0, 12, 10,  4, 10, 12,  0,  2],
+        [ -8, -4,  4,  4, -6,  4,  4, -4, -8],
+        [ -6,-10, -4, -4, -8, -4, -4,-10, -6]
       ],
       c: [
-        [14, 14, 8, 2, 0, 2, 8, 14, 14],
-        [10, 8, 6, 2, -2, 2, 6, 8, 10],
-        [8, 6, 4, 4, 10, 4, 4, 6, 8],
-        [4, 6, 4, 12, 24, 12, 4, 6, 4],
-        [2, 4, 6, 10, 22, 10, 6, 4, 2],
-        [0, 4, 8, 8, 18, 8, 8, 4, 0],
-        [2, 4, 4, 6, 14, 6, 4, 4, 2],
-        [8, 2, 14, 12, 20, 12, 14, 2, 8],
-        [2, 4, 6, 10, 12, 10, 6, 4, 2],
-        [0, 2, 4, 10, 12, 10, 4, 2, 0]
+        [ 14, 14,  8,  2,  0,  2,  8, 14, 14],
+        [ 10,  8,  6,  2, -2,  2,  6,  8, 10],
+        [  8,  6,  4,  4, 10,  4,  4,  6,  8],
+        [  4,  6,  4, 12, 24, 12,  4,  6,  4],
+        [  2,  4,  6, 10, 22, 10,  6,  4,  2],
+        [  0,  4,  8,  8, 18,  8,  8,  4,  0],
+        [  2,  4,  4,  6, 14,  6,  4,  4,  2],
+        [  8,  2, 14, 12, 20, 12, 14,  2,  8],
+        [  2,  4,  6, 10, 12, 10,  6,  4,  2],
+        [  0,  2,  4, 10, 12, 10,  4,  2,  0]
       ],
       r: [
-        [14, 18, 16, 28, 32, 28, 16, 18, 14],
-        [16, 28, 24, 38, 65, 38, 24, 28, 16],
-        [14, 20, 18, 30, 34, 30, 18, 20, 14],
-        [16, 26, 26, 34, 36, 34, 26, 26, 16],
-        [18, 24, 24, 30, 32, 30, 24, 24, 18],
-        [16, 24, 24, 30, 32, 30, 24, 24, 16],
-        [10, 18, 12, 24, 26, 24, 12, 18, 10],
-        [14, 14, 16, 24, 18, 24, 16, 14, 14],
-        [10, 16, 14, 22, 4, 22, 14, 16, 10],
-        [-8, 16, 10, 22, 0, 22, 10, 16, -8]
+        [ 14, 18, 16, 28, 32, 28, 16, 18, 14],
+        [ 16, 28, 24, 38, 65, 38, 24, 28, 16],
+        [ 14, 20, 18, 30, 34, 30, 18, 20, 14],
+        [ 16, 26, 26, 34, 36, 34, 26, 26, 16],
+        [ 18, 24, 24, 30, 32, 30, 24, 24, 18],
+        [ 16, 24, 24, 30, 32, 30, 24, 24, 16],
+        [ 10, 18, 12, 24, 26, 24, 12, 18, 10],
+        [ 14, 14, 16, 24, 18, 24, 16, 14, 14],
+        [ 10, 16, 14, 22,  4, 22, 14, 16, 10],
+        [ -8, 16, 10, 22,  0, 22, 10, 16, -8]
       ],
       a: [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 4, 0, 4, 0, 0, 0],
-        [0, 0, 0, 0, 12, 0, 0, 0, 0],
-        [0, 0, 0, 2, 0, 2, 0, 0, 0]
+        [0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],
+        [0,0,0, 4, 0, 4,0,0,0],
+        [0,0,0, 0,12, 0,0,0,0],
+        [0,0,0, 2, 0, 2,0,0,0]
       ],
       b: [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 6, 0, 0, 0, 6, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [4, 0, 0, 0, 14, 0, 0, 0, 4],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 4, 0, 0, 0, 4, 0, 0]
+        [0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],
+        [0,0, 6,0, 0,0, 6,0,0],
+        [0,0, 0,0, 0,0, 0,0,0],
+        [4,0, 0,0,14,0, 0,0,4],
+        [0,0, 0,0, 0,0, 0,0,0],
+        [0,0, 4,0, 0,0, 4,0,0]
       ],
       k: [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, -6, -8, -6, 0, 0, 0],
-        [0, 0, 0, -2, -4, -2, 0, 0, 0],
-        [0, 0, 0, 6, 12, 6, 0, 0, 0]
+        [0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],
+        [0,0,0, -6, -8, -6,0,0,0],
+        [0,0,0, -2, -4, -2,0,0,0],
+        [0,0,0,  6, 12,  6,0,0,0]
       ]
     };
 
@@ -1778,8 +1510,8 @@
         // PATTERN 13: 双鬼拍门
         const palaceAttackers = attackerPieces.filter(
           a => (a.piece.type === 'p' || a.piece.type === 'r') &&
-            Math.abs(a.r - enemyBaseRow) <= 1 &&
-            (a.c === 3 || a.c === 5)
+               Math.abs(a.r - enemyBaseRow) <= 1 &&
+               (a.c === 3 || a.c === 5)
         );
         if (palaceAttackers.length >= 2) {
           palaceAttackers.forEach(pa => highlightCoords.push({ r: pa.r, c: pa.c }));
@@ -3457,7 +3189,7 @@
         }
 
         if (p.type === 'b') {
-          if ((color === RED && tr < 5) || (color === BLACK && tr > 4)) {
+          if ( (color === RED && tr < 5) || (color === BLACK && tr > 4) ) {
             return {
               icon: 'water',
               title: '走法违规 · 相/象不可过河',
@@ -4104,23 +3836,6 @@
         this.onlineRole = null;
         this.roomCode = null;
 
-        // ICE 服务器配置：STUN 用于 NAT 穿透，TURN 用于中继（解决不同设备/网络无法直连的问题）
-        this.peerConfig = {
-          config: {
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:stun1.l.google.com:19302' },
-              { urls: 'stun:stun2.l.google.com:19302' },
-              { urls: 'stun:stun.qq.com:3478' },
-              { urls: 'stun:stun.miwifi.com:3478' },
-              // 免费 TURN 中继服务器（当 STUN 穿透失败时作为备选）
-              { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-              { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-              { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
-            ]
-          }
-        };
-
         this.selectedSquare = null;
         this.legalMovesForSelected = [];
 
@@ -4181,7 +3896,7 @@
               const legal = this.engine.getAllLegalMoves(this.engine.turn);
               cb(legal[0] || null);
             }
-            try { this.aiWorker.terminate(); } catch (_) { }
+            try { this.aiWorker.terminate(); } catch (_) {}
             this.aiWorker = null;
           };
         } catch (err) {
@@ -4238,7 +3953,7 @@
               if (this.aiWorker === workerAtRequest && this.aiCallback === callbackAtRequest) {
                 console.warn('宗师 AI 推演超时，使用合法走法恢复对局。');
                 this.aiCallback = null;
-                try { workerAtRequest.terminate(); } catch (_) { }
+                try { workerAtRequest.terminate(); } catch (_) {}
                 this.aiWorker = null;
                 const legal = this.engine.getAllLegalMoves(color);
                 callbackAtRequest(legal[0] || null);
@@ -4626,21 +4341,21 @@
         // Shared or cached physical materials for body
         const bodyMat = isRed
           ? new THREE.MeshPhysicalMaterial({
-            color: 0xfaf3e3,
-            roughness: 0.22,
-            metalness: 0.03,
-            clearcoat: 0.65,
-            clearcoatRoughness: 0.18,
-            reflectivity: 0.7
-          })
+              color: 0xfaf3e3,
+              roughness: 0.22,
+              metalness: 0.03,
+              clearcoat: 0.65,
+              clearcoatRoughness: 0.18,
+              reflectivity: 0.7
+            })
           : new THREE.MeshPhysicalMaterial({
-            color: 0x131924,
-            roughness: 0.08,
-            metalness: 0.22,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.06,
-            reflectivity: 1.0
-          });
+              color: 0x131924,
+              roughness: 0.08,
+              metalness: 0.22,
+              clearcoat: 1.0,
+              clearcoatRoughness: 0.06,
+              reflectivity: 1.0
+            });
 
         const height = 0.34;
         const radius = 0.44;
@@ -5990,15 +5705,15 @@
         const isRed = color === RED;
         const fragMat = isRed
           ? new THREE.MeshStandardMaterial({
-            color: 0xf5ecd9,
-            roughness: 0.25,
-            metalness: 0.1
-          })
+              color: 0xf5ecd9,
+              roughness: 0.25,
+              metalness: 0.1
+            })
           : new THREE.MeshStandardMaterial({
-            color: 0x111827,
-            roughness: 0.1,
-            metalness: 0.45
-          });
+              color: 0x111827,
+              roughness: 0.1,
+              metalness: 0.45
+            });
 
         const accentMat = new THREE.MeshStandardMaterial({
           color: isRed ? 0xb91c1c : 0xd4af37,
@@ -7257,7 +6972,7 @@
           const parts = String(fenString).trim().split(/\s+/);
           const rows = parts[0].split('/');
           if (rows.length !== 10) return false;
-          const board = Array.from({ length: 10 }, () => Array(9).fill(null));
+          const board = Array.from({length:10}, () => Array(9).fill(null));
           let id = 100, redKing = false, blackKing = false;
           for (let r = 0; r < 10; r++) {
             let c = 0;
@@ -7266,7 +6981,7 @@
               const type = ch.toLowerCase();
               if (!PIECE_CHARS.r[type] || c >= 9) return false;
               const color = ch === ch.toUpperCase() ? RED : BLACK;
-              board[r][c++] = { id: id++, color, type, char: PIECE_CHARS[color][type] };
+              board[r][c++] = {id:id++, color, type, char:PIECE_CHARS[color][type]};
               if (type === 'k') { if (color === RED) redKing = true; else blackKing = true; }
             }
             if (c !== 9) return false;
@@ -7280,7 +6995,7 @@
           this.engine.capturedRed = [];
           this.engine.capturedBlack = [];
           this.engine.initialPosKey = this.engine.getPositionKey(board, turn);
-          this.customEndgameSnapshot = board.map(row => row.map(p => p ? { ...p } : null));
+          this.customEndgameSnapshot = board.map(row => row.map(p => p ? {...p} : null));
           this.gameOver = false;
           this.selectedSquare = null;
           this.clearLegalMoveIndicators();
@@ -7326,11 +7041,6 @@
         target.innerHTML = '';
         section.classList.remove('hidden');
         this.inviteLink = inviteLink;
-        const host = window.location.hostname;
-        if (window.location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '::1') {
-          target.innerHTML = '<p class="max-w-[240px] px-3 text-xs leading-relaxed text-rose-600">当前地址是本地文件或 localhost，好友无法通过二维码访问这份网页。请先将 HTML 部署到双方都能访问的 HTTPS 网站，再创建房间并扫码。</p>';
-          return;
-        }
         if (typeof QRCode === 'undefined') {
           target.innerHTML = '<p class="max-w-[220px] px-3 text-xs text-rose-600">二维码组件加载失败。请检查网络，或点击下方按钮复制邀请链接。</p>';
           return;
@@ -7399,7 +7109,16 @@
         this.onlineRole = RED;
         const codeEl = document.getElementById('my-room-code');
         if (codeEl) codeEl.textContent = code;
-        this.peer = new Peer(`xq3d-room-${code}`, this.peerConfig);
+        this.peer = new Peer(`xq3d-room-${code}`, {
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+              { urls: 'stun:stun2.l.google.com:19302' },
+              { urls: 'stun:openrelay.metered.ca:80' } // 备用公开 STUN
+            ]
+          }
+        });
         this.updateOnlineStatusUI(`正在初始化房间 ${code}…`, false);
         this.peer.on('open', () => {
           // 只将邀请链接复制给好友，不污染房主自己的地址栏。
@@ -7460,7 +7179,16 @@
         this.desiredSpherical.theta = Math.PI;
         this.updatePiecesOrientation();
         this.updateUI(this.engine.isInCheck(this.engine.turn));
-        this.peer = new Peer(this.peerConfig);
+        this.peer = new Peer(undefined, {
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+              { urls: 'stun:stun2.l.google.com:19302' },
+              { urls: 'stun:openrelay.metered.ca:80' } // 备用公开 STUN
+            ]
+          }
+        });
         let settled = false;
         this.peer.on('open', () => {
           if (settled) return;
@@ -7470,8 +7198,8 @@
           const retryTimer = setTimeout(() => {
             if (!currentConn || !currentConn.open) {
               settled = true;
-              try { currentConn?.close(); } catch (_) { }
-              try { this.peer?.destroy(); } catch (_) { }
+              try { currentConn?.close(); } catch (_) {}
+              try { this.peer?.destroy(); } catch (_) {}
               if (retryCount < 2) this.joinOnlineRoom(roomCode, retryCount + 1);
               else {
                 this.onlineRole = null; this.conn = null; this.peer = null;
@@ -7480,13 +7208,13 @@
                 this.updateUI(this.engine.isInCheck(this.engine.turn));
               }
             }
-          }, 15000);
+          }, 5000);
           currentConn?.on('open', () => { settled = true; clearTimeout(retryTimer); });
         });
         this.peer.on('error', err => {
           if (settled) return;
           settled = true;
-          try { this.peer?.destroy(); } catch (_) { }
+          try { this.peer?.destroy(); } catch (_) {}
           if (retryCount < 2) setTimeout(() => this.joinOnlineRoom(roomCode, retryCount + 1), 700);
           else {
             this.onlineRole = null; this.conn = null; this.peer = null;
@@ -7564,8 +7292,8 @@
         this.conn = null; this.peer = null; this.onlineRole = null; this.roomCode = null;
         this.pendingUndoRequest = false;
         document.getElementById('undo-request-modal')?.classList.add('hidden');
-        try { if (conn) conn.close(); } catch (_) { }
-        try { if (peer) peer.destroy(); } catch (_) { }
+        try { if (conn) conn.close(); } catch (_) {}
+        try { if (peer) peer.destroy(); } catch (_) {}
         const code = document.getElementById('my-room-code');
         if (code) code.textContent = '未创建';
         if (!silent) {
@@ -7622,7 +7350,7 @@
           panel.style.right = 'auto';
           panel.style.bottom = 'auto';
           header.style.cursor = 'grabbing';
-          try { header.setPointerCapture(event.pointerId); } catch (_) { }
+          try { header.setPointerCapture(event.pointerId); } catch (_) {}
           event.preventDefault();
         });
         header.addEventListener('pointermove', (event) => {
@@ -7651,5 +7379,4 @@
     };
   </script>
 </body>
-
 </html>
