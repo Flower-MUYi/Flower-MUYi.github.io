@@ -10,6 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- PeerJS WebRTC P2P 实时联机库 -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- QR code generation for friend-room invite links -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Google Fonts & Material Symbols -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -534,9 +536,15 @@
   <!-- PeerJS 异地好友实时联机面板 -->
   <div id="online-modal" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 hidden w-[92vw] max-w-md">
     <div class="md-card rounded-3xl p-4 border border-indigo-300/80 shadow-2xl space-y-3">
-      <div class="flex items-center justify-between gap-2"><div><h3 class="serif-cn font-black text-slate-800 text-sm">异地好友实时联机 (P2P)</h3><p id="online-status-text" class="text-[11px] text-slate-500">支持标准局或当前残局 · 点开邀请链接自动入局</p></div>
+      <div class="flex items-center justify-between gap-2"><div><h3 class="serif-cn font-black text-slate-800 text-sm">异地好友实时联机 (P2P)</h3><p id="online-status-text" class="text-[11px] text-slate-500">支持标准局或当前残局 · 链接或扫码自动加入</p></div>
         <button onclick="window.gameApp.toggleOnlineModal(false)" class="md-btn w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center">×</button></div>
       <div class="flex items-center justify-between text-xs bg-indigo-950/5 px-3 py-2 rounded-xl border border-indigo-900/10"><span class="font-semibold text-slate-700">房间号（点击号码直接复制）：</span><strong id="my-room-code" onclick="window.gameApp.copyRoomCodeOnly()" class="font-mono text-sm px-2.5 py-0.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 cursor-pointer hover:bg-indigo-50 active:scale-95 transition" title="点击直接复制房间号">未创建</strong></div>
+      <div id="invite-qr-section" class="hidden rounded-2xl border border-indigo-200 bg-white p-3 text-center space-y-2">
+        <div class="text-xs font-bold text-slate-700">扫码加入房间</div>
+        <div id="invite-qr" class="mx-auto flex min-h-[180px] w-full items-center justify-center overflow-hidden"></div>
+        <p class="text-[10px] leading-relaxed text-slate-500">用手机相机扫描二维码，打开邀请链接即可自动加入。请确保此页面已部署到好友也能访问的 HTTPS 网站。</p>
+        <button onclick="window.gameApp.copyInviteLink()" class="md-btn rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">复制邀请链接</button>
+      </div>
       <button id="btn-create-room" onclick="window.gameApp.createOnlineRoom()" class="md-btn w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm">创建房间并复制邀请链接（朋友点开即连）</button>
       <div id="manual-join-row" class="flex gap-2"><input id="join-room-input" maxlength="10" placeholder="或手动输入房间号加入" class="min-w-0 flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono uppercase"/><button onclick="window.gameApp.joinOnlineRoomFromInput()" class="md-btn px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">加入</button></div>
       <button id="btn-disconnect-p2p" onclick="window.gameApp.disconnectOnline()" class="hidden md-btn w-full py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold">退出联机房间（恢复单机全部功能）</button>
@@ -7026,6 +7034,48 @@
         modal.classList.toggle('hidden', !(typeof force === 'boolean' ? force : modal.classList.contains('hidden')));
       }
 
+      renderInviteQRCode(inviteLink) {
+        const section = document.getElementById('invite-qr-section');
+        const target = document.getElementById('invite-qr');
+        if (!section || !target) return;
+        target.innerHTML = '';
+        section.classList.remove('hidden');
+        this.inviteLink = inviteLink;
+        const host = window.location.hostname;
+        if (window.location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '::1') {
+          target.innerHTML = '<p class="max-w-[240px] px-3 text-xs leading-relaxed text-rose-600">当前地址是本地文件或 localhost，好友无法通过二维码访问这份网页。请先将 HTML 部署到双方都能访问的 HTTPS 网站，再创建房间并扫码。</p>';
+          return;
+        }
+        if (typeof QRCode === 'undefined') {
+          target.innerHTML = '<p class="max-w-[220px] px-3 text-xs text-rose-600">二维码组件加载失败。请检查网络，或点击下方按钮复制邀请链接。</p>';
+          return;
+        }
+        try {
+          new QRCode(target, {
+            text: inviteLink,
+            width: 180,
+            height: 180,
+            colorDark: '#111827',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch (err) {
+          target.innerHTML = '<p class="max-w-[220px] px-3 text-xs text-rose-600">二维码生成失败，请复制邀请链接发送给好友。</p>';
+        }
+      }
+
+      copyInviteLink() {
+        if (!this.inviteLink) {
+          this.showCenterCallout('请先创建房间生成邀请链接', this.onlineRole || RED);
+          return;
+        }
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(this.inviteLink)
+            .then(() => this.showCenterCallout('邀请链接已复制', this.onlineRole || RED))
+            .catch(() => prompt('请复制邀请链接：', this.inviteLink));
+        } else prompt('请复制邀请链接：', this.inviteLink);
+      }
+
       copyRoomCodeOnly() {
         if (!this.roomCode) {
           if (this.onlineRole === RED && this.peer) return;
@@ -7073,6 +7123,11 @@
           inviteUrl.searchParams.set('fen', this.exportBoardToFEN());
           inviteUrl.searchParams.delete('mode');
           const inviteLink = inviteUrl.toString();
+          this.inviteLink = inviteLink;
+          this.renderInviteQRCode(inviteLink);
+          if (window.location.protocol === 'file:') {
+            this.updateOnlineStatusUI('房间已创建，但当前是本地文件。好友无法通过 file:// 地址打开；请将网页部署到可公开访问的 HTTPS 网站后再分享。', false);
+          }
           if (navigator.clipboard?.writeText) {
             navigator.clipboard.writeText(inviteLink).then(() => this.showCenterCallout(`邀请链接已复制 · 房间 ${code}`, RED))
               .catch(() => prompt('请复制邀请链接发给好友（点开即连）：', inviteLink));
@@ -7081,7 +7136,17 @@
           this.updateUI(this.engine.isInCheck(this.engine.turn));
         });
         this.peer.on('connection', conn => { this.conn = conn; this.setupPeerConnection(); });
-        this.peer.on('error', err => this.updateOnlineStatusUI(`网络信令异常：${err.type || '请重试'}`, false));
+        this.peer.on('error', err => {
+          const reason = ({
+            'unavailable-id': '房间号冲突，请重新创建房间',
+            'peer-unavailable': '房主未在线、房间已关闭或房间号错误',
+            'network': '网络连接信令服务器失败，请检查网络或稍后重试',
+            'server-error': 'PeerJS 信令服务器暂时异常',
+            'socket-error': '信令服务器连接失败，可能被网络或防火墙拦截',
+            'socket-closed': '信令服务器连接已关闭'
+          })[err.type] || `网络信令异常：${err.type || '未知错误'}`;
+          this.updateOnlineStatusUI(reason, false);
+        });
       }
 
       joinOnlineRoomFromInput() {
@@ -7125,7 +7190,7 @@
               if (retryCount < 2) this.joinOnlineRoom(roomCode, retryCount + 1);
               else {
                 this.onlineRole = null; this.conn = null; this.peer = null;
-                this.updateOnlineStatusUI(`无法连入房间 ${roomCode}（房主可能已离开）`, false);
+                this.updateOnlineStatusUI(`连接失败：房主可能已离开，或网络/防火墙阻止了 WebRTC。请重新创建房间后再试。`, false);
                 this.showCenterCallout(`房间 ${roomCode} 连接失败`, BLACK);
                 this.updateUI(this.engine.isInCheck(this.engine.turn));
               }
@@ -7140,7 +7205,7 @@
           if (retryCount < 2) setTimeout(() => this.joinOnlineRoom(roomCode, retryCount + 1), 700);
           else {
             this.onlineRole = null; this.conn = null; this.peer = null;
-            this.updateOnlineStatusUI(`无法连入房间 ${roomCode}（${err.type || '房主可能已离开'}）`, false);
+            this.updateOnlineStatusUI(`连接失败（${err.type || '网络异常'}）。请确认房主页面仍开着、房间号正确，双方均能访问 PeerJS 信令服务器，且浏览器/网络未阻止 WebRTC。`, false);
             this.showCenterCallout(`房间 ${roomCode} 连接失败`, BLACK);
             this.updateUI(this.engine.isInCheck(this.engine.turn));
           }
@@ -7218,6 +7283,10 @@
         try { if (peer) peer.destroy(); } catch (_) {}
         const code = document.getElementById('my-room-code');
         if (code) code.textContent = '未创建';
+        if (!silent) {
+          document.getElementById('invite-qr-section')?.classList.add('hidden');
+          this.inviteLink = null;
+        }
         this.updatePiecesOrientation();
         if (!silent) {
           this.desiredSpherical.theta = 0;
