@@ -445,17 +445,21 @@
       footer > div > button { padding: 3px 2px !important; }
     }
 
-    /* 标题栏保持单行：窄屏时允许内容压缩，不让动态文本撑开换行 */
-    header > div:first-child { min-width: 0; }
+    /* 标题栏：桌面端保持紧凑，手机端分层排布，避免品牌、模式和回合状态互相挤压 */
+    header, header * { min-width: 0; }
     header h1 { white-space: nowrap; }
-    #ai-telemetry-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #ai-telemetry-text { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     @media (max-width: 640px) {
-      header > div:first-child { gap: 5px !important; }
-      header > div:first-child > div:first-child { width: 30px !important; height: 30px !important; }
-      header [role="group"] button { padding-left: 5px !important; padding-right: 5px !important; }
-      #turn-badge { padding-left: 6px !important; padding-right: 6px !important; }
-      #captured-content:not(.hidden) { flex-wrap: wrap; }
-      #captured-row { align-items: flex-start; }
+      header { padding: 9px 11px !important; gap: 8px !important; align-items: stretch !important; }
+      header > div:first-child { gap: 8px !important; flex: 1 1 100%; width:100%; }
+      header > div:first-child > div:first-child { width: 34px !important; height: 34px !important; flex: 0 0 34px !important; }
+      header h1 { font-size: 15px !important; line-height: 1.2 !important; }
+      #ai-telemetry-text { font-size: 10px !important; line-height: 1.25 !important; }
+      header [role="group"] { display:flex !important; width:100%; justify-content:stretch !important; gap:4px !important; }
+      header [role="group"] button { flex:1 1 0; min-width:0 !important; padding:7px 3px !important; font-size:11px !important; white-space:nowrap; }
+      #turn-badge { flex:0 0 auto; padding:5px 8px !important; font-size:11px !important; }
+      #captured-content:not(.hidden) { flex-wrap:wrap; }
+      #captured-row { align-items:flex-start; }
     }
     #captured-content.hidden { display: none !important; }
 </style>
@@ -4567,6 +4571,10 @@
       }
 
       toggleVFXDrawer(forceState) {
+        if (this.onlineRole && forceState !== false) {
+          this.showCenterCallout('联机对局中不可使用绝杀大招', this.onlineRole);
+          return;
+        }
         const drawer = document.getElementById('vfx-drawer');
         if (!drawer) return;
         const willShow = typeof forceState === 'boolean' ? forceState : drawer.classList.contains('hidden');
@@ -4575,6 +4583,10 @@
       }
 
       toggleMoreMenu(forceState) {
+        if (this.onlineRole && forceState !== false) {
+          this.showCenterCallout('联机对局中已禁用残局工坊、绝杀大招和标准新局', this.onlineRole);
+          return;
+        }
         const menu = document.getElementById('more-tools-menu');
         if (!menu) return;
         const willShow = typeof forceState === 'boolean' ? forceState : menu.classList.contains('hidden');
@@ -5831,6 +5843,10 @@
       }
 
       enterEndgameEditor() {
+        if (this.onlineRole) {
+          this.showCenterCallout('联机对局中不能打开残局工坊', this.onlineRole);
+          return;
+        }
         if (this.isBusy) return;
         this.endgameEditor = true;
         this.gameOver = false;
@@ -6231,6 +6247,20 @@
         ['mode-pvp', 'mode-easy', 'mode-hard', 'mode-inferno'].forEach(id => {
           document.getElementById(id)?.toggleAttribute('disabled', isOnline);
         });
+        ['btn-more-menu', 'btn-endgame-editor', 'btn-vfx-panel', 'btn-standard-new-game', 'btn-share-endgame'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.disabled = isOnline;
+            el.classList.toggle('opacity-45', isOnline);
+            el.classList.toggle('cursor-not-allowed', isOnline);
+            el.title = isOnline ? '联机对局中不可使用此功能，请先退出房间' : '';
+          }
+        });
+        if (isOnline) {
+          document.getElementById('more-tools-menu')?.classList.add('hidden');
+          document.getElementById('custom-endgame-panel')?.classList.add('hidden');
+          document.getElementById('vfx-drawer')?.classList.add('hidden');
+        }
 
         btnUndo.disabled = this.engine.history.length === 0 || this.isBusy || Boolean(this.pendingUndoRequest);
         if (btnHint) btnHint.disabled = this.isBusy || this.gameOver || this.engine.turn !== RED || isOnline;
@@ -6401,6 +6431,10 @@
       }
 
       restartStandardGame(isRemote = false) {
+        if (this.onlineRole && !isRemote) {
+          this.showCenterCallout('联机对局中不能单独开始标准新局，请先退出房间', this.onlineRole);
+          return;
+        }
         this.customEndgameSnapshot = null;
         this.endgameEditor = false;
         document.getElementById('custom-endgame-panel')?.classList.add('hidden');
