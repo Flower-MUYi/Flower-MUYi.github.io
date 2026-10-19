@@ -14,6 +14,7 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <!-- QR code generation for friend-room invite links -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <!-- Google Fonts & Material Symbols -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -542,7 +543,11 @@
       #cycle-warning-banner { z-index: 60; }
       #illegal-move-toast { z-index: 61; }
     }
-</style>
+
+    /* Share poster and QR scanner */
+    #share-endgame-modal, #qr-scanner-modal { -webkit-overflow-scrolling: touch; }
+    #share-poster-qr canvas, #share-poster-qr img { display:block; max-width:150px; height:auto; margin:auto; }
+  </style>
 </head>
 
 <body class="relative select-none overflow-hidden">
@@ -798,6 +803,7 @@
         <span class="material-symbols-rounded text-[17px] text-red-600">auto_awesome</span>
         <span>绝杀大招</span>
       </button>
+      <button onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.startQRScanner()" class="md-btn px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-950 text-xs font-bold flex items-center gap-1.5 border border-indigo-200/80"><span class="material-symbols-rounded text-[17px]">qr_code_scanner</span><span>扫码识局 / 进房</span></button>
       <button id="btn-standard-new-game"
         onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.restartStandardGame();"
         class="md-btn px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 border border-slate-300/80">
@@ -907,9 +913,29 @@
       <div id="manual-join-row" class="flex gap-2"><input id="join-room-input" maxlength="10" placeholder="或手动输入房间号加入"
           class="min-w-0 flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono uppercase" /><button
           onclick="window.gameApp.joinOnlineRoomFromInput()"
-          class="md-btn px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">加入</button></div>
+          class="md-btn px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">加入</button><button onclick="window.gameApp.startQRScanner()" class="md-btn px-3 py-2 rounded-xl bg-indigo-100 text-indigo-800 text-xs font-bold">扫码加入</button></div>
       <button id="btn-disconnect-p2p" onclick="window.gameApp.disconnectOnline()"
         class="hidden md-btn w-full py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold">退出联机房间（恢复单机全部功能）</button>
+    </div>
+  </div>
+
+  <!-- 残局分享海报弹窗 -->
+  <div id="share-endgame-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto bg-slate-950/60 p-3 sm:p-6">
+    <div class="md-card mx-auto my-4 w-full max-w-lg rounded-3xl border border-white/70 p-4 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between"><h3 class="font-black text-slate-900">分享残局挑战</h3><button onclick="document.getElementById('share-endgame-modal').classList.add('hidden')" class="rounded-full bg-slate-200 px-3 py-1">×</button></div>
+      <img id="share-poster-img" alt="残局挑战分享海报" class="mx-auto block max-h-[55vh] w-auto max-w-full rounded-xl border border-amber-200 shadow-md" />
+      <div class="flex items-center justify-center gap-3"><div id="share-poster-qr" class="rounded-xl bg-white p-2"></div><p class="max-w-[180px] text-xs leading-relaxed text-slate-600">扫描二维码即可加载此残局，挑战相同棋局。</p></div>
+      <div class="grid grid-cols-2 gap-2"><button onclick="window.gameApp.downloadEndgamePoster()" class="rounded-xl bg-emerald-700 px-3 py-2.5 text-sm font-bold text-white">下载海报图片</button><button onclick="window.gameApp.copyEndgameShareLink()" class="rounded-xl bg-indigo-700 px-3 py-2.5 text-sm font-bold text-white">复制残局链接</button></div>
+    </div>
+  </div>
+
+  <!-- 二维码扫描弹窗：支持摄像头与相册图片 -->
+  <div id="qr-scanner-modal" class="fixed inset-0 z-[80] hidden overflow-y-auto bg-slate-950/75 p-3 sm:p-6">
+    <div class="md-card mx-auto my-4 w-full max-w-md rounded-3xl p-4 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between"><h3 class="font-black text-slate-900">扫码识局 / 加入房间</h3><button onclick="window.gameApp.stopQRScanner()" class="rounded-full bg-slate-200 px-3 py-1">×</button></div>
+      <video id="qr-video" playsinline class="aspect-square w-full rounded-2xl bg-slate-900 object-cover"></video><canvas id="qr-canvas" class="hidden"></canvas>
+      <p id="qr-scan-status" class="text-center text-xs text-slate-600">准备启动摄像头…</p>
+      <div class="grid grid-cols-2 gap-2"><button onclick="window.gameApp.toggleQRScannerCamera()" class="rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-800">切换前后摄像头</button><label class="cursor-pointer rounded-xl bg-indigo-700 px-3 py-2 text-center text-sm font-bold text-white">从相册选择<input type="file" accept="image/*" class="hidden" onchange="window.gameApp.scanQRImageFile(this)"></label></div>
     </div>
   </div>
 
@@ -2670,6 +2696,13 @@
         this.capturedBlack = [];
         this.setupInitialBoard();
         this.initialPosKey = this.getPositionKey(this.board, RED);
+      }
+
+      clearCapturesAndHistory() {
+        this.history = [];
+        this.capturedRed = [];
+        this.capturedBlack = [];
+        this.initialPosKey = this.getPositionKey(this.board, this.turn);
       }
 
       getPositionKey(board = this.board, turn = this.turn) {
@@ -5973,8 +6006,8 @@
       clearEditorBoard() {
         if (!this.endgameEditor) return;
         this.engine.board = Array.from({ length: 10 }, () => Array(9).fill(null));
-        this.engine.history = [];
         this.engine.turn = RED;
+        this.engine.clearCapturesAndHistory?.();
         this.syncPiecesFromEngine();
         this.updateUI(false);
       }
@@ -5987,8 +6020,8 @@
         } else {
           this.engine.board[r][c] = { id: Date.now() + r * 9 + c, color: this.editorPiece.color, type: this.editorPiece.type, char: PIECE_CHARS[this.editorPiece.color][this.editorPiece.type] };
         }
-        this.engine.history = [];
         this.engine.turn = RED;
+        this.engine.clearCapturesAndHistory?.();
         this.selectedSquare = null;
         this.clearLegalMoveIndicators();
         this.syncPiecesFromEngine();
@@ -6009,8 +6042,8 @@
         }
         this.endgameEditor = false;
         document.getElementById('custom-endgame-panel')?.classList.add('hidden');
-        this.engine.history = [];
         this.engine.turn = this.editorFirstTurn || RED;
+        this.engine.clearCapturesAndHistory?.();
         this.gameOver = false;
         this.selectedSquare = null;
         this.syncPiecesFromEngine();
@@ -6579,8 +6612,8 @@
         this.selectedSquare = null;
         this.clearLegalMoveIndicators();
         this.engine.board = this.customEndgameSnapshot.map(row => row.map(p => p ? { ...p } : null));
-        this.engine.history = [];
         this.engine.turn = this.editorFirstTurn || RED;
+        this.engine.clearCapturesAndHistory?.();
         this.syncPiecesFromEngine();
         this.setGameMode(this.onlineRole ? 'pvp' : 'inferno');
         this.updateUI(this.engine.isInCheck(this.engine.turn));
@@ -6707,14 +6740,94 @@
         const url = new URL(window.location.href);
         url.searchParams.set('fen', this.exportBoardToFEN(board, turn));
         url.searchParams.set('mode', this.gameMode);
-        const shareUrl = url.toString();
-        window.history.replaceState({}, '', url.toString());
-        if (navigator.clipboard?.writeText) {
-          navigator.clipboard.writeText(shareUrl).then(() => this.showCenterCallout('残局链接已复制', RED));
-        } else {
-          prompt('请复制残局链接：', shareUrl);
-        }
+        url.searchParams.delete('room');
+        this.currentShareUrl = url.toString();
+        this.renderEndgamePoster(board, turn, this.currentShareUrl);
+        document.getElementById('share-endgame-modal')?.classList.remove('hidden');
       }
+
+      renderEndgamePoster(board, turn, shareUrl) {
+        const img = document.getElementById('share-poster-img');
+        const qr = document.getElementById('share-poster-qr');
+        const canvas = document.createElement('canvas');
+        canvas.width = 800; canvas.height = 1100;
+        const ctx = canvas.getContext('2d');
+        const bg = ctx.createLinearGradient(0, 0, 800, 1100);
+        bg.addColorStop(0, '#f5f0dc'); bg.addColorStop(1, '#d9e8d5');
+        ctx.fillStyle = bg; ctx.fillRect(0, 0, 800, 1100);
+        ctx.strokeStyle = '#9a6b36'; ctx.lineWidth = 10; ctx.strokeRect(22, 22, 756, 1056);
+        ctx.fillStyle = '#542d18'; ctx.font = 'bold 42px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('中国象棋 3D · 残局挑战', 400, 92);
+        ctx.fillStyle = '#8b3a26'; ctx.font = 'bold 26px sans-serif';
+        ctx.fillText(turn === BLACK ? '黑方先行' : '红方先行', 400, 138);
+        const x0=105,y0=190,cell=65;
+        ctx.fillStyle='#ead7ad'; ctx.fillRect(65,165,670,620);
+        ctx.strokeStyle='#805b35'; ctx.lineWidth=2;
+        for(let r=0;r<10;r++){ctx.beginPath();ctx.moveTo(x0,y0+r*cell);ctx.lineTo(x0+8*cell,y0+r*cell);ctx.stroke();}
+        for(let c=0;c<9;c++){ctx.beginPath();ctx.moveTo(x0+c*cell,y0);ctx.lineTo(x0+c*cell,y0+4*cell);ctx.stroke();ctx.beginPath();ctx.moveTo(x0+c*cell,y0+5*cell);ctx.lineTo(x0+c*cell,y0+9*cell);ctx.stroke();}
+        ctx.beginPath();ctx.moveTo(x0,y0+4*cell);ctx.lineTo(x0,y0+5*cell);ctx.moveTo(x0+8*cell,y0+4*cell);ctx.lineTo(x0+8*cell,y0+5*cell);ctx.stroke();
+        for(const [r1,c1,r2,c2] of [[0,3,2,5],[0,5,2,3],[7,3,9,5],[7,5,9,3]]){ctx.beginPath();ctx.moveTo(x0+c1*cell,y0+r1*cell);ctx.lineTo(x0+c2*cell,y0+r2*cell);ctx.stroke();}
+        ctx.fillStyle='#704a2a';ctx.font='italic 24px serif';ctx.fillText('楚 河                 汉 界',400,y0+4.8*cell);
+        const chars = {r:{k:'帥',a:'仕',b:'相',n:'傌',r:'俥',c:'炮',p:'兵'},b:{k:'將',a:'士',b:'象',n:'馬',r:'車',c:'砲',p:'卒'}};
+        for(let r=0;r<10;r++)for(let c=0;c<9;c++){const p=board[r]?.[c];if(!p)continue;const x=x0+c*cell,y=y0+r*cell;ctx.beginPath();ctx.arc(x,y,25,0,Math.PI*2);ctx.fillStyle='#f8edcf';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle=p.color===RED?'#b72e20':'#34414a';ctx.stroke();ctx.fillStyle=p.color===RED?'#b51f1b':'#202b34';ctx.font='bold 31px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.char||chars[p.color]?.[p.type]||'?',x,y+1);}
+        ctx.fillStyle='#fffdf4';ctx.fillRect(65,825,670,205);ctx.fillStyle='#56321f';ctx.font='bold 27px sans-serif';ctx.fillText('扫码加载残局，与你一决高下',400,870);
+        ctx.font='20px sans-serif';ctx.fillStyle='#6b6253';ctx.fillText('中国象棋 3D · 自定义残局分享',400,1010);
+        if(img) img.src=canvas.toDataURL('image/png');
+        if(qr){qr.innerHTML='';if(typeof QRCode!=='undefined'){try{new QRCode(qr,{text:shareUrl,width:150,height:150,colorDark:'#111827',colorLight:'#ffffff'});}catch(_){}}if(!qr.querySelector('canvas,img')){const qimg=document.createElement('img');qimg.alt='残局二维码';qimg.width=150;qimg.height=150;qimg.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+encodeURIComponent(shareUrl);qr.appendChild(qimg);}}
+        const qrCanvas=qr?.querySelector('canvas');
+        if(qrCanvas){ctx.fillStyle='#ffffff';ctx.fillRect(565,865,175,175);ctx.drawImage(qrCanvas,575,875,150,150);if(img)img.src=canvas.toDataURL('image/png');}
+      }
+
+      async copyEndgameShareLink() {
+        const url = this.currentShareUrl || window.location.href;
+        try { await navigator.clipboard.writeText(url); this.showCenterCallout('残局链接已复制', RED); }
+        catch (_) { window.prompt('请复制残局链接：', url); }
+      }
+
+      downloadEndgamePoster() {
+        const img=document.getElementById('share-poster-img'); if(!img?.src)return;
+        const a=document.createElement('a');a.href=img.src;a.download='中国象棋3D-残局挑战.png';a.click();
+      }
+
+      async startQRScanner() {
+        const modal=document.getElementById('qr-scanner-modal'); if(!modal)return;
+        modal.classList.remove('hidden');
+        const status=document.getElementById('qr-scan-status');
+        const video=document.getElementById('qr-video');
+        if(!navigator.mediaDevices?.getUserMedia || typeof jsQR==='undefined') { if(status)status.textContent='摄像头扫码不可用，请从相册选择二维码图片。'; return; }
+        try {
+          this.stopQRScanner(false);
+          this.qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:this.qrFacingMode||'environment'}},audio:false});
+          video.srcObject=this.qrStream; await video.play();
+          const canvas=document.getElementById('qr-canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+          const scan=()=>{if(!this.qrStream||modal.classList.contains('hidden'))return;if(video.readyState>=2){canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0,canvas.width,canvas.height);const data=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(data.data,data.width,data.height,{inversionAttempts:'attemptBoth'});if(code?.data){this.stopQRScanner();this.handleScannedQRText(code.data);return;}}this.qrAnimationFrame=requestAnimationFrame(scan);};
+          if(status)status.textContent='将二维码放入取景框内'; this.qrAnimationFrame=requestAnimationFrame(scan);
+        } catch(e) { if(status)status.textContent='未获取到相机权限或摄像头不可用，请从相册选择二维码图片。'; }
+      }
+
+      stopQRScanner(closeModal=true) {
+        if(this.qrAnimationFrame)cancelAnimationFrame(this.qrAnimationFrame);this.qrAnimationFrame=null;
+        if(this.qrStream){this.qrStream.getTracks().forEach(t=>t.stop());this.qrStream=null;}
+        const video=document.getElementById('qr-video');if(video)video.srcObject=null;
+        if(closeModal)document.getElementById('qr-scanner-modal')?.classList.add('hidden');
+      }
+
+      async scanQRImageFile(input) {
+        const file=input?.files?.[0];if(!file)return;
+        try { if(typeof jsQR==='undefined')throw new Error('扫码库未加载');const bitmap=await createImageBitmap(file);const c=document.getElementById('qr-canvas');c.width=bitmap.width;c.height=bitmap.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0);const d=ctx.getImageData(0,0,c.width,c.height);const code=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});bitmap.close?.();if(!code)throw new Error('图片中未识别到二维码');this.stopQRScanner();this.handleScannedQRText(code.data); } catch(e){const status=document.getElementById('qr-scan-status');if(status)status.textContent=e.message||'图片识别失败，请换一张清晰的二维码图片。';}
+        input.value='';
+      }
+
+      handleScannedQRText(rawText) {
+        const text=String(rawText||'').trim();if(!text)return;
+        let url=null;try{url=new URL(text);}catch(_){}
+        if(url){const room=url.searchParams.get('room'),fen=url.searchParams.get('fen'),mode=url.searchParams.get('mode');if(room){if(fen)this.loadBoardFromFEN(fen);this.joinOnlineRoom(room.trim().toUpperCase());this.showCenterCallout('扫码成功 · 正在加入房间',RED);return;}if(fen){if(this.onlineRole){this.showCenterCallout('请先退出联机房间再加载残局',RED);return;}if(this.loadBoardFromFEN(fen)){if(mode)this.setGameMode(mode);this.showCenterCallout('扫码成功 · 残局已加载',RED);}return;}}
+        if(/^[A-Z0-9]{4,10}$/i.test(text)){this.joinOnlineRoom(text.toUpperCase());this.showCenterCallout('正在加入房间',RED);return;}
+        if((text.match(/\//g)||[]).length===9){if(this.onlineRole){this.showCenterCallout('请先退出联机房间再加载残局',RED);return;}if(this.loadBoardFromFEN(text))this.showCenterCallout('残局已加载',RED);return;}
+        this.showIllegalMovePrompt({icon:'qr_code',title:'无法识别的二维码',message:'请扫描本游戏的房间邀请码或残局分享二维码。'},2500);
+      }
+
+      toggleQRScannerCamera() { this.qrFacingMode=this.qrFacingMode==='environment'?'user':'environment';this.startQRScanner(); }
 
       toggleOnlineModal(force) {
         const modal = document.getElementById('online-modal');
