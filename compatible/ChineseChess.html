@@ -741,7 +741,7 @@
             class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-xs font-bold text-red-700"
             onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button
             class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-xs font-bold text-red-700"
-            onclick="window.gameApp.chooseEditorPiece('r','n')">馬</button><button
+            onclick="window.gameApp.chooseEditorPiece('r','n')">傌</button><button
             class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-xs font-bold text-red-700"
             onclick="window.gameApp.chooseEditorPiece('r','r')">俥</button><button
             class="md-btn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-xs font-bold text-red-700"
@@ -766,7 +766,7 @@
             class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-xs font-bold text-slate-800"
             onclick="window.gameApp.chooseEditorPiece('b','r')">車</button><button
             class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-xs font-bold text-slate-800"
-            onclick="window.gameApp.chooseEditorPiece('b','c')">炮</button><button
+            onclick="window.gameApp.chooseEditorPiece('b','c')">砲</button><button
             class="md-btn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-xs font-bold text-slate-800"
             onclick="window.gameApp.chooseEditorPiece('b','p')">卒</button>
         </div>
@@ -1461,8 +1461,8 @@
     const BLACK = 'b';
 
     const PIECE_CHARS = {
-      r: { k: '帥', a: '仕', b: '相', n: '馬', r: '俥', c: '炮', p: '兵' },
-      b: { k: '將', a: '士', b: '象', n: '馬', r: '車', c: '炮', p: '卒' }
+      r: { k: '帥', a: '仕', b: '相', n: '傌', r: '俥', c: '炮', p: '兵' },
+      b: { k: '將', a: '士', b: '象', n: '馬', r: '車', c: '砲', p: '卒' }
     };
 
     const PIECE_VALUES = {
@@ -3829,9 +3829,13 @@
       ctx.arc(cx, cy, 205, 0, Math.PI * 2);
       bctx.stroke();
 
-      ctx.font = '900 245px "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif';
+      ctx.font = '900 245px "KaiTi", "STKaiti", "Kaiti SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(45, 24, 8, 0.22)';
+      ctx.shadowBlur = 5;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 3;
 
       if (color === RED) {
         ctx.lineWidth = 10;
@@ -3847,7 +3851,7 @@
         ctx.fillText(char, cx, cy + 12);
       }
 
-      bctx.font = '900 245px "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif';
+      bctx.font = '900 245px "KaiTi", "STKaiti", "Kaiti SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif';
       bctx.textAlign = 'center';
       bctx.textBaseline = 'middle';
       bctx.fillStyle = '#202020';
