@@ -919,13 +919,19 @@
     </div>
   </div>
 
-  <!-- 残局分享海报弹窗 -->
-  <div id="share-endgame-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto bg-slate-950/60 p-3 sm:p-6">
-    <div class="md-card mx-auto my-4 w-full max-w-lg rounded-3xl border border-white/70 p-4 shadow-2xl space-y-3">
-      <div class="flex items-center justify-between"><h3 class="font-black text-slate-900">分享残局挑战</h3><button onclick="document.getElementById('share-endgame-modal').classList.add('hidden')" class="rounded-full bg-slate-200 px-3 py-1">×</button></div>
-      <img id="share-poster-img" alt="残局挑战分享海报" class="mx-auto block max-h-[55vh] w-auto max-w-full rounded-xl border border-amber-200 shadow-md" />
-      <div class="flex items-center justify-center gap-3"><div id="share-poster-qr" class="rounded-xl bg-white p-2"></div><p class="max-w-[180px] text-xs leading-relaxed text-slate-600">扫描二维码即可加载此残局，挑战相同棋局。</p></div>
-      <div class="grid grid-cols-2 gap-2"><button onclick="window.gameApp.downloadEndgamePoster()" class="rounded-xl bg-emerald-700 px-3 py-2.5 text-sm font-bold text-white">下载海报图片</button><button onclick="window.gameApp.copyEndgameShareLink()" class="rounded-xl bg-indigo-700 px-3 py-2.5 text-sm font-bold text-white">复制残局链接</button></div>
+  <!-- 残局分享海报弹窗（国风海报 + 系统快捷分享） -->
+  <div id="share-endgame-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center overflow-y-auto bg-slate-950/70 backdrop-blur-md p-3 sm:p-5">
+    <div class="md-card relative my-auto w-full max-w-md rounded-3xl border border-amber-200/80 bg-gradient-to-b from-[#faf6ec] to-[#f2ead8] p-4 sm:p-5 shadow-2xl space-y-3.5">
+      <div class="flex items-center justify-between border-b border-amber-900/10 pb-2.5">
+        <div class="flex items-center gap-2"><span class="w-7 h-7 rounded-lg bg-gradient-to-br from-red-700 to-amber-700 text-amber-50 flex items-center justify-center serif-cn font-bold text-sm shadow-sm">局</span><div><h3 class="serif-cn font-black text-slate-900 text-sm sm:text-base leading-tight">残局战帖 · 分享挑战</h3><p class="text-[10px] text-slate-500">长按海报，或使用下方按钮分享图片</p></div></div>
+        <button onclick="document.getElementById('share-endgame-modal').classList.add('hidden')" aria-label="关闭分享弹窗" class="md-btn w-7 h-7 rounded-full bg-slate-200/80 text-slate-700 flex items-center justify-center font-bold">×</button>
+      </div>
+      <div class="relative mx-auto flex justify-center rounded-2xl bg-slate-900/5 p-2 border border-amber-900/10 shadow-inner"><img id="share-poster-img" alt="残局挑战分享海报" class="block max-h-[58vh] w-auto max-w-full rounded-xl shadow-lg border border-amber-300/60 object-contain" /><div id="share-poster-qr" class="hidden" aria-hidden="true"></div></div>
+      <div class="grid grid-cols-3 gap-2 pt-1">
+        <button onclick="window.gameApp.shareEndgamePosterNative()" class="md-btn rounded-xl bg-gradient-to-r from-red-700 to-amber-600 px-2 py-2.5 text-xs font-extrabold text-white shadow-md flex items-center justify-center gap-1"><span class="material-symbols-rounded text-[16px]">ios_share</span><span>分享图片</span></button>
+        <button onclick="window.gameApp.downloadEndgamePoster()" class="md-btn rounded-xl bg-emerald-700 px-2 py-2.5 text-xs font-bold text-white shadow-sm flex items-center justify-center gap-1"><span class="material-symbols-rounded text-[16px]">download</span><span>保存海报</span></button>
+        <button onclick="window.gameApp.copyEndgameShareLink()" class="md-btn rounded-xl bg-slate-800 px-2 py-2.5 text-xs font-bold text-white shadow-sm flex items-center justify-center gap-1"><span class="material-symbols-rounded text-[16px]">link</span><span>复制链接</span></button>
+      </div>
     </div>
   </div>
 
@@ -2352,6 +2358,7 @@
         let stopSearch = false;
         let startTime = 0;
         let maxTimeMs = 1500;
+        let currentDifficulty = 'inferno';
 
         function orderMoves(moves, board, ttBestEncoded, ply) {
           const k1 = killerMoves[ply] ? killerMoves[ply][0] : 0;
@@ -2366,14 +2373,21 @@
             } else if (m.capture) {
               const attacker = board[m.fr][m.fc];
               score = 1000000 + PIECE_VALUES[m.capture.type] * 20 - PIECE_VALUES[attacker.type];
-            } else if (enc === k1) {
-              score = 900000;
-            } else if (enc === k2) {
-              score = 850000;
             } else {
-              const fromSq = m.fr * 9 + m.fc;
-              const toSq = m.tr * 9 + m.tc;
-              score = historyTable[fromSq * 90 + toSq];
+              const mover = board[m.fr][m.fc];
+              const fromSq = m.fr * 9 + m.fc, toSq = m.tr * 9 + m.tc;
+              if (currentDifficulty === 'grandmaster_hint' && mover) {
+                const savedTarget = board[m.tr][m.tc];
+                board[m.tr][m.tc] = mover; board[m.fr][m.fc] = null;
+                const givesCheck = isInCheck(mover.color === RED ? BLACK : RED, board);
+                board[m.fr][m.fc] = mover; board[m.tr][m.tc] = savedTarget;
+                if (givesCheck) score = 950000;
+                else if (enc === k1) score = 900000;
+                else if (enc === k2) score = 850000;
+                else score = historyTable[fromSq * 90 + toSq];
+              } else if (enc === k1) score = 900000;
+              else if (enc === k2) score = 850000;
+              else score = historyTable[fromSq * 90 + toSq];
             }
             m.sortScore = score;
           }
@@ -2428,7 +2442,7 @@
           if (ply >= 64) return evaluate(board, color);
 
           const inChk = isInCheck(color, board);
-          if (inChk && ply < 8) depth++;
+          if (inChk && ply < (currentDifficulty === 'grandmaster_hint' ? 12 : 8)) depth++;
 
           if (depth <= 0) {
             return quiescence(board, alpha, beta, color, 0);
@@ -2580,6 +2594,7 @@
 
         self.onmessage = function(e) {
           const { board, turn, difficulty, historyMoves, useBook, forbiddenMoves } = e.data;
+          currentDifficulty = difficulty || 'inferno';
           nodesSearched = 0;
           stopSearch = false;
           startTime = Date.now();
@@ -2618,15 +2633,12 @@
           for (let r = 0; r < 10; r++) for (let c = 0; c < 9; c++) if (board[r][c]) pieceCount++;
           const isEndgame = pieceCount <= 16;
           const isDeepEndgame = pieceCount <= 10;
-          if (difficulty === 'easy') {
-            maxTimeMs = isEndgame ? 340 : 260;
-          } else if (difficulty === 'hard') {
-            maxTimeMs = isDeepEndgame ? 1050 : (isEndgame ? 850 : 680);
-          } else {
-            maxTimeMs = isDeepEndgame ? 3200 : (isEndgame ? 2500 : 1650);
-          }
-
-          const maxTargetDepth = difficulty === 'easy' ? 2 : (difficulty === 'hard' ? (isDeepEndgame ? 6 : 4) : (isDeepEndgame ? 13 : (isEndgame ? 11 : 9)));
+          const isHintBoost = difficulty === 'grandmaster_hint';
+          if (difficulty === 'easy') maxTimeMs = isEndgame ? 340 : 260;
+          else if (difficulty === 'hard') maxTimeMs = isDeepEndgame ? 1050 : (isEndgame ? 850 : 680);
+          else if (isHintBoost) maxTimeMs = isDeepEndgame ? 4500 : (isEndgame ? 3800 : 3000);
+          else maxTimeMs = isDeepEndgame ? 3200 : (isEndgame ? 2500 : 1650);
+          const maxTargetDepth = difficulty === 'easy' ? 2 : (difficulty === 'hard' ? (isDeepEndgame ? 6 : 4) : (isHintBoost ? (isDeepEndgame ? 15 : (isEndgame ? 13 : 11)) : (isDeepEndgame ? 13 : (isEndgame ? 11 : 9))));
           const { lo, hi } = computeBoardHash(board, turn);
 
           for (let i = 0; i < historyTable.length; i++) historyTable[i] >>= 2;
@@ -5946,28 +5958,47 @@
         }
       }
 
+      formatChineseMoveNotation(move) {
+        const p=this.engine.board[move.fr]?.[move.fc]; if(!p)return '妙手支招';
+        const red=['一','二','三','四','五','六','七','八','九'], black=['１','２','３','４','５','６','７','８','９'];
+        const col=c=>p.color===RED?red[8-c]:black[c], step=n=>p.color===RED?red[Math.max(0,n-1)]:black[Math.max(0,n-1)];
+        const dr=move.tr-move.fr; let action='平',target=col(move.tc);
+        if(dr!==0){action=(p.color===RED?dr<0:dr>0)?'进':'退';target=['n','b','a'].includes(p.type)?col(move.tc):step(Math.abs(dr));}
+        return `${p.char||PIECE_CHARS[p.color]?.[p.type]||'子'}${col(move.fc)}${action}${target}`;
+      }
+
+      showGrandmasterHint3D(move) {
+        this.clearGrandmasterHint3D(); if(!this.scene||!window.THREE)return;
+        this.hintVFXGroup=new THREE.Group();this.scene.add(this.hintVFXGroup);
+        const a=gridToWorld(move.fr,move.fc),b=gridToWorld(move.tr,move.tc);
+        const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(a.x,.36,a.z),new THREE.Vector3((a.x+b.x)/2,1.45,(a.z+b.z)/2),new THREE.Vector3(b.x,.25,b.z));
+        this.hintVFXGroup.add(new THREE.Mesh(new THREE.TubeGeometry(curve,36,.055,10,false),new THREE.MeshBasicMaterial({color:0xfbbf24,transparent:true,opacity:.92,blending:THREE.AdditiveBlending,depthWrite:false})));
+        [a,b].forEach((pos,i)=>{const ring=new THREE.Mesh(new THREE.RingGeometry(i?.36:.44,i?.52:.56,36),new THREE.MeshBasicMaterial({color:i?0x10b981:0xf59e0b,side:THREE.DoubleSide,transparent:true,opacity:.95}));ring.rotation.x=-Math.PI/2;ring.position.set(pos.x,.04,pos.z);this.hintVFXGroup.add(ring);});
+      }
+
+      clearGrandmasterHint3D() {
+        if(this.hintVFXGroup){this.scene?.remove(this.hintVFXGroup);this.hintVFXGroup.traverse?.(o=>{o.geometry?.dispose?.();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose?.());else o.material?.dispose?.();});this.hintVFXGroup=null;}
+      }
+
       requestRedGrandmasterMove() {
-        if (this.isBusy || this.gameOver || this.engine.turn !== RED) return;
-        this.sfx.playSelect();
-        this.isBusy = true;
-        this.clearLegalMoveIndicators();
-        this.selectedSquare = null;
-
-        const aiBadge = document.getElementById('ai-thinking');
-        const aiLabel = document.getElementById('ai-thinking-label');
-        aiBadge?.classList.remove('hidden');
-        aiBadge?.classList.add('inline-flex');
-        if (aiLabel) aiLabel.textContent = '宗师支招推演中...';
-
-        this.requestAIMove(RED, 'inferno', (bestMove) => {
-          aiBadge?.classList.add('hidden');
-          aiBadge?.classList.remove('inline-flex');
-          if (bestMove && !this.gameOver) this.executeMoveAnimated(bestMove);
-          else { this.isBusy = false; this.updateUI(this.engine.isInCheck(this.engine.turn)); }
+        const side=this.engine.turn;
+        if(this.isBusy||this.gameOver||this.onlineRole)return;
+        if(this.gameMode!=='pvp'&&side!==RED)return;
+        this.sfx.playSelect();this.isBusy=true;this.clearLegalMoveIndicators();this.clearGrandmasterHint3D();this.selectedSquare=null;
+        const badge=document.getElementById('ai-thinking'),label=document.getElementById('ai-thinking-label');
+        badge?.classList.remove('hidden');badge?.classList.add('inline-flex');if(label)label.textContent='宗师深度推演支招…';
+        this.requestAIMove(side,'grandmaster_hint',(move)=>{
+          badge?.classList.add('hidden');badge?.classList.remove('inline-flex');
+          if(!move||this.gameOver){this.isBusy=false;this.updateUI(this.engine.isInCheck(this.engine.turn));return;}
+          const notation=this.formatChineseMoveNotation(move),mover=this.engine.board[move.fr]?.[move.fc],target=this.engine.board[move.tr]?.[move.tc];
+          let tactic=target?`争取吃子：${target.char||'子'}`:'宗师妙手';
+          try{const after=this.engine.cloneBoard(this.engine.board);after[move.tr][move.tc]=mover;after[move.fr][move.fc]=null;const a=this.engine.classifyMoveAction?.(move,mover,this.engine.board,after);if(a?.type==='jiang')tactic='雷霆叫将';else if(a?.type==='sha')tactic='致命叫杀';else if(a?.desc)tactic=a.desc;}catch(_){}
+          this.showGrandmasterHint3D(move);this.showCenterCallout(`宗师支招：【${notation}】· ${tactic}`,side);
+          setTimeout(()=>{if(this.gameOver){this.clearGrandmasterHint3D();this.isBusy=false;return;}this.executeMoveAnimated(move,()=>setTimeout(()=>this.clearGrandmasterHint3D(),800));},650);
         });
       }
 
-      toggleEditorTools() {
+            toggleEditorTools() {
         const content = document.getElementById('editor-tools-content');
         const button = document.getElementById('editor-collapse-btn');
         if (!content || !button) return;
@@ -6396,7 +6427,7 @@
         }
 
         btnUndo.disabled = this.engine.history.length === 0 || this.isBusy || Boolean(this.pendingUndoRequest);
-        if (btnHint) btnHint.disabled = this.isBusy || this.gameOver || this.engine.turn !== RED || isOnline;
+        if (btnHint) btnHint.disabled = this.isBusy || this.gameOver || (this.gameMode !== 'pvp' && this.engine.turn !== RED) || isOnline;
 
         // 动态按需显隐吃子战果栏
         const redCard = document.getElementById('captured-red-card');
@@ -6751,38 +6782,38 @@
       }
 
       renderEndgamePoster(board, turn, shareUrl) {
-        const img = document.getElementById('share-poster-img');
-        const qr = document.getElementById('share-poster-qr');
-        const canvas = document.createElement('canvas');
-        canvas.width = 800; canvas.height = 1100;
-        const ctx = canvas.getContext('2d');
-        const bg = ctx.createLinearGradient(0, 0, 800, 1100);
-        bg.addColorStop(0, '#f5f0dc'); bg.addColorStop(1, '#d9e8d5');
-        ctx.fillStyle = bg; ctx.fillRect(0, 0, 800, 1100);
-        ctx.strokeStyle = '#9a6b36'; ctx.lineWidth = 10; ctx.strokeRect(22, 22, 756, 1056);
-        ctx.fillStyle = '#542d18'; ctx.font = 'bold 42px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('中国象棋 3D · 残局挑战', 400, 92);
-        ctx.fillStyle = '#8b3a26'; ctx.font = 'bold 26px sans-serif';
-        ctx.fillText(turn === BLACK ? '黑方先行' : '红方先行', 400, 138);
-        const x0=105,y0=190,cell=65;
-        ctx.fillStyle='#ead7ad'; ctx.fillRect(65,165,670,620);
-        ctx.strokeStyle='#805b35'; ctx.lineWidth=2;
-        for(let r=0;r<10;r++){ctx.beginPath();ctx.moveTo(x0,y0+r*cell);ctx.lineTo(x0+8*cell,y0+r*cell);ctx.stroke();}
-        for(let c=0;c<9;c++){ctx.beginPath();ctx.moveTo(x0+c*cell,y0);ctx.lineTo(x0+c*cell,y0+4*cell);ctx.stroke();ctx.beginPath();ctx.moveTo(x0+c*cell,y0+5*cell);ctx.lineTo(x0+c*cell,y0+9*cell);ctx.stroke();}
-        ctx.beginPath();ctx.moveTo(x0,y0+4*cell);ctx.lineTo(x0,y0+5*cell);ctx.moveTo(x0+8*cell,y0+4*cell);ctx.lineTo(x0+8*cell,y0+5*cell);ctx.stroke();
+        const img=document.getElementById('share-poster-img'),qr=document.getElementById('share-poster-qr');
+        const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=1420;const ctx=canvas.getContext('2d');if(!ctx)return;
+        const bg=ctx.createLinearGradient(0,0,1000,1420);bg.addColorStop(0,'#fbf7ee');bg.addColorStop(.5,'#f3ead6');bg.addColorStop(1,'#e7dac0');ctx.fillStyle=bg;ctx.fillRect(0,0,1000,1420);
+        ctx.strokeStyle='#784b23';ctx.lineWidth=8;ctx.strokeRect(28,28,944,1364);ctx.strokeStyle='#b48a52';ctx.lineWidth=2.5;ctx.strokeRect(40,40,920,1340);
+        ctx.textAlign='center';ctx.fillStyle='#3d2310';ctx.font='900 52px "Noto Serif SC","Songti SC",serif';ctx.fillText('中国象棋 · 残局战帖',500,112);
+        ctx.fillStyle=turn===BLACK?'#1e293b':'#991b1b';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(390,136,220,44,22);else ctx.rect(390,136,220,44);ctx.fill();ctx.fillStyle='#fef3c7';ctx.font='bold 24px "Noto Serif SC",serif';ctx.fillText(turn===BLACK?'● 黑方先行':'● 红方先行',500,165);
+        ctx.save();ctx.translate(850,110);ctx.rotate(-.08);ctx.strokeStyle='#b91c1c';ctx.lineWidth=4;ctx.strokeRect(-44,-44,88,88);ctx.fillStyle='rgba(185,28,28,.1)';ctx.fillRect(-44,-44,88,88);ctx.fillStyle='#b91c1c';ctx.font='900 26px "Noto Serif SC",serif';ctx.fillText('古谱',0,-8);ctx.fillText('挑战',0,24);ctx.restore();
+        ctx.save();ctx.shadowColor='rgba(40,20,5,.24)';ctx.shadowBlur=28;ctx.shadowOffsetY=12;const wood=ctx.createLinearGradient(76,210,924,1130);wood.addColorStop(0,'#ecdab9');wood.addColorStop(.5,'#e2ca9f');wood.addColorStop(1,'#d4b886');ctx.fillStyle=wood;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(76,210,848,920,20);else ctx.rect(76,210,848,920);ctx.fill();ctx.restore();
+        const x0=140,y0=275,cell=90;ctx.strokeStyle='#3d2914';ctx.lineWidth=6;ctx.strokeRect(x0-12,y0-12,744,834);ctx.lineWidth=2.5;
+        for(let r=0;r<10;r++){ctx.beginPath();ctx.moveTo(x0,y0+r*cell);ctx.lineTo(x0+720,y0+r*cell);ctx.stroke();}
+        for(let c=1;c<8;c++){ctx.beginPath();ctx.moveTo(x0+c*cell,y0);ctx.lineTo(x0+c*cell,y0+360);ctx.moveTo(x0+c*cell,y0+450);ctx.lineTo(x0+c*cell,y0+810);ctx.stroke();}
         for(const [r1,c1,r2,c2] of [[0,3,2,5],[0,5,2,3],[7,3,9,5],[7,5,9,3]]){ctx.beginPath();ctx.moveTo(x0+c1*cell,y0+r1*cell);ctx.lineTo(x0+c2*cell,y0+r2*cell);ctx.stroke();}
-        ctx.fillStyle='#704a2a';ctx.font='italic 24px serif';ctx.fillText('楚 河                 汉 界',400,y0+4.8*cell);
-        const chars = {r:{k:'帥',a:'仕',b:'相',n:'傌',r:'俥',c:'炮',p:'兵'},b:{k:'將',a:'士',b:'象',n:'馬',r:'車',c:'砲',p:'卒'}};
-        for(let r=0;r<10;r++)for(let c=0;c<9;c++){const p=board[r]?.[c];if(!p)continue;const x=x0+c*cell,y=y0+r*cell;ctx.beginPath();ctx.arc(x,y,25,0,Math.PI*2);ctx.fillStyle='#f8edcf';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle=p.color===RED?'#b72e20':'#34414a';ctx.stroke();ctx.fillStyle=p.color===RED?'#b51f1b':'#202b34';ctx.font='bold 31px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.char||chars[p.color]?.[p.type]||'?',x,y+1);}
-        ctx.fillStyle='#fffdf4';ctx.fillRect(65,825,670,205);ctx.fillStyle='#56321f';ctx.font='bold 27px sans-serif';ctx.fillText('扫码加载残局，与你一决高下',400,870);
-        ctx.font='20px sans-serif';ctx.fillStyle='#6b6253';ctx.fillText('中国象棋 3D · 自定义残局分享',400,1010);
-        if(img) img.src=canvas.toDataURL('image/png');
-        if(qr){qr.innerHTML='';if(typeof QRCode!=='undefined'){try{new QRCode(qr,{text:shareUrl,width:150,height:150,colorDark:'#111827',colorLight:'#ffffff'});}catch(_){}}if(!qr.querySelector('canvas,img')){const qimg=document.createElement('img');qimg.alt='残局二维码';qimg.width=150;qimg.height=150;qimg.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+encodeURIComponent(shareUrl);qr.appendChild(qimg);}}
-        const qrCanvas=qr?.querySelector('canvas');
-        if(qrCanvas){ctx.fillStyle='#ffffff';ctx.fillRect(565,865,175,175);ctx.drawImage(qrCanvas,575,875,150,150);if(img)img.src=canvas.toDataURL('image/png');}
+        const flower=(r,c)=>{const x=x0+c*cell,y=y0+r*cell;for(const [qx,qy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){if((c===0&&qx<0)||(c===8&&qx>0))continue;ctx.beginPath();ctx.moveTo(x+qx*7,y+qy*21);ctx.lineTo(x+qx*7,y+qy*7);ctx.lineTo(x+qx*21,y+qy*7);ctx.stroke();}};
+        [[2,1],[2,7],[7,1],[7,7]].forEach(([r,c])=>flower(r,c));for(let c=0;c<9;c+=2){flower(3,c);flower(6,c);}
+        ctx.fillStyle='#472f18';ctx.font='bold 44px "Noto Serif SC","Songti SC",serif';ctx.textBaseline='middle';ctx.fillText('楚  河',x0+180,y0+405);ctx.fillText('漢  界',x0+540,y0+405);
+        for(let r=0;r<10;r++)for(let c=0;c<9;c++){const p=board?.[r]?.[c];if(!p)continue;const x=x0+c*cell,y=y0+r*cell,red=p.color===RED;ctx.save();ctx.shadowColor='rgba(15,23,42,.38)';ctx.shadowBlur=10;ctx.shadowOffsetY=5;ctx.beginPath();ctx.arc(x,y,39,0,Math.PI*2);const g=ctx.createRadialGradient(x-10,y-10,4,x,y,39);if(red){g.addColorStop(0,'#fffdf7');g.addColorStop(.72,'#f5ecd9');g.addColorStop(1,'#decba8');}else{g.addColorStop(0,'#334155');g.addColorStop(.65,'#111827');g.addColorStop(1,'#090d16');}ctx.fillStyle=g;ctx.fill();ctx.restore();ctx.lineWidth=3;ctx.strokeStyle=red?'#b91c1c':'#d4af37';ctx.beginPath();ctx.arc(x,y,35,0,Math.PI*2);ctx.stroke();ctx.lineWidth=1.2;ctx.strokeStyle=red?'#d97706':'#94a3b8';ctx.beginPath();ctx.arc(x,y,30,0,Math.PI*2);ctx.stroke();const ch=p.char||PIECE_CHARS[p.color]?.[p.type]||'?';ctx.font='900 42px "KaiTi","STKaiti","Noto Serif SC",serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=2.5;ctx.strokeStyle=red?'#d4af37':'#b48a28';ctx.strokeText(ch,x,y+2);ctx.fillStyle=red?'#991b1b':'#f8fafc';ctx.fillText(ch,x,y+2);}
+        ctx.fillStyle='#fffdf8';ctx.strokeStyle='#d6c3a5';ctx.lineWidth=2;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(76,1160,848,200,18);else ctx.rect(76,1160,848,200);ctx.fill();ctx.stroke();
+        ctx.textAlign='left';ctx.fillStyle='#3d2310';ctx.font='900 32px "Noto Serif SC",serif';ctx.fillText('扫码立破此局 · 与君一决高下',112,1225);ctx.fillStyle='#785a3c';ctx.font='500 22px "Inter",sans-serif';ctx.fillText('长按识别二维码，或使用游戏内「扫码识局」直接挑战',112,1275);ctx.fillStyle='#9a7b56';ctx.font='bold 18px "Inter",sans-serif';ctx.fillText('3D 中国象棋 · 极简公园版',112,1320);
+        const finish=source=>{if(source){ctx.fillStyle='#fff';ctx.strokeStyle='#e2d5be';ctx.lineWidth=2;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(732,1176,168,168,12);else ctx.rect(732,1176,168,168);ctx.fill();ctx.stroke();try{ctx.drawImage(source,742,1186,148,148);}catch(_){}}if(img)img.src=canvas.toDataURL('image/png');canvas.toBlob(blob=>{this.currentPosterBlob=blob;},'image/png');};
+        if(qr&&typeof QRCode!=='undefined'){qr.innerHTML='';try{new QRCode(qr,{text:shareUrl,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel?QRCode.CorrectLevel.M:undefined});}catch(_){}setTimeout(()=>{const c=qr.querySelector('canvas'),i=qr.querySelector('img');if(c)finish(c);else if(i?.complete)finish(i);else{const f=new Image();f.onload=()=>finish(f);f.onerror=()=>finish(null);f.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=4&data='+encodeURIComponent(shareUrl);}},80);}else finish(null);
       }
 
-      async copyEndgameShareLink() {
+      async shareEndgamePosterNative() {
+        this.sfx?.playSelect?.();const url=this.currentShareUrl||window.location.href;let blob=this.currentPosterBlob;
+        if(!blob){const img=document.getElementById('share-poster-img');if(img?.src){try{blob=await(await fetch(img.src)).blob();}catch(_){}}}
+        if(blob){const file=new File([blob],'中国象棋3D-残局战帖.png',{type:'image/png'});if(navigator.canShare?.({files:[file]})&&navigator.share){try{await navigator.share({title:'中国象棋 3D · 残局挑战',text:'我摆了一道精妙象棋残局，扫码或点击链接即可直接应战！',files:[file]});return;}catch(e){if(e?.name==='AbortError')return;}}
+          if(navigator.clipboard&&window.ClipboardItem){try{await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);this.showCenterCallout('海报图片已复制，可直接粘贴发送！',RED);return;}catch(_){}}}
+        if(navigator.share){try{await navigator.share({title:'中国象棋 3D · 残局挑战',text:'来看看这道象棋残局，你能几步破解？',url});return;}catch(e){if(e?.name==='AbortError')return;}}
+        this.downloadEndgamePoster();this.showCenterCallout('已为您下载海报图片',RED);
+      }
+
+            async copyEndgameShareLink() {
         const url = this.currentShareUrl || window.location.href;
         try { await navigator.clipboard.writeText(url); this.showCenterCallout('残局链接已复制', RED); }
         catch (_) { window.prompt('请复制残局链接：', url); }
@@ -6794,22 +6825,25 @@
       }
 
       async startQRScanner() {
-        const modal=document.getElementById('qr-scanner-modal'); if(!modal)return;
-        modal.classList.remove('hidden');
-        const status=document.getElementById('qr-scan-status');
-        const video=document.getElementById('qr-video');
-        if(!navigator.mediaDevices?.getUserMedia || typeof jsQR==='undefined') { if(status)status.textContent='摄像头扫码不可用，请从相册选择二维码图片。'; return; }
-        try {
-          this.stopQRScanner(false);
-          this.qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:this.qrFacingMode||'environment'}},audio:false});
-          video.srcObject=this.qrStream; await video.play();
-          const canvas=document.getElementById('qr-canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
-          const scan=()=>{if(!this.qrStream||modal.classList.contains('hidden'))return;if(video.readyState>=2){canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0,canvas.width,canvas.height);const data=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(data.data,data.width,data.height,{inversionAttempts:'attemptBoth'});if(code?.data){this.stopQRScanner();this.handleScannedQRText(code.data);return;}}this.qrAnimationFrame=requestAnimationFrame(scan);};
-          if(status)status.textContent='将二维码放入取景框内'; this.qrAnimationFrame=requestAnimationFrame(scan);
-        } catch(e) { if(status)status.textContent='未获取到相机权限或摄像头不可用，请从相册选择二维码图片。'; }
+        const modal=document.getElementById('qr-scanner-modal');if(!modal)return;modal.classList.remove('hidden');
+        const status=document.getElementById('qr-scan-status'),video=document.getElementById('qr-video');
+        if(!navigator.mediaDevices?.getUserMedia){if(status)status.textContent='当前环境不支持摄像头，请点击「从相册选择」二维码图片。';return;}
+        try{
+          this.stopQRScanner(false);if(status)status.textContent='正在启动高清摄像头与自动对焦…';
+          let stream;const v={facingMode:{ideal:this.qrFacingMode||'environment'},width:{ideal:1920},height:{ideal:1080}};
+          try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{...v,advanced:[{focusMode:'continuous'}]}});}catch(_){stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:this.qrFacingMode||'environment'},width:{ideal:1280},height:{ideal:720}}});}
+          this.qrStream=stream;video.srcObject=stream;video.setAttribute('playsinline','true');video.setAttribute('autoplay','true');await video.play();
+          const track=stream.getVideoTracks()[0];if(track?.getCapabilities){const caps=track.getCapabilities(),adv={};if(caps.focusMode?.includes('continuous'))adv.focusMode='continuous';if(caps.zoom)adv.zoom=Math.min(caps.zoom.max,Math.max(caps.zoom.min,1.15));if(Object.keys(adv).length)track.applyConstraints({advanced:[adv]}).catch(()=>{});video.onclick=()=>{if(caps.focusMode?.includes('single-shot'))track.applyConstraints({advanced:[{focusMode:'single-shot'}]}).then(()=>setTimeout(()=>{if(caps.focusMode?.includes('continuous'))track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});},600)).catch(()=>{});if(status)status.textContent='已尝试重新对焦，请避免二维码离镜头过近。';};}
+          let detector=null;if('BarcodeDetector' in window){try{detector=new BarcodeDetector({formats:['qr_code']});}catch(_){}}
+          const canvas=document.getElementById('qr-canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;
+          const scan=async()=>{if(!this.qrStream||modal.classList.contains('hidden'))return;if(video.readyState>=2&&video.videoWidth>0){if(detector){try{const codes=await detector.detect(video);if(codes?.[0]?.rawValue){const value=codes[0].rawValue;this.stopQRScanner();this.handleScannedQRText(value);return;}}catch(_){}}
+            if(typeof jsQR!=='undefined'){const w=video.videoWidth,h=video.videoHeight,crop=Math.floor(Math.min(w,h)*.9),sx=Math.floor((w-crop)/2),sy=Math.floor((h-crop)/2),dim=Math.min(1024,crop);canvas.width=dim;canvas.height=dim;ctx.drawImage(video,sx,sy,crop,crop,0,0,dim,dim);const d=ctx.getImageData(0,0,dim,dim),code=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});if(code?.data){this.stopQRScanner();this.handleScannedQRText(code.data);return;}}}
+            this.qrAnimationFrame=requestAnimationFrame(scan);};
+          if(status)status.textContent='请将二维码放入取景框 · 建议距离 15–25cm · 点击画面可尝试对焦';this.qrAnimationFrame=requestAnimationFrame(scan);
+        }catch(e){if(status)status.textContent='摄像头启动失败，请检查权限或使用「从相册选择」。';}
       }
 
-      stopQRScanner(closeModal=true) {
+            stopQRScanner(closeModal=true) {
         if(this.qrAnimationFrame)cancelAnimationFrame(this.qrAnimationFrame);this.qrAnimationFrame=null;
         if(this.qrStream){this.qrStream.getTracks().forEach(t=>t.stop());this.qrStream=null;}
         const video=document.getElementById('qr-video');if(video)video.srcObject=null;
