@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>3D 中国象棋 · 极简公园版 (Material Xiangqi 3D)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- PeerJS WebRTC P2P 实时联机库 -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- QR code generation & recognition -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0"
+    rel="stylesheet" />
+
+  <!-- 引入分离的 CSS 样式表（含内置古籍书法字体子集） -->
+  <link rel="stylesheet" href="ChineseChessCSS/style.css?v=20261021" />
+</head>
+
+<body class="relative select-none overflow-hidden serif-cn">
+
+  <!-- 3D Viewport Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Fullscreen Impact Flash Overlay for Ultimate Checkmate VFX -->
+  <div id="vfx-screen-flash" class="pointer-events-none fixed inset-0 z-10 opacity-0"
+    style="background: radial-gradient(circle at 50% 45%, rgba(254, 240, 138, 0.55) 0%, rgba(220, 38, 38, 0.35) 45%, rgba(15, 23, 42, 0.75) 100%); mix-blend-mode: screen;">
+  </div>
+
+  <!-- Center Dramatic Callout ("将军!" / "【炮二平五】· 雷霆叫将") -->
+  <div id="center-callout"
+    class="pointer-events-none fixed left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 z-30 hidden">
+    <div id="center-callout-inner"
+      class="serif-cn px-7 py-3.5 rounded-3xl text-2xl md:text-4xl font-black tracking-widest shadow-2xl border-2 text-center">
+      将军！
+    </div>
+  </div>
+
+  <!-- 自然消失的禁着/规则/复盘提示浮窗（深色紫檀鎏金高对比度样式，字迹清晰醒目） -->
+  <div id="illegal-move-toast" onclick="window.gameApp.hideIllegalMovePrompt()" title="点击立即关闭"
+    class="auto-dismiss-toast toast-hidden fixed left-1/2 top-16 md:top-20 -translate-x-1/2 z-50 w-[92vw] max-w-sm cursor-pointer">
+    <div
+      class="toast-surface relative overflow-hidden rounded-2xl px-4 py-3 border-2 border-amber-400 bg-slate-950 text-white shadow-2xl flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-md">
+        <span id="illegal-toast-icon" class="material-symbols-rounded text-[20px]">gpp_maybe</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2">
+          <h3 id="illegal-toast-title" class="serif-cn font-black text-xs md:text-sm text-yellow-300 truncate">
+            禁着提示 · 移动后己方被将军
+          </h3>
+          <span class="toast-close-hint serif-cn text-[10px] text-amber-300 shrink-0">点击关闭</span>
+        </div>
+        <p id="illegal-toast-desc" class="serif-cn text-xs text-white leading-relaxed mt-1 line-clamp-2">
+          移动该棋子后会导致己方帥/將暴露在敌方攻击之下，请另选合法落点。
+        </p>
+      </div>
+      <div id="illegal-toast-bar" class="toast-progress-bar absolute bottom-0 left-0"></div>
+    </div>
+  </div>
+
+  <!-- 极简一体式顶部导航栏 -->
+  <header
+    class="pointer-events-none fixed top-0 left-0 right-0 z-20 p-2 md:p-3.5 flex flex-col gap-1.5 max-w-5xl mx-auto">
+    <div
+      class="pointer-events-auto md-card relative overflow-hidden rounded-2xl px-3 py-1.5 md:px-4 md:py-2 flex flex-nowrap items-center justify-between gap-2 min-w-0">
+
+      <!-- 左侧：品牌标识 + 极简AI遥测状态 -->
+      <div class="flex items-center gap-2 min-w-0 shrink">
+        <div
+          class="w-8 h-8 rounded-xl bg-gradient-to-br from-red-700 to-amber-700 flex items-center justify-center text-amber-50 shadow-inner serif-cn font-bold text-base shrink-0">
+          帥
+        </div>
+        <div class="leading-tight min-w-0">
+          <div class="flex flex-nowrap items-center gap-1.5 whitespace-nowrap">
+            <h1 class="serif-cn font-bold text-slate-800 text-xs sm:text-sm md:text-base">中国象棋 3D</h1>
+            <span id="scene-badge"
+              class="hidden md:inline-block serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-800/10 text-emerald-900 border border-emerald-800/15">
+              竹林石桌
+            </span>
+          </div>
+          <p id="ai-telemetry-text" class="serif-cn text-[10px] text-slate-600 truncate max-w-[150px] sm:max-w-xs">
+            开局库就绪 · 均势
+          </p>
+        </div>
+      </div>
+
+      <!-- 中部：紧凑型分段模式选择器 -->
+      <div class="flex flex-nowrap shrink-0 items-center bg-slate-200/65 p-0.5 rounded-xl gap-0.5" role="group" aria-label="对局模式切换">
+        <button id="mode-pvp" onclick="window.gameApp.setGameMode('pvp')"
+          class="md-btn serif-cn px-2 py-1 rounded-lg text-[11px] font-bold text-slate-700 flex items-center gap-1">
+          <span class="material-symbols-rounded text-[14px] hidden sm:inline">group</span>
+          <span>双人</span>
+        </button>
+        <button id="mode-easy" onclick="window.gameApp.setGameMode('easy')"
+          class="md-btn serif-cn px-2 py-1 rounded-lg text-[11px] font-bold text-slate-700 flex items-center gap-1">
+          <span>简单</span>
+        </button>
+        <button id="mode-hard" onclick="window.gameApp.setGameMode('hard')"
+          class="md-btn serif-cn px-2 py-1 rounded-lg text-[11px] font-bold text-slate-700 flex items-center gap-1">
+          <span>困难</span>
+        </button>
+        <button id="mode-inferno" onclick="window.gameApp.setGameMode('inferno')"
+          class="md-btn serif-cn seg-inferno-active px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 flex items-center gap-0.5">
+          <span class="material-symbols-rounded text-[14px]">local_fire_department</span>
+          <span>宗师</span>
+        </button>
+      </div>
+
+      <!-- 右侧：回合指示器、内嵌式战果切换胶囊与将军徽章 -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <div id="turn-badge"
+          class="rounded-xl bg-white/70 border border-white/85 px-2.5 py-1 flex items-center gap-1.5 transition-all duration-300">
+          <span id="turn-dot" class="w-2.5 h-2.5 rounded-full bg-red-600 ring-4 ring-red-600/20"></span>
+          <span id="turn-text" class="serif-cn font-bold text-xs text-red-800">红方走棋</span>
+          <span id="ai-thinking"
+            class="hidden items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-500/20 px-2 py-0.5 rounded-full">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping"></span>
+            <span id="ai-thinking-label" class="serif-cn">推演中</span>
+          </span>
+        </div>
+
+        <!-- 战果胶囊按钮（内嵌于顶栏，占 0 额外高度，彻底避免遮挡棋盘） -->
+        <button id="captured-toggle" type="button" onclick="window.gameApp.toggleCapturedTray()"
+          class="hidden md-btn serif-cn rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-amber-300/90 px-2.5 py-1 text-[11px] font-bold text-amber-950 shadow-sm shrink-0"
+          title="点击展开或收起被吃棋子战果匣">
+          战果 ▾
+        </button>
+
+        <div id="check-badge"
+          class="hidden check-badge-pulse bg-red-600 text-white rounded-xl px-2.5 py-1 items-center gap-0.5 shadow-md">
+          <span class="material-symbols-rounded text-[15px]">warning</span>
+          <span class="serif-cn font-bold text-xs">将军</span>
+        </div>
+      </div>
+
+      <!-- 底部内嵌式 3px 胜率流光进度条 -->
+      <div class="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-800/75 overflow-hidden">
+        <div id="eval-bar-red" class="h-full bg-gradient-to-r from-red-600 to-amber-500 transition-all duration-500"
+          style="width: 50%;"></div>
+      </div>
+    </div>
+
+    <!-- 循环着法性质判定与倒数裁决警告 -->
+    <div id="cycle-warning-banner" onclick="window.gameApp.hideCycleWarningBanner()" title="点击关闭提示"
+      class="hidden pointer-events-auto cursor-pointer relative overflow-hidden rounded-2xl px-3.5 py-2.5 border-2 border-amber-400 bg-amber-950/95 text-amber-50 shadow-2xl items-center justify-between gap-2 flex-wrap transition-opacity duration-300">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-rounded text-amber-400 text-[19px] shrink-0">gavel</span>
+        <div class="text-xs leading-snug serif-cn">
+          <div class="flex flex-wrap items-center gap-1 font-bold">
+            <span id="cycle-red-tag" class="px-1.5 py-0.5 rounded bg-red-500/35 text-red-100">红方：长捉</span>
+            <span class="text-amber-300">vs</span>
+            <span id="cycle-black-tag" class="px-1.5 py-0.5 rounded bg-slate-700/85 text-slate-100">黑方：闲着</span>
+          </div>
+          <p id="cycle-rule-desc" class="text-[11px] text-yellow-200 mt-0.5">走“禁止着法”方应变着，否则不变判负。</p>
+        </div>
+      </div>
+      <span id="cycle-countdown-badge"
+        class="serif-cn px-2.5 py-1 rounded-lg bg-red-600 text-white font-bold text-xs shrink-0">
+        ⚠️ 再走 4 步判负
+      </span>
+    </div>
+  </header>
+
+  <!-- 零遮挡被吃棋子战果匣（桌面端位于屏幕左右两侧边缘博古竖匣，移动端按需展开悬浮抽屉） -->
+  <div id="captured-row" class="hidden pointer-events-none">
+    <div id="captured-content" class="flex items-center justify-between gap-2">
+      <div id="captured-red-card"
+        class="hidden pointer-events-auto md-card rounded-2xl px-2.5 py-2 flex items-center gap-1.5 shadow-md">
+        <div class="flex items-center justify-between w-full gap-1 border-b border-red-900/10 pb-1">
+          <span class="serif-cn text-[11px] font-black text-red-800 shrink-0">红方俘子</span>
+          <span id="captured-red-count" class="serif-cn text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-red-100 text-red-800">0子</span>
+        </div>
+        <div id="captured-by-red" class="flex flex-wrap items-center justify-center gap-1 serif-cn pt-0.5"></div>
+      </div>
+      <div id="captured-black-card"
+        class="hidden pointer-events-auto md-card rounded-2xl px-2.5 py-2 flex items-center gap-1.5 shadow-md">
+        <div class="flex items-center justify-between w-full gap-1 border-b border-slate-900/10 pb-1">
+          <span class="serif-cn text-[11px] font-black text-slate-800 shrink-0">黑方俘子</span>
+          <span id="captured-black-count" class="serif-cn text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800">0子</span>
+        </div>
+        <div id="captured-by-black" class="flex flex-wrap items-center justify-center gap-1 serif-cn pt-0.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义残局编辑器：紧凑浮动工具箱 -->
+  <section id="custom-endgame-panel"
+    class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-20 w-[min(330px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/80 shadow-xl overflow-hidden"
+    style="background:rgba(255,251,235,.96);backdrop-filter:blur(14px);">
+    <div
+      class="flex items-center gap-2 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-amber-100/95 to-orange-50/95">
+      <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-sm"><span
+          class="material-symbols-rounded text-[17px]">edit_square</span></div>
+      <div class="min-w-0 flex-1">
+        <h2 class="serif-cn font-black text-slate-800 text-xs leading-tight">残局工坊</h2>
+        <p class="serif-cn text-[10px] text-slate-600 leading-tight">选棋子后点击棋盘放置</p>
+      </div>
+      <button id="editor-collapse-btn"
+        class="md-btn serif-cn shrink-0 rounded-lg px-2 py-1 bg-white/80 border border-amber-200 text-slate-700 text-[11px] font-bold"
+        onclick="window.gameApp.toggleEditorTools()">收起</button>
+      <button id="editor-start-btn"
+        class="md-btn serif-cn shrink-0 rounded-lg px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-extrabold shadow-sm"
+        onclick="window.gameApp.exitEndgameEditor(true)">开始</button>
+      <button
+        class="md-btn shrink-0 rounded-lg w-6 h-6 bg-white/80 border border-amber-200 text-slate-600 flex items-center justify-center"
+        onclick="window.gameApp.exitEndgameEditor(false)"><span
+          class="material-symbols-rounded text-[15px]">close</span></button>
+    </div>
+    <div id="editor-tools-content" class="p-2.5 space-y-2 max-h-[27vh] overflow-y-auto">
+      <div class="rounded-xl bg-white/75 border border-red-100 p-2">
+        <div class="flex items-center gap-1.5 mb-1"><span class="w-1.5 h-3.5 rounded-full bg-red-500"></span><span
+            class="serif-cn text-[11px] font-extrabold text-red-700">红方棋子</span></div>
+        <div class="grid grid-cols-7 gap-1">
+          <button
+            class="md-btn serif-cn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-black text-red-700"
+            onclick="window.gameApp.chooseEditorPiece('r','k')">帥</button><button
+            class="md-btn serif-cn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-black text-red-700"
+            onclick="window.gameApp.chooseEditorPiece('r','a')">仕</button><button
+            class="md-btn serif-cn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-black text-red-700"
+            onclick="window.gameApp.chooseEditorPiece('r','b')">相</button><button
+            class="md-btn serif-cn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-black text-red-700"
+            onclick="window.gameApp.chooseEditorPiece('r','n')">傌</button><button
+            class="md-btn serif-cn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-black text-red-700"
+            onclick="window.gameApp.chooseEditorPiece('r','r')">俥</button><button
+            class="md-btn serif-cn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-black text-red-700"
+            onclick="window.gameApp.chooseEditorPiece('r','c')">炮</button><button
+            class="md-btn serif-cn border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg py-1 text-sm font-black text-red-700"
+            onclick="window.gameApp.chooseEditorPiece('r','p')">兵</button>
+        </div>
+      </div>
+      <div class="rounded-xl bg-white/75 border border-slate-200 p-2">
+        <div class="flex items-center gap-1.5 mb-1"><span class="w-1.5 h-3.5 rounded-full bg-slate-700"></span><span
+            class="serif-cn text-[11px] font-extrabold text-slate-700">黑方棋子</span></div>
+        <div class="grid grid-cols-7 gap-1">
+          <button
+            class="md-btn serif-cn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-black text-slate-800"
+            onclick="window.gameApp.chooseEditorPiece('b','k')">將</button><button
+            class="md-btn serif-cn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-black text-slate-800"
+            onclick="window.gameApp.chooseEditorPiece('b','a')">士</button><button
+            class="md-btn serif-cn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-black text-slate-800"
+            onclick="window.gameApp.chooseEditorPiece('b','b')">象</button><button
+            class="md-btn serif-cn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-black text-slate-800"
+            onclick="window.gameApp.chooseEditorPiece('b','n')">馬</button><button
+            class="md-btn serif-cn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-black text-slate-800"
+            onclick="window.gameApp.chooseEditorPiece('b','r')">車</button><button
+            class="md-btn serif-cn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-black text-slate-800"
+            onclick="window.gameApp.chooseEditorPiece('b','c')">砲</button><button
+            class="md-btn serif-cn border border-slate-300 bg-slate-100 hover:bg-slate-200 rounded-lg py-1 text-sm font-black text-slate-800"
+            onclick="window.gameApp.chooseEditorPiece('b','p')">卒</button>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5"><span id="editor-piece-status"
+          class="serif-cn flex-1 min-w-[105px] text-[11px] font-bold text-slate-700 truncate px-2 py-1 rounded-lg bg-white border border-slate-200">当前工具：红帥</span><button
+          id="editor-turn-btn"
+          class="md-btn serif-cn rounded-lg px-2 py-1 bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold"
+          onclick="window.gameApp.toggleEditorTurn()">红先</button><button
+          class="md-btn serif-cn rounded-lg px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-[11px] font-bold"
+          onclick="window.gameApp.setEditorErase()">橡皮擦</button><button
+          class="md-btn serif-cn rounded-lg px-2 py-1 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold"
+          onclick="window.gameApp.clearEditorBoard()">清空</button></div>
+    </div>
+  </section>
+
+  <!-- 百宝箱：棋局复盘浮动控制台 (#replay-panel) -->
+  <section id="replay-panel"
+    class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-20 w-[min(380px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/85 shadow-2xl overflow-hidden"
+    style="background:rgba(255,251,235,.96);backdrop-filter:blur(16px);">
+    <div
+      class="flex items-center gap-2 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-red-100/90 via-amber-100/90 to-orange-50/95">
+      <div class="w-7 h-7 rounded-lg bg-red-700 text-amber-50 flex items-center justify-center shadow-sm"><span
+          class="material-symbols-rounded text-[17px]">history_edu</span></div>
+      <div class="min-w-0 flex-1">
+        <h2 class="serif-cn font-black text-slate-900 text-xs leading-tight">百宝箱 · 棋局复盘</h2>
+        <p id="replay-step-badge" class="serif-cn text-[10px] font-bold text-red-800 truncate leading-tight">第 0 / 0 步 · 初始盘面</p>
+      </div>
+      <button onclick="window.gameApp.shareReplay()"
+        class="md-btn serif-cn shrink-0 rounded-lg px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold shadow-sm flex items-center gap-1">
+        <span class="material-symbols-rounded text-[14px]">share</span>
+        <span>分享复盘</span>
+      </button>
+      <button onclick="window.gameApp.exitReplayMode(true)"
+        class="md-btn shrink-0 rounded-lg w-6 h-6 bg-white/85 border border-amber-200 text-slate-700 flex items-center justify-center"
+        title="退出复盘"><span class="material-symbols-rounded text-[15px]">close</span></button>
+    </div>
+
+    <div class="p-2.5 space-y-2.5">
+      <!-- 横向滚动步数胶囊时间轴 -->
+      <div id="replay-moves-list"
+        class="flex items-center gap-1.5 overflow-x-auto py-1 px-1 rounded-xl bg-amber-950/5 border border-amber-900/10 scrollbar-thin">
+      </div>
+
+      <!-- 复盘步进与自动演武控制栏 -->
+      <div class="grid grid-cols-5 gap-1.5">
+        <button onclick="window.gameApp.replayFirstStep()"
+          class="md-btn serif-cn py-1.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 text-slate-800 text-[11px] font-bold flex items-center justify-center gap-0.5">
+          <span class="material-symbols-rounded text-[16px]">first_page</span>
+          <span>初局</span>
+        </button>
+        <button onclick="window.gameApp.replayPrevStep()"
+          class="md-btn serif-cn py-1.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 text-slate-800 text-[11px] font-bold flex items-center justify-center gap-0.5">
+          <span class="material-symbols-rounded text-[16px]">chevron_left</span>
+          <span>上一步</span>
+        </button>
+        <button onclick="window.gameApp.toggleReplayAutoPlay()"
+          class="md-btn serif-cn py-1.5 rounded-xl bg-red-700 hover:bg-red-600 text-white text-[11px] font-bold shadow-sm flex items-center justify-center gap-0.5">
+          <span id="replay-autoplay-icon" class="material-symbols-rounded text-[16px]">play_arrow</span>
+          <span id="replay-autoplay-label">自动演示</span>
+        </button>
+        <button onclick="window.gameApp.replayNextStep()"
+          class="md-btn serif-cn py-1.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 text-slate-800 text-[11px] font-bold flex items-center justify-center gap-0.5">
+          <span>下一步</span>
+          <span class="material-symbols-rounded text-[16px]">chevron_right</span>
+        </button>
+        <button onclick="window.gameApp.replayLastStep()"
+          class="md-btn serif-cn py-1.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-200 text-slate-800 text-[11px] font-bold flex items-center justify-center gap-0.5">
+          <span>终局</span>
+          <span class="material-symbols-rounded text-[16px]">last_page</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 二级收纳弹出菜单：“百宝箱” -->
+  <div id="more-tools-menu"
+    class="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-30 hidden w-[92vw] max-w-sm">
+    <div class="md-card rounded-2xl p-2.5 border border-white/80 shadow-2xl grid grid-cols-2 gap-1.5">
+      <button id="btn-endgame-editor"
+        onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.enterEndgameEditor();"
+        class="md-btn serif-cn px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 text-xs font-bold flex items-center gap-1.5 border border-amber-200/80">
+        <span class="material-symbols-rounded text-[17px] text-amber-600">edit_square</span>
+        <span>残局工坊</span>
+      </button>
+      <button id="btn-share-endgame" onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.shareCurrentBoard();"
+        class="md-btn serif-cn px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-950 text-xs font-bold flex items-center gap-1.5 border border-emerald-200/80">
+        <span class="material-symbols-rounded text-[17px] text-emerald-600">share</span>
+        <span>分享残局</span>
+      </button>
+      <button id="btn-replay-tool"
+        onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.openReplayPanel();"
+        class="md-btn serif-cn px-3 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-950 text-xs font-bold flex items-center gap-1.5 border border-orange-200/80">
+        <span class="material-symbols-rounded text-[17px] text-red-700">history_edu</span>
+        <span>局谱复盘</span>
+      </button>
+      <button id="btn-vfx-panel" onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.toggleVFXDrawer(true);"
+        class="md-btn serif-cn px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-950 text-xs font-bold flex items-center gap-1.5 border border-red-200/80">
+        <span class="material-symbols-rounded text-[17px] text-red-600">auto_awesome</span>
+        <span>绝杀大招</span>
+      </button>
+      <button onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.startQRScanner()"
+        class="md-btn serif-cn px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-950 text-xs font-bold flex items-center gap-1.5 border border-indigo-200/80">
+        <span class="material-symbols-rounded text-[17px]">qr_code_scanner</span>
+        <span>扫码识局 / 进房</span>
+      </button>
+      <button id="btn-standard-new-game"
+        onclick="window.gameApp.toggleMoreMenu(false); window.gameApp.restartStandardGame();"
+        class="md-btn serif-cn px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 border border-slate-300/80">
+        <span class="material-symbols-rounded text-[17px] text-slate-600">refresh</span>
+        <span>标准新局</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 极简底部悬浮控制栏 -->
+  <footer class="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-2 md:p-3.5 flex justify-center">
+    <div
+      class="pointer-events-auto md-card rounded-2xl px-2.5 py-1.5 md:px-3.5 md:py-2 flex items-center justify-center gap-1.5 md:gap-2">
+
+      <!-- 1. 悔棋 -->
+      <button id="btn-undo" onclick="window.gameApp.undoMove()"
+        class="md-btn serif-cn px-2.5 py-1.5 rounded-xl bg-white/85 hover:bg-white text-slate-800 text-xs font-bold flex items-center gap-1 border border-slate-200/80">
+        <span class="material-symbols-rounded text-[17px]">undo</span>
+        <span>悔棋</span>
+      </button>
+
+      <!-- 2. 支招 -->
+      <button id="btn-hint" onclick="window.gameApp.requestRedGrandmasterMove()"
+        class="md-btn serif-cn px-2.5 py-1.5 rounded-xl bg-white/85 hover:bg-white text-slate-800 text-xs font-bold flex items-center gap-1 border border-slate-200/80"
+        title="深度推演并代走一步当前最优着法">
+        <span class="material-symbols-rounded text-[17px] text-amber-600">tips_and_updates</span>
+        <span>支招</span>
+      </button>
+
+      <!-- 3. 新局 / 重置残局 / 重新对局 / 再来一局 -->
+      <button id="btn-restart" onclick="window.gameApp.handleRestartButton()"
+        class="md-btn serif-cn px-2.5 py-1.5 rounded-xl bg-white/85 hover:bg-white text-slate-800 text-xs font-bold flex items-center gap-1 border border-slate-200/80">
+        <span id="restart-icon" class="material-symbols-rounded text-[17px]">restart_alt</span>
+        <span id="restart-label">新局</span>
+      </button>
+
+      <!-- 4. 求和 / 认输 / 好友联机 -->
+      <button id="btn-offer-draw" onclick="window.gameApp.requestDraw()"
+        class="hidden md-btn serif-cn px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200">
+        <span>求和</span>
+      </button>
+      <button id="btn-resign" onclick="window.gameApp.resignOnline()"
+        class="hidden md-btn serif-cn px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-bold border border-rose-200">
+        <span>认输</span>
+      </button>
+      <button id="btn-online-p2p" onclick="window.gameApp.toggleOnlineModal()"
+        class="md-btn serif-cn px-2.5 py-1.5 rounded-xl bg-indigo-50/90 hover:bg-indigo-100 text-indigo-950 text-xs font-bold flex items-center gap-1 border border-indigo-200">
+        <span id="online-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+        <span class="material-symbols-rounded text-[16px]">wifi_tethering</span>
+        <span id="online-btn-label">联机</span>
+      </button>
+
+      <div class="h-4 w-[1px] bg-slate-300/80 mx-0.5"></div>
+
+      <!-- 5. 视角一键循环切换 -->
+      <button id="btn-cam-cycle" onclick="window.gameApp.cycleCameraPreset()"
+        class="md-btn serif-cn px-2.5 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold flex items-center gap-1 shadow-sm"
+        title="点击切换视角 (正视 / 俯视 / 环绕)">
+        <span id="cam-cycle-icon" class="material-symbols-rounded text-[16px]">visibility</span>
+        <span id="cam-cycle-label">正视</span>
+      </button>
+
+      <!-- 6. 音效开关 -->
+      <button id="btn-sound" onclick="window.gameApp.toggleSound()"
+        class="md-btn p-1.5 rounded-xl bg-white/85 hover:bg-white text-slate-700 border border-slate-200/80"
+        title="音效开关">
+        <span id="icon-sound" class="material-symbols-rounded text-[18px] block">volume_up</span>
+      </button>
+
+      <!-- 7. 百宝箱收纳按钮 -->
+      <button id="btn-more-menu" onclick="window.gameApp.toggleMoreMenu()"
+        class="md-btn serif-cn px-2 py-1.5 rounded-xl bg-amber-100/90 hover:bg-amber-200 text-amber-950 text-xs font-bold flex items-center gap-0.5 border border-amber-300/80"
+        title="更多工具 (残局工坊 / 局谱复盘 / 分享 / 绝杀特效)">
+        <span class="material-symbols-rounded text-[18px]">apps</span>
+        <span class="hidden sm:inline">百宝箱</span>
+      </button>
+
+    </div>
+  </footer>
+
+  <!-- PeerJS 异地好友实时联机面板 -->
+  <div id="online-modal" class="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-40 hidden w-[92vw] max-w-md">
+    <div class="md-card rounded-3xl p-4 border border-indigo-300/80 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <div>
+          <h3 class="serif-cn font-black text-slate-800 text-sm">异地好友实时联机 (P2P)</h3>
+          <p id="online-status-text" class="serif-cn text-[11px] text-slate-600">支持标准局或当前残局 · 链接或扫码自动加入</p>
+        </div>
+        <button onclick="window.gameApp.toggleOnlineModal(false)"
+          class="md-btn w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center font-bold">×</button>
+      </div>
+      <div
+        class="flex items-center justify-between text-xs bg-indigo-950/5 px-3 py-2 rounded-xl border border-indigo-900/10">
+        <span class="serif-cn font-bold text-slate-700">房间号（点击直接复制）：</span><strong id="my-room-code"
+          onclick="window.gameApp.copyRoomCodeOnly()"
+          class="serif-cn text-sm px-2.5 py-0.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 cursor-pointer hover:bg-indigo-50 active:scale-95 transition"
+          title="点击直接复制房间号">未创建</strong></div>
+      <div id="invite-qr-section"
+        class="hidden rounded-2xl border border-indigo-200 bg-white p-3 text-center space-y-2">
+        <div class="serif-cn text-xs font-bold text-slate-700">扫码加入房间</div>
+        <div id="invite-qr" class="mx-auto flex min-h-[160px] w-full items-center justify-center overflow-hidden"></div>
+        <p class="serif-cn text-[11px] leading-relaxed text-slate-600">用手机相机扫描二维码，打开邀请链接即可自动加入。</p>
+        <button onclick="window.gameApp.copyInviteLink()"
+          class="md-btn serif-cn rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">复制邀请链接</button>
+      </div>
+      <div id="room-side-choice" class="serif-cn flex items-center gap-3 rounded-xl border border-indigo-200 bg-white/80 px-3 py-2 text-xs">
+        <span class="font-bold text-slate-700">创建方执棋：</span>
+        <label class="flex items-center gap-1"><input type="radio" name="room-side" value="red" checked> <span class="text-red-700 font-bold">红方</span></label>
+        <label class="flex items-center gap-1"><input type="radio" name="room-side" value="black"> <span class="text-slate-800 font-bold">黑方</span></label>
+      </div>
+      <button id="btn-create-room" onclick="window.gameApp.createOnlineRoom()"
+        class="md-btn serif-cn w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm">创建房间并生成二维码（扫码加入）</button>
+      <div id="manual-join-row" class="flex gap-2"><input id="join-room-input" maxlength="10" placeholder="或手动输入房间号加入"
+          class="serif-cn min-w-0 flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs uppercase" /><button
+          onclick="window.gameApp.joinOnlineRoomFromInput()"
+          class="md-btn serif-cn px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">加入</button><button onclick="window.gameApp.startQRScanner()" class="md-btn serif-cn px-3 py-2 rounded-xl bg-indigo-100 text-indigo-800 text-xs font-bold">扫码加入</button></div>
+      <button id="btn-disconnect-p2p" onclick="window.gameApp.disconnectOnline()"
+        class="hidden md-btn serif-cn w-full py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold">退出联机房间（恢复单机全部功能）</button>
+    </div>
+  </div>
+
+  <!-- 残局 / 复盘 分享海报弹窗（全新重绘御制锦绫金丝楠木棋盘海报） -->
+  <div id="share-endgame-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center overflow-y-auto bg-slate-950/70 backdrop-blur-md p-3 sm:p-5">
+    <div class="md-card relative my-auto w-full max-w-md rounded-3xl border border-amber-200/80 bg-gradient-to-b from-[#faf6ec] to-[#f2ead8] p-4 sm:p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between border-b border-amber-900/10 pb-2">
+        <div class="flex items-center gap-2">
+          <span id="share-modal-badge" class="w-7 h-7 rounded-lg bg-gradient-to-br from-red-700 to-amber-700 text-amber-50 flex items-center justify-center serif-cn font-bold text-sm shadow-sm">局</span>
+          <div>
+            <h3 id="share-modal-title" class="serif-cn font-black text-slate-900 text-sm sm:text-base leading-tight">残局战帖 · 分享挑战</h3>
+            <p id="share-modal-subtitle" class="serif-cn text-[11px] text-slate-600">长按海报、点击分享图片或选择下方社交平台转发</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('share-endgame-modal').classList.add('hidden')" aria-label="关闭分享弹窗" class="md-btn w-7 h-7 rounded-full bg-slate-200/80 text-slate-700 flex items-center justify-center font-bold">×</button>
+      </div>
+      <div class="relative mx-auto flex justify-center rounded-2xl bg-slate-900/5 p-2 border border-amber-900/10 shadow-inner">
+        <img id="share-poster-img" alt="中国象棋分享海报" class="block max-h-[52vh] w-auto max-w-full rounded-xl shadow-lg border border-amber-300/60 object-contain" />
+        <div id="share-poster-qr" class="hidden" aria-hidden="true"></div>
+      </div>
+
+      <!-- 主操作按钮组 -->
+      <div class="grid grid-cols-3 gap-2 pt-0.5">
+        <button onclick="window.gameApp.shareEndgamePosterNative()" class="md-btn serif-cn rounded-xl bg-gradient-to-r from-red-700 to-amber-600 px-2 py-2.5 text-xs font-extrabold text-white shadow-md flex items-center justify-center gap-1">
+          <span class="material-symbols-rounded text-[16px]">ios_share</span><span>分享图片</span>
+        </button>
+        <button onclick="window.gameApp.downloadEndgamePoster()" class="md-btn serif-cn rounded-xl bg-emerald-700 px-2 py-2.5 text-xs font-bold text-white shadow-sm flex items-center justify-center gap-1">
+          <span class="material-symbols-rounded text-[16px]">download</span><span>保存海报</span>
+        </button>
+        <button onclick="window.gameApp.copyEndgameShareLink()" class="md-btn serif-cn rounded-xl bg-slate-800 px-2 py-2.5 text-xs font-bold text-white shadow-sm flex items-center justify-center gap-1">
+          <span class="material-symbols-rounded text-[16px]">link</span><span>复制链接</span>
+        </button>
+      </div>
+
+      <!-- 社交平台快捷转发栏 -->
+      <div class="pt-1 border-t border-amber-900/10">
+        <div class="grid grid-cols-4 gap-1.5">
+          <button onclick="window.gameApp.shareToSocialPlatform('wechat')" class="md-btn serif-cn rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 py-1.5 text-[11px] font-bold text-emerald-900 flex items-center justify-center gap-1">
+            <span class="material-symbols-rounded text-[15px] text-emerald-600">forum</span><span>微信/朋友圈</span>
+          </button>
+          <button onclick="window.gameApp.shareToSocialPlatform('qq')" class="md-btn serif-cn rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 py-1.5 text-[11px] font-bold text-sky-900 flex items-center justify-center gap-1">
+            <span class="material-symbols-rounded text-[15px] text-sky-600">chat</span><span>QQ好友</span>
+          </button>
+          <button onclick="window.gameApp.shareToSocialPlatform('weibo')" class="md-btn serif-cn rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 py-1.5 text-[11px] font-bold text-rose-900 flex items-center justify-center gap-1">
+            <span class="material-symbols-rounded text-[15px] text-rose-600">public</span><span>新浪微博</span>
+          </button>
+          <button onclick="window.gameApp.shareToSocialPlatform('copy_image')" class="md-btn serif-cn rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 py-1.5 text-[11px] font-bold text-amber-950 flex items-center justify-center gap-1">
+            <span class="material-symbols-rounded text-[15px] text-amber-700">content_copy</span><span>复制图片</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 二维码扫描弹窗：支持摄像头与相册图片 -->
+  <div id="qr-scanner-modal" class="fixed inset-0 z-[80] hidden overflow-y-auto bg-slate-950/75 p-3 sm:p-6">
+    <div class="md-card mx-auto my-4 w-full max-w-md rounded-3xl p-4 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between"><h3 class="serif-cn font-black text-slate-900">扫码识局 / 加入房间</h3><button onclick="window.gameApp.stopQRScanner()" class="rounded-full bg-slate-200 px-3 py-1 font-bold">×</button></div>
+      <video id="qr-video" playsinline class="aspect-square w-full rounded-2xl bg-slate-900 object-cover"></video><canvas id="qr-canvas" class="hidden"></canvas>
+      <p id="qr-scan-status" class="serif-cn text-center text-xs text-slate-700">准备启动摄像头…</p>
+      <div class="grid grid-cols-2 gap-2"><button onclick="window.gameApp.toggleQRScannerCamera()" class="serif-cn rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-800">切换前后摄像头</button><label class="serif-cn cursor-pointer rounded-xl bg-indigo-700 px-3 py-2 text-center text-sm font-bold text-white">从相册选择<input type="file" accept="image/*" class="hidden" onchange="window.gameApp.scanQRImageFile(this)"></label></div>
+    </div>
+  </div>
+
+  <!-- 1. 联机悔棋请求确认框（网页内高对比深色弹窗） -->
+  <div id="undo-request-modal" class="inpage-dark-modal fixed top-24 left-1/2 -translate-x-1/2 z-50 hidden w-[90vw] max-w-sm">
+    <div class="rounded-2xl p-4 border-2 border-amber-500 bg-slate-950 text-white shadow-2xl space-y-3">
+      <div class="flex items-center gap-2.5"><span
+          class="material-symbols-rounded text-amber-400 text-[22px]">history</span>
+        <div>
+          <h4 class="serif-cn font-black text-sm modal-subtext">对方请求悔棋一步</h4>
+          <p class="serif-cn text-xs text-white">是否同意撤回刚刚走出的最后一步棋？</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2"><button onclick="window.gameApp.respondUndoRequest(false)"
+          class="md-btn serif-cn px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold">拒绝</button><button
+          onclick="window.gameApp.respondUndoRequest(true)"
+          class="md-btn serif-cn px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md">同意悔棋</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 点击“求和”按钮弹出的网页内确认弹窗 -->
+  <div id="draw-confirm-modal" class="inpage-dark-modal fixed top-24 left-1/2 -translate-x-1/2 z-50 hidden w-[90vw] max-w-sm">
+    <div class="rounded-2xl p-4 border-2 border-amber-500 bg-slate-950 text-white shadow-2xl space-y-3">
+      <div class="flex items-center gap-2.5"><span
+          class="material-symbols-rounded text-amber-400 text-[22px]">handshake</span>
+        <div>
+          <h4 class="serif-cn font-black text-sm modal-subtext">发起求和申请</h4>
+          <p id="draw-confirm-desc" class="serif-cn text-xs text-white">确定向对方提出求和申请吗？对方同意后本局将作和。</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button onclick="window.gameApp.confirmSendDrawRequest(false)"
+          class="md-btn serif-cn px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold">取消</button>
+        <button onclick="window.gameApp.confirmSendDrawRequest(true)"
+          class="md-btn serif-cn px-4 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-md">确认求和</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 收到对方“求和”请求的网页内弹窗 -->
+  <div id="draw-request-modal" class="inpage-dark-modal fixed top-24 left-1/2 -translate-x-1/2 z-50 hidden w-[90vw] max-w-sm">
+    <div class="rounded-2xl p-4 border-2 border-amber-500 bg-slate-950 text-white shadow-2xl space-y-3">
+      <div class="flex items-center gap-2.5"><span
+          class="material-symbols-rounded text-amber-400 text-[22px]">handshake</span>
+        <div>
+          <h4 class="serif-cn font-black text-sm modal-subtext">对方请求求和</h4>
+          <p class="serif-cn text-xs text-white">对方提议本局握手言和，是否同意和棋？</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button onclick="window.gameApp.respondDrawRequest(false)"
+          class="md-btn serif-cn px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold">拒绝</button>
+        <button onclick="window.gameApp.respondDrawRequest(true)"
+          class="md-btn serif-cn px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md">同意求和</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 点击“认输”按钮弹出的网页内确认弹窗 -->
+  <div id="resign-confirm-modal" class="inpage-dark-modal fixed top-24 left-1/2 -translate-x-1/2 z-50 hidden w-[90vw] max-w-sm">
+    <div class="rounded-2xl p-4 border-2 border-rose-500 bg-slate-950 text-white shadow-2xl space-y-3">
+      <div class="flex items-center gap-2.5"><span
+          class="material-symbols-rounded text-rose-400 text-[22px]">flag</span>
+        <div>
+          <h4 class="serif-cn font-black text-sm modal-subtext">确认投子认输</h4>
+          <p class="serif-cn text-xs text-white">确定认输吗？认输后本局将立即结束并展示终局棋盘。</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button onclick="window.gameApp.confirmResignAction(false)"
+          class="md-btn serif-cn px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold">取消</button>
+        <button onclick="window.gameApp.confirmResignAction(true)"
+          class="md-btn serif-cn px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md">确认认输</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 收到对方“重新对局 / 再来一局”请求的网页内确认弹窗 -->
+  <div id="rematch-request-modal" class="inpage-dark-modal fixed top-24 left-1/2 -translate-x-1/2 z-50 hidden w-[90vw] max-w-sm">
+    <div class="rounded-2xl p-4 border-2 border-amber-500 bg-slate-950 text-white shadow-2xl space-y-3">
+      <div class="flex items-center gap-2.5"><span
+          class="material-symbols-rounded text-amber-400 text-[22px]">restart_alt</span>
+        <div>
+          <h4 id="rematch-modal-title" class="serif-cn font-black text-sm modal-subtext">对方请求再来一局</h4>
+          <p id="rematch-modal-desc" class="serif-cn text-xs text-white">对方申请重置当前棋盘并重新开始一局，是否同意？</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button onclick="window.gameApp.respondRematchRequest(false)"
+          class="md-btn serif-cn px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold">拒绝</button>
+        <button id="rematch-accept-btn" onclick="window.gameApp.respondRematchRequest(true)"
+          class="md-btn serif-cn px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md">同意再来一局</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Ultimate VFX Showcase Drawer -->
+  <div id="vfx-drawer" class="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-30 hidden w-[94vw] max-w-2xl">
+    <div class="md-card rounded-3xl p-3.5 md:p-4 border border-amber-400/50 shadow-2xl">
+      <div class="flex items-center justify-between mb-2.5 px-1">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-rounded text-red-700 text-[20px]">flare</span>
+          <span class="serif-cn font-black text-slate-900 text-xs md:text-sm">古谱十八杀法 · 3D 终极特效鉴赏（点击即刻轰击九宫）</span>
+        </div>
+        <button onclick="window.gameApp.toggleVFXDrawer(false)"
+          class="md-btn w-7 h-7 rounded-full bg-slate-200/80 hover:bg-slate-300 flex items-center justify-center text-slate-700">
+          <span class="material-symbols-rounded text-[16px]">close</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+        <button onclick="window.gameApp.previewUltimateVFX('iron_bolt', '铁门栓 · 绝杀', '玄铁蟠龙锁天门')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>🔥 铁门栓</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">蟠龙神栓坠落</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('heart_blade', '大刀剜心 · 绝杀', '轩辕巨阙剑气斩')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>⚔️ 大刀剜心</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">万剑归宗巨刃</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('heaven_earth', '天地炮 · 绝杀', '乾坤十字灭世炮')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>🌌 天地炮</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">双螺旋通天柱</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('horse_cannon', '马后炮 · 绝杀', '红衣陨星连环轰')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>☄️ 马后炮/重炮</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">流星火雨核爆</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('double_lightning', '拔簧马 · 双将', '九天紫金雷劫风暴')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>⚡ 闪击双将</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">九天紫金雷暴</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('double_chariot', '双车错 · 绝杀', '烈焰双龙十字斩')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>🐉 双车错</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">烈焰刀轨火柱</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('royal_gaze', '白脸将 · 对面笑', '九五龙皇贯穿波')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>👑 白脸将</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">玉玺帝王龙波</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('smothered_cage', '闷宫 · 绝杀', '八荒黑曜困龙阵')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>⛓️ 闷宫困毙</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">八荒锁龙天牢</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('horse_stomp', '卧槽马 · 绝杀', '天马流星踏金枪')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>🐎 卧槽/挂角马</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">星虹枪林破阵</span>
+        </button>
+        <button onclick="window.gameApp.previewUltimateVFX('imperial_pawn', '双鬼拍门 / 老卒', '冥火神将冠冕降')"
+          class="md-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-red-900 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/30">
+          <span>👻 双鬼/老卒</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">双龙炎柱加冕</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal Overlay -->
+  <div id="gameover-modal"
+    class="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div
+      class="md-card rounded-3xl max-w-lg w-full p-6 md:p-7 text-center border border-white/85 shadow-2xl transform transition-all relative overflow-hidden">
+
+      <div id="checkmate-seal"
+        class="seal-stamp-anim mx-auto mb-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-red-800/10 border-2 border-red-800 text-red-900 serif-cn font-black text-xs md:text-sm tracking-widest shadow-sm">
+        <span class="material-symbols-rounded text-[18px] text-red-700">verified</span>
+        <span id="checkmate-badge-text">古谱绝杀判定 · 铁门栓</span>
+      </div>
+
+      <div class="flex items-center justify-center gap-3 mb-2">
+        <div id="winner-icon"
+          class="w-14 h-14 rounded-2xl bg-red-700 text-amber-100 flex items-center justify-center serif-cn text-2xl font-black shadow-lg shrink-0">
+          帥
+        </div>
+        <div class="text-left">
+          <h2 id="winner-title" class="serif-cn text-2xl md:text-3xl font-black text-slate-900 leading-tight">
+            铁门栓 · 绝杀！
+          </h2>
+          <p id="winner-subtitle" class="serif-cn text-xs font-bold text-red-800 mt-0.5">
+            红方（象牙）获胜 · 第 24 回合终局
+          </p>
+        </div>
+      </div>
+
+      <div class="my-4 p-4 rounded-2xl bg-amber-950/5 border border-amber-900/15 text-left space-y-2">
+        <div id="checkmate-poem"
+          class="serif-cn text-sm md:text-base font-bold text-amber-950 border-l-4 border-red-700 pl-3 py-0.5 italic">
+          “中炮镇神州，轻车破铁门；将士皆束手，寸步不能行。”
+        </div>
+        <p id="winner-desc" class="serif-cn text-xs md:text-sm text-slate-700 leading-relaxed pt-1">
+          战术解析：中路炮镇住九宫中轴线，配合车直接切入底线将死。
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-5">
+        <button onclick="window.gameApp.closeModalOnly()"
+          class="md-btn serif-cn px-3.5 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs md:text-sm flex items-center gap-1">
+          <span class="material-symbols-rounded text-[18px]">visibility</span>
+          <span>观赏终局棋盘</span>
+        </button>
+        <button onclick="window.gameApp.openReplayPanel()"
+          class="md-btn serif-cn px-3.5 py-2.5 rounded-2xl bg-orange-100 hover:bg-orange-200 text-orange-950 border border-orange-300 font-bold text-xs md:text-sm flex items-center gap-1">
+          <span class="material-symbols-rounded text-[18px] text-red-700">history_edu</span>
+          <span>局谱复盘</span>
+        </button>
+        <button id="btn-modal-replay-vfx" onclick="window.gameApp.replayCheckmateVFX()"
+          class="md-btn serif-cn px-3.5 py-2.5 rounded-2xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-950 border border-amber-600/30 font-bold text-xs md:text-sm flex items-center gap-1">
+          <span class="material-symbols-rounded text-[18px] text-red-700">auto_awesome</span>
+          <span>重播绝杀特效</span>
+        </button>
+        <button onclick="window.gameApp.handlePlayAgain()"
+          class="md-btn serif-cn px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs md:text-sm flex items-center gap-1.5 shadow-lg">
+          <span class="material-symbols-rounded text-[18px]">replay</span>
+          <span>再来一局</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 按模块依赖顺序加载拆分后的高内聚 JS 模块 -->
+  <script src="ChineseChessJS/constants.js?v=20261021"></script>
+  <script src="ChineseChessJS/sound.js?v=20261021"></script>
+  <script src="ChineseChessJS/engine.js?v=20261021"></script>
+  <script src="ChineseChessJS/classifier.js?v=20261021"></script>
+  <script src="ChineseChessJS/ai-worker.js?v=20261021"></script>
+  <script src="ChineseChessJS/textures.js?v=20261021"></script>
+  <script src="ChineseChessJS/app.js?v=20261021"></script>
+  <script src="ChineseChessJS/vfx3d.js?v=20261021"></script>
+  <script src="ChineseChessJS/online.js?v=20261021"></script>
+  <script src="ChineseChessJS/share-qr.js?v=20261021"></script>
+  <script src="ChineseChessJS/replay.js?v=20261021"></script>
+</body>
+</html>
