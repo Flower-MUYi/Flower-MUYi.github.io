@@ -39,7 +39,7 @@ class Xiangqi3DApp {
       {
         id: 'bamboo_park',
         name: '竹林石桌',
-        badge: '当前场景',
+        badge: '古典雅集',
         desc: '翠竹掩映、青石棋案、落英微风的古典公园雅集意境',
         icon: 'park',
         bgHex: 0xdce8dc,
@@ -49,6 +49,20 @@ class Xiangqi3DApp {
         hemiSky: 0xfef9e7,
         hemiGround: 0x688264,
         hemiIntensity: 0.75
+      },
+      {
+        id: 'ancient_battlefield',
+        name: '古风战场',
+        badge: '楚汉峥嵘',
+        desc: '金戈铁马、玄铁点将台、猎猎帅旗与烽火流萤的楚汉古战场意境',
+        icon: 'local_fire_department',
+        bgHex: 0x261a16,
+        fogDensity: 0.014,
+        sunColor: 0xffcfa3,
+        sunIntensity: 1.28,
+        hemiSky: 0xffb38a,
+        hemiGround: 0x3b2318,
+        hemiIntensity: 0.72
       }
     ];
     this.isBusy = false;
@@ -107,6 +121,7 @@ class Xiangqi3DApp {
     this.initAIWorker();
     this.initThree();
     this.buildParkEnvironment();
+    this.buildBattlefieldEnvironment();
     this.buildChessboard3D();
     this.buildInteractionMarkers();
     this.piecesGroup = new THREE.Group();
@@ -254,6 +269,38 @@ class Xiangqi3DApp {
     }
   }
 
+  /**
+   * 修复 2：切换模式（对弈难度模式 / 象棋揭棋模式）或新局重置时，同步重置标题栏预测文本与胜率条
+   */
+  resetTelemetryUI(customText = null) {
+    const barEl = document.getElementById('eval-bar-red');
+    if (barEl) barEl.style.width = '50%';
+    const telEl = document.getElementById('ai-telemetry-text');
+    if (!telEl) return;
+    if (customText) {
+      telEl.textContent = customText;
+      return;
+    }
+    const isJieqi = (this.engine?.variantMode || this.variantMode) === 'jieqi';
+    const modeNames = { pvp: '双人对弈', easy: '简单AI', hard: '困难AI', inferno: '宗师AI' };
+    const modeLabel = this.onlineRole ? '联机对弈' : (modeNames[this.gameMode] || '宗师AI');
+    if (this.endgameEditor) {
+      telEl.textContent = '残局工坊 · 自由布阵';
+    } else if (this.replayMode && !this.replayBranchActive) {
+      telEl.textContent = `复盘推演 · ${modeLabel}就绪`;
+    } else if (this.gameMode === 'pvp' || this.onlineRole) {
+      telEl.textContent = `${modeLabel} · 均势`;
+    } else if (isJieqi) {
+      telEl.textContent = `${modeLabel}就绪 · 均势`;
+    } else {
+      telEl.textContent = `开局库就绪 · 均势`;
+    }
+  }
+
+  getActiveSceneConfig() {
+    return this.sceneRegistry.find(s => s.id === this.currentSceneId) || this.sceneRegistry[0];
+  }
+
   requestAIMove(color, difficulty, callback) {
     const historyMoves = this.engine.history.map(h => h.move);
     const forbiddenMoves = this.engine.getForbiddenRepetitionMoves(color);
@@ -335,6 +382,9 @@ class Xiangqi3DApp {
     const side = this.engine.turn;
     if (this.isBusy || (this.gameOver && !this.replayMode) || this.onlineRole || this.replayTrialCheckmated) return;
     if (!this.replayMode && this.gameMode !== 'pvp' && side !== RED) return;
+    if (this.replayMode) {
+      this.stopReplayAutoPlay?.();
+    }
     this.sfx.playSelect();
     this.isBusy = true;
     this.clearLegalMoveIndicators();
@@ -350,7 +400,7 @@ class Xiangqi3DApp {
     this.requestAIMove(side, 'grandmaster_hint', (move) => {
       badge?.classList.add('hidden');
       badge?.classList.remove('inline-flex');
-      if (!move || this.gameOver) {
+      if (!move || (this.gameOver && !this.replayMode)) {
         this.isBusy = false;
         this.updateUI(this.engine.isInCheck(this.engine.turn));
         return;
@@ -379,7 +429,8 @@ class Xiangqi3DApp {
           return;
         }
         if (this.replayMode) {
-          this.prepareReplayBranchAtCurrentStep?.();
+          this.replayHumanColor = side;
+          this.prepareReplayBranchAtCurrentStep?.(side);
         }
         this.executeMoveAnimated(move, () => setTimeout(() => this.clearGrandmasterHint3D?.(), 800));
       }, 650);
@@ -645,6 +696,316 @@ class Xiangqi3DApp {
     }
   }
 
+  /**
+   * 需求 7：新增场景 —— 古风战场 (Ancient Chu-Han Battlefield 3D Environment)
+   * 包含：赤壁焦土大地、八角玄铁青铜点将台、战鼓座墩、四隅青铜篝火鼎（动态烈焰+火光点光源）、
+   *       楚汉帅旗战幡（迎风猎猎摆动）、古战场鹿角拒马、画戟兵器架与漫天烽火流萤火星
+   */
+  buildBattlefieldEnvironment() {
+    this.battlefieldGroup = new THREE.Group();
+    this.battlefieldGroup.visible = this.currentSceneId === 'ancient_battlefield';
+    this.scene.add(this.battlefieldGroup);
+
+    // 1. 苍茫赤壁黄沙古战场大地
+    const groundGeo = new THREE.CylinderGeometry(58, 58, 1, 64);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x3b271e });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.position.y = -4.8;
+    ground.receiveShadow = true;
+    this.battlefieldGroup.add(ground);
+
+    // 外围古战场砂石环带
+    const outerRingGeo = new THREE.RingGeometry(11.5, 28.0, 48);
+    const outerRingMat = new THREE.MeshLambertMaterial({
+      color: 0x2a1b14,
+      side: THREE.DoubleSide
+    });
+    const outerSandRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+    outerSandRing.rotation.x = -Math.PI / 2;
+    outerSandRing.position.y = -4.28;
+    outerSandRing.receiveShadow = true;
+    this.battlefieldGroup.add(outerSandRing);
+
+    const obsidianStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x262322,
+      roughness: 0.72,
+      metalness: 0.25
+    });
+    const darkIronMat = new THREE.MeshStandardMaterial({
+      color: 0x1c1917,
+      roughness: 0.45,
+      metalness: 0.65
+    });
+    const gildedBronzeMat = new THREE.MeshStandardMaterial({
+      color: 0xd97706,
+      emissive: 0x78350f,
+      emissiveIntensity: 0.25,
+      roughness: 0.32,
+      metalness: 0.88
+    });
+    const crimsonLacquerMat = new THREE.MeshStandardMaterial({
+      color: 0x7f1d1d,
+      roughness: 0.48,
+      metalness: 0.22
+    });
+
+    // 2. 八角玄铁点将台基座 (Stepped Octagonal Command Dais)
+    const daisBase = new THREE.Mesh(new THREE.CylinderGeometry(10.8, 11.6, 0.36, 8), obsidianStoneMat);
+    daisBase.position.y = -4.22;
+    daisBase.receiveShadow = true;
+    this.battlefieldGroup.add(daisBase);
+
+    const daisStep = new THREE.Mesh(new THREE.CylinderGeometry(9.2, 9.8, 0.28, 8), darkIronMat);
+    daisStep.position.y = -3.95;
+    daisStep.receiveShadow = true;
+    this.battlefieldGroup.add(daisStep);
+
+    const daisBronzeRim = new THREE.Mesh(new THREE.TorusGeometry(9.45, 0.12, 10, 8), gildedBronzeMat);
+    daisBronzeRim.rotation.x = Math.PI / 2;
+    daisBronzeRim.rotation.z = Math.PI / 8;
+    daisBronzeRim.position.y = -3.85;
+    this.battlefieldGroup.add(daisBronzeRim);
+
+    // 3. 中央玄铁鎏金帅案与巨型战鼓台座
+    const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.05, 7.75, 0.78, 32), darkIronMat);
+    tableSlab.position.y = -0.62;
+    tableSlab.castShadow = true;
+    tableSlab.receiveShadow = true;
+    this.battlefieldGroup.add(tableSlab);
+
+    const tableBronzeRim = new THREE.Mesh(new THREE.TorusGeometry(7.88, 0.18, 14, 64), gildedBronzeMat);
+    tableBronzeRim.rotation.x = Math.PI / 2;
+    tableBronzeRim.position.y = -0.44;
+    this.battlefieldGroup.add(tableBronzeRim);
+
+    // 帅案外缘 16 颗青铜虎头铆钉
+    const rivetGeo = new THREE.SphereGeometry(0.14, 12, 12);
+    for (let i = 0; i < 16; i++) {
+      const a = (i * Math.PI) / 8;
+      const rivet = new THREE.Mesh(rivetGeo, gildedBronzeMat);
+      rivet.position.set(Math.cos(a) * 7.92, -0.62, Math.sin(a) * 7.92);
+      this.battlefieldGroup.add(rivet);
+    }
+
+    const drumPedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 3.25, 3.5, 24), crimsonLacquerMat);
+    drumPedestal.position.y = -2.55;
+    drumPedestal.castShadow = true;
+    drumPedestal.receiveShadow = true;
+    this.battlefieldGroup.add(drumPedestal);
+
+    const drumRingTop = new THREE.Mesh(new THREE.TorusGeometry(2.72, 0.11, 10, 36), gildedBronzeMat);
+    drumRingTop.rotation.x = Math.PI / 2;
+    drumRingTop.position.y = -1.2;
+    const drumRingBot = new THREE.Mesh(new THREE.TorusGeometry(3.15, 0.11, 10, 36), gildedBronzeMat);
+    drumRingBot.rotation.x = Math.PI / 2;
+    drumRingBot.position.y = -3.6;
+    this.battlefieldGroup.add(drumRingTop, drumRingBot);
+
+    // 4. 四方牛皮朱漆战鼓坐墩
+    const drumStoolCoords = [
+      { x: 0, z: 9.2 },
+      { x: 0, z: -9.2 },
+      { x: 9.2, z: 0 },
+      { x: -9.2, z: 0 }
+    ];
+    drumStoolCoords.forEach(pos => {
+      const sg = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(1.68, 1.48, 1.95, 24), crimsonLacquerMat);
+      body.position.y = -2.95;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      const topSeat = new THREE.Mesh(new THREE.CylinderGeometry(1.76, 1.72, 0.32, 24), darkIronMat);
+      topSeat.position.y = -1.92;
+      topSeat.castShadow = true;
+      const goldBand = new THREE.Mesh(new THREE.TorusGeometry(1.74, 0.08, 10, 32), gildedBronzeMat);
+      goldBand.rotation.x = Math.PI / 2;
+      goldBand.position.y = -1.92;
+      sg.add(body, topSeat, goldBand);
+      sg.position.set(pos.x, 0, pos.z);
+      this.battlefieldGroup.add(sg);
+    });
+
+    // 5. 四隅青铜烽火篝火鼎 (Flaming Bronze Braziers)
+    this.battlefieldFlames = [];
+    this.battlefieldLights = [];
+    const brazierCoords = [
+      { x: -7.6, z: -7.6 },
+      { x: 7.6, z: -7.6 },
+      { x: -7.6, z: 7.6 },
+      { x: 7.6, z: 7.6 }
+    ];
+    brazierCoords.forEach((bp, idx) => {
+      const bg = new THREE.Group();
+      bg.position.set(bp.x, 0, bp.z);
+
+      const bowl = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.58, 0.9, 16), darkIronMat);
+      bowl.position.y = -1.75;
+      bowl.castShadow = true;
+      bg.add(bowl);
+
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.09, 10, 24), gildedBronzeMat);
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = -1.32;
+      bg.add(rim);
+
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.52, 2.2, 12), obsidianStoneMat);
+      pillar.position.y = -3.1;
+      bg.add(pillar);
+
+      // 赤红炭火床与动态多层火焰
+      const coalBed = new THREE.Mesh(
+        new THREE.CircleGeometry(0.92, 20),
+        new THREE.MeshBasicMaterial({ color: 0xea580c })
+      );
+      coalBed.rotation.x = -Math.PI / 2;
+      coalBed.position.y = -1.31;
+      bg.add(coalBed);
+
+      const flameGroup = new THREE.Group();
+      flameGroup.position.y = -1.28;
+      const outerFlame = new THREE.Mesh(
+        new THREE.ConeGeometry(0.72, 1.85, 10),
+        new THREE.MeshBasicMaterial({
+          color: 0xf97316,
+          transparent: true,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
+      outerFlame.position.y = 0.85;
+      const innerFlame = new THREE.Mesh(
+        new THREE.ConeGeometry(0.42, 1.35, 10),
+        new THREE.MeshBasicMaterial({
+          color: 0xfef08a,
+          transparent: true,
+          opacity: 0.92,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
+      innerFlame.position.y = 0.62;
+      flameGroup.add(outerFlame, innerFlame);
+      bg.add(flameGroup);
+
+      const fireLight = new THREE.PointLight(0xff7b24, 1.25, 16, 1.6);
+      fireLight.position.set(0, -0.2, 0);
+      bg.add(fireLight);
+
+      this.battlefieldGroup.add(bg);
+      this.battlefieldFlames.push({ group: flameGroup, outer: outerFlame, inner: innerFlame, phase: idx * 1.7 });
+      this.battlefieldLights.push({ light: fireLight, baseIntensity: 1.25, phase: idx * 2.1 });
+    });
+
+    // 6. 楚汉古战场猎猎帅旗与长戈战戟
+    this.warBanners = [];
+    const bannerConfigs = [
+      { x: -13.2, z: -10.8, isRed: false, scale: 1.15 },
+      { x: 13.2, z: -10.8, isRed: false, scale: 1.15 },
+      { x: -13.2, z: 10.8, isRed: true, scale: 1.15 },
+      { x: 13.2, z: 10.8, isRed: true, scale: 1.15 },
+      { x: -16.5, z: -2.2, isRed: false, scale: 1.0 },
+      { x: 16.5, z: 2.2, isRed: true, scale: 1.0 }
+    ];
+    bannerConfigs.forEach((cfg, idx) => {
+      const bGroup = new THREE.Group();
+      bGroup.position.set(cfg.x, 0, cfg.z);
+      bGroup.scale.setScalar(cfg.scale);
+
+      // 旗杆与矛尖
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.16, 10.5, 10), darkIronMat);
+      pole.position.y = 1.0;
+      pole.castShadow = true;
+      bGroup.add(pole);
+
+      const spearTip = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.85, 6), gildedBronzeMat);
+      spearTip.position.y = 6.55;
+      bGroup.add(spearTip);
+
+      const crossBar = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 8), gildedBronzeMat);
+      crossBar.rotation.z = Math.PI / 2;
+      crossBar.position.set(1.15, 5.65, 0);
+      bGroup.add(crossBar);
+
+      // 战旗布面
+      const clothGeo = new THREE.PlaneGeometry(2.3, 4.4, 8, 8);
+      const clothMat = new THREE.MeshStandardMaterial({
+        color: cfg.isRed ? 0x991b1b : 0x1e293b,
+        emissive: cfg.isRed ? 0x450a0a : 0x0f172a,
+        emissiveIntensity: 0.35,
+        roughness: 0.6,
+        side: THREE.DoubleSide
+      });
+      const cloth = new THREE.Mesh(clothGeo, clothMat);
+      cloth.position.set(1.18, 3.35, 0);
+      cloth.castShadow = true;
+      bGroup.add(cloth);
+
+      this.battlefieldGroup.add(bGroup);
+      this.warBanners.push({ mesh: cloth, phase: idx * 1.4, baseX: 1.18 });
+    });
+
+    // 7. 战场外围鹿角拒马与古烽火台剪影
+    const barricadeCoords = [
+      { x: -11.5, z: -15.5, ry: 0.35 },
+      { x: 11.5, z: -15.5, ry: -0.35 },
+      { x: -15.8, z: 5.5, ry: 1.1 },
+      { x: 15.8, z: -5.5, ry: -1.1 }
+    ];
+    const woodBeamMat = new THREE.MeshLambertMaterial({ color: 0x452c1e });
+    barricadeCoords.forEach(bc => {
+      const bg = new THREE.Group();
+      bg.position.set(bc.x, -3.55, bc.z);
+      bg.rotation.y = bc.ry;
+
+      const mainLog = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 4.2, 8), woodBeamMat);
+      mainLog.rotation.z = Math.PI / 2;
+      bg.add(mainLog);
+
+      for (let i = -1; i <= 1; i++) {
+        const s1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 2.6, 6), woodBeamMat);
+        s1.position.x = i * 1.25;
+        s1.rotation.x = 0.68;
+        const s2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 2.6, 6), woodBeamMat);
+        s2.position.x = i * 1.25;
+        s2.rotation.x = -0.68;
+        bg.add(s1, s2);
+      }
+      this.battlefieldGroup.add(bg);
+    });
+
+    // 8. 漫天烽火流萤火星粒子 (Battlefield Floating Embers)
+    this.battlefieldEmbers = [];
+    const glowTex = typeof getGlowParticleTexture === 'function' ? getGlowParticleTexture() : null;
+    for (let i = 0; i < 46; i++) {
+      const spMat = new THREE.SpriteMaterial({
+        map: glowTex,
+        color: i % 3 === 0 ? 0xfef08a : (i % 2 === 0 ? 0xf97316 : 0xef4444),
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const sp = new THREE.Sprite(spMat);
+      const s = 0.18 + Math.random() * 0.26;
+      sp.scale.set(s, s, 1);
+      sp.position.set(
+        (Math.random() - 0.5) * 26,
+        Math.random() * 11 - 3.5,
+        (Math.random() - 0.5) * 26
+      );
+      sp.visible = this.currentSceneId === 'ancient_battlefield';
+      this.scene.add(sp);
+      this.battlefieldEmbers.push({
+        sprite: sp,
+        baseScale: s,
+        speedY: 0.55 + Math.random() * 0.85,
+        speedX: 0.35 + Math.random() * 0.55,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
   buildChessboard3D() {
     this.boardGroup = new THREE.Group();
     this.scene.add(this.boardGroup);
@@ -669,24 +1030,50 @@ class Xiangqi3DApp {
     this.markersGroup = new THREE.Group();
     this.scene.add(this.markersGroup);
 
-    const selGeo = new THREE.RingGeometry(0.45, 0.56, 32);
-    const selMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
-    this.selectedRing = new THREE.Mesh(selGeo, selMat);
+    const selTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('selected') : null;
+    const selMat = new THREE.MeshBasicMaterial({
+      map: selTex,
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.selectedRing = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 1.36), selMat);
     this.selectedRing.rotation.x = -Math.PI / 2;
-    this.selectedRing.position.y = 0.02;
+    this.selectedRing.position.y = 0.022;
     this.selectedRing.visible = false;
     this.scene.add(this.selectedRing);
 
-    const lastGeo = new THREE.RingGeometry(0.42, 0.49, 32);
-    const lastMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, side: THREE.DoubleSide, transparent: true, opacity: 0.65 });
-    this.lastFromRing = new THREE.Mesh(lastGeo, lastMat);
+    const fromTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('last_from') : null;
+    const fromMat = new THREE.MeshBasicMaterial({
+      map: fromTex,
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.88,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.lastFromRing = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 1.06), fromMat);
     this.lastFromRing.rotation.x = -Math.PI / 2;
     this.lastFromRing.position.y = 0.015;
     this.lastFromRing.visible = false;
 
-    this.lastToRing = new THREE.Mesh(lastGeo, lastMat);
+    const toTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('last_to') : null;
+    const toMat = new THREE.MeshBasicMaterial({
+      map: toTex,
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.92,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.lastToRing = new THREE.Mesh(new THREE.PlaneGeometry(1.32, 1.32), toMat);
     this.lastToRing.rotation.x = -Math.PI / 2;
-    this.lastToRing.position.y = 0.015;
+    this.lastToRing.position.y = 0.016;
     this.lastToRing.visible = false;
     this.scene.add(this.lastFromRing, this.lastToRing);
 
@@ -694,7 +1081,7 @@ class Xiangqi3DApp {
   }
 
   /**
-   * 预构建并缓存棋子共享几何体与红/绿战术光晕共享材质（彻底消除重复创建与 WebGL 着色器重编译）
+   * 需求 1（美化所有光效）：预构建并缓存棋子共享几何体与高精莲华/丝绸气旋光晕材质
    */
   ensureSharedPieceAssets() {
     if (this.sharedPieceAssets) return this.sharedPieceAssets;
@@ -703,17 +1090,17 @@ class Xiangqi3DApp {
     const dangerTex = getTacticalAuraTextures('danger');
     const safeTex = getTacticalAuraTextures('safe');
 
-    const createTacticalMatSet = (auraTex, ringHex, coronaHex) => ({
+    const createTacticalMatSet = (auraTex) => ({
       haloMat: new THREE.MeshBasicMaterial({
         map: auraTex.radialMap,
         transparent: true,
-        opacity: 0.85,
+        opacity: 0.90,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
       }),
       outerRingMat: new THREE.MeshBasicMaterial({
-        color: ringHex,
+        map: auraTex.coronaMap,
         transparent: true,
         opacity: 0.92,
         blending: THREE.AdditiveBlending,
@@ -723,15 +1110,15 @@ class Xiangqi3DApp {
       cylShellMat: new THREE.MeshBasicMaterial({
         map: auraTex.cylinderMap,
         transparent: true,
-        opacity: 0.68,
+        opacity: 0.74,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
       }),
       topCoronaMat: new THREE.MeshBasicMaterial({
-        color: coronaHex,
+        map: auraTex.coronaMap,
         transparent: true,
-        opacity: 0.62,
+        opacity: 0.72,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
@@ -744,41 +1131,63 @@ class Xiangqi3DApp {
       cylGeo: new THREE.CylinderGeometry(radius * 0.94, radius, height, 36),
       rimGeo: new THREE.TorusGeometry(radius * 0.92, 0.028, 12, 36),
       topDiscGeo: new THREE.CircleGeometry(radius * 0.91, 36),
-      auraRingGeo: new THREE.RingGeometry(0.44, 0.51, 32),
-      haloPlaneGeo: new THREE.PlaneGeometry(1.36, 1.36),
-      outerRingGeo: new THREE.RingGeometry(0.45, 0.54, 48),
-      cylShellGeo: new THREE.CylinderGeometry(radius * 1.11, radius * 1.04, height * 1.24, 36, 1, true),
-      topCoronaGeo: new THREE.RingGeometry(radius * 0.86, radius * 0.99, 36),
-      redRimMat: new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85 }),
-      blackRimMat: new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85 }),
+      auraRingGeo: new THREE.PlaneGeometry(1.24, 1.24),
+      haloPlaneGeo: new THREE.PlaneGeometry(1.42, 1.42),
+      outerRingGeo: new THREE.PlaneGeometry(1.28, 1.28),
+      cylShellGeo: new THREE.CylinderGeometry(radius * 1.12, radius * 1.03, height * 1.32, 36, 1, true),
+      topCoronaGeo: new THREE.PlaneGeometry(1.02, 1.02),
+      redRimMat: new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 }),
+      blackRimMat: new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.2 }),
+      turnRedTex: typeof getTurnAuraTexture === 'function' ? getTurnAuraTexture('red') : null,
+      turnBlackTex: typeof getTurnAuraTexture === 'function' ? getTurnAuraTexture('black') : null,
+      turnSelTex: typeof getTurnAuraTexture === 'function' ? getTurnAuraTexture('selected') : null,
       tacticalMats: {
-        danger: createTacticalMatSet(dangerTex, 0xef4444, 0xf87171),
-        safe: createTacticalMatSet(safeTex, 0x10b981, 0x34d399)
+        danger: createTacticalMatSet(dangerTex),
+        safe: createTacticalMatSet(safeTex)
       }
     };
     return this.sharedPieceAssets;
   }
 
   /**
-   * 预构建并缓存落点指示器的共享几何体与材质（点击选子时零材质/几何体分配）
+   * 需求 1（美化所有落点）：预构建并缓存 3D 翠玉灵珠 / 朱砂警珠 / 四方金戈锁敌阵的共享几何体与材质
    */
   ensureSharedIndicatorAssets() {
     if (this.sharedIndicatorAssets) return this.sharedIndicatorAssets;
     const dangerAura = getTacticalAuraTextures('danger');
     const safeAura = getTacticalAuraTextures('safe');
+    const dotSafeTex = getMoveIndicatorTexture('dot_safe');
+    const dotUnsafeTex = getMoveIndicatorTexture('dot_unsafe');
+    const capSafeTex = getMoveIndicatorTexture('capture_safe');
+    const capUnsafeTex = getMoveIndicatorTexture('capture_unsafe');
 
     this.sharedIndicatorAssets = {
-      captureRingGeo: new THREE.RingGeometry(0.45, 0.56, 36),
-      softGlowGeo: new THREE.PlaneGeometry(0.64, 0.64),
-      dotGeo: new THREE.CircleGeometry(0.155, 32),
-      outerDotRingGeo: new THREE.RingGeometry(0.185, 0.245, 32),
+      captureBaseGeo: new THREE.PlaneGeometry(1.38, 1.38),
+      captureCrownGeo: new THREE.PlaneGeometry(1.06, 1.06),
+      softGlowGeo: new THREE.PlaneGeometry(0.92, 0.92),
+      lotusDotGeo: new THREE.PlaneGeometry(0.76, 0.76),
+      gemOrbGeo: new THREE.SphereGeometry(0.105, 24, 16),
       hitGeo: new THREE.CylinderGeometry(0.62, 0.62, 0.55, 16),
-      captureSafeMat: new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.92 }),
-      captureUnsafeMat: new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide, transparent: true, opacity: 0.92 }),
+      captureSafeMat: new THREE.MeshBasicMaterial({
+        map: capSafeTex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.96,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }),
+      captureUnsafeMat: new THREE.MeshBasicMaterial({
+        map: capUnsafeTex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.96,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }),
       glowSafeMat: new THREE.MeshBasicMaterial({
         map: safeAura.radialMap,
         transparent: true,
-        opacity: 0.45,
+        opacity: 0.52,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
@@ -786,28 +1195,42 @@ class Xiangqi3DApp {
       glowUnsafeMat: new THREE.MeshBasicMaterial({
         map: dangerAura.radialMap,
         transparent: true,
-        opacity: 0.62,
+        opacity: 0.65,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
       }),
-      dotSafeMat: new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.94 }),
-      dotUnsafeMat: new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide, transparent: true, opacity: 0.94 }),
-      outerDotSafeMat: new THREE.MeshBasicMaterial({
-        color: 0x34d399,
+      dotSafeMat: new THREE.MeshBasicMaterial({
+        map: dotSafeTex,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.62,
-        blending: THREE.AdditiveBlending,
+        opacity: 0.96,
         depthWrite: false
       }),
-      outerDotUnsafeMat: new THREE.MeshBasicMaterial({
-        color: 0xf87171,
+      dotUnsafeMat: new THREE.MeshBasicMaterial({
+        map: dotUnsafeTex,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.82,
-        blending: THREE.AdditiveBlending,
+        opacity: 0.96,
         depthWrite: false
+      }),
+      orbSafeMat: new THREE.MeshStandardMaterial({
+        color: 0x6ee7b7,
+        emissive: 0x10b981,
+        emissiveIntensity: 0.75,
+        roughness: 0.15,
+        metalness: 0.25,
+        transparent: true,
+        opacity: 0.95
+      }),
+      orbUnsafeMat: new THREE.MeshStandardMaterial({
+        color: 0xfca5a5,
+        emissive: 0xef4444,
+        emissiveIntensity: 0.82,
+        roughness: 0.15,
+        metalness: 0.25,
+        transparent: true,
+        opacity: 0.95
       }),
       hitMat: new THREE.MeshBasicMaterial({ visible: false })
     };
@@ -847,10 +1270,12 @@ class Xiangqi3DApp {
     group.add(topDisc);
 
     const auraMat = new THREE.MeshBasicMaterial({
-      color: isRed ? 0xef4444 : 0x38bdf8,
+      map: isRed ? assets.turnRedTex : assets.turnBlackTex,
+      color: 0xffffff,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.0,
+      blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     const auraRing = new THREE.Mesh(assets.auraRingGeo, auraMat);
@@ -1003,7 +1428,9 @@ class Xiangqi3DApp {
 
     const friendlyColor = this.onlineRole
       ? this.onlineRole
-      : (this.gameMode !== 'pvp' && !this.replayMode ? RED : this.engine.turn);
+      : (this.replayMode
+          ? (this.replayBranchActive && this.gameMode !== 'pvp' ? (this.replayHumanColor || RED) : this.engine.turn)
+          : (this.gameMode !== 'pvp' ? RED : this.engine.turn));
 
     this.threatenedFriendlyIds = this.engine.getThreatenedFriendlyPieceIds(friendlyColor, this.engine.board);
     this.safeCapturableEnemyIds = this.engine.getSafeCapturableEnemyPieceIds(friendlyColor, this.selectedSquare, this.engine.board);
@@ -1131,12 +1558,23 @@ class Xiangqi3DApp {
 
     this.clearIllegalWarningRings();
     if (Array.isArray(diagnosis.highlightSquares)) {
+      const warnTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('warning') : null;
+      const selTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('selected') : null;
       diagnosis.highlightSquares.forEach((sq, idx) => {
         if (!sq || typeof sq.r !== 'number' || typeof sq.c !== 'number') return;
         const pos = gridToWorld(sq.r, sq.c);
+        const tex = idx === 0 ? warnTex : selTex;
         const ring = new THREE.Mesh(
-          new THREE.RingGeometry(0.42, 0.56, 32),
-          new THREE.MeshBasicMaterial({ color: idx === 0 ? 0xef4444 : 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+          tex ? new THREE.PlaneGeometry(1.36, 1.36) : new THREE.RingGeometry(0.42, 0.56, 32),
+          new THREE.MeshBasicMaterial({
+            map: tex || null,
+            color: tex ? 0xffffff : (idx === 0 ? 0xef4444 : 0xf59e0b),
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.95,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+          })
         );
         ring.rotation.x = -Math.PI / 2;
         ring.position.set(pos.x, 0.036, pos.z);
@@ -1157,20 +1595,31 @@ class Xiangqi3DApp {
     for (const m of moves) {
       const pos = gridToWorld(m.tr, m.tc);
       const isCapture = Boolean(m.capture);
-      // 新增 4：检测己方棋子下到该落点后是否会被敌方吃掉
+      // 检测己方棋子下到该落点后是否会被敌方吃掉
       const isUnsafe = this.engine.wouldPieceBeCapturedAfterMove(m, this.engine.board);
       const holder = new THREE.Group();
-      holder.position.set(pos.x, 0.025, pos.z);
-      holder.userData = { isCapture, isUnsafe };
+      holder.position.set(pos.x, 0.024, pos.z);
+      holder.userData = { isCapture, isUnsafe, phase: (m.tr * 0.65 + m.tc * 0.45) };
 
       if (isCapture) {
-        const ring = new THREE.Mesh(
-          indAssets.captureRingGeo,
+        const baseLock = new THREE.Mesh(
+          indAssets.captureBaseGeo,
           isUnsafe ? indAssets.captureUnsafeMat : indAssets.captureSafeMat
         );
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.02;
-        holder.add(ring);
+        baseLock.rotation.x = -Math.PI / 2;
+        baseLock.position.y = 0.012;
+        holder.add(baseLock);
+
+        const crownLock = new THREE.Mesh(
+          indAssets.captureCrownGeo,
+          isUnsafe ? indAssets.captureUnsafeMat : indAssets.captureSafeMat
+        );
+        crownLock.rotation.x = -Math.PI / 2;
+        crownLock.position.y = 0.345;
+        holder.add(crownLock);
+
+        holder.userData.baseLock = baseLock;
+        holder.userData.crownLock = crownLock;
       } else {
         const softGlow = new THREE.Mesh(
           indAssets.softGlowGeo,
@@ -1180,20 +1629,24 @@ class Xiangqi3DApp {
         softGlow.position.y = -0.006;
         holder.add(softGlow);
 
-        const dot = new THREE.Mesh(
-          indAssets.dotGeo,
+        const lotusDisc = new THREE.Mesh(
+          indAssets.lotusDotGeo,
           isUnsafe ? indAssets.dotUnsafeMat : indAssets.dotSafeMat
         );
-        dot.rotation.x = -Math.PI / 2;
-        holder.add(dot);
+        lotusDisc.rotation.x = -Math.PI / 2;
+        lotusDisc.position.y = 0.002;
+        holder.add(lotusDisc);
 
-        const outerDotRing = new THREE.Mesh(
-          indAssets.outerDotRingGeo,
-          isUnsafe ? indAssets.outerDotUnsafeMat : indAssets.outerDotSafeMat
+        const gemOrb = new THREE.Mesh(
+          indAssets.gemOrbGeo,
+          isUnsafe ? indAssets.orbUnsafeMat : indAssets.orbSafeMat
         );
-        outerDotRing.rotation.x = -Math.PI / 2;
-        outerDotRing.position.y = 0.002;
-        holder.add(outerDotRing);
+        gemOrb.scale.set(1, 0.44, 1);
+        gemOrb.position.y = 0.026;
+        holder.add(gemOrb);
+
+        holder.userData.lotusDisc = lotusDisc;
+        holder.userData.gemOrb = gemOrb;
       }
 
       const hitMesh = new THREE.Mesh(indAssets.hitGeo, indAssets.hitMat);
@@ -1303,6 +1756,7 @@ class Xiangqi3DApp {
           this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color);
           this.sfx.playAttackShatter();
         } else {
+          this.spawnMoveImpactWave?.(endPos.x, endPos.z, false);
           this.sfx.playMove(movingPiece.color, movingPiece.type);
         }
         this.updateTacticalGlowState();
@@ -1462,7 +1916,11 @@ class Xiangqi3DApp {
       this.showCenterCallout('将军！', currentTurn === RED ? BLACK : RED);
     }
 
-    if (this.gameMode !== 'pvp' && currentTurn === BLACK && !this.gameOver) {
+    const shouldAITakeTurn = !this.replayMode
+      ? (this.gameMode !== 'pvp' && currentTurn === BLACK && !this.gameOver)
+      : (this.replayBranchActive && this.gameMode !== 'pvp' && !this.replayTrialCheckmated && currentTurn !== (this.replayHumanColor || RED));
+
+    if (shouldAITakeTurn) {
       this.isBusy = true;
       const aiBadge = document.getElementById('ai-thinking');
       const aiLabel = document.getElementById('ai-thinking-label');
@@ -1470,11 +1928,18 @@ class Xiangqi3DApp {
       aiBadge?.classList.add('inline-flex');
       if (aiLabel) aiLabel.textContent = this.gameMode === 'inferno' ? '宗师推演中...' : 'AI 思考中...';
 
-      this.requestAIMove(BLACK, this.gameMode, (aiMove) => {
+      this.requestAIMove(currentTurn, this.gameMode, (aiMove) => {
         aiBadge?.classList.add('hidden');
         aiBadge?.classList.remove('inline-flex');
-        if (aiMove && !this.gameOver) this.executeMoveAnimated(aiMove);
-        else { this.isBusy = false; this.updateUI(this.engine.isInCheck(this.engine.turn)); }
+        const stillValid = !this.replayMode
+          ? !this.gameOver
+          : (this.replayMode && this.replayBranchActive && !this.replayTrialCheckmated);
+        if (aiMove && stillValid) {
+          this.executeMoveAnimated(aiMove);
+        } else {
+          this.isBusy = false;
+          this.updateUI(this.engine.isInCheck(this.engine.turn));
+        }
       });
     } else {
       this.isBusy = false;
@@ -1532,7 +1997,8 @@ class Xiangqi3DApp {
         if (hitData.isMoveTarget) {
           this.clearIllegalWarningRings();
           if (this.replayMode) {
-            this.prepareReplayBranchAtCurrentStep?.();
+            this.replayHumanColor = this.engine.turn;
+            this.prepareReplayBranchAtCurrentStep?.(this.engine.turn);
           }
           this.executeMoveAnimated(hitData.move);
           return;
@@ -1578,7 +2044,8 @@ class Xiangqi3DApp {
           if (matchingMove) {
             this.clearIllegalWarningRings();
             if (this.replayMode) {
-              this.prepareReplayBranchAtCurrentStep?.();
+              this.replayHumanColor = this.engine.turn;
+            this.prepareReplayBranchAtCurrentStep?.(this.engine.turn);
             }
             this.executeMoveAnimated(matchingMove);
             return;
@@ -1725,40 +2192,106 @@ class Xiangqi3DApp {
       let targetAuraOpacity = 0.0;
       if (isSelected) {
         mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, 0.32 + Math.sin(elapsed * 5.0) * 0.07, 0.18);
-        targetAuraOpacity = 0.75 + Math.sin(elapsed * 5.0) * 0.2;
+        targetAuraOpacity = 0.85 + Math.sin(elapsed * 5.0) * 0.15;
+        if (this.sharedPieceAssets?.turnSelTex && auraMat.map !== this.sharedPieceAssets.turnSelTex) {
+          auraMat.map = this.sharedPieceAssets.turnSelTex;
+          auraMat.needsUpdate = true;
+        }
       } else {
         if (Math.abs(mesh.position.y) > 0.001) mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, 0, 0.22);
+        const normalTex = color === RED ? this.sharedPieceAssets?.turnRedTex : this.sharedPieceAssets?.turnBlackTex;
+        if (normalTex && auraMat.map !== normalTex) {
+          auraMat.map = normalTex;
+          auraMat.needsUpdate = true;
+        }
         if (isTurnSide && !ud.tacticalState) {
-          targetAuraOpacity = 0.18 + Math.sin(elapsed * 2.6 + r * 0.5) * 0.1;
+          targetAuraOpacity = 0.24 + Math.sin(elapsed * 2.8 + r * 0.5 + c * 0.3) * 0.12;
         }
       }
       auraMat.opacity = targetAuraOpacity;
       if (auraRing) {
         auraRing.visible = targetAuraOpacity > 0.005;
+        if (auraRing.visible) {
+          auraRing.rotation.z = elapsed * (isSelected ? 1.15 : 0.45);
+        }
       }
 
       if (ud.tacticalState && ud.tacticalGlowGroup && ud.tacticalGlowGroup.visible) {
         const pulse = 0.5 + 0.5 * Math.sin(elapsed * 4.2 + (r * 0.7 + c * 0.5));
-        const haloScale = 0.96 + pulse * 0.10;
+        const haloScale = 0.94 + pulse * 0.12;
         ud.haloMesh.scale.set(haloScale, haloScale, 1);
-        ud.cylShellMesh.rotation.y = elapsed * (ud.tacticalState === 'danger' ? -1.2 : 1.2);
+        ud.haloMesh.rotation.z = elapsed * (ud.tacticalState === 'danger' ? -0.65 : 0.65);
+        ud.outerRingMesh.rotation.z = elapsed * (ud.tacticalState === 'danger' ? 1.25 : -1.25);
+        ud.topCoronaRing.rotation.z = elapsed * (ud.tacticalState === 'danger' ? -1.6 : 1.6);
+        ud.cylShellMesh.rotation.y = elapsed * (ud.tacticalState === 'danger' ? -1.35 : 1.35);
         if (ud.bodyMat) {
-          ud.bodyMat.emissiveIntensity = 0.18 + pulse * 0.22;
+          ud.bodyMat.emissiveIntensity = 0.20 + pulse * 0.24;
         }
       }
     }
 
     if (this.selectedRing.visible) {
-      const s = 1 + Math.sin(elapsed * 5) * 0.06;
+      const s = 1 + Math.sin(elapsed * 4.8) * 0.065;
       this.selectedRing.scale.set(s, s, 1);
+      this.selectedRing.rotation.z = elapsed * 0.85;
     }
+    if (this.lastFromRing?.visible) {
+      this.lastFromRing.rotation.z = -elapsed * 0.45;
+    }
+    if (this.lastToRing?.visible) {
+      const s = 0.97 + Math.sin(elapsed * 3.6) * 0.05;
+      this.lastToRing.scale.set(s, s, 1);
+      this.lastToRing.rotation.z = elapsed * 0.55;
+    }
+
     for (const ind of this.moveIndicators) {
-      if (ind.userData.isCapture) {
-        const s = 1 + Math.sin(elapsed * 6) * 0.08;
+      const u = ind.userData;
+      const ph = u.phase || 0;
+      if (u.isCapture) {
+        const s = 0.96 + Math.sin(elapsed * 5.5 + ph) * 0.085;
         ind.scale.set(s, 1, s);
-      } else if (ind.userData.isUnsafe) {
-        const s = 1 + Math.sin(elapsed * 6.5) * 0.09;
+        if (u.baseLock) u.baseLock.rotation.z = elapsed * 1.1 + ph;
+        if (u.crownLock) u.crownLock.rotation.z = -elapsed * 1.65 - ph;
+      } else {
+        const s = 0.95 + Math.sin(elapsed * 4.6 + ph) * 0.08;
         ind.scale.set(s, 1, s);
+        if (u.lotusDisc) u.lotusDisc.rotation.z = elapsed * 0.75 + ph;
+        if (u.gemOrb) {
+          u.gemOrb.position.y = 0.028 + Math.sin(elapsed * 4.6 + ph) * 0.012;
+        }
+      }
+    }
+
+    if (this.impactWaves && this.impactWaves.length > 0) {
+      for (let i = this.impactWaves.length - 1; i >= 0; i--) {
+        const w = this.impactWaves[i];
+        w.age += dt;
+        const p = Math.min(1, w.age / w.maxAge);
+        const sc = 0.65 + (1 - Math.pow(1 - p, 2)) * (w.maxScale - 0.65);
+        w.mesh.scale.set(sc, sc, 1);
+        w.mesh.material.opacity = (1 - p) * 0.85;
+        if (p >= 1) {
+          this.scene.remove(w.mesh);
+          w.mesh.geometry?.dispose?.();
+          w.mesh.material?.dispose?.();
+          this.impactWaves.splice(i, 1);
+        }
+      }
+    }
+
+    if (this.illegalWarningRings && this.illegalWarningRings.length > 0) {
+      for (let i = this.illegalWarningRings.length - 1; i >= 0; i--) {
+        const item = this.illegalWarningRings[i];
+        item.age += dt;
+        const p = Math.min(1, item.age / item.maxAge);
+        const s = 0.92 + Math.sin(item.age * 12) * 0.08;
+        item.mesh.scale.set(s, s, 1);
+        item.mesh.rotation.z += dt * 1.5;
+        item.mesh.material.opacity = (1 - p) * 0.92;
+        if (p >= 1) {
+          this.scene.remove(item.mesh);
+          this.illegalWarningRings.splice(i, 1);
+        }
       }
     }
 
@@ -1780,12 +2313,13 @@ class Xiangqi3DApp {
       if (progress < 0.12) eclipseFactor = progress / 0.12;
       else if (progress < 0.72) eclipseFactor = 1;
       else eclipseFactor = 1 - (progress - 0.72) / 0.28;
-      this._tempDayColor.setHex(0xdce8dc);
+      const sc = this.getActiveSceneConfig();
+      this._tempDayColor.setHex(sc.bgHex || 0xdce8dc);
       this._tempDayColor.lerp(this._tempNightColor, Math.max(0, Math.min(1, eclipseFactor)) * 0.86);
       this.scene.background.copy(this._tempDayColor);
       if (this.scene.fog) this.scene.fog.color.copy(this._tempDayColor);
-      if (this.sunLight) this.sunLight.intensity = THREE.MathUtils.lerp(1.15, 0.22, eclipseFactor);
-      if (this.hemiLight) this.hemiLight.intensity = THREE.MathUtils.lerp(0.75, 0.18, eclipseFactor);
+      if (this.sunLight) this.sunLight.intensity = THREE.MathUtils.lerp(sc.sunIntensity || 1.15, 0.22, eclipseFactor);
+      if (this.hemiLight) this.hemiLight.intensity = THREE.MathUtils.lerp(sc.hemiIntensity || 0.75, 0.18, eclipseFactor);
     }
     for (let i = this.checkmateVFXAnimations.length - 1; i >= 0; i--) {
       const vfx = this.checkmateVFXAnimations[i];
@@ -1819,26 +2353,63 @@ class Xiangqi3DApp {
       p.mesh.material.opacity = Math.max(0, 1 - p.life / p.maxLife);
     }
 
-    this.trees.forEach(t => {
-      t.group.rotation.z = Math.sin(elapsed * 1.2 + t.phase) * 0.035;
-      t.group.rotation.x = Math.cos(elapsed * 0.9 + t.phase) * 0.025;
-    });
-    this.dappledCanopy.position.x = Math.sin(elapsed * 1.1) * 0.35;
-    this.dappledCanopy.position.z = Math.cos(elapsed * 0.9) * 0.35;
-
-    this.breezeParticles.forEach(bp => {
-      bp.mesh.position.y -= bp.speedY * dt;
-      bp.mesh.position.x += Math.sin(elapsed * 0.8 + bp.phase) * bp.speedX * dt;
-      bp.mesh.position.z += Math.cos(elapsed * 0.6 + bp.phase) * 0.3 * dt;
-      bp.mesh.rotation.x += dt * 1.2;
-      bp.mesh.rotation.y += dt * 0.9;
-
-      if (bp.mesh.position.y < -3.5) {
-        bp.mesh.position.y = 9.5;
-        bp.mesh.position.x = (Math.random() - 0.5) * 26;
-        bp.mesh.position.z = (Math.random() - 0.5) * 26;
+    if (this.currentSceneId === 'ancient_battlefield') {
+      if (this.battlefieldFlames) {
+        this.battlefieldFlames.forEach(f => {
+          const sx = 0.92 + Math.sin(elapsed * 9.5 + f.phase) * 0.12;
+          const sy = 0.90 + Math.cos(elapsed * 12.0 + f.phase) * 0.18;
+          f.outer.scale.set(sx, sy, sx);
+          f.inner.scale.set(sy, sx, sy);
+          f.group.rotation.y = elapsed * 2.2 + f.phase;
+        });
       }
-    });
+      if (this.battlefieldLights) {
+        this.battlefieldLights.forEach(bl => {
+          bl.light.intensity = bl.baseIntensity + Math.sin(elapsed * 11.0 + bl.phase) * 0.28;
+        });
+      }
+      if (this.warBanners) {
+        this.warBanners.forEach(wb => {
+          wb.mesh.rotation.y = Math.sin(elapsed * 2.4 + wb.phase) * 0.18;
+          wb.mesh.rotation.z = Math.cos(elapsed * 1.9 + wb.phase) * 0.045;
+        });
+      }
+      if (this.battlefieldEmbers) {
+        this.battlefieldEmbers.forEach(em => {
+          em.sprite.position.y += em.speedY * dt;
+          em.sprite.position.x += Math.sin(elapsed * 1.2 + em.phase) * em.speedX * dt;
+          em.sprite.position.z += Math.cos(elapsed * 0.9 + em.phase) * 0.35 * dt;
+          const flicker = 0.55 + 0.45 * Math.sin(elapsed * 6.5 + em.phase);
+          em.sprite.material.opacity = flicker;
+          if (em.sprite.position.y > 9.5) {
+            em.sprite.position.y = -3.8;
+            em.sprite.position.x = (Math.random() - 0.5) * 26;
+            em.sprite.position.z = (Math.random() - 0.5) * 26;
+          }
+        });
+      }
+    } else {
+      this.trees.forEach(t => {
+        t.group.rotation.z = Math.sin(elapsed * 1.2 + t.phase) * 0.035;
+        t.group.rotation.x = Math.cos(elapsed * 0.9 + t.phase) * 0.025;
+      });
+      this.dappledCanopy.position.x = Math.sin(elapsed * 1.1) * 0.35;
+      this.dappledCanopy.position.z = Math.cos(elapsed * 0.9) * 0.35;
+
+      this.breezeParticles.forEach(bp => {
+        bp.mesh.position.y -= bp.speedY * dt;
+        bp.mesh.position.x += Math.sin(elapsed * 0.8 + bp.phase) * bp.speedX * dt;
+        bp.mesh.position.z += Math.cos(elapsed * 0.6 + bp.phase) * 0.3 * dt;
+        bp.mesh.rotation.x += dt * 1.2;
+        bp.mesh.rotation.y += dt * 0.9;
+
+        if (bp.mesh.position.y < -3.5) {
+          bp.mesh.position.y = 9.5;
+          bp.mesh.position.x = (Math.random() - 0.5) * 26;
+          bp.mesh.position.z = (Math.random() - 0.5) * 26;
+        }
+      });
+    }
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -1912,7 +2483,7 @@ class Xiangqi3DApp {
 
     if (toggleBtn) {
       toggleBtn.classList.toggle('hidden', !hasAny);
-      const arrow = this.capturedTrayCollapsed ? '▸' : '▾';
+      const arrow = this.capturedTrayCollapsed ? '▶' : '▼';
       toggleBtn.innerHTML = `<span class="serif-cn">战果</span> <span class="text-red-700">红${this.engine.capturedBlack.length}</span>·<span class="text-slate-800">黑${this.engine.capturedRed.length}</span> ${arrow}`;
     }
 
@@ -1947,12 +2518,14 @@ class Xiangqi3DApp {
     } else if (this.engine.turn === RED) {
       turnDot.className = 'w-2.5 h-2.5 rounded-full bg-red-600 ring-4 ring-red-600/20';
       turnText.className = 'serif-cn font-bold text-xs text-red-800';
-      turnText.textContent = this.replayMode ? '复盘：红方走棋' : '红方走棋';
+      const isAIOppInReplay = this.replayMode && this.replayBranchActive && this.gameMode !== 'pvp' && this.replayHumanColor === BLACK;
+      turnText.textContent = this.replayMode ? (isAIOppInReplay ? '复盘：红方AI' : '复盘：红方走棋') : '红方走棋';
     } else {
       turnDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-900 ring-4 ring-slate-900/20';
       turnText.className = 'serif-cn font-bold text-xs text-slate-900';
       const modeLabels = { pvp: '黑方走棋', easy: '简单AI', hard: '困难AI', inferno: '宗师AI' };
-      turnText.textContent = this.replayMode ? '复盘：黑方走棋' : (modeLabels[this.gameMode] || 'AI');
+      const isAIOppInReplay = this.replayMode && this.replayBranchActive && this.gameMode !== 'pvp' && (this.replayHumanColor || RED) === RED;
+      turnText.textContent = this.replayMode ? (isAIOppInReplay ? `复盘：${modeLabels[this.gameMode] || 'AI'}` : '复盘：黑方走棋') : (modeLabels[this.gameMode] || 'AI');
     }
 
     if (inCheck && (!this.gameOver || this.replayMode)) {
@@ -2120,7 +2693,15 @@ class Xiangqi3DApp {
       if (m === mode) btn.classList.add(mode === 'inferno' ? 'seg-inferno-active' : 'seg-active');
     });
     this.sfx.playSelect();
-    if (this.gameMode !== 'pvp' && this.engine.turn === BLACK && !this.gameOver && !this.replayMode) {
+    this.resetTelemetryUI();
+    this.updateTacticalGlowState();
+    if (this.replayMode) {
+      this.updateReplayPanelUI?.();
+    }
+    const shouldTriggerAI = !this.replayMode
+      ? (this.gameMode !== 'pvp' && this.engine.turn === BLACK && !this.gameOver)
+      : (this.replayBranchActive && this.gameMode !== 'pvp' && !this.replayTrialCheckmated && this.engine.turn !== (this.replayHumanColor || RED));
+    if (shouldTriggerAI) {
       this.onTurnFinished();
     } else {
       this.updateUI(this.engine.isInCheck(this.engine.turn));
@@ -2172,6 +2753,11 @@ class Xiangqi3DApp {
     } else {
       this.engine.undoLastMove();
       this.popReplayStep?.();
+    }
+    if (this.engine.history.length === 0) {
+      this.resetTelemetryUI();
+      if (this.lastFromRing) this.lastFromRing.visible = false;
+      if (this.lastToRing) this.lastToRing.visible = false;
     }
     this.syncPiecesFromEngine();
     this.updateRestartButtonLabel();
@@ -2278,7 +2864,7 @@ class Xiangqi3DApp {
                 }">${v.badge}</span>
               </div>
               <span class="serif-cn text-[11px] font-bold ${isCurrent ? 'text-red-700' : 'text-amber-700'}">
-                ${isCurrent ? '● 当前模式 · 点击新局' : '点击开启 ▸'}
+                ${isCurrent ? '● 当前模式 · 点击新局' : '点击开启 ▶'}
               </span>
             </div>
             <p class="serif-cn text-xs text-slate-600 leading-relaxed mt-1">${v.desc}</p>
@@ -2326,23 +2912,32 @@ class Xiangqi3DApp {
     if (!container) return;
     container.innerHTML = this.sceneRegistry.map(sc => {
       const isCurrent = sc.id === this.currentSceneId;
+      const isBattlefield = sc.id === 'ancient_battlefield';
+      const activeBorder = isBattlefield
+        ? 'border-red-700 bg-gradient-to-r from-amber-50/95 to-red-50/95 shadow-md'
+        : 'border-emerald-700 bg-gradient-to-r from-emerald-50/95 to-teal-50/95 shadow-md';
+      const iconBg = isBattlefield
+        ? 'bg-gradient-to-br from-red-700 to-amber-700 text-amber-50'
+        : 'bg-gradient-to-br from-emerald-700 to-teal-800 text-emerald-50';
+      const badgeCls = isBattlefield
+        ? 'bg-red-100 text-red-900'
+        : 'bg-emerald-100 text-emerald-900';
+      const statusCls = isBattlefield ? 'text-red-800' : 'text-emerald-800';
       return `
         <button type="button" onclick="window.gameApp.switchScene('${sc.id}')"
           class="md-btn w-full text-left rounded-2xl p-3.5 border-2 transition-all flex items-start gap-3 ${
-            isCurrent
-              ? 'border-emerald-700 bg-gradient-to-r from-emerald-50/95 to-teal-50/95 shadow-md'
-              : 'border-slate-200 bg-white/90 hover:bg-emerald-50/50'
+            isCurrent ? activeBorder : 'border-slate-200 bg-white/90 hover:bg-amber-50/50'
           }">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-800 text-emerald-50 flex items-center justify-center shrink-0 shadow-sm">
+          <div class="w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0 shadow-sm">
             <span class="material-symbols-rounded text-[20px]">${sc.icon || 'park'}</span>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5">
                 <span class="serif-cn font-black text-sm text-slate-900">${sc.name}</span>
-                <span class="serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900">${isCurrent ? '当前使用' : '可用场景'}</span>
+                <span class="serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}">${sc.badge || (isCurrent ? '当前使用' : '可用场景')}</span>
               </div>
-              <span class="serif-cn text-[11px] font-bold text-emerald-800">${isCurrent ? '✓ 已启用' : '点击切换'}</span>
+              <span class="serif-cn text-[11px] font-bold ${statusCls}">${isCurrent ? '✓ 当前场景' : '点击切换 ▶'}</span>
             </div>
             <p class="serif-cn text-xs text-slate-600 leading-relaxed mt-1">${sc.desc}</p>
           </div>
@@ -2354,15 +2949,29 @@ class Xiangqi3DApp {
   switchScene(sceneId) {
     const sc = this.sceneRegistry.find(s => s.id === sceneId) || this.sceneRegistry[0];
     this.currentSceneId = sc.id;
+    const isBattlefield = sc.id === 'ancient_battlefield';
     this.sfx.playSelect();
 
-    // 在不刷新网页、不重置棋盘与对局状态的前提下，平滑应用 3D 场景光影与环境配置
+    // 在不刷新网页、不重置棋盘与对局状态的前提下，无缝切换 3D 场景模型、粒子与光影
+    if (this.parkGroup) this.parkGroup.visible = !isBattlefield;
+    if (this.dappledCanopy) this.dappledCanopy.visible = !isBattlefield;
+    if (this.breezeParticles) {
+      this.breezeParticles.forEach(bp => { bp.mesh.visible = !isBattlefield; });
+    }
+    if (this.battlefieldGroup) this.battlefieldGroup.visible = isBattlefield;
+    if (this.battlefieldEmbers) {
+      this.battlefieldEmbers.forEach(em => { em.sprite.visible = isBattlefield; });
+    }
+
     if (this.scene) {
       this.scene.background = new THREE.Color(sc.bgHex);
       if (this.scene.fog) {
         this.scene.fog.color.setHex(sc.bgHex);
         this.scene.fog.density = sc.fogDensity || 0.015;
       }
+    }
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.style.background = isBattlefield ? '#261a16' : '#dce7dc';
     }
     if (this.sunLight) {
       this.sunLight.color.setHex(sc.sunColor || 0xfff5e0);
@@ -2375,7 +2984,16 @@ class Xiangqi3DApp {
     }
 
     const badgeEl = document.getElementById('scene-badge');
-    if (badgeEl) badgeEl.textContent = sc.name;
+    if (badgeEl) {
+      badgeEl.textContent = sc.name;
+      badgeEl.className = isBattlefield
+        ? 'hidden md:inline-block cursor-pointer serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-800/15 text-amber-950 border border-amber-800/25'
+        : 'hidden md:inline-block cursor-pointer serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-800/10 text-emerald-900 border border-emerald-800/15';
+    }
+    const switcherBtn = document.getElementById('btn-scene-switcher');
+    if (switcherBtn) {
+      switcherBtn.title = `点击切换 3D 场景（当前：${sc.name}）`;
+    }
 
     this.toggleSceneModal(false);
     this.showCenterCallout(`场景已切换：${sc.name}`, RED);
@@ -2453,6 +3071,7 @@ class Xiangqi3DApp {
 
     this.initReplaySession?.(this.engine.board, this.engine.turn, 'standard');
 
+    this.resetTelemetryUI();
     this.syncPiecesFromEngine();
     this.updateRestartButtonLabel();
     this.updateUI(this.engine.isInCheck(this.engine.turn));
