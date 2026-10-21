@@ -140,7 +140,7 @@
         <button id="captured-toggle" type="button" onclick="window.gameApp.toggleCapturedTray()"
           class="hidden md-btn serif-cn rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-amber-300/90 px-2.5 py-1 text-[11px] font-bold text-amber-950 shadow-sm shrink-0"
           title="点击展开或收起被吃棋子战果匣">
-          战果 ▾
+          战果 ▼
         </button>
 
         <div id="check-badge"
@@ -280,11 +280,11 @@
 
   <!-- 百宝箱：棋局复盘浮动控制台 (#replay-panel) -->
   <section id="replay-panel"
-    class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-20 w-[min(380px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/85 shadow-2xl overflow-hidden"
+    class="hidden pointer-events-auto fixed z-30 right-3 bottom-20 sm:right-5 sm:bottom-20 w-[min(390px,calc(100vw-24px))] md-card rounded-2xl border border-amber-300/85 shadow-2xl overflow-hidden"
     style="background:rgba(255,251,235,.96);backdrop-filter:blur(16px);">
-    <div
-      class="flex items-center gap-2 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-red-100/90 via-amber-100/90 to-orange-50/95">
-      <div class="w-7 h-7 rounded-lg bg-red-700 text-amber-50 flex items-center justify-center shadow-sm"><span
+    <div id="replay-panel-header"
+      class="flex items-center gap-1.5 px-3 py-2 border-b border-amber-200/80 bg-gradient-to-r from-red-100/90 via-amber-100/90 to-orange-50/95">
+      <div class="w-7 h-7 rounded-lg bg-red-700 text-amber-50 flex items-center justify-center shadow-sm shrink-0"><span
           class="material-symbols-rounded text-[17px]">history_edu</span></div>
       <div class="min-w-0 flex-1">
         <h2 class="serif-cn font-black text-slate-900 text-xs leading-tight">百宝箱 · 棋局复盘</h2>
@@ -292,12 +292,15 @@
       </div>
       <button id="btn-restore-replay-line" onclick="window.gameApp.restoreOriginalReplayLine()"
         class="hidden md-btn serif-cn shrink-0 rounded-lg px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-[11px] font-bold shadow-sm flex items-center gap-0.5"
-        title="放弃分支试招，还原初始复盘记录">
+        title="放弃分支试招，回到变招发生的那一步">
         <span class="material-symbols-rounded text-[13px]">restore</span>
         <span>原谱</span>
       </button>
+      <button id="replay-collapse-btn" onclick="window.gameApp.toggleReplayPanelCollapse()"
+        class="md-btn serif-cn shrink-0 rounded-lg px-2 py-1 bg-white/85 hover:bg-amber-50 border border-amber-200 text-slate-700 text-[11px] font-bold"
+        title="收起或展开复盘窗口">收起</button>
       <button onclick="window.gameApp.shareReplay()"
-        class="md-btn serif-cn shrink-0 rounded-lg px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold shadow-sm flex items-center gap-1">
+        class="md-btn serif-cn shrink-0 rounded-lg px-2 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold shadow-sm flex items-center gap-1">
         <span class="material-symbols-rounded text-[14px]">share</span>
         <span>分享复盘</span>
       </button>
@@ -306,7 +309,7 @@
         title="退出复盘"><span class="material-symbols-rounded text-[15px]">close</span></button>
     </div>
 
-    <div class="p-2.5 space-y-2.5">
+    <div id="replay-panel-body" class="p-2.5 space-y-2.5">
       <!-- 横向滚动步数胶囊时间轴 -->
       <div id="replay-moves-list"
         class="flex items-center gap-1.5 overflow-x-auto py-1 px-1 rounded-xl bg-amber-950/5 border border-amber-900/10 scrollbar-thin">
@@ -419,7 +422,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-2">
               <span class="serif-cn font-black text-sm text-slate-900">揭棋</span>
-              <span class="serif-cn text-[11px] font-bold text-amber-700">点击开启 ▸</span>
+              <span class="serif-cn text-[11px] font-bold text-amber-700">点击开启 ▶</span>
             </div>
             <p class="serif-cn text-xs text-slate-600 leading-relaxed mt-1">将帅明置九宫原点，其余各15子暗置随机摆放；暗子按初始位规则行棋并翻开，明相明仕允许过河</p>
           </div>
@@ -454,10 +457,29 @@
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-2">
-              <span class="serif-cn font-black text-sm text-slate-900">竹林石桌</span>
+              <div class="flex items-center gap-1.5">
+                <span class="serif-cn font-black text-sm text-slate-900">竹林石桌</span>
+                <span class="serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900">古典雅集</span>
+              </div>
               <span class="serif-cn text-[11px] font-bold text-emerald-800">✓ 当前场景</span>
             </div>
             <p class="serif-cn text-xs text-slate-600 leading-relaxed mt-1">翠竹掩映、青石棋案、落英微风的古典公园雅集意境</p>
+          </div>
+        </button>
+        <button type="button" onclick="window.gameApp.switchScene('ancient_battlefield')"
+          class="md-btn w-full text-left rounded-2xl p-3.5 border-2 border-slate-200 bg-white/90 hover:bg-amber-50/50 flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-700 to-amber-700 text-amber-50 flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-rounded text-[20px]">local_fire_department</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5">
+                <span class="serif-cn font-black text-sm text-slate-900">古风战场</span>
+                <span class="serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-900">楚汉峥嵘</span>
+              </div>
+              <span class="serif-cn text-[11px] font-bold text-red-800">点击切换 ▶</span>
+            </div>
+            <p class="serif-cn text-xs text-slate-600 leading-relaxed mt-1">金戈铁马、玄铁点将台、猎猎帅旗与烽火流萤的楚汉古战场意境</p>
           </div>
         </button>
       </div>

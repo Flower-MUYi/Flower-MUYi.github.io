@@ -6,10 +6,13 @@
  *   1. Step-by-step demonstration from initial standard/Jieqi game or custom endgame
  *   2. Exact board & history snapshot preservation (preventing duplicate piece IDs on undo)
  *   3. Mid-replay interactive modification / branching ("复盘中途修改尝试另一种思路"):
- *      - Users can play moves at any replay step to test alternative lines
+ *      - Users can play moves or invoke Grandmaster Hint ("支招") at any replay step
+ *      - In AI modes (简单/困难/宗师), opponent pieces are automatically played by AI during branch trials
  *      - Getting checkmated during a replay trial plays the checkmate animation
  *        WITHOUT ending the game, and prompts the user to click "悔棋" to continue
- *   4. Sharing replay with others via final-board poster & compact binary encoding
+ *   4. Collapsible replay window ("收起" / "展开")
+ *   5. Clicking "原谱" returns to the exact step where the variation branched (not step 0)
+ *   6. Sharing replay with others via final-board poster & compact binary encoding
  *************************************************************************/
 
 function encodeMovesToBase64Url(moves) {
@@ -81,6 +84,30 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   /**
+   * 需求 5：让复盘窗口可以“收起” / “展开”
+   */
+  setReplayPanelCollapsed(collapsed) {
+    this.replayPanelCollapsed = Boolean(collapsed);
+    const bodyEl = document.getElementById('replay-panel-body');
+    const btnEl = document.getElementById('replay-collapse-btn');
+    const headerEl = document.getElementById('replay-panel-header');
+    if (bodyEl) {
+      bodyEl.classList.toggle('hidden', this.replayPanelCollapsed);
+    }
+    if (headerEl) {
+      headerEl.classList.toggle('border-b', !this.replayPanelCollapsed);
+    }
+    if (btnEl) {
+      btnEl.textContent = this.replayPanelCollapsed ? '展开' : '收起';
+    }
+  },
+
+  toggleReplayPanelCollapse() {
+    this.sfx?.playSelect?.();
+    this.setReplayPanelCollapsed(!this.replayPanelCollapsed);
+  },
+
+  /**
    * 初始化/清空复盘会话（在每次新对局或新残局开始时调用）
    */
   initReplaySession(initialBoard = this.engine.board, initialTurn = this.engine.turn, sourceType = 'standard') {
@@ -89,6 +116,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       this.replayMode = false;
       this.replayBranchActive = false;
       this.replayTrialCheckmated = false;
+      this.replayHumanColor = RED;
       document.getElementById('replay-panel')?.classList.add('hidden');
     }
     this.replayInitialFEN = this.exportBoardToFEN(initialBoard, initialTurn);
@@ -99,6 +127,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.replayStepIndex = 0;
     this.replayBranchActive = false;
     this.replayTrialCheckmated = false;
+    this.replayHumanColor = RED;
     this.originalReplayData = null;
     this._lastRenderedReplayListHash = '';
 
@@ -120,12 +149,21 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   /**
-   * 当用户在复盘模式中主动走子尝试另一种思路时，从当前步数截断后续步骤并进入推演分支
+   * 当用户在复盘模式中主动走子或调用支招尝试另一种思路时，从当前步数截断后续步骤并进入推演分支
    */
-  prepareReplayBranchAtCurrentStep() {
+  prepareReplayBranchAtCurrentStep(humanMoverColor = null) {
     if (!this.replayMode) return;
     this.stopReplayAutoPlay();
     this.replayTrialCheckmated = false;
+
+    const curIdx = Math.max(0, Math.min((this.replaySnapshots?.length || 1) - 1, this.replayStepIndex || 0));
+    const currentSnapIsOriginal = !this.replaySnapshots?.[curIdx]?.isBranchStep;
+
+    if (humanMoverColor) {
+      this.replayHumanColor = humanMoverColor;
+    } else if (!this.replayBranchActive || currentSnapIsOriginal || !this.replayHumanColor) {
+      this.replayHumanColor = this.engine.turn || RED;
+    }
 
     if (!this.originalReplayData && this.replaySnapshots) {
       this.originalReplayData = {
@@ -136,11 +174,13 @@ Object.assign(Xiangqi3DApp.prototype, {
           capturedBlack: (m.capturedBlack || []).map(p => ({ ...p }))
         })),
         outcome: this.replayOutcome ? { ...this.replayOutcome } : null,
-        branchOriginIndex: this.replayStepIndex
+        branchOriginIndex: curIdx
       };
+    } else if (this.originalReplayData && (!this.replayBranchActive || currentSnapIsOriginal)) {
+      // 需求 6：准确记录变招发生的那一步，点击“原谱”时直接回到该变招步而非从头再来
+      this.originalReplayData.branchOriginIndex = curIdx;
     }
 
-    const curIdx = Math.max(0, Math.min((this.replaySnapshots?.length || 1) - 1, this.replayStepIndex || 0));
     this.replaySnapshots = this.replaySnapshots.slice(0, curIdx + 1);
     this.replayMoves = (this.replayMoves || []).slice(0, curIdx);
     this.replayStepIndex = curIdx;
@@ -150,18 +190,27 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   /**
-   * 还原复盘原谱（退出分支推演，回到原对局记录）
+   * 需求 6：还原复盘原谱（退出分支推演，回到变招发生的那一步）
    */
   restoreOriginalReplayLine() {
     if (!this.replayMode || !this.originalReplayData) return;
     this.stopReplayAutoPlay();
     this.sfx.playSelect();
+    this.isBusy = false;
+    this.aiCallback = null;
+    document.getElementById('ai-thinking')?.classList.add('hidden');
+    document.getElementById('ai-thinking')?.classList.remove('inline-flex');
     this.clearCheckmateVFX();
     this.clearCheckmateHighlights();
+    this.clearGrandmasterHint3D?.();
     this.hideIllegalMovePrompt();
     this.replayTrialCheckmated = false;
     this.replayBranchActive = false;
     this._lastRenderedReplayListHash = '';
+
+    const branchStep = typeof this.originalReplayData.branchOriginIndex === 'number'
+      ? this.originalReplayData.branchOriginIndex
+      : 0;
 
     this.replaySnapshots = this.originalReplayData.snapshots.map(s => this.cloneReplayStepSnapshot(s));
     this.replayMoves = this.originalReplayData.moves.map(m => ({
@@ -171,9 +220,9 @@ Object.assign(Xiangqi3DApp.prototype, {
     }));
     this.replayOutcome = this.originalReplayData.outcome ? { ...this.originalReplayData.outcome } : null;
 
-    const targetStep = Math.min(this.originalReplayData.branchOriginIndex || 0, this.replaySnapshots.length - 1);
+    const targetStep = Math.max(0, Math.min(branchStep, this.replaySnapshots.length - 1));
     this.applyReplaySnapshotAt(targetStep, false);
-    this.showCenterCallout('已还原初始复盘棋谱', RED);
+    this.showCenterCallout(`已还原原谱 · 回到第 ${targetStep} 步`, RED);
   },
 
   /**
@@ -256,6 +305,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.hideCycleWarningBanner();
     this.clearCheckmateHighlights();
     this.clearCheckmateVFX();
+    this.clearGrandmasterHint3D?.();
     this.clearLegalMoveIndicators();
     this.selectedSquare = null;
 
@@ -272,9 +322,10 @@ Object.assign(Xiangqi3DApp.prototype, {
     const wasTrialCheckmated = Boolean(this.replayTrialCheckmated);
     this.replayTrialCheckmated = false;
 
-    // 计算需要回退的步数：若在人机模式下的推演分支中轮到红方（如刚被黑AI绝杀或AI刚应手），一次回退2步回到红方走棋前
+    const humanSide = this.replayHumanColor || RED;
+    // 计算需要回退的步数：若在人机模式下的推演分支中轮到玩家执子方（如刚被AI绝杀或AI刚应手），一次回退2步回到玩家走棋前
     let stepsBack = 1;
-    if (this.replayBranchActive && this.gameMode !== 'pvp' && this.engine.turn === RED && this.replayStepIndex >= 2) {
+    if (this.replayBranchActive && this.gameMode !== 'pvp' && this.engine.turn === humanSide && this.replayStepIndex >= 2) {
       const prevSnap = this.replaySnapshots[this.replayStepIndex];
       const prevPrevSnap = this.replaySnapshots[this.replayStepIndex - 1];
       if (prevSnap?.isBranchStep && prevPrevSnap?.isBranchStep) {
@@ -342,6 +393,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.clearLegalMoveIndicators();
     this.clearCheckmateVFX();
     this.clearCheckmateHighlights();
+    this.clearGrandmasterHint3D?.();
     this.selectedSquare = null;
 
     if (!this.replayMode) {
@@ -373,7 +425,9 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.replayMode = true;
     this.replayBranchActive = false;
     this.replayTrialCheckmated = false;
+    this.replayHumanColor = RED;
     this._lastRenderedReplayListHash = '';
+    this.setReplayPanelCollapsed(false);
     document.getElementById('replay-panel')?.classList.remove('hidden');
 
     this.applyReplaySnapshotAt(0, false);
@@ -384,12 +438,17 @@ Object.assign(Xiangqi3DApp.prototype, {
    */
   exitReplayMode(restoreBoard = true) {
     this.stopReplayAutoPlay();
+    this.isBusy = false;
+    this.aiCallback = null;
+    document.getElementById('ai-thinking')?.classList.add('hidden');
+    document.getElementById('ai-thinking')?.classList.remove('inline-flex');
     this.replayMode = false;
     this.replayBranchActive = false;
     this.replayTrialCheckmated = false;
     this._lastRenderedReplayListHash = '';
     this.clearCheckmateVFX();
     this.clearCheckmateHighlights();
+    this.clearGrandmasterHint3D?.();
     this.hideIllegalMovePrompt();
     document.getElementById('replay-panel')?.classList.add('hidden');
 
@@ -478,8 +537,12 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.clearLegalMoveIndicators();
     this.clearCheckmateVFX();
     this.clearCheckmateHighlights();
+    this.clearGrandmasterHint3D?.();
 
     const snap = this.replaySnapshots[targetIdx];
+    if (targetIdx === 0) {
+      this.resetTelemetryUI?.();
+    }
 
     if (animateMove && targetIdx === prevIdx + 1 && snap.move) {
       const prevSnap = this.replaySnapshots[prevIdx];
@@ -519,6 +582,7 @@ Object.assign(Xiangqi3DApp.prototype, {
               this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color);
               this.sfx.playAttackShatter();
             } else if (movingPiece) {
+              this.spawnMoveImpactWave?.(endPos.x, endPos.z, false);
               this.sfx.playMove(movingPiece.color, movingPiece.type);
             }
             this.syncPiecesFromEngine();
@@ -567,7 +631,8 @@ Object.assign(Xiangqi3DApp.prototype, {
     const stepBadge = document.getElementById('replay-step-badge');
     if (stepBadge) {
       const sourceLabel = this.replaySourceType === 'endgame' ? '残局起点' : '初始棋局';
-      const branchTag = this.replayBranchActive ? ' · [分支推演中]' : ' · [可直接走子试招]';
+      const aiOppLabel = this.gameMode === 'pvp' ? '双人推演' : 'AI应手/可支招';
+      const branchTag = this.replayBranchActive ? ` · [分支·${aiOppLabel}]` : ` · [可走子/支招]`;
       if (cur === 0) {
         stepBadge.textContent = `第 0 / ${totalSteps} 步 · ${sourceLabel}${branchTag}`;
       } else if (cur === totalSteps && this.replayOutcome && !this.replayBranchActive) {
@@ -617,18 +682,21 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   jumpToReplayStep(idx) {
+    if (this.isBusy) return;
     this.stopReplayAutoPlay();
     this.sfx.playSelect();
     this.applyReplaySnapshotAt(idx, false);
   },
 
   replayFirstStep() {
+    if (this.isBusy) return;
     this.stopReplayAutoPlay();
     this.sfx.playSelect();
     this.applyReplaySnapshotAt(0, false);
   },
 
   replayPrevStep() {
+    if (this.isBusy) return;
     this.stopReplayAutoPlay();
     if (this.replayStepIndex <= 0) return;
     this.sfx.playSelect();
@@ -636,6 +704,7 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   replayNextStep() {
+    if (this.isBusy) return;
     this.stopReplayAutoPlay();
     const total = (this.replaySnapshots?.length || 1) - 1;
     if (this.replayStepIndex >= total) return;
@@ -643,6 +712,7 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   replayLastStep() {
+    if (this.isBusy) return;
     this.stopReplayAutoPlay();
     this.sfx.playSelect();
     const total = (this.replaySnapshots?.length || 1) - 1;
@@ -650,6 +720,7 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   toggleReplayAutoPlay() {
+    if (this.isBusy) return;
     if (this.replayAutoTimer) {
       this.stopReplayAutoPlay();
       this.sfx.playSelect();

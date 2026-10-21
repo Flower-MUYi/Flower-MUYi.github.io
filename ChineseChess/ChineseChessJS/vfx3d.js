@@ -1,5 +1,5 @@
 /*************************************************************************
- * 3D ULTIMATE CHECKMATE VFX & GRANDMASTER HINT TRAJECTORY MODULE
+ * 3D ULTIMATE CHECKMATE VFX, MOVE IMPACT RIPPLES & GRANDMASTER HINT TRAJECTORY MODULE
  * Extends Xiangqi3DApp.prototype
  *************************************************************************/
 
@@ -12,11 +12,23 @@ Object.assign(Xiangqi3DApp.prototype, {
   showCheckmateHighlights(coords) {
     this.clearCheckmateHighlights();
     if (!coords || !coords.length) return;
+    const warnTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('warning') : null;
+    const goldTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('selected') : null;
+
     coords.forEach((pt, idx) => {
       const pos = gridToWorld(pt.r, pt.c);
+      const tex = idx === 0 ? warnTex : goldTex;
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(0.48, 0.62, 36),
-        new THREE.MeshBasicMaterial({ color: idx === 0 ? 0xdc2626 : 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.92 })
+         tex ? new THREE.PlaneGeometry(1.42, 1.42) : new THREE.RingGeometry(0.48, 0.62, 48),
+        new THREE.MeshBasicMaterial({
+          map: tex || null,
+          color: tex ? 0xffffff : (idx === 0 ? 0xdc2626 : 0xf59e0b),
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.96,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
       );
       ring.rotation.x = -Math.PI / 2;
       ring.position.set(pos.x, 0.032, pos.z);
@@ -33,10 +45,21 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.checkmateVFXAnimations = [];
     this.vfxAtmosphereTimer = 0;
     if (this.scene && this.sunLight && this.hemiLight) {
-      this.scene.background.setHex(0xdce8dc);
-      this.scene.fog.color.setHex(0xdce8dc);
-      this.sunLight.intensity = 1.15;
-      this.hemiLight.intensity = 0.75;
+      const sc = this.getActiveSceneConfig?.() || {
+        bgHex: 0xdce8dc,
+        sunColor: 0xfff5e0,
+        sunIntensity: 1.15,
+        hemiSky: 0xfef9e7,
+        hemiGround: 0x688264,
+        hemiIntensity: 0.75
+      };
+      this.scene.background.setHex(sc.bgHex);
+      if (this.scene.fog) this.scene.fog.color.setHex(sc.bgHex);
+      this.sunLight.color.setHex(sc.sunColor || 0xfff5e0);
+      this.sunLight.intensity = sc.sunIntensity || 1.15;
+      this.hemiLight.color.setHex(sc.hemiSky || 0xfef9e7);
+      this.hemiLight.groundColor.setHex(sc.hemiGround || 0x688264);
+      this.hemiLight.intensity = sc.hemiIntensity || 0.75;
     }
   },
 
@@ -164,12 +187,14 @@ Object.assign(Xiangqi3DApp.prototype, {
     baguaInner.rotation.x = -Math.PI / 2;
     baguaInner.position.set(kPos.x, 0.06, kPos.z);
 
+    const coronaTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('selected') : null;
     const skyHalo = new THREE.Mesh(
-      new THREE.RingGeometry(1.45, 1.68, 48),
+      coronaTex ? new THREE.PlaneGeometry(3.4, 3.4) : new THREE.RingGeometry(1.45, 1.68, 48),
       new THREE.MeshBasicMaterial({
+        map: coronaTex || null,
         color: 0xfef08a,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.85,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
@@ -1039,25 +1064,96 @@ Object.assign(Xiangqi3DApp.prototype, {
     }
   },
 
+  /**
+   * 美化升级：落子/吃子水墨流光涟漪与玉石崩裂星芒粒子
+   */
+  spawnMoveImpactWave(worldX, worldZ, isCapture = false) {
+    if (!this.scene) return;
+    const markerTex = typeof getBoardMarkerTexture === 'function'
+      ? getBoardMarkerTexture(isCapture ? 'warning' : 'last_to')
+      : null;
+    const mat = new THREE.MeshBasicMaterial({
+      map: markerTex || null,
+      color: isCapture ? 0xfef08a : 0xfde68a,
+      transparent: true,
+      opacity: isCapture ? 0.95 : 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    const waveMesh = new THREE.Mesh(
+      markerTex ? new THREE.PlaneGeometry(1.0, 1.0) : new THREE.RingGeometry(0.32, 0.46, 36),
+      mat
+    );
+    waveMesh.rotation.x = -Math.PI / 2;
+    waveMesh.position.set(worldX, 0.024, worldZ);
+    this.scene.add(waveMesh);
+    if (!this.impactWaves) this.impactWaves = [];
+    this.impactWaves.push({
+      mesh: waveMesh,
+      age: 0,
+      maxAge: isCapture ? 0.65 : 0.48,
+      maxScale: isCapture ? 2.45 : 1.65
+    });
+  },
+
   spawnShatterFragments(worldX, worldZ, color) {
     const isRed = color === RED;
-    const fragMat = new THREE.MeshStandardMaterial({ color: isRed ? 0xf5ecd9 : 0x111827, roughness: 0.25 });
-    for (let i = 0; i < 14; i++) {
-      const mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.1, 0), fragMat);
-      mesh.material.transparent = true;
-      mesh.position.set(worldX, 0.2, worldZ);
+    this.spawnMoveImpactWave(worldX, worldZ, true);
+    const glowTex = typeof getGlowParticleTexture === 'function' ? getGlowParticleTexture() : null;
+
+    for (let i = 0; i < 16; i++) {
+      const fragMat = new THREE.MeshStandardMaterial({
+        color: isRed ? 0xf5ecd9 : 0x1e293b,
+        emissive: isRed ? 0xd97706 : 0x38bdf8,
+        emissiveIntensity: 0.35,
+        roughness: 0.22,
+        metalness: 0.3,
+        transparent: true,
+        opacity: 1
+      });
+      const mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.08 + Math.random() * 0.04, 0), fragMat);
+      mesh.position.set(worldX, 0.22, worldZ);
       this.scene.add(mesh);
       this.shatterParticles.push({
         mesh,
-        vx: (Math.random() - 0.5) * 4,
-        vy: 3 + Math.random() * 3,
-        vz: (Math.random() - 0.5) * 4,
+        vx: (Math.random() - 0.5) * 4.6,
+        vy: 3.2 + Math.random() * 3.4,
+        vz: (Math.random() - 0.5) * 4.6,
         life: 0,
-        maxLife: 1.0
+        maxLife: 0.95
       });
+    }
+
+    if (glowTex) {
+      for (let i = 0; i < 12; i++) {
+        const spMat = new THREE.SpriteMaterial({
+          map: glowTex,
+          color: i % 2 === 0 ? 0xfef08a : (isRed ? 0xef4444 : 0x38bdf8),
+          transparent: true,
+          opacity: 0.95,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        const sp = new THREE.Sprite(spMat);
+        sp.scale.set(0.42, 0.42, 1);
+        sp.position.set(worldX, 0.25, worldZ);
+        this.scene.add(sp);
+        this.shatterParticles.push({
+          mesh: sp,
+          vx: (Math.random() - 0.5) * 5.2,
+          vy: 2.5 + Math.random() * 4.0,
+          vz: (Math.random() - 0.5) * 5.2,
+          life: 0,
+          maxLife: 0.75
+        });
+      }
     }
   },
 
+  /**
+   * 美化升级：宗师支招 3D 流光虹桥与落点灵柱特效
+   */
   showGrandmasterHint3D(move) {
     this.clearGrandmasterHint3D();
     if (!this.scene || !window.THREE) return;
@@ -1067,24 +1163,71 @@ Object.assign(Xiangqi3DApp.prototype, {
     const b = gridToWorld(move.tr, move.tc);
     const curve = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(a.x, 0.36, a.z),
-      new THREE.Vector3((a.x + b.x) / 2, 1.45, (a.z + b.z) / 2),
-      new THREE.Vector3(b.x, 0.25, b.z)
+      new THREE.Vector3((a.x + b.x) / 2, 1.55, (a.z + b.z) / 2),
+      new THREE.Vector3(b.x, 0.26, b.z)
     );
-    this.hintVFXGroup.add(
-      new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 36, 0.055, 10, false),
-        new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false })
-      )
+
+    // 内核金芒虹管 + 外层柔光晕管
+    const coreTube = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 44, 0.042, 12, false),
+      new THREE.MeshBasicMaterial({
+        color: 0xfef9c3,
+        transparent: true,
+        opacity: 0.96,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
     );
+    const auraTube = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 44, 0.095, 12, false),
+      new THREE.MeshBasicMaterial({
+        color: 0xf59e0b,
+        transparent: true,
+        opacity: 0.45,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    this.hintVFXGroup.add(coreTube, auraTube);
+
+    const startTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('selected') : null;
+    const endTex = typeof getMoveIndicatorTexture === 'function' ? getMoveIndicatorTexture('capture_safe') : null;
+
     [a, b].forEach((pos, i) => {
+      const tex = i === 0 ? startTex : endTex;
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(i ? 0.36 : 0.44, i ? 0.52 : 0.56, 36),
-        new THREE.MeshBasicMaterial({ color: i ? 0x10b981 : 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.95 })
+        tex ? new THREE.PlaneGeometry(1.36, 1.36) : new THREE.RingGeometry(0.38, 0.54, 36),
+        new THREE.MeshBasicMaterial({
+          map: tex || null,
+          color: tex ? 0xffffff : (i ? 0x10b981 : 0xf59e0b),
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.95,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
       );
       ring.rotation.x = -Math.PI / 2;
-      ring.position.set(pos.x, 0.04, pos.z);
+      ring.position.set(pos.x, 0.038, pos.z);
       this.hintVFXGroup.add(ring);
     });
+
+    // 落点接引光柱
+    const safeAura = typeof getTacticalAuraTextures === 'function' ? getTacticalAuraTextures('safe') : null;
+    const beacon = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.42, 1.25, 24, 1, true),
+      new THREE.MeshBasicMaterial({
+        map: safeAura ? safeAura.cylinderMap : null,
+        color: 0x6ee7b7,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      })
+    );
+    beacon.position.set(b.x, 0.64, b.z);
+    this.hintVFXGroup.add(beacon);
   },
 
   clearGrandmasterHint3D() {

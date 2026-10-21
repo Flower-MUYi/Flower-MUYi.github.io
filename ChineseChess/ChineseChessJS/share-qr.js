@@ -84,6 +84,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.clearCheckmateHighlights();
     document.getElementById('custom-endgame-panel')?.classList.remove('hidden');
     this.chooseEditorPiece('r', 'k');
+    this.resetTelemetryUI?.();
   },
 
   chooseEditorPiece(color, type) {
@@ -171,6 +172,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         });
       }
     }
+    this.resetTelemetryUI?.();
     this.updateRestartButtonLabel();
     this.updateUI(this.engine.isInCheck(this.engine.turn));
   },
@@ -275,6 +277,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     }
 
     this.syncPiecesFromEngine();
+    this.resetTelemetryUI?.();
     this.updateRestartButtonLabel();
     this.updateUI(this.engine.isInCheck(turn));
     return true;
@@ -416,14 +419,14 @@ Object.assign(Xiangqi3DApp.prototype, {
       ctx.fill();
     });
 
-    ctx.font = '900 54px "XiangqiCalligraphy", "STKaiti", "Kaiti SC", "KaiTi", "Noto Serif SC", "Songti SC", serif';
+    ctx.font = '900 54px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", "KaiTi", "Songti SC", serif';
     ctx.fillStyle = 'rgba(255, 248, 230, 0.9)';
     ctx.fillText(posterTitle, W / 2 + 2, 106);
     ctx.fillStyle = '#361c0a';
     ctx.fillText(posterTitle, W / 2, 104);
 
     // 先手/终局状态锦囊铭牌
-    ctx.font = 'bold 24px "XiangqiCalligraphy", "STKaiti", "Kaiti SC", "KaiTi", "Noto Serif SC", serif';
+    ctx.font = 'bold 24px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", "KaiTi", serif';
     const textMetrics = ctx.measureText(badgeText);
     const badgeW = Math.max(280, Math.min(760, textMetrics.width + 72));
     const badgeX = (W - badgeW) / 2;
@@ -771,16 +774,16 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#361c0a';
-    ctx.font = '900 35px "XiangqiCalligraphy", "STKaiti", "Kaiti SC", "KaiTi", "Noto Serif SC", serif';
+    ctx.font = '900 35px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", "KaiTi", serif';
     ctx.fillText(footerHeadline, cardX + 48, cardY + 66);
 
     ctx.fillStyle = '#6b4c2b';
-    ctx.font = '600 22px "XiangqiCalligraphy", "STKaiti", "Kaiti SC", "KaiTi", "Noto Serif SC", serif';
+    ctx.font = '600 22px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", "KaiTi", serif';
     ctx.fillText(footerSub, cardX + 48, cardY + 118);
 
     ctx.fillStyle = '#991b1b';
-    ctx.font = 'bold 19px "XiangqiCalligraphy", "STKaiti", "Kaiti SC", "KaiTi", "Noto Serif SC", serif';
-    ctx.fillText('◆ 3D 中国象棋 · 竹林石桌古谱演武', cardX + 48, cardY + 166);
+    ctx.font = 'bold 19px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", "KaiTi", serif';
+    ctx.fillText(this.currentSceneId === 'ancient_battlefield' ? '◆ 3D 中国象棋 · 古风战场楚汉演武' : '◆ 3D 中国象棋 · 竹林石桌古谱演武', cardX + 48, cardY + 166);
 
     const finalizePoster = (source) => {
       const qrBoxX = cardX + cardW - 198;
