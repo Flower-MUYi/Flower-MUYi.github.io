@@ -1560,10 +1560,10 @@ footer > div > button.hidden,
           <span>🎣 钓鱼马</span>
           <span class="text-[10px] text-amber-300/80 font-normal">金钩碧浪收网</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('standing_horse_chariot', '立马车', '断崖烈日 · 立马斩将')"
+        <button onclick="window.gameApp.previewUltimateVFX('standing_horse_chariot', '列马车', '断崖赤日 · 列马斩将')"
           class="md-btn px-2 py-2 rounded-xl bg-slate-900/95 hover:bg-red-950 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/40">
-          <span>🐎 立马车</span>
-          <span class="text-[10px] text-amber-300/80 font-normal">烈日战马破阵</span>
+          <span>🐎 列马车</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">断崖赤日破阵</span>
         </button>
         <button onclick="window.gameApp.previewUltimateVFX('double_check', '双将', '双将临门 · 金锤破空')"
           class="md-btn px-2 py-2 rounded-xl bg-slate-900/95 hover:bg-red-950 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/40">
@@ -1595,10 +1595,10 @@ footer > div > button.hidden,
           <span>🔒 困毙</span>
           <span class="text-[10px] text-amber-300/80 font-normal">八卦石阵封死</span>
         </button>
-        <button onclick="window.gameApp.previewUltimateVFX('frost_lotus_strike', '雪拥蓝关', '冰莲绽放 · 寒霜封魂')"
+        <button onclick="window.gameApp.previewUltimateVFX('frost_lotus_strike', '海底捞月', '沧海映月 · 碧浪涌莲')"
           class="md-btn px-2 py-2 rounded-xl bg-slate-900/95 hover:bg-red-950 text-amber-100 text-xs font-bold serif-cn flex flex-col items-center gap-0.5 border border-amber-500/40 col-span-3 sm:col-span-2">
-          <span>❄️ 雪拥蓝关 · 冰封绝杀</span>
-          <span class="text-[10px] text-amber-300/80 font-normal">寒冰莲华·霜刃碎空</span>
+          <span>🌕 海底捞月 · 碧海涌莲</span>
+          <span class="text-[10px] text-amber-300/80 font-normal">水中映月·冰莲破浪</span>
         </button>
       </div>
     </div>
@@ -2433,11 +2433,29 @@ class SoundEffects {
       nGain.connect(dest);
       neigh.start(now + 0.96);
       neigh.stop(now + 1.68);
+    } else if (vfxType === 'fishing_horse' || vfxType === 'frost_lotus_strike' || vfxType === 'sea_bottom_moon') {
+      // 碧海漩涡与水中捞月浪涌音效
+      triggerNoiseBurst(0.72, 0.85, 1800, 320, 0.78, 'bandpass');
+      triggerNoiseBurst(1.38, 0.65, 3600, 480, 0.82, 'bandpass');
+      [587.33, 880.0, 1174.66, 1760.0].forEach((freq, idx) => {
+        const t0 = now + 0.88 + idx * 0.12;
+        const chime = this.ctx.createOscillator();
+        const cGain = this.ctx.createGain();
+        chime.type = 'sine';
+        chime.frequency.setValueAtTime(freq, t0);
+        chime.frequency.exponentialRampToValueAtTime(freq * 1.02, t0 + 0.45);
+        cGain.gain.setValueAtTime(0.16, t0);
+        cGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.48);
+        chime.connect(cGain);
+        cGain.connect(dest);
+        chime.start(t0);
+        chime.stop(t0 + 0.50);
+      });
     } else {
       triggerNoiseBurst(1.08, 0.55, 4800, 340, 0.75, 'bandpass');
     }
 
-    this.playVictorySeal(2.35);
+    this.playVictorySeal(2.52);
   }
 }
 </script>
@@ -3980,6 +3998,10 @@ class XiangqiEngine {
 }
 </script>
   <script>
+/*************************************************************************
+ * 25+ CLASSIC & JJ XIANGQI CHECKMATE PATTERN RECOGNITION ENGINE
+ * (古谱杀法与JJ象棋十七大绝杀因果推演智能判定系统)
+ *************************************************************************/
 class CheckmateClassifier {
   static getCatalog() {
     return [
@@ -4011,7 +4033,7 @@ class CheckmateClassifier {
         subBanner: '金甲神将 · 白脸封喉',
         badge: '绝杀名局 · 对面笑',
         poem: '“两王相见本无情，借帅之力锁中庭；金甲破空施妙手，对面笑里定输赢。”',
-        desc: '妙借将帅不照面规则，以己方将帅隔空锁死肋道，协同主力一击绝杀。'
+        desc: '妙借将帅不照面规则，以己方将帅隔空锁死肋道或掩护强子，协同主力一击绝杀。'
       },
       {
         vfxType: 'double_cannon',
@@ -4031,7 +4053,7 @@ class CheckmateClassifier {
         subBanner: '铁骑锁喉 · 火炮轰门',
         badge: '绝杀名局 · 马后炮',
         poem: '“骏马当先控将门，火炮随后定乾坤；前锁咽喉后催命，千古名局第一功。”',
-        desc: '战马封锁敌将退路或作炮架，后方火炮隔山轰击，马炮合一绝杀九宫。'
+        desc: '战马封锁敌将退路或兼作炮架，后方火炮隔山轰击，马炮合一绝杀九宫。'
       },
       {
         vfxType: 'iron_bolt',
@@ -4041,7 +4063,7 @@ class CheckmateClassifier {
         subBanner: '玄铁重门 · 锁链封宫',
         badge: '绝杀名局 · 铁门栓',
         poem: '“中炮巍然镇神州，轻车破门入龙楼；铁栓横锁生死路，将士束手万古愁。”',
-        desc: '中炮死锁九宫中轴，车或兵卒切入底肋一击致命，如玄铁重门上栓。'
+        desc: '中炮死锁九宫中轴，车或兵卒切入底线或肋道一击致命，如玄铁重门上栓。'
       },
       {
         vfxType: 'side_tiger',
@@ -4051,17 +4073,17 @@ class CheckmateClassifier {
         subBanner: '猛虎下山 · 侧翼扑杀',
         badge: '绝杀名局 · 侧面虎',
         poem: '“猛虎咆哮跃侧翼，车马纵横逼玉阶；任尔九宫多险固，狂飙一扑万军摧。”',
-        desc: '战马跃居九宫侧翼高点，协同强车横扫将门，势如猛虎侧扑。'
+        desc: '战马跃居九宫侧翼高钓或虎位控场，协同强车横扫将门，势如猛虎侧扑。'
       },
       {
         vfxType: 'octagon_horse',
         name: '八角马',
         title: '八角马 · 绝杀',
         stampText: '八角马',
-        subBanner: '明月银枪 · 挂角定乾',
+        subBanner: '明月银枪 · 八角锁阵',
         badge: '绝杀名局 · 八角马',
         poem: '“骏马凌空挂八角，斜刺银枪破月华；八面威风封去路，将在城头计已穷。”',
-        desc: '战马据守九宫士角与敌将呈对角相望，既直接将军又卡死将门，车马联攻绝杀。'
+        desc: '战马据守九宫士角与敌将呈对角定马之势，锁死纵横两路，车马联攻绝杀。'
       },
       {
         vfxType: 'fishing_horse',
@@ -4071,24 +4093,24 @@ class CheckmateClassifier {
         subBanner: '碧海漩涡 · 垂钓擒王',
         badge: '绝杀名局 · 钓鱼马',
         poem: '“稳坐寒江垂钓钩，金鞍玉勒锁王侯；车马联营施巧计，一朝收网万事休。”',
-        desc: '战马高悬敌宫三路或二路钓位锁死将门，强车长驱直入完成致命绝杀。'
+        desc: '战马高悬敌宫三七路钓位锁死将门，强车远距离直入底线完成致命绝杀。'
       },
       {
         vfxType: 'standing_horse_chariot',
-        name: '立马车',
-        title: '立马车 · 绝杀',
-        stampText: '立马车',
-        subBanner: '断崖烈日 · 立马斩将',
-        badge: '绝杀名局 · 立马车',
-        poem: '“烈日悬空照断崖，天驹独立傲风沙；长车直破中宫帐，一骑绝尘斩乱麻。”',
-        desc: '战马驻守宫前掩护，强车直插九宫肋道或花心，车马并立绝杀敌将。'
+        name: '列马车',
+        title: '列马车 · 绝杀',
+        stampText: '列马车',
+        subBanner: '断崖赤日 · 列马斩将',
+        badge: '绝杀名局 · 列马车',
+        poem: '“赤日悬空照断崖，天驹独立傲风沙；长车直破中宫帐，一骑绝尘斩乱麻。”',
+        desc: '战马驻守宫前护佑，强车贴身切入九宫肋道或花心，车马并列绝杀敌将。'
       },
       {
         vfxType: 'double_check',
         name: '双将',
         title: '双将 · 绝杀',
         stampText: '双将',
-        subBanner: '金锤破石 · 双路齐发',
+        subBanner: '金剑破石 · 双路齐发',
         badge: '绝杀名局 · 双将',
         poem: '“一子跃出惊天地，双刃齐发锁九宫；任凭神仙多妙算，难挡雷霆两路攻。”',
         desc: '双子同时从两路发起将军，敌方无法靠吃子或垫子兼顾化解，立判绝杀。'
@@ -4108,10 +4130,10 @@ class CheckmateClassifier {
         name: '卧槽马',
         title: '卧槽马 · 绝杀',
         stampText: '卧槽马',
-        subBanner: '金印破空 · 神驹跃槽',
+        subBanner: '金门破空 · 神驹跃槽',
         badge: '绝杀名局 · 卧槽马',
         poem: '“千里良驹跃卧槽，将军抽车气势豪；车炮相随封退路，金驹破阵斩天骄。”',
-        desc: '战马跃入敌方底线前一格的卧槽要津致命将军，配合车炮封锁将门完成绝杀。'
+        desc: '战马跃入敌方底线前一格的卧槽要津致命将军，配合车炮或帅力封锁将门完成绝杀。'
       },
       {
         vfxType: 'smothered_kill',
@@ -4145,18 +4167,19 @@ class CheckmateClassifier {
       },
       {
         vfxType: 'frost_lotus_strike',
-        name: '绝杀',
-        title: '雪拥蓝关 · 绝杀',
-        stampText: '绝杀',
-        subBanner: '冰莲绽放 · 一击必杀',
-        badge: '终局裁定 · 绝杀',
-        poem: '“寒芒一点绽冰莲，杀气纵横贯九天；妙算神机催敌胆，一着绝杀定山川。”',
-        desc: '攻方子力精密协同锁死敌将全部生路，发起致命一击完成绝杀。'
+        name: '海底捞月',
+        title: '海底捞月 · 绝杀',
+        stampText: '海底捞月',
+        subBanner: '沧海映月 · 碧浪涌莲',
+        badge: '绝杀名局 · 海底捞月',
+        poem: '“金轮沉海映寒波，碧浪翻莲锁奈何；莫道微兵难近驾，海底捞月奏凯歌。”',
+        desc: '攻方妙用沉底子力于九宫海底横向逼宫催命，破除敌方护驾防线一击绝杀。'
       }
     ];
   }
 
   static getMetaByType(vfxType) {
+    if (vfxType === 'sea_bottom_moon') vfxType = 'frost_lotus_strike';
     const list = CheckmateClassifier.getCatalog();
     return list.find(item => item.vfxType === vfxType) || list[list.length - 1];
   }
@@ -4196,11 +4219,11 @@ class CheckmateClassifier {
     const buildResult = (vfxType, highlightCoords, extra = {}) => {
       const meta = CheckmateClassifier.getMetaByType(vfxType);
       return {
-        title: meta.title,
-        stampText: meta.stampText,
-        subBanner: meta.subBanner,
-        badge: meta.badge,
-        poem: meta.poem,
+        title: extra.title || meta.title,
+        stampText: extra.stampText || meta.stampText,
+        subBanner: extra.subBanner || meta.subBanner,
+        badge: extra.badge || meta.badge,
+        poem: extra.poem || meta.poem,
         analysis: extra.analysis || meta.desc,
         vfxType: meta.vfxType,
         highlightCoords: dedupeCoords(highlightCoords),
@@ -4211,24 +4234,29 @@ class CheckmateClassifier {
       };
     };
 
+    // 1. 欠行 · 困毙 (Stalemate: Not in check, but no legal moves)
     if (!inCheck) {
       return buildResult('stalemate_trap', [kingCoord], {
-        analysis: `${loserColor === RED ? '红方' : '黑方'}全局子力均被封锁，无合法着法可走，依规判【困毙】负。`
+        analysis: `${loserColor === RED ? '红方' : '黑方'}虽未被直接将军，但全局子力均被封锁或牵制，无任何合法着法可走，依规判【困毙】负。`
       });
     }
 
     const checkers = [];
     const attackerPieces = [];
+    const loserPieces = [];
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 9; c++) {
         const p = board[r][c];
-        if (p && p.color === winnerColor) {
-          const effType = p.isHidden ? (p.posType || p.type) : p.type;
+        if (!p) continue;
+        const effType = p.isHidden ? (p.posType || p.type) : p.type;
+        if (p.color === winnerColor) {
           attackerPieces.push({ r, c, piece: p, type: effType });
           const moves = engine.getPseudoMoves(r, c, board);
           if (moves.some(m => m.tr === kr && m.tc === kc)) {
             checkers.push({ r, c, piece: p, type: effType });
           }
+        } else {
+          loserPieces.push({ r, c, piece: p, type: effType });
         }
       }
     }
@@ -4254,29 +4282,35 @@ class CheckmateClassifier {
       piece: lastMover || { type: 'r', char: winnerColor === RED ? '俥' : '車', color: winnerColor }
     };
 
-    const countBetweenOnLine = (r1, c1, r2, c2) => {
+    const countBetweenOnLine = (r1, c1, r2, c2, customBoard = board) => {
       if (r1 !== r2 && c1 !== c2) return -1;
       let count = 0;
       const dr = Math.sign(r2 - r1);
       const dc = Math.sign(c2 - c1);
       let curR = r1 + dr, curC = c1 + dc;
       while (curR !== r2 || curC !== c2) {
-        if (board[curR][curC]) count++;
+        if (customBoard[curR][curC]) count++;
         curR += dr;
         curC += dc;
       }
       return count;
     };
 
-    const getPiecesBetweenOnLine = (r1, c1, r2, c2) => {
+    const getPiecesBetweenOnLine = (r1, c1, r2, c2, customBoard = board) => {
       if (r1 !== r2 && c1 !== c2) return [];
       const list = [];
       const dr = Math.sign(r2 - r1);
       const dc = Math.sign(c2 - c1);
       let curR = r1 + dr, curC = c1 + dc;
       while (curR !== r2 || curC !== c2) {
-        if (board[curR][curC]) {
-          list.push({ r: curR, c: curC, piece: board[curR][curC] });
+        if (customBoard[curR][curC]) {
+          const p = customBoard[curR][curC];
+          list.push({
+            r: curR,
+            c: curC,
+            piece: p,
+            type: p.isHidden ? (p.posType || p.type) : p.type
+          });
         }
         curR += dr;
         curC += dc;
@@ -4284,37 +4318,107 @@ class CheckmateClassifier {
       return list;
     };
 
+    const analyzeKingStep = (nr, nc) => {
+      const simBoard = engine.cloneBoard(board);
+      const kingObj = simBoard[kr][kc];
+      simBoard[kr][kc] = null;
+      simBoard[nr][nc] = kingObj;
+
+      let flyingGeneralBlocks = false;
+      if (wkr !== -1 && wkc === nc) {
+        if (countBetweenOnLine(nr, nc, wkr, wkc, simBoard) === 0) {
+          flyingGeneralBlocks = true;
+        }
+      }
+
+      const nonGeneralControllers = [];
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 9; c++) {
+          const p = simBoard[r][c];
+          if (!p || p.color !== winnerColor) continue;
+          const effType = p.isHidden ? (p.posType || p.type) : p.type;
+          if (effType === 'k') continue;
+          const pMoves = engine.getPseudoMoves(r, c, simBoard);
+          if (pMoves.some(m => m.tr === nr && m.tc === nc)) {
+            nonGeneralControllers.push({ r, c, piece: p, type: effType });
+          }
+        }
+      }
+      return {
+        flyingGeneralBlocks,
+        nonGeneralControllers,
+        onlyBlockedByFlyingGeneral: flyingGeneralBlocks && nonGeneralControllers.length === 0
+      };
+    };
+
+    const doesPieceProtectOrAttackSquare = (ar, ac, tr, tc, customBoard = board) => {
+      if (ar === tr && ac === tc) return false;
+      const simBoard = engine.cloneBoard(customBoard);
+      simBoard[tr][tc] = { color: loserColor, type: 'p', isHidden: false };
+      const moves = engine.getPseudoMoves(ar, ac, simBoard);
+      return moves.some(m => m.tr === tr && m.tc === tc);
+    };
+
     const orthDirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
     let ownBlockedCount = 0;
+    let ownAdvisorBishopBlockedCount = 0;
+    let ownMajorBlockedCount = 0;
     let emptyKingAdjCount = 0;
     let enemyAdjCount = 0;
     let palacePossibleCount = 0;
     let royalAssistUsed = false;
+    let essentialRoyalAssist = false;
+    const escapeSquareDetails = [];
 
     for (const [dr, dc] of orthDirs) {
       const nr = kr + dr, nc = kc + dc;
       if (!engine.inPalace(nr, nc, loserColor)) continue;
       palacePossibleCount++;
       const occupant = board[nr][nc];
-      if (occupant) {
-        if (occupant.color === loserColor) {
-          ownBlockedCount++;
-        } else {
-          enemyAdjCount++;
-        }
+      if (occupant && occupant.color === loserColor) {
+        ownBlockedCount++;
+        const occType = occupant.isHidden ? (occupant.posType || occupant.type) : occupant.type;
+        if (occType === 'a' || occType === 'b') ownAdvisorBishopBlockedCount++;
+        else ownMajorBlockedCount++;
+        escapeSquareDetails.push({ r: nr, c: nc, status: 'own_blocked', occupant, occType });
       } else {
-        emptyKingAdjCount++;
-        if (wkc === nc && wkr !== -1) {
-          let clearLine = true;
-          const minR = Math.min(nr, wkr) + 1;
-          const maxR = Math.max(nr, wkr);
-          for (let rr = minR; rr < maxR; rr++) {
-            if (rr !== kr && board[rr][nc] !== null) {
-              clearLine = false;
-              break;
-            }
-          }
-          if (clearLine) royalAssistUsed = true;
+        if (occupant && occupant.color === winnerColor) {
+          enemyAdjCount++;
+        } else {
+          emptyKingAdjCount++;
+        }
+        const stepInfo = analyzeKingStep(nr, nc);
+        if (stepInfo.flyingGeneralBlocks) royalAssistUsed = true;
+        if (stepInfo.onlyBlockedByFlyingGeneral) essentialRoyalAssist = true;
+        escapeSquareDetails.push({
+          r: nr,
+          c: nc,
+          status: occupant ? 'enemy_occupied' : 'empty',
+          occupant,
+          ...stepInfo
+        });
+      }
+    }
+
+    // Check if Flying General pins a defender on file kc that could otherwise capture primaryChecker
+    if (wkr !== -1 && wkc === kc) {
+      const betweenKings = getPiecesBetweenOnLine(kr, kc, wkr, wkc);
+      if (betweenKings.length === 1 && betweenKings[0].piece.color === loserColor) {
+        const pinned = betweenKings[0];
+        const pMoves = engine.getPseudoMoves(pinned.r, pinned.c, board);
+        if (pMoves.some(m => m.tr === primaryChecker.r && m.tc === primaryChecker.c)) {
+          royalAssistUsed = true;
+          essentialRoyalAssist = true;
+        }
+      }
+    }
+
+    let ownPiecesInPalace = 0;
+    for (let r = (loserColor === BLACK ? 0 : 7); r <= (loserColor === BLACK ? 2 : 9); r++) {
+      for (let c = 3; c <= 5; c++) {
+        const p = board[r][c];
+        if (p && p.color === loserColor && !(r === kr && c === kc)) {
+          ownPiecesInPalace++;
         }
       }
     }
@@ -4322,95 +4426,86 @@ class CheckmateClassifier {
     const enemyBaseRow = loserColor === BLACK ? 0 : 9;
     const enemySecondRow = loserColor === BLACK ? 1 : 8;
     const enemyThirdRow = loserColor === BLACK ? 2 : 7;
+    const enemyFourthRow = loserColor === BLACK ? 3 : 6;
 
     const isTroughPos = (r, c) => r === enemySecondRow && (c === 2 || c === 6);
-    const isOctagonPos = (r, c) => engine.inPalace(r, c, loserColor) && Math.abs(r - kr) === 1 && Math.abs(c - kc) === 1;
+    const isDiagonalOctagonLock = (hr, hc) =>
+      engine.inPalace(hr, hc, loserColor) &&
+      Math.abs(hr - kr) === 2 &&
+      Math.abs(hc - kc) === 2 &&
+      doesPieceProtectOrAttackSquare(hr, hc, kr, (hc + kc) >> 1) &&
+      doesPieceProtectOrAttackSquare(hr, hc, (hr + kr) >> 1, kc);
+    const isPalaceCornerHorse = (hr, hc) =>
+      engine.inPalace(hr, hc, loserColor) && (hc === 3 || hc === 5) && (hr === enemyBaseRow || hr === enemyThirdRow);
+    const isOctagonPos = (hr, hc) => isDiagonalOctagonLock(hr, hc) || isPalaceCornerHorse(hr, hc) || engine.inPalace(hr, hc, loserColor);
+
     const isFishingPos = (r, c) =>
       (r === enemyThirdRow && (c === 2 || c === 6)) ||
       (r === enemySecondRow && (c === 1 || c === 7));
-    const isSideTigerPos = (r, c) =>
-      (r === enemyBaseRow || r === enemySecondRow) && (c === 2 || c === 3 || c === 5 || c === 6);
 
-    const doesPieceControlKingZone = (pieceCoord) => {
-      const moves = engine.getPseudoMoves(pieceCoord.r, pieceCoord.c, board);
-      return moves.some(m => engine.inPalace(m.tr, m.tc, loserColor) && Math.abs(m.tr - kr) + Math.abs(m.tc - kc) <= 1);
+    const isSideTigerPos = (r, c) =>
+      Math.abs(r - enemyBaseRow) <= 3 && (c >= 1 && c <= 7) && c !== 4;
+
+    const doesPieceControlKingEscape = (pieceCoord) => {
+      for (const sq of escapeSquareDetails) {
+        if (sq.nonGeneralControllers && sq.nonGeneralControllers.some(ctrl => ctrl.r === pieceCoord.r && ctrl.c === pieceCoord.c)) {
+          return true;
+        }
+      }
+      if (doesPieceProtectOrAttackSquare(pieceCoord.r, pieceCoord.c, primaryChecker.r, primaryChecker.c)) {
+        return true;
+      }
+      return false;
     };
 
+    // =========================================================================
+    // 2. 双将 (Double Check: 2+ pieces checking the King simultaneously)
+    // =========================================================================
     if (checkers.length >= 2) {
+      const hasHorse = checkers.some(c => c.type === 'n');
+      const hasCannon = checkers.some(c => c.type === 'c');
+      const extra = (hasHorse && hasCannon)
+        ? {
+            badge: '古谱十八杀法 · 拔簧马双将',
+            subBanner: '拔簧跃马 · 双将齐发',
+            analysis: '致胜方跃马闪击，战马与火炮同时从两路照将（拔簧马双将），敌将无法兼顾，一击毙命！'
+          }
+        : {};
       return buildResult('double_check', highlightCoords, {
-        checkers: checkerSummaries
+        checkers: checkerSummaries,
+        ...extra
       });
     }
 
-    if (primaryChecker.type === 'c') {
-      const mounts = getPiecesBetweenOnLine(primaryChecker.r, primaryChecker.c, kr, kc);
-      const mount = mounts[0] || null;
-      if (mount) highlightCoords.push({ r: mount.r, c: mount.c });
-      const mountType = mount ? (mount.piece.isHidden ? (mount.piece.posType || mount.piece.type) : mount.piece.type) : null;
-
-      if (mount && mount.piece.color === winnerColor && mountType === 'c') {
-        return buildResult('double_cannon', highlightCoords, {
-          checkers: checkerSummaries,
-          mountCoord: { r: mount.r, c: mount.c }
-        });
-      }
-      if (mount && mount.piece.color === winnerColor && mountType === 'n') {
-        return buildResult('horse_cannon', highlightCoords, {
-          checkers: checkerSummaries,
-          mountCoord: { r: mount.r, c: mount.c }
-        });
-      }
-      const nearHorse = attackerPieces.find(a => a.type === 'n' && doesPieceControlKingZone(a));
-      if (nearHorse) {
-        highlightCoords.push({ r: nearHorse.r, c: nearHorse.c });
-        return buildResult('horse_cannon', highlightCoords, {
-          checkers: checkerSummaries,
-          mountCoord: { r: nearHorse.r, c: nearHorse.c }
-        });
-      }
-    }
-
-    if (primaryChecker.type === 'n') {
-      const alignedCannon = attackerPieces.find(a => {
-        if (a.type !== 'c') return false;
-        if (a.r === kr || a.c === kc) {
-          const between = countBetweenOnLine(a.r, a.c, kr, kc);
-          return between >= 1 && between <= 2;
-        }
-        return doesPieceControlKingZone(a);
-      });
-      if (alignedCannon) {
-        highlightCoords.push({ r: alignedCannon.r, c: alignedCannon.c });
-        return buildResult('horse_cannon', highlightCoords, {
-          checkers: checkerSummaries,
-          mountCoord: { r: alignedCannon.r, c: alignedCannon.c }
-        });
-      }
-    }
-
+    // =========================================================================
+    // 3. 天地炮 (Heaven & Earth Cannons: Central Cannon + Bottom/Second-Rank Cannon)
+    // =========================================================================
     const centralCannons = attackerPieces.filter(a => a.type === 'c' && a.c === 4);
     const activeCentralCannon = centralCannons.find(cc => {
       if (kc === 4) {
         const b = countBetweenOnLine(cc.r, cc.c, kr, kc);
-        return b >= 1 && b <= 2;
+        return b >= 0 && b <= 2;
       }
-      const targetR = kr;
-      const b = countBetweenOnLine(cc.r, 4, targetR, 4);
-      return b === 0 || b === 1;
+      const b = countBetweenOnLine(cc.r, 4, kr, 4);
+      return b >= 0 && b <= 2;
     });
 
     const bottomRowCannons = attackerPieces.filter(a => {
-      if (a.type !== 'c' || a.r !== enemyBaseRow) return false;
+      if (a.type !== 'c' || (a.r !== enemyBaseRow && a.r !== enemySecondRow)) return false;
       if (activeCentralCannon && a.r === activeCentralCannon.r && a.c === activeCentralCannon.c) return false;
-      if (kr === enemyBaseRow) {
+      if (kr === a.r) {
         const b = countBetweenOnLine(a.r, a.c, kr, kc);
         return b >= 1 && b <= 2;
       }
-      const b = countBetweenOnLine(a.r, a.c, enemyBaseRow, kc);
-      return b === 0 || b === 1;
+      const b = countBetweenOnLine(a.r, a.c, a.r, kc);
+      return b >= 0 && b <= 2;
     });
 
-    if (activeCentralCannon && bottomRowCannons.length > 0) {
+    if (
+      activeCentralCannon &&
+      bottomRowCannons.length > 0 &&
+      (primaryChecker.type === 'c' || bottomRowCannons.some(bc => bc.r === primaryChecker.r && bc.c === primaryChecker.c))
+    ) {
       highlightCoords.push({ r: activeCentralCannon.r, c: activeCentralCannon.c });
       bottomRowCannons.forEach(bc => highlightCoords.push({ r: bc.r, c: bc.c }));
       return buildResult('heaven_earth_cannon', highlightCoords, {
@@ -4418,6 +4513,9 @@ class CheckmateClassifier {
       });
     }
 
+    // =========================================================================
+    // 4. 铁门栓 (Iron Bolt: Central Cannon locks c=4 + Rook/Pawn strikes bottom/rib)
+    // =========================================================================
     if (activeCentralCannon && kc === 4) {
       if (
         (primaryChecker.type === 'r' || primaryChecker.type === 'p') &&
@@ -4430,7 +4528,7 @@ class CheckmateClassifier {
       }
       if (primaryChecker.type === 'c' && primaryChecker.c === 4) {
         const gateCrasher = attackerPieces.find(
-          a => (a.type === 'r' || a.type === 'p') &&
+          a => a.type === 'r' && doesPieceControlKingEscape(a) &&
             (a.r === enemyBaseRow || (engine.inPalace(a.r, a.c, loserColor) && (a.c === 3 || a.c === 5 || a.c === 4)))
         );
         if (gateCrasher) {
@@ -4442,11 +4540,84 @@ class CheckmateClassifier {
       }
     }
 
+    // =========================================================================
+    // 5. 夹车炮 (Chariot-Cannon Clamp) vs 重炮 (Double Cannon) vs 马后炮 (Horse-Cannon)
+    // =========================================================================
+    if (primaryChecker.type === 'c') {
+      const mounts = getPiecesBetweenOnLine(primaryChecker.r, primaryChecker.c, kr, kc);
+      const mount = mounts[0] || null;
+      if (mount) highlightCoords.push({ r: mount.r, c: mount.c });
+      const mountType = mount ? mount.type : null;
+
+      const clampingRook = attackerPieces.find(a =>
+        a.type === 'r' &&
+        Math.abs(a.r - enemyBaseRow) <= 2 &&
+        doesPieceControlKingEscape(a)
+      );
+
+      if (mount && mount.piece.color === winnerColor && mountType === 'c') {
+        if (clampingRook) {
+          highlightCoords.push({ r: clampingRook.r, c: clampingRook.c });
+          return buildResult('chariot_cannon_clamp', highlightCoords, {
+            checkers: checkerSummaries,
+            mountCoord: { r: mount.r, c: mount.c }
+          });
+        }
+        return buildResult('double_cannon', highlightCoords, {
+          checkers: checkerSummaries,
+          mountCoord: { r: mount.r, c: mount.c }
+        });
+      }
+
+      if (mount && mount.piece.color === winnerColor && mountType === 'n') {
+        return buildResult('horse_cannon', highlightCoords, {
+          checkers: checkerSummaries,
+          mountCoord: { r: mount.r, c: mount.c }
+        });
+      }
+
+      const perpHorse = attackerPieces.find(a => {
+        if (a.type !== 'n') return false;
+        return escapeSquareDetails.some(sq => {
+          const isPerp = (primaryChecker.r === kr) ? (sq.r !== kr) : (sq.c !== kc);
+          return isPerp && sq.nonGeneralControllers?.some(ctrl => ctrl.r === a.r && ctrl.c === a.c);
+        });
+      });
+      if (perpHorse) {
+        highlightCoords.push({ r: perpHorse.r, c: perpHorse.c });
+        return buildResult('horse_cannon', highlightCoords, {
+          checkers: checkerSummaries,
+          mountCoord: { r: perpHorse.r, c: perpHorse.c }
+        });
+      }
+    }
+
+    if (primaryChecker.type === 'n') {
+      const alignedCannon = attackerPieces.find(a => {
+        if (a.type !== 'c') return false;
+        if (a.r === kr || a.c === kc) {
+          const between = countBetweenOnLine(a.r, a.c, kr, kc);
+          return between >= 0 && between <= 2;
+        }
+        return doesPieceControlKingEscape(a);
+      });
+      if (alignedCannon) {
+        highlightCoords.push({ r: alignedCannon.r, c: alignedCannon.c });
+        return buildResult('horse_cannon', highlightCoords, {
+          checkers: checkerSummaries,
+          mountCoord: { r: alignedCannon.r, c: alignedCannon.c }
+        });
+      }
+    }
+
+    // =========================================================================
+    // 6. 双车错 (Double Chariot Alternating Mate)
+    // =========================================================================
     const allWinnerChariots = attackerPieces.filter(a => a.type === 'r');
     if (primaryChecker.type === 'r' && allWinnerChariots.length >= 2) {
       const otherChariot = allWinnerChariots.find(r => {
         if (r.r === primaryChecker.r && r.c === primaryChecker.c) return false;
-        return Math.abs(r.r - kr) <= 2 || Math.abs(r.c - kc) <= 1 || doesPieceControlKingZone(r);
+        return Math.abs(r.r - kr) <= 2 || Math.abs(r.c - kc) <= 1 || doesPieceControlKingEscape(r);
       });
       if (otherChariot) {
         highlightCoords.push({ r: otherChariot.r, c: otherChariot.c });
@@ -4456,14 +4627,13 @@ class CheckmateClassifier {
       }
     }
 
-    if (
-      (primaryChecker.type === 'c' || primaryChecker.type === 'r') &&
-      attackerPieces.some(a => a.type === 'c' && Math.abs(a.r - enemyBaseRow) <= 2) &&
-      attackerPieces.some(a => a.type === 'r' && Math.abs(a.r - enemyBaseRow) <= 2)
-    ) {
-      const clampC = attackerPieces.find(a => a.type === 'c' && Math.abs(a.r - enemyBaseRow) <= 2);
-      const clampR = attackerPieces.find(a => a.type === 'r' && Math.abs(a.r - enemyBaseRow) <= 2);
-      if (clampC && clampR && (doesPieceControlKingZone(clampC) || doesPieceControlKingZone(clampR))) {
+    // =========================================================================
+    // 7. 夹车炮 (Chariot + Cannon Clamp in bottom 3 ranks)
+    // =========================================================================
+    if (primaryChecker.type === 'c' || primaryChecker.type === 'r') {
+      const clampC = attackerPieces.find(a => a.type === 'c' && Math.abs(a.r - enemyBaseRow) <= 2 && (a === primaryChecker || doesPieceControlKingEscape(a)));
+      const clampR = attackerPieces.find(a => a.type === 'r' && Math.abs(a.r - enemyBaseRow) <= 2 && (a === primaryChecker || doesPieceControlKingEscape(a)));
+      if (clampC && clampR) {
         highlightCoords.push({ r: clampC.r, c: clampC.c }, { r: clampR.r, c: clampR.c });
         return buildResult('chariot_cannon_clamp', highlightCoords, {
           checkers: checkerSummaries
@@ -4471,16 +4641,27 @@ class CheckmateClassifier {
       }
     }
 
-    if (royalAssistUsed && wkr !== -1) {
-      highlightCoords.push({ r: wkr, c: wkc });
-      return buildResult('royal_gaze', highlightCoords, {
-        checkers: checkerSummaries
-      });
-    }
-
+    // =========================================================================
+    // 8. 马系绝杀与车马协同绝杀 (卧槽马 / 八角马 / 钓鱼马 / 列马车 / 侧面虎 / 双马饮泉)
+    // =========================================================================
     if (primaryChecker.type === 'n') {
       if (isTroughPos(primaryChecker.r, primaryChecker.c)) {
         return buildResult('trough_horse', highlightCoords, {
+          checkers: checkerSummaries
+        });
+      }
+      const secondHorse = attackerPieces.find(
+        a => a.type === 'n' && (a.r !== primaryChecker.r || a.c !== primaryChecker.c) && doesPieceControlKingEscape(a)
+      );
+      if (secondHorse) {
+        highlightCoords.push({ r: secondHorse.r, c: secondHorse.c });
+        return buildResult('side_tiger', highlightCoords, {
+          title: '双马饮泉 · 绝杀',
+          stampText: '双马饮泉',
+          subBanner: '双骏踏波 · 饮泉锁宫',
+          badge: '古谱十八杀法 · 双马饮泉',
+          poem: '“双骏奔腾饮玉泉，左盘右蹙锁金殿；纵横蹄影封生路，一跃擒王定凯旋。”',
+          analysis: '致胜方双马在九宫左右盘旋呼应，一马封门、一马致命将军，成就古谱名杀【双马饮泉】！',
           checkers: checkerSummaries
         });
       }
@@ -4494,7 +4675,7 @@ class CheckmateClassifier {
           checkers: checkerSummaries
         });
       }
-      if (emptyKingAdjCount === 0 && ownBlockedCount >= 2 && palacePossibleCount > 0) {
+      if (ownBlockedCount >= 2 && palacePossibleCount > 0) {
         return buildResult('smothered_palace', highlightCoords, {
           checkers: checkerSummaries
         });
@@ -4506,18 +4687,26 @@ class CheckmateClassifier {
 
     if (primaryChecker.type === 'r') {
       const supportingHorses = attackerPieces.filter(
-        a => a.type === 'n' && Math.abs(a.r - kr) <= 3 && Math.abs(a.c - kc) <= 3 && doesPieceControlKingZone(a)
+        a => a.type === 'n' && Math.abs(a.r - kr) <= 4 && Math.abs(a.c - kc) <= 3 && doesPieceControlKingEscape(a)
       );
       if (supportingHorses.length > 0) {
         const h = supportingHorses[0];
         highlightCoords.push({ r: h.r, c: h.c });
+        const rookAdjacentToKing = (Math.abs(primaryChecker.r - kr) + Math.abs(primaryChecker.c - kc)) === 1;
+        const horseProtectsRook = doesPieceProtectOrAttackSquare(h.r, h.c, primaryChecker.r, primaryChecker.c);
+
+        if (isDiagonalOctagonLock(h.r, h.c) || isPalaceCornerHorse(h.r, h.c)) {
+          return buildResult('octagon_horse', highlightCoords, {
+            checkers: checkerSummaries
+          });
+        }
         if (isTroughPos(h.r, h.c)) {
           return buildResult('trough_horse', highlightCoords, {
             checkers: checkerSummaries
           });
         }
-        if (isOctagonPos(h.r, h.c)) {
-          return buildResult('octagon_horse', highlightCoords, {
+        if (rookAdjacentToKing && horseProtectsRook) {
+          return buildResult('standing_horse_chariot', highlightCoords, {
             checkers: checkerSummaries
           });
         }
@@ -4537,8 +4726,42 @@ class CheckmateClassifier {
       }
     }
 
-    if (palacePossibleCount > 0 && emptyKingAdjCount === 0 && ownBlockedCount >= 2) {
-      if (primaryChecker.type === 'c' && ownBlockedCount === palacePossibleCount) {
+    // =========================================================================
+    // 9. 花心破宫特判：大刀剜心 (Chariot in Palace Center) & 小鬼坐龙廷 (Pawn in Palace Center)
+    // =========================================================================
+    if (primaryChecker.type === 'r' && primaryChecker.r === enemySecondRow && primaryChecker.c === 4 && !essentialRoyalAssist) {
+      return buildResult('standing_horse_chariot', highlightCoords, {
+        title: '大刀剜心 · 绝杀',
+        stampText: '大刀剜心',
+        subBanner: '中心开花 · 大刀剜心',
+        badge: '古谱十八杀法 · 大刀剜心',
+        poem: '“铁骑长驱入九宫，大刀直取九五尊；中心开花惊四座，霸气纵横贯长虹。”',
+        analysis: '致胜方强車在后方子力掩护下直接闯入敌方九宫正中心（花心位），四面威慑令敌将寸步难行！',
+        checkers: checkerSummaries
+      });
+    }
+
+    if (primaryChecker.type === 'p' && primaryChecker.r !== enemyBaseRow && engine.inPalace(primaryChecker.r, primaryChecker.c, loserColor) && !essentialRoyalAssist) {
+      return buildResult('frost_lotus_strike', highlightCoords, {
+        title: '小鬼坐龙廷 · 绝杀',
+        stampText: '老卒搜山',
+        subBanner: '过河老卒 · 擒王定鼎',
+        badge: '古谱十八杀法 · 老卒搜山',
+        poem: '“过河小卒当车使，步步紧逼入深宫；莫欺微末无大志，一朝擒王立奇功。”',
+        analysis: '过河老兵深入敌方九宫腹地，在主力子力协同封锁下亲自捉拿敌帅，完成传奇绝杀！',
+        checkers: checkerSummaries
+      });
+    }
+
+    // =========================================================================
+    // 10. 闷杀 (Smothered Kill) vs 闷宫 (Smothered Palace)
+    // =========================================================================
+    if (palacePossibleCount > 0 && ownBlockedCount >= 2) {
+      if (
+        emptyKingAdjCount === 0 &&
+        ownBlockedCount === palacePossibleCount &&
+        (ownMajorBlockedCount >= 1 || ownPiecesInPalace >= 3 || kc !== 4)
+      ) {
         return buildResult('smothered_kill', highlightCoords, {
           checkers: checkerSummaries
         });
@@ -4548,20 +4771,86 @@ class CheckmateClassifier {
       });
     }
 
-    if (primaryChecker.type === 'c' && ownBlockedCount >= 2 && emptyKingAdjCount <= 1) {
-      return buildResult('smothered_kill', highlightCoords, {
+    // =========================================================================
+    // 11. 海底捞月 (Scooping the Moon from the Sea Bottom - Video Case 17, 01:54)
+    // =========================================================================
+    const frontOfKingR = kr + (loserColor === BLACK ? 1 : -1);
+    const frontOccupant = engine.inBounds(frontOfKingR, kc) ? board[frontOfKingR][kc] : null;
+    if (
+      kr === enemyBaseRow &&
+      primaryChecker.r === enemyBaseRow &&
+      (primaryChecker.type === 'p' || primaryChecker.type === 'r' || primaryChecker.type === 'c') &&
+      frontOccupant &&
+      frontOccupant.color === loserColor
+    ) {
+      highlightCoords.push({ r: frontOfKingR, c: kc });
+      return buildResult('frost_lotus_strike', highlightCoords, {
         checkers: checkerSummaries
       });
     }
 
-    if (primaryChecker.type === 'r' && primaryChecker.c >= 3 && primaryChecker.c <= 5) {
-      const frontHorse = attackerPieces.find(a => a.type === 'n' && Math.abs(a.r - kr) <= 4 && Math.abs(a.c - kc) <= 3);
-      if (frontHorse) {
-        highlightCoords.push({ r: frontHorse.r, c: frontHorse.c });
-        return buildResult('standing_horse_chariot', highlightCoords, {
-          checkers: checkerSummaries
-        });
-      }
+    // =========================================================================
+    // 12. 空头炮 (Central Sky Cannon Mate on c=4)
+    // =========================================================================
+    if (primaryChecker.type === 'c' && primaryChecker.c === 4 && kc === 4 && !essentialRoyalAssist) {
+      return buildResult('heaven_earth_cannon', highlightCoords, {
+        title: '空头炮 · 绝杀',
+        stampText: '空头炮',
+        subBanner: '当头空炮 · 直轰中宫',
+        badge: '古谱十八杀法 · 空头炮',
+        poem: '“当头一炮最堪夸，直指中宫破帝家；莫道隔山方显威，空头落子乱如麻。”',
+        analysis: '中路【空头炮】直指九宫核心，隔山发炮瞬间引爆雷霆一击，令敌将无路可逃！',
+        checkers: checkerSummaries
+      });
+    }
+
+    // =========================================================================
+    // 13. 双鬼拍门 (Two Pawns or Pawn+Rook Clamping Palace Ribs)
+    // =========================================================================
+    const ribAttackers = attackerPieces.filter(
+      a => (a.type === 'p' || a.type === 'r') &&
+        Math.abs(a.r - enemyBaseRow) <= 1 &&
+        (a.c === 3 || a.c === 5)
+    );
+    if (ribAttackers.length >= 2 && ribAttackers.some(a => a.type === 'p') && new Set(ribAttackers.map(a => a.c)).size >= 2) {
+      ribAttackers.forEach(ra => highlightCoords.push({ r: ra.r, c: ra.c }));
+      return buildResult('iron_bolt', highlightCoords, {
+        title: '双鬼拍门 · 绝杀',
+        stampText: '双鬼拍门',
+        subBanner: '双卒叩门 · 左右夹击',
+        badge: '古谱十八杀法 · 双鬼拍门',
+        poem: '“双卒过河赛猛虎，左右叩门入王府；九宫两肋皆失守，纵有良将亦无补。”',
+        analysis: '致胜方两路尖兵（或车兵）一左一右紧逼九宫两肋门户，如“双鬼拍门”锁死敌将生路！',
+        checkers: checkerSummaries
+      });
+    }
+
+    // =========================================================================
+    // 14. 对面笑 / 白脸将 (Royal Gaze / Flying General Assist - Video Case 3, 00:13)
+    // =========================================================================
+    if (essentialRoyalAssist && wkr !== -1) {
+      highlightCoords.push({ r: wkr, c: wkc });
+      return buildResult('royal_gaze', highlightCoords, {
+        checkers: checkerSummaries
+      });
+    }
+
+    if (primaryChecker.r === enemyBaseRow) {
+      return buildResult('frost_lotus_strike', highlightCoords, {
+        checkers: checkerSummaries
+      });
+    }
+
+    if (primaryChecker.type === 'p') {
+      return buildResult('frost_lotus_strike', highlightCoords, {
+        title: '小鬼坐龙廷 · 绝杀',
+        stampText: '老卒搜山',
+        subBanner: '过河老卒 · 擒王定鼎',
+        badge: '古谱十八杀法 · 老卒搜山',
+        poem: '“过河小卒当车使，步步紧逼入深宫；莫欺微末无大志，一朝擒王立奇功。”',
+        analysis: '过河老兵深入敌方九宫腹地，在主力子力协同封锁下亲自捉拿敌帅，完成传奇绝杀！',
+        checkers: checkerSummaries
+      });
     }
 
     return buildResult('frost_lotus_strike', highlightCoords, {
@@ -10522,6 +10811,12 @@ if (document.readyState === 'loading') {
 window.addEventListener('load', initXiangqiAppOnce);
 </script>
   <script>
+/*************************************************************************
+ * 3D + 2D JJ-STYLE ULTIMATE CHECKMATE CINEMATICS, MOVE IMPACT RIPPLES
+ * & GRANDMASTER HINT TRAJECTORY MODULE
+ * Extends Xiangqi3DApp.prototype
+ *************************************************************************/
+
 Object.assign(Xiangqi3DApp.prototype, {
   clearCheckmateHighlights() {
     if (!this.checkmateHighlightRings) return;
@@ -10676,6 +10971,7 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   previewUltimateVFX(vfxType, title, badge, stampText = '') {
+    if (vfxType === 'sea_bottom_moon') vfxType = 'frost_lotus_strike';
     this.toggleVFXDrawer(false);
     this.closeModalOnly();
     let kr = 0, kc = 4, wkr = 9, wkc = 4;
@@ -10693,23 +10989,23 @@ Object.assign(Xiangqi3DApp.prototype, {
       : { title: title || '绝杀', stampText: stampText || '绝杀', subBanner: badge || '雷霆绝杀', badge: badge || '绝杀', vfxType };
 
     const sampleCheckersByType = {
-      double_chariot: [{ r: 0, c: 3, char: '俥', type: 'r' }, { r: 1, c: 5, char: '俥', type: 'r' }],
-      smothered_palace: [{ r: 1, c: 3, char: '傌', type: 'n' }],
-      royal_gaze: [{ r: 0, c: 3, char: '俥', type: 'r' }, { r: wkr, c: wkc, char: '帥', type: 'k' }],
-      double_cannon: [{ r: 4, c: 4, char: '炮', type: 'c' }, { r: 2, c: 4, char: '炮', type: 'c' }],
-      horse_cannon: [{ r: 2, c: 3, char: '傌', type: 'n' }, { r: 4, c: 4, char: '炮', type: 'c' }],
-      iron_bolt: [{ r: 0, c: 3, char: '俥', type: 'r' }, { r: 4, c: 4, char: '炮', type: 'c' }],
-      side_tiger: [{ r: 1, c: 2, char: '傌', type: 'n' }, { r: 0, c: 3, char: '俥', type: 'r' }],
-      octagon_horse: [{ r: 2, c: 3, char: '傌', type: 'n' }, { r: 1, c: 5, char: '俥', type: 'r' }],
-      fishing_horse: [{ r: 2, c: 2, char: '傌', type: 'n' }, { r: 0, c: 3, char: '俥', type: 'r' }],
-      standing_horse_chariot: [{ r: 2, c: 4, char: '傌', type: 'n' }, { r: 1, c: 4, char: '俥', type: 'r' }],
-      double_check: [{ r: 1, c: 3, char: '俥', type: 'r' }, { r: 3, c: 4, char: '炮', type: 'c' }],
-      chariot_cannon_clamp: [{ r: 0, c: 2, char: '俥', type: 'r' }, { r: 1, c: 2, char: '炮', type: 'c' }],
-      trough_horse: [{ r: 1, c: 2, char: '傌', type: 'n' }, { r: 0, c: 3, char: '俥', type: 'r' }],
-      smothered_kill: [{ r: 4, c: 4, char: '炮', type: 'c' }],
-      heaven_earth_cannon: [{ r: 4, c: 4, char: '炮', type: 'c' }, { r: 0, c: 1, char: '炮', type: 'c' }],
-      stalemate_trap: [{ r: 1, c: 4, char: '兵', type: 'p' }],
-      frost_lotus_strike: [{ r: 1, c: 4, char: '俥', type: 'r' }]
+      double_chariot: [{ r: 0, c: 0, char: '俥', type: 'r' }, { r: 1, c: 8, char: '俥', type: 'r' }],
+      smothered_palace: [{ r: 0, c: 0, char: '炮', type: 'c' }, { r: 0, c: 3, char: '士', type: 'a' }],
+      royal_gaze: [{ r: 2, c: 3, char: '俥', type: 'r' }, { r: wkr, c: wkc, char: '帥', type: 'k' }],
+      double_cannon: [{ r: 6, c: 3, char: '炮', type: 'c' }, { r: 4, c: 3, char: '炮', type: 'c' }],
+      horse_cannon: [{ r: 2, c: 4, char: '傌', type: 'n' }, { r: 4, c: 4, char: '炮', type: 'c' }],
+      iron_bolt: [{ r: 0, c: 7, char: '俥', type: 'r' }, { r: 7, c: 4, char: '炮', type: 'c' }],
+      side_tiger: [{ r: 3, c: 6, char: '傌', type: 'n' }, { r: 0, c: 7, char: '俥', type: 'r' }],
+      octagon_horse: [{ r: 2, c: 5, char: '傌', type: 'n' }, { r: 0, c: 0, char: '俥', type: 'r' }],
+      fishing_horse: [{ r: 2, c: 6, char: '傌', type: 'n' }, { r: 0, c: 8, char: '俥', type: 'r' }],
+      standing_horse_chariot: [{ r: 0, c: 3, char: '俥', type: 'r' }, { r: 2, c: 2, char: '傌', type: 'n' }],
+      double_check: [{ r: 4, c: 3, char: '俥', type: 'r' }, { r: 9, c: 3, char: '炮', type: 'c' }],
+      chariot_cannon_clamp: [{ r: 0, c: 0, char: '炮', type: 'c' }, { r: 1, c: 3, char: '俥', type: 'r' }, { r: 0, c: 3, char: '炮', type: 'c' }],
+      trough_horse: [{ r: 1, c: 2, char: '傌', type: 'n' }],
+      smothered_kill: [{ r: 0, c: 5, char: '炮', type: 'c' }],
+      heaven_earth_cannon: [{ r: 0, c: 8, char: '炮', type: 'c' }, { r: 5, c: 4, char: '炮', type: 'c' }],
+      stalemate_trap: [{ r: 2, c: 2, char: '傌', type: 'n' }, { r: 1, c: 3, char: '俥', type: 'r' }],
+      frost_lotus_strike: [{ r: 0, c: 2, char: '兵', type: 'p' }, { r: 7, c: 4, char: '俥', type: 'r' }]
     };
     const mockCheckers = sampleCheckersByType[vfxType] || [{ r: 1, c: 4, char: '俥', type: 'r' }];
     const highlightCoords = [{ r: kr, c: kc }, ...mockCheckers.map(c => ({ r: c.r, c: c.c }))];
@@ -10717,7 +11013,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     const mockPattern = {
       ...meta,
       title: title || meta.title,
-      stampText: stampText || meta.stampText,
+      stampText: stampText || title || meta.stampText,
       subBanner: badge || meta.subBanner,
       badge: badge || meta.badge,
       vfxType,
@@ -10744,51 +11040,76 @@ Object.assign(Xiangqi3DApp.prototype, {
     flashEl.classList.add('vfx-flash-active');
   },
 
-  drawJJMedallion2D(ctx, x, y, radius, char, isRed, scaleX = 1, scaleY = 1, rot = 0, glowColor = '#fef08a') {
+  /**
+   * 绘制 JJ 象棋风格 3D 立体斜视木质/玉质棋子勋章（带厚实侧边、双环回纹与刀刻书法）
+   */
+  drawJJMedallion2D(ctx, x, y, radius, char, isRed, scaleX = 1, scaleY = 1, rot = 0, glowColor = '#fef08a', alpha = 1) {
+    if (alpha <= 0.01 || radius <= 2) return;
     ctx.save();
+    ctx.globalAlpha = alpha;
     ctx.translate(x, y);
     ctx.rotate(rot);
     ctx.scale(scaleX, scaleY);
 
     ctx.shadowColor = glowColor;
-    ctx.shadowBlur = radius * 0.42;
+    ctx.shadowBlur = radius * 0.48;
 
-    ctx.fillStyle = isRed ? '#78350f' : '#020617';
+    // 3D 棋子立体侧壁厚度 (Cylindrical Rim Extrusion)
+    const depth = radius * 0.24;
+    const rimGrad = ctx.createLinearGradient(-radius, 0, radius, depth);
+    if (isRed) {
+      rimGrad.addColorStop(0, '#92400e');
+      rimGrad.addColorStop(0.5, '#d97706');
+      rimGrad.addColorStop(1, '#451a03');
+    } else {
+      rimGrad.addColorStop(0, '#334155');
+      rimGrad.addColorStop(0.5, '#64748b');
+      rimGrad.addColorStop(1, '#090d16');
+    }
+    ctx.fillStyle = rimGrad;
     ctx.beginPath();
-    ctx.arc(0, radius * 0.12, radius, 0, Math.PI * 2);
+    ctx.arc(0, depth, radius, 0, Math.PI * 2);
     ctx.fill();
 
+    // 棋子顶面温润象牙木 / 玄武乌木渐变
     const bodyGrad = ctx.createRadialGradient(-radius * 0.28, -radius * 0.28, radius * 0.08, 0, 0, radius);
     if (isRed) {
-      bodyGrad.addColorStop(0, '#fdf8ed');
-      bodyGrad.addColorStop(0.55, '#ecdcbe');
-      bodyGrad.addColorStop(0.85, '#c89d54');
-      bodyGrad.addColorStop(1, '#78350f');
+      bodyGrad.addColorStop(0, '#fffbeb');
+      bodyGrad.addColorStop(0.52, '#f5e6c8');
+      bodyGrad.addColorStop(0.84, '#d4a359');
+      bodyGrad.addColorStop(1, '#854d0e');
     } else {
-      bodyGrad.addColorStop(0, '#334155');
-      bodyGrad.addColorStop(0.42, '#111827');
-      bodyGrad.addColorStop(0.82, '#070a12');
-      bodyGrad.addColorStop(1, '#020306');
+      bodyGrad.addColorStop(0, '#475569');
+      bodyGrad.addColorStop(0.45, '#1e293b');
+      bodyGrad.addColorStop(0.82, '#0f172a');
+      bodyGrad.addColorStop(1, '#020617');
     }
     ctx.fillStyle = bodyGrad;
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.lineWidth = Math.max(2.5, radius * 0.08);
+    // 外圈双环回纹装饰
+    ctx.lineWidth = Math.max(2.5, radius * 0.075);
     ctx.strokeStyle = isRed ? '#b91c1c' : '#fbbf24';
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.86, 0, Math.PI * 2);
+    ctx.arc(0, 0, radius * 0.84, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.lineWidth = Math.max(1.2, radius * 0.028);
+    ctx.strokeStyle = isRed ? '#d97706' : '#fef08a';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.74, 0, Math.PI * 2);
     ctx.stroke();
 
     if (typeof drawCalligraphicGlyph === 'function') {
-      drawCalligraphicGlyph(ctx, char, 0, 0, radius * 1.15, {
+      drawCalligraphicGlyph(ctx, char, 0, 0, radius * 1.12, {
         strokeStyle: isRed ? '#fef08a' : '#78350f',
         lineWidth: radius * 0.04,
         topGradientColors: isRed ? ['#ef4444', '#b91c1c', '#450a0a'] : ['#ffffff', '#fde047', '#d97706']
       });
     } else {
-      ctx.font = `900 ${Math.round(radius * 1.05)}px "XiangqiCalligraphy", "Noto Serif SC", serif`;
+      ctx.font = `900 ${Math.round(radius * 1.02)}px "XiangqiCalligraphy", "Noto Serif SC", serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = isRed ? '#b91c1c' : '#fde047';
@@ -10797,6 +11118,9 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.restore();
   },
 
+  /**
+   * 绘制 JJ 象棋标志性玄铁锁链 (闷宫 / 铁门栓 / 闷杀)
+   */
   drawJJChain2D(ctx, x1, y1, x2, y2, linkCount = 14, glowColor = '#f59e0b', alpha = 1) {
     if (alpha <= 0.01) return;
     const dx = x2 - x1;
@@ -10805,21 +11129,21 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 14;
     for (let i = 0; i <= linkCount; i++) {
       const f = i / linkCount;
       const lx = x1 + dx * f;
       const ly = y1 + dy * f;
       ctx.save();
       ctx.translate(lx, ly);
-      ctx.rotate(ang + (i % 2 === 0 ? 0.18 : -0.18));
-      ctx.strokeStyle = i % 2 === 0 ? '#334155' : '#0f172a';
-      ctx.lineWidth = 6;
+      ctx.rotate(ang + (i % 2 === 0 ? 0.22 : -0.22));
+      ctx.strokeStyle = i % 2 === 0 ? '#1e293b' : '#090d16';
+      ctx.lineWidth = 8.5;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 14, 6.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 17, 8, 0, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = glowColor;
+      ctx.lineWidth = 2.2;
       ctx.stroke();
       ctx.restore();
     }
@@ -10832,19 +11156,19 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.globalAlpha = alpha;
     ctx.translate(cx, topY);
 
-    const barW = Math.min(480, window.innerWidth * 0.84);
+    const barW = Math.min(500, window.innerWidth * 0.86);
     const barH = 38;
     const grad = ctx.createLinearGradient(-barW * 0.5, 0, barW * 0.5, 0);
     grad.addColorStop(0, 'rgba(15, 23, 42, 0)');
-    grad.addColorStop(0.18, 'rgba(18, 12, 10, 0.86)');
-    grad.addColorStop(0.5, 'rgba(42, 12, 12, 0.92)');
-    grad.addColorStop(0.82, 'rgba(18, 12, 10, 0.86)');
+    grad.addColorStop(0.18, 'rgba(18, 12, 10, 0.88)');
+    grad.addColorStop(0.5, 'rgba(52, 14, 14, 0.94)');
+    grad.addColorStop(0.82, 'rgba(18, 12, 10, 0.88)');
     grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
     ctx.fillStyle = grad;
     ctx.fillRect(-barW * 0.5, -barH * 0.5, barW, barH);
 
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
     ctx.moveTo(-barW * 0.38, -barH * 0.5);
     ctx.lineTo(barW * 0.38, -barH * 0.5);
@@ -10862,7 +11186,10 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.restore();
   },
 
-  drawJJBrushTitle(ctx, cx, cy, text, fontSize, slamScale = 1, alpha = 1, subText = '', accentColor = '#f59e0b') {
+  /**
+   * 绘制 JJ 象棋原版风格 3D 浮雕鎏金行书大字（无黑框遮挡法相，带多层立体厚度与刀锋长尾）
+   */
+  drawJJBrushTitle(ctx, cx, cy, text, fontSize, slamScale = 1, alpha = 1, subText = '', accentColor = '#f59e0b', colorPhase = 1) {
     if (alpha <= 0.01) return;
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -10870,73 +11197,1037 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.scale(slamScale, slamScale);
 
     const chars = String(text || '绝杀').split('');
-    const spacing = fontSize * 1.08;
+    const spacing = fontSize * 1.06;
     const totalW = (chars.length - 1) * spacing;
 
-    const plaqueW = totalW + fontSize * 2.1;
-    const plaqueH = fontSize * 1.38;
-    const bgGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, plaqueW * 0.60);
-    bgGrad.addColorStop(0, 'rgba(18, 8, 6, 0.90)');
-    bgGrad.addColorStop(0.58, 'rgba(58, 12, 12, 0.68)');
-    bgGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = bgGrad;
+    // 底部柔和流光气韵（不遮挡后方法相插画）
+    const glowW = totalW + fontSize * 2.2;
+    const glowGrad = ctx.createRadialGradient(0, 0, fontSize * 0.1, 0, 0, glowW * 0.58);
+    const isCyanPhase = colorPhase < 0.45;
+    glowGrad.addColorStop(0, isCyanPhase ? 'rgba(56, 189, 248, 0.42)' : 'rgba(245, 158, 11, 0.38)');
+    glowGrad.addColorStop(0.55, isCyanPhase ? 'rgba(14, 116, 144, 0.18)' : 'rgba(180, 83, 9, 0.16)');
+    glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glowGrad;
     ctx.beginPath();
-    ctx.ellipse(0, 0, plaqueW * 0.62, plaqueH * 0.58, -0.02, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, glowW * 0.58, fontSize * 0.72, -0.04, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = accentColor;
-    ctx.shadowColor = accentColor;
-    ctx.shadowBlur = 16;
-    ctx.lineWidth = 3.0;
+    // 书法飞白金色横扫刀芒（复刻JJ象棋文字底部的流光剑气）
+    ctx.save();
+    ctx.strokeStyle = isCyanPhase ? '#7dd3fc' : '#fef08a';
+    ctx.shadowColor = isCyanPhase ? '#0284c7' : accentColor;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = Math.max(3, fontSize * 0.045);
     ctx.beginPath();
-    ctx.moveTo(-plaqueW * 0.42, -fontSize * 0.62);
-    ctx.lineTo(plaqueW * 0.42, -fontSize * 0.62);
-    ctx.moveTo(-plaqueW * 0.42, fontSize * 0.62);
-    ctx.lineTo(plaqueW * 0.42, fontSize * 0.62);
+    ctx.moveTo(-glowW * 0.46, fontSize * 0.36);
+    ctx.quadraticCurveTo(0, fontSize * 0.54, glowW * 0.48, fontSize * 0.22);
     ctx.stroke();
+    ctx.restore();
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = `900 ${fontSize}px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", serif`;
+    ctx.font = `900 ${fontSize}px "XiangqiCalligraphy", "STKaiti", "Kaiti SC", "KaiTi", "Noto Serif SC", "Songti SC", serif`;
 
     chars.forEach((ch, idx) => {
       const ox = idx * spacing - totalW * 0.5;
-      const oy = (idx % 2 === 0 ? -2 : 2);
+      const oy = (idx % 2 === 0 ? -3 : 3);
       ctx.save();
       ctx.translate(ox, oy);
-      ctx.rotate((idx - (chars.length - 1) * 0.5) * 0.028);
+      ctx.rotate((idx - (chars.length - 1) * 0.5) * 0.032 - 0.03);
 
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
-      ctx.shadowBlur = 22;
-      ctx.shadowOffsetY = 7;
-      ctx.lineWidth = Math.max(8, fontSize * 0.13);
-      ctx.strokeStyle = '#1e0505';
+      // 1. 7层 3D 立体暗金铜浮雕底座 (3D Extruded Bevel Depth)
+      const extrudeSteps = 7;
+      for (let d = extrudeSteps; d >= 1; d--) {
+        ctx.fillStyle = isCyanPhase
+          ? (d > 4 ? '#082f49' : '#0369a1')
+          : (d > 4 ? '#270e04' : '#78350f');
+        ctx.fillText(ch, d * 1.4, d * 1.9);
+      }
+
+      // 2. 深色外轮廓勾边，凸显立体凌厉感
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetY = 6;
+      ctx.lineWidth = Math.max(6, fontSize * 0.10);
+      ctx.strokeStyle = isCyanPhase ? '#082f49' : '#3b1106';
       ctx.strokeText(ch, 0, 0);
 
-      ctx.lineWidth = Math.max(3.5, fontSize * 0.055);
-      ctx.strokeStyle = '#991b1b';
-      ctx.strokeText(ch, 0, 0);
-
-      ctx.shadowColor = accentColor;
-      ctx.shadowBlur = 24;
+      // 3. 阳刻鎏金主体渐变填充
+      ctx.shadowColor = isCyanPhase ? '#38bdf8' : accentColor;
+      ctx.shadowBlur = 26;
       const g = ctx.createLinearGradient(0, -fontSize * 0.52, 0, fontSize * 0.52);
-      g.addColorStop(0, '#ffffff');
-      g.addColorStop(0.32, '#fef08a');
-      g.addColorStop(0.70, accentColor);
-      g.addColorStop(1, '#92400e');
+      if (isCyanPhase) {
+        g.addColorStop(0, '#ffffff');
+        g.addColorStop(0.35, '#bae6fd');
+        g.addColorStop(0.75, '#38bdf8');
+        g.addColorStop(1, '#0284c7');
+      } else {
+        g.addColorStop(0, '#fffef0');
+        g.addColorStop(0.28, '#fef08a');
+        g.addColorStop(0.65, '#f59e0b');
+        g.addColorStop(1, '#b45309');
+      }
       ctx.fillStyle = g;
       ctx.fillText(ch, 0, 0);
+
+      // 4. 顶部高光描边
+      ctx.lineWidth = Math.max(1.8, fontSize * 0.025);
+      ctx.strokeStyle = isCyanPhase ? '#e0f2fe' : '#fffbeb';
+      ctx.strokeText(ch, -1, -1.5);
       ctx.restore();
     });
 
     if (subText) {
-      const subSize = Math.max(14, Math.round(fontSize * 0.24));
+      const subSize = Math.max(14, Math.round(fontSize * 0.23));
       ctx.font = `bold ${subSize}px "XiangqiCalligraphy", "Noto Serif SC", serif`;
       ctx.fillStyle = '#fef3c7';
       ctx.shadowColor = '#000000';
       ctx.shadowBlur = 10;
-      ctx.fillText(`◆ ${subText} ◆`, 0, fontSize * 0.88);
+      ctx.fillText(`◆ ${subText} ◆`, 0, fontSize * 0.82);
     }
+    ctx.restore();
+  },
+
+  /**
+   * 复刻 JJ象棋绝杀动画 17 种专属史诗 2D 法相画卷 (renderJJHeroSpectacle2D)
+   */
+  renderJJHeroSpectacle2D(ctx, w, h, p, vfxType, winnerColor, checker, kCoord, pattern) {
+    const cx = w * 0.5;
+    const cy = h * 0.44;
+    const minDim = Math.min(w, h);
+    const R = minDim * 0.36;
+    const isRedWinner = winnerColor === RED;
+    const enemyKingChar = isRedWinner ? '將' : '帥';
+    const allyKingChar = isRedWinner ? '帥' : '將';
+    const checkerChar = checker?.char || (isRedWinner ? '俥' : '車');
+
+    ctx.save();
+
+    // 1. 双车错 (00:00 - 00:04): 双俥火环交错旋转 -> 双金甲战车破空冲锋
+    if (vfxType === 'double_chariot') {
+      // S型烈焰流光轨迹
+      for (let idx = 0; idx < 2; idx++) {
+        const dir = idx === 0 ? 1 : -1;
+        ctx.save();
+        ctx.strokeStyle = idx === 0 ? '#f97316' : '#fef08a';
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 24;
+        ctx.lineWidth = Math.max(8, R * 0.09 * (1 - p * 0.3));
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        for (let s = 0; s <= 24; s++) {
+          const t = (s / 24) * Math.min(1, p * 1.4);
+          const ang = t * Math.PI * 1.85 + (idx * Math.PI);
+          const rad = R * (0.95 - t * 0.42);
+          const px = cx + Math.cos(ang) * rad * 1.15;
+          const py = cy + Math.sin(ang) * rad * 0.82;
+          if (s === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // 双战车 3D 意象与旋转战轮 (00:03)
+        if (p > 0.22) {
+          const cp = Math.min(1, (p - 0.22) / 0.65);
+          const wx = cx + dir * THREE.MathUtils.lerp(R * 1.1, R * 0.38, cp);
+          const wy = cy + dir * THREE.MathUtils.lerp(R * 0.62, R * 0.22, cp);
+          ctx.save();
+          ctx.translate(wx, wy);
+          ctx.rotate(-0.35);
+          // 战车金轮与辐条
+          const wheelR = R * 0.28;
+          ctx.strokeStyle = '#fbbf24';
+          ctx.fillStyle = 'rgba(120, 53, 15, 0.85)';
+          ctx.lineWidth = 5;
+          ctx.shadowColor = '#f59e0b';
+          ctx.shadowBlur = 18;
+          ctx.beginPath();
+          ctx.arc(0, 0, wheelR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          for (let sp = 0; sp < 8; sp++) {
+            const sa = (sp * Math.PI) / 4 + p * 14 * dir;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(sa) * wheelR, Math.sin(sa) * wheelR);
+            ctx.stroke();
+          }
+          // 战车弩机与金戈锋刃
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.moveTo(dir * wheelR * 0.4, -wheelR * 0.35);
+          ctx.lineTo(dir * wheelR * 1.85, 0);
+          ctx.lineTo(dir * wheelR * 0.4, wheelR * 0.35);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // 双「俥」棋子交错飞旋 (00:02)
+        const ang = p * Math.PI * 1.6 + idx * Math.PI;
+        const mx = cx + Math.cos(ang) * R * 0.56;
+        const my = cy + Math.sin(ang) * R * 0.52;
+        this.drawJJMedallion2D(
+          ctx, mx, my, R * (0.28 + idx * 0.06),
+          isRedWinner ? '俥' : '車', isRedWinner,
+          1.0, 0.78, ang * 0.3, '#f97316', Math.min(1, (1 - p * 0.15))
+        );
+      }
+    }
+
+    // 2. 闷宫 (00:05 - 00:12): 烈焰风暴 + 四周粗铁链锁宫 + 敌将旋转裂光爆碎
+    else if (vfxType === 'smothered_palace') {
+      // 烈焰气旋漩涡 (00:07-00:09)
+      for (let ring = 3; ring >= 0; ring--) {
+        const rad = R * (0.38 + ring * 0.24);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(p * (4.5 - ring * 0.6));
+        const g = ctx.createRadialGradient(0, 0, rad * 0.2, 0, 0, rad);
+        g.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+        g.addColorStop(0.6, 'rgba(234, 88, 12, 0.35)');
+        g.addColorStop(1, 'rgba(124, 45, 18, 0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rad * 1.18, rad * 0.88, 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 上下弧形玄铁重链 (00:07-00:10)
+      this.drawJJChain2D(ctx, w * 0.05, cy - R * 0.78, w * 0.95, cy - R * 0.52, 16, '#fbbf24', 0.92);
+      this.drawJJChain2D(ctx, w * 0.05, cy + R * 0.65, w * 0.95, cy + R * 0.82, 16, '#fbbf24', 0.92);
+
+      // 中心「將」字棋子翻转锁困 + 内部金光崩裂射线 (00:08 - 00:10)
+      const flipScaleX = p < 0.35 ? Math.max(0.22, Math.abs(Math.cos(p * Math.PI * 4))) : 1.0;
+      this.drawJJMedallion2D(ctx, cx, cy - R * 0.06, R * 0.36, enemyKingChar, !isRedWinner, flipScaleX, 1.0, 0, '#f59e0b', 1.0);
+
+      if (p > 0.42) {
+        const crackP = (p - 0.42) / 0.58;
+        ctx.save();
+        ctx.translate(cx, cy - R * 0.06);
+        ctx.globalCompositeOperation = 'lighter';
+        for (let rIdx = 0; rIdx < 10; rIdx++) {
+          const ra = (rIdx / 10) * Math.PI * 2 + crackP * 0.4;
+          const beamLen = R * (0.35 + crackP * 0.95) * (rIdx % 2 === 0 ? 1.15 : 0.75);
+          const bGrad = ctx.createLinearGradient(0, 0, Math.cos(ra) * beamLen, Math.sin(ra) * beamLen);
+          bGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+          bGrad.addColorStop(0.4, 'rgba(254, 240, 138, 0.85)');
+          bGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+          ctx.fillStyle = bGrad;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(ra - 0.09) * beamLen, Math.sin(ra - 0.09) * beamLen);
+          ctx.lineTo(Math.cos(ra + 0.09) * beamLen, Math.sin(ra + 0.09) * beamLen);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // 3. 对面笑 (00:13 - 00:19): 金色流光绸带 + 巨型金甲帝王神将挥戈斩击
+    else if (vfxType === 'royal_gaze') {
+      const heroY = cy - R * 0.18;
+      ctx.save();
+      ctx.translate(cx, heroY);
+      const auraGrad = ctx.createRadialGradient(0, 0, R * 0.1, 0, 0, R * 1.15);
+      auraGrad.addColorStop(0, 'rgba(254, 240, 138, 0.52)');
+      auraGrad.addColorStop(0.5, 'rgba(217, 119, 6, 0.25)');
+      auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 1.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 金甲神将半身法相 (00:16 - 00:18)
+      const appear = Math.min(1, p / 0.28);
+      ctx.scale(appear, appear);
+      ctx.strokeStyle = '#fef08a';
+      ctx.fillStyle = 'rgba(180, 83, 9, 0.72)';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 22;
+      ctx.lineWidth = 4;
+
+      // 披风与肩甲
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.75, R * 0.55);
+      ctx.quadraticCurveTo(-R * 0.58, -R * 0.25, -R * 0.26, -R * 0.35);
+      ctx.lineTo(R * 0.26, -R * 0.35);
+      ctx.quadraticCurveTo(R * 0.58, -R * 0.25, R * 0.75, R * 0.55);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 胸甲护心镜
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.34, -R * 0.28);
+      ctx.lineTo(R * 0.34, -R * 0.28);
+      ctx.lineTo(R * 0.22, R * 0.38);
+      ctx.lineTo(-R * 0.22, R * 0.38);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 帝王凤翅金盔
+      ctx.beginPath();
+      ctx.arc(0, -R * 0.52, R * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      // 凤翅冠翼
+      [-1, 1].forEach(dir => {
+        ctx.beginPath();
+        ctx.moveTo(dir * R * 0.14, -R * 0.62);
+        ctx.quadraticCurveTo(dir * R * 0.48, -R * 0.92, dir * R * 0.56, -R * 0.52);
+        ctx.stroke();
+      });
+
+      // 横贯画面的神将黄金龙枪/长剑 (00:16-00:18)
+      const slashAng = -0.32 + Math.sin(p * Math.PI) * 0.22;
+      ctx.save();
+      ctx.rotate(slashAng);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(-R * 1.25, 0);
+      ctx.lineTo(R * 1.25, 0);
+      ctx.stroke();
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.moveTo(R * 1.05, -R * 0.10);
+      ctx.lineTo(R * 1.48, 0);
+      ctx.lineTo(R * 1.05, R * 0.10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.restore();
+
+      // 掠过的「帥」与「俥」勋章 (00:15)
+      if (p < 0.55) {
+        const mp = p / 0.55;
+        this.drawJJMedallion2D(ctx, cx - R * (1.1 - mp * 0.5), cy + R * 0.35, R * 0.26, allyKingChar, isRedWinner, 1, 0.72, -0.2, '#fef08a', 1 - mp);
+        this.drawJJMedallion2D(ctx, cx + R * (1.1 - mp * 0.5), cy - R * 0.35, R * 0.25, checkerChar, isRedWinner, 1, 0.72, 0.2, '#fef08a', 1 - mp);
+      }
+    }
+
+    // 4. 重炮 (00:20 - 00:26): 巍峨城墙垛口 + 并列双龙巨炮齐射轰击
+    else if (vfxType === 'double_cannon') {
+      const wallY = cy + R * 0.12;
+      ctx.save();
+      // 城墙垛口底座 (00:23)
+      const wallGrad = ctx.createLinearGradient(0, wallY - R * 0.2, 0, wallY + R * 0.75);
+      wallGrad.addColorStop(0, '#78350f');
+      wallGrad.addColorStop(0.5, '#451a03');
+      wallGrad.addColorStop(1, '#1c0a00');
+      ctx.fillStyle = wallGrad;
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - R * 1.25, wallY + R * 0.68);
+      ctx.lineTo(cx - R * 1.12, wallY);
+      for (let i = -3; i <= 2; i++) {
+        const bx = cx + i * R * 0.34;
+        ctx.lineTo(bx, wallY);
+        ctx.lineTo(bx, wallY - R * 0.12);
+        ctx.lineTo(bx + R * 0.18, wallY - R * 0.12);
+        ctx.lineTo(bx + R * 0.18, wallY);
+      }
+      ctx.lineTo(cx + R * 1.12, wallY);
+      ctx.lineTo(cx + R * 1.25, wallY + R * 0.68);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 并列双龙巨炮 (00:23 - 00:24)
+      [-R * 0.48, R * 0.48].forEach((ox, idx) => {
+        const recoil = p > 0.32 ? Math.sin(Math.min(1, (p - 0.32) * 4) * Math.PI) * R * 0.08 : 0;
+        const px = cx + ox;
+        const py = wallY - R * 0.28 + recoil;
+        ctx.save();
+        ctx.translate(px, py);
+
+        // 龙首护盾与双角
+        ctx.fillStyle = '#334155';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        (ctx.roundRect ? ctx.roundRect(-R * 0.28, -R * 0.22, R * 0.56, R * 0.42, 10) : ctx.rect(-R * 0.28, -R * 0.22, R * 0.56, R * 0.42, 10));
+        ctx.fill();
+        ctx.stroke();
+
+        // 巨炮炮管口 (正对镜头微微上扬)
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(0, -R * 0.14, R * 0.19, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 炮口烈焰齐射闪光 (00:24)
+        if (p > 0.30) {
+          const flashP = Math.sin(Math.min(1, (p - 0.30 + idx * 0.06) * 2.2) * Math.PI);
+          if (flashP > 0.05) {
+            const fg = ctx.createRadialGradient(0, -R * 0.18, 2, 0, -R * 0.18, R * 0.48 * flashP);
+            fg.addColorStop(0, '#ffffff');
+            fg.addColorStop(0.35, '#fef08a');
+            fg.addColorStop(0.7, '#f97316');
+            fg.addColorStop(1, 'rgba(239, 68, 68, 0)');
+            ctx.fillStyle = fg;
+            ctx.beginPath();
+            ctx.arc(0, -R * 0.18, R * 0.48 * flashP, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      });
+      ctx.restore();
+    }
+
+    // 5. 马后炮 (00:27 - 00:32): 后方巨炮镇守 + 前方金甲战马扬蹄 + 烈焰炮弹越马轰击
+    else if (vfxType === 'horse_cannon') {
+      ctx.save();
+      // 后方中路巨炮炮台 (00:30)
+      ctx.save();
+      ctx.translate(cx, cy - R * 0.22);
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      (ctx.roundRect ? ctx.roundRect(-R * 0.34, -R * 0.22, R * 0.68, R * 0.42, 8) : ctx.rect(-R * 0.34, -R * 0.22, R * 0.68, R * 0.42, 8));
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#090d16';
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.arc(0, -R * 0.05, R * 0.16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // 右侧前景跃起的金焰战马剪影 (00:30)
+      ctx.save();
+      ctx.translate(cx + R * 0.62, cy + R * 0.18);
+      ctx.fillStyle = '#fbbf24';
+      ctx.strokeStyle = '#fef08a';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 22;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(R * 0.22, R * 0.48);
+      ctx.quadraticCurveTo(-R * 0.08, R * 0.12, -R * 0.18, -R * 0.15);
+      ctx.lineTo(-R * 0.36, -R * 0.05);
+      ctx.lineTo(-R * 0.24, -R * 0.32);
+      ctx.lineTo(-R * 0.05, -R * 0.48);
+      ctx.quadraticCurveTo(R * 0.18, -R * 0.32, R * 0.28, R * 0.15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // 呼啸而出的烈焰火球 (00:31)
+      if (p > 0.35) {
+        const bp = Math.min(1, (p - 0.35) / 0.55);
+        const bx = THREE.MathUtils.lerp(cx, cx - R * 0.25, bp);
+        const by = THREE.MathUtils.lerp(cy - R * 0.25, cy - R * 0.55, Math.sin(bp * Math.PI));
+        const br = R * (0.14 + bp * 0.28);
+        const fg = ctx.createRadialGradient(bx, by, 2, bx, by, br * 1.8);
+        fg.addColorStop(0, '#ffffff');
+        fg.addColorStop(0.35, '#fef08a');
+        fg.addColorStop(0.7, '#ea580c');
+        fg.addColorStop(1, 'rgba(220, 38, 38, 0)');
+        ctx.fillStyle = fg;
+        ctx.beginPath();
+        ctx.arc(bx, by, br * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 6. 铁门栓 (00:33 - 00:40): 三扇玄铁巨门合拢 + 四方粗铁链死锁 + 铁门轰然炸裂碎片
+    else if (vfxType === 'iron_bolt') {
+      const shatterP = p > 0.62 ? (p - 0.62) / 0.38 : 0;
+      // 四角粗大玄铁锁链 (00:36 - 00:37)
+      const chainAlpha = shatterP > 0 ? Math.max(0, 1 - shatterP * 1.8) : Math.min(1, p * 3.5);
+      const corners = [[0, h * 0.08], [w, h * 0.08], [0, h * 0.88], [w, h * 0.88]];
+      corners.forEach(([sx, sy]) => {
+        this.drawJJChain2D(ctx, sx, sy, cx, cy, 12, '#f59e0b', chainAlpha);
+      });
+
+      if (shatterP <= 0) {
+        // 三扇玄铁黑门夹紧并发出熔岩金光 (00:36 - 00:37)
+        const closeEase = 1 - Math.pow(1 - Math.min(1, p / 0.26), 3);
+        [-1, 0, 1].forEach(idx => {
+          const ox = idx * R * THREE.MathUtils.lerp(0.85, 0.36, closeEase);
+          ctx.save();
+          ctx.translate(cx + ox, cy + idx * 8);
+          ctx.rotate(idx * 0.08);
+          ctx.fillStyle = '#090d16';
+          ctx.strokeStyle = '#f97316';
+          ctx.shadowColor = '#f59e0b';
+          ctx.shadowBlur = 24;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          (ctx.roundRect ? ctx.roundRect(-R * 0.22, -R * 0.48, R * 0.44, R * 0.96, 6) : ctx.rect(-R * 0.22, -R * 0.48, R * 0.44, R * 0.96, 6));
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        });
+      } else {
+        // 铁门轰然炸裂为飞散玄铁碎片 (00:38)
+        const fg = ctx.createRadialGradient(cx, cy, 8, cx, cy, R * 1.35);
+        fg.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        fg.addColorStop(0.35, 'rgba(254, 240, 138, 0.85)');
+        fg.addColorStop(0.7, 'rgba(249, 115, 22, 0.45)');
+        fg.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = fg;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let i = 0; i < 16; i++) {
+          const ang = (i / 16) * Math.PI * 2 + i * 0.2;
+          const dist = R * (0.2 + shatterP * 1.35);
+          ctx.save();
+          ctx.translate(cx + Math.cos(ang) * dist, cy + Math.sin(ang) * dist);
+          ctx.rotate(ang + shatterP * 6);
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 2;
+          const sz = R * 0.14 * (1 - shatterP * 0.4);
+          ctx.fillRect(-sz, -sz * 0.6, sz * 2, sz * 1.2);
+          ctx.strokeRect(-sz, -sz * 0.6, sz * 2, sz * 1.2);
+          ctx.restore();
+        }
+      }
+    }
+
+    // 7. 侧面虎 (00:41 - 00:46): 俥傌双棋盘旋 + 左上方咆哮金焰猛虎扑击与五道虎爪裂芒
+    else if (vfxType === 'side_tiger') {
+      // 金焰猛虎扑击剪影 (00:44)
+      const leapP = Math.min(1, p / 0.45);
+      const tx = cx - R * THREE.MathUtils.lerp(0.85, 0.35, leapP);
+      const ty = cy - R * THREE.MathUtils.lerp(0.75, 0.38, leapP);
+      ctx.save();
+      ctx.translate(tx, ty);
+      ctx.rotate(0.24);
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 26;
+      const tGrad = ctx.createLinearGradient(-R * 0.4, -R * 0.3, R * 0.4, R * 0.3);
+      tGrad.addColorStop(0, '#fef08a');
+      tGrad.addColorStop(0.5, '#f59e0b');
+      tGrad.addColorStop(1, '#b45309');
+      ctx.fillStyle = tGrad;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      // 猛虎躯干与咆哮虎首轮廓
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.42, 0);
+      ctx.quadraticCurveTo(-R * 0.15, -R * 0.28, R * 0.22, -R * 0.22);
+      ctx.lineTo(R * 0.38, -R * 0.08);
+      ctx.lineTo(R * 0.28, R * 0.14);
+      ctx.lineTo(R * 0.44, R * 0.32); // 前扑虎爪
+      ctx.lineTo(R * 0.12, R * 0.20);
+      ctx.quadraticCurveTo(-R * 0.15, R * 0.22, -R * 0.38, R * 0.28);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // 俥与傌双棋流光环绕 (00:44)
+      this.drawJJMedallion2D(ctx, cx - R * 0.62, cy - R * 0.05, R * 0.24, isRedWinner ? '傌' : '馬', isRedWinner, 1.0, 0.68, -0.25, '#f97316', 0.95);
+      this.drawJJMedallion2D(ctx, cx + R * 0.38, cy + R * 0.18, R * 0.34, isRedWinner ? '俥' : '車', isRedWinner, 1.0, 0.72, 0.12, '#fef08a', 0.98);
+
+      // 虎爪撕裂金芒 (00:45)
+      if (p > 0.32) {
+        const sp = Math.min(1, (p - 0.32) / 0.45);
+        ctx.save();
+        ctx.strokeStyle = '#fef08a';
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 18;
+        ctx.lineWidth = 5;
+        for (let cIdx = -2; cIdx <= 2; cIdx++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - R * 0.75 + cIdx * 18, cy - R * 0.45 - cIdx * 12);
+          ctx.quadraticCurveTo(cx + cIdx * 20, cy + cIdx * 10, cx - R * 0.75 + R * 1.55 * sp + cIdx * 18, cy - R * 0.45 + R * 0.95 * sp - cIdx * 12);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    // 8. 八角马 (00:47 - 00:51): 幽夜皎洁满月 + 立马横枪将军剪影化为金焰神骑冲锋
+    else if (vfxType === 'octagon_horse') {
+      const moonX = cx;
+      const moonY = cy - R * 0.28;
+      const moonR = R * 0.46;
+
+      // 皎洁满月与月华光晕 (00:49 - 00:50)
+      const mGlow = ctx.createRadialGradient(moonX, moonY, moonR * 0.5, moonX, moonY, moonR * 1.9);
+      mGlow.addColorStop(0, 'rgba(255, 255, 240, 0.95)');
+      mGlow.addColorStop(0.5, 'rgba(254, 240, 138, 0.42)');
+      mGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = mGlow;
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonR * 1.9, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fefce8';
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 月下立马横枪将军 (p < 0.48 为月前墨色剪影，p >= 0.48 化为金焰神将冲出明月)
+      const isCharging = p >= 0.46;
+      const chargeP = isCharging ? (p - 0.46) / 0.54 : 0;
+      const rx = THREE.MathUtils.lerp(moonX, cx - R * 0.65, chargeP);
+      const ry = THREE.MathUtils.lerp(moonY + R * 0.04, cy - R * 0.05, chargeP);
+      const rScale = 1 + chargeP * 0.45;
+
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.scale(rScale, rScale);
+      ctx.fillStyle = isCharging ? '#fbbf24' : '#1e1b2e';
+      ctx.strokeStyle = isCharging ? '#fef08a' : '#fbbf24';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = isCharging ? 28 : 8;
+      ctx.lineWidth = 2.8;
+
+      // 扬蹄战马与武将剪影
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.18, R * 0.26);
+      ctx.lineTo(-R * 0.08, -R * 0.05);
+      ctx.lineTo(-R * 0.16, -R * 0.24);
+      ctx.lineTo(0, -R * 0.34);
+      ctx.lineTo(R * 0.14, -R * 0.18);
+      ctx.lineTo(R * 0.22, R * 0.18);
+      ctx.closePath();
+      ctx.fill();
+      if (isCharging) ctx.stroke();
+
+      // 武将长枪
+      ctx.strokeStyle = isCharging ? '#ffffff' : '#1e1b2e';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.35, -R * 0.28);
+      ctx.lineTo(R * 0.42, R * 0.08);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 9. 钓鱼马 (00:52 - 01:01): 全屏碧海漩涡 + 傌字居中 + 垂钓者金钩钓起碧海巨鲲
+    else if (vfxType === 'fishing_horse') {
+      // 全屏深海漩涡波纹 (00:54 - 00:58)
+      for (let i = 6; i >= 1; i--) {
+        const wr = R * (0.24 + i * 0.22);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-p * (5.2 - i * 0.45));
+        ctx.strokeStyle = i % 2 === 0 ? 'rgba(56, 189, 248, 0.62)' : 'rgba(186, 230, 253, 0.48)';
+        ctx.lineWidth = 4 + i * 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, wr, 0, Math.PI * 1.35);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 漩涡中心「傌」棋子 (00:54)
+      if (p < 0.42) {
+        this.drawJJMedallion2D(ctx, cx, cy, R * 0.36, isRedWinner ? '傌' : '馬', isRedWinner, 1, 1, p * 2.5, '#38bdf8', 1 - p * 1.8);
+      }
+
+      // 漩涡中心垂钓者剪影与弯弓鱼竿 (00:57)
+      if (p > 0.28) {
+        const fp = Math.min(1, (p - 0.28) / 0.35);
+        ctx.save();
+        ctx.globalAlpha = fp;
+        ctx.translate(cx - R * 0.12, cy - R * 0.08);
+        ctx.fillStyle = '#082f49';
+        ctx.strokeStyle = '#7dd3fc';
+        ctx.lineWidth = 2.5;
+        // 斗笠垂钓者
+        ctx.beginPath();
+        ctx.moveTo(-R * 0.16, -R * 0.12);
+        ctx.lineTo(0, -R * 0.24);
+        ctx.lineTo(R * 0.16, -R * 0.12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // 弧形钓竿与发光钓线
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -R * 0.05);
+        ctx.quadraticCurveTo(R * 0.45, -R * 0.42, R * 0.68, -R * 0.12);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 破浪而出的碧海巨鲲/蛟龙灵影 (00:58)
+      if (p > 0.52) {
+        const dp = (p - 0.52) / 0.48;
+        ctx.save();
+        ctx.translate(cx + R * 0.38, cy + R * (0.45 - dp * 0.65));
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.82)';
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 28;
+        ctx.beginPath();
+        ctx.arc(0, 0, R * 0.35 * dp, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 10. 列马车 (01:02 - 01:09): 苍穹赤日红月 + 浮空断崖石台 + 赤焰烈马傲立跃空
+    else if (vfxType === 'standing_horse_chariot') {
+      const sunY = cy - R * 0.48;
+      const sunR = R * 0.44;
+      // 苍穹赤日红月 (01:06 - 01:08)
+      const sunGrad = ctx.createRadialGradient(cx, sunY, sunR * 0.1, cx, sunY, sunR * 1.45);
+      sunGrad.addColorStop(0, '#fef08a');
+      sunGrad.addColorStop(0.45, '#ef4444');
+      sunGrad.addColorStop(0.75, '#991b1b');
+      sunGrad.addColorStop(1, 'rgba(153, 27, 27, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.arc(cx, sunY, sunR * 1.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 浮空断崖与阶梯石台 (01:06 - 01:07)
+      const cliffY = cy + R * 0.12;
+      ctx.fillStyle = '#334155';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx - R * 0.45, cliffY);
+      ctx.lineTo(cx + R * 0.32, cliffY);
+      ctx.lineTo(cx + R * 0.18, cliffY + R * 0.58);
+      ctx.lineTo(cx - R * 0.32, cliffY + R * 0.48);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 断崖之巅的赤焰烈马 (01:06 傲立 -> 01:08 腾空跃起)
+      const jumpP = p > 0.55 ? (p - 0.55) / 0.45 : 0;
+      const hx = cx - R * 0.06 - jumpP * R * 0.25;
+      const hy = cliffY - R * 0.26 - Math.sin(jumpP * Math.PI * 0.8) * R * 0.55;
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(-jumpP * 0.45);
+      ctx.fillStyle = '#dc2626';
+      ctx.strokeStyle = '#fef08a';
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 22;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.24, R * 0.22);
+      ctx.lineTo(-R * 0.14, -R * 0.12);
+      ctx.lineTo(-R * 0.26, -R * 0.28);
+      ctx.lineTo(-R * 0.06, -R * 0.36);
+      ctx.lineTo(R * 0.22, -R * 0.08);
+      ctx.lineTo(R * 0.26, R * 0.24);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 11. 双将 (01:10 - 01:16): 双道金弧交击 + 右下方破空巨型黄金圣剑/金锏轰碎乱石
+    else if (vfxType === 'double_check') {
+      const thrust = Math.min(1, p / 0.35);
+      ctx.save();
+      ctx.translate(cx + R * (0.45 - thrust * 0.35), cy + R * (0.45 - thrust * 0.35));
+      ctx.rotate(-Math.PI * 0.72);
+
+      // 巨型黄金圣剑/金锏剑身 (01:13 - 01:14)
+      const bladeG = ctx.createLinearGradient(-R * 0.28, 0, R * 0.28, 0);
+      bladeG.addColorStop(0, '#b45309');
+      bladeG.addColorStop(0.5, '#fef08a');
+      bladeG.addColorStop(1, '#d97706');
+      ctx.fillStyle = bladeG;
+      ctx.strokeStyle = '#ffffff';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 28;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.24, -R * 0.95);
+      ctx.lineTo(0, -R * 1.38);
+      ctx.lineTo(R * 0.24, -R * 0.95);
+      ctx.lineTo(R * 0.20, R * 0.55);
+      ctx.lineTo(-R * 0.20, R * 0.55);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 剑柄护手
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      (ctx.roundRect ? ctx.roundRect(-R * 0.46, R * 0.48, R * 0.92, R * 0.18, 8) : ctx.rect(-R * 0.46, R * 0.48, R * 0.92, R * 0.18, 8));
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // 崩飞的白玉碎石 (01:13)
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + p * 2;
+        const d = R * (0.32 + p * 0.75);
+        ctx.save();
+        ctx.translate(cx + Math.cos(a) * d, cy + Math.sin(a) * d);
+        ctx.rotate(a);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(-10, -7, 20, 14);
+        ctx.restore();
+      }
+    }
+
+    // 12. 夹车炮 (01:17 - 01:24): 大漠狂沙 + 双红战旗重甲巨炮战车正面冲锋
+    else if (vfxType === 'chariot_cannon_clamp') {
+      const scaleC = THREE.MathUtils.lerp(0.65, 1.08, Math.min(1, p / 0.48));
+      ctx.save();
+      ctx.translate(cx, cy - R * 0.08);
+      ctx.scale(scaleC, scaleC);
+
+      // 双面迎风招展的赤红战旗 (01:21 - 01:22)
+      [-R * 0.32, R * 0.18].forEach((fx, idx) => {
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(fx, -R * 0.22);
+        ctx.lineTo(fx, -R * 0.88);
+        ctx.stroke();
+
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.moveTo(fx, -R * 0.86);
+        ctx.quadraticCurveTo(fx + R * 0.22, -R * 0.82 + Math.sin(p * 18 + idx) * 12, fx + R * 0.34, -R * 0.68);
+        ctx.lineTo(fx, -R * 0.52);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // 重甲战车木铁城垛车体 (01:22)
+      ctx.fillStyle = '#78350f';
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      (ctx.roundRect ? ctx.roundRect(-R * 0.68, -R * 0.35, R * 1.36, R * 0.72, 10) : ctx.rect(-R * 0.68, -R * 0.35, R * 1.36, R * 0.72, 10));
+      ctx.fill();
+      ctx.stroke();
+
+      // 左右战车铁刺巨轮
+      [-R * 0.74, R * 0.74].forEach(wx => {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(wx - R * 0.08, -R * 0.25, R * 0.16, R * 0.65);
+        ctx.strokeRect(wx - R * 0.08, -R * 0.25, R * 0.16, R * 0.65);
+      });
+
+      // 中央巨炮黑洞炮口
+      ctx.fillStyle = '#090d16';
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(0, -R * 0.02, R * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 13. 卧槽马 (01:25 - 01:31): 璀璨黄金马厩牌坊图腾 + 金焰神驹破门直冲镜头
+    else if (vfxType === 'trough_horse') {
+      const gateY = cy - R * 0.14;
+      ctx.save();
+      ctx.translate(cx, gateY);
+      ctx.strokeStyle = '#fef08a';
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.28)';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 32;
+      ctx.lineWidth = 6;
+
+      // 黄金牌坊立柱与飞檐 (01:28 - 01:29)
+      ctx.strokeRect(-R * 0.62, -R * 0.52, R * 1.24, R * 0.96);
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.82, -R * 0.52);
+      ctx.quadraticCurveTo(0, -R * 0.76, R * 0.82, -R * 0.52);
+      ctx.stroke();
+
+      // 牌坊中心骏马金印图腾 + 破门冲出的神驹 (01:29 -> 01:30)
+      const rushScale = p < 0.45 ? 1.0 : 1.0 + (p - 0.45) * 1.65;
+      ctx.scale(rushScale, rushScale);
+      const coreG = ctx.createRadialGradient(0, 0, 5, 0, 0, R * 0.42);
+      coreG.addColorStop(0, '#ffffff');
+      coreG.addColorStop(0.5, '#fef08a');
+      coreG.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = coreG;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 0.42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // 神驹昂首剪影
+      ctx.fillStyle = '#b45309';
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.15, R * 0.22);
+      ctx.lineTo(-R * 0.06, -R * 0.24);
+      ctx.lineTo(R * 0.16, -R * 0.12);
+      ctx.lineTo(R * 0.08, R * 0.22);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 14. 闷杀 (01:32 - 01:37): 巨型将棋翻滚 + 暗黑玄铁巨柱烈焰 + 黑铁锁链横扫
+    else if (vfxType === 'smothered_kill') {
+      // 翻滚的特写敌将棋子 (01:34)
+      if (p < 0.58) {
+        const kp = p / 0.58;
+        this.drawJJMedallion2D(
+          ctx,
+          cx - R * (0.95 - kp * 0.35),
+          cy + R * 0.12,
+          R * 0.52,
+          enemyKingChar,
+          !isRedWinner,
+          0.92,
+          1.0,
+          -0.65 + kp * 0.4,
+          '#fbbf24',
+          1 - kp * 0.5
+        );
+      }
+      // 交叉黑铁锁链 (01:35)
+      this.drawJJChain2D(ctx, w * 0.04, h * 0.78, w * 0.36, h * 0.18, 14, '#eab308', 0.95);
+      this.drawJJChain2D(ctx, w * 0.22, h * 0.56, w * 0.96, h * 0.24, 16, '#eab308', 0.95);
+    }
+
+    // 15. 天地炮 (01:38 - 01:43): 赤云群峰苍穹 + 九天雷火冲击波从天而降轰击敌将
+    else if (vfxType === 'heaven_earth_cannon') {
+      // 远景群山剪影 (01:41)
+      ctx.save();
+      ctx.fillStyle = 'rgba(69, 10, 10, 0.72)';
+      ctx.beginPath();
+      ctx.moveTo(0, cy + R * 0.65);
+      ctx.lineTo(w * 0.22, cy - R * 0.18);
+      ctx.lineTo(w * 0.45, cy + R * 0.25);
+      ctx.lineTo(w * 0.76, cy - R * 0.28);
+      ctx.lineTo(w, cy + R * 0.35);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
+
+      // 天降乾坤火柱冲击波与底部受击敌将 (01:41)
+      const beamG = ctx.createRadialGradient(cx, cy - R * 0.45, 10, cx, cy + R * 0.35, R * 1.25);
+      beamG.addColorStop(0, 'rgba(255, 255, 255, 0.92)');
+      beamG.addColorStop(0.35, 'rgba(254, 240, 138, 0.68)');
+      beamG.addColorStop(0.7, 'rgba(239, 68, 68, 0.38)');
+      beamG.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = beamG;
+      ctx.fillRect(cx - R * 1.2, cy - R * 1.1, R * 2.4, R * 1.8);
+
+      this.drawJJMedallion2D(ctx, cx, cy + R * 0.58, R * 0.34, enemyKingChar, !isRedWinner, 1.0, 0.58, 0, '#ef4444', 0.95);
+      ctx.restore();
+    }
+
+    // 16. 困毙 (01:44 - 01:53): 3D 透视八卦奇门石阵升起 + 敌将坠入阵眼封印
+    else if (vfxType === 'stalemate_trap') {
+      const arrayY = cy + R * 0.18;
+      ctx.save();
+      ctx.translate(cx, arrayY);
+      ctx.scale(1.0, 0.56); // 3D 俯视透视石阵 (01:48 - 01:52)
+
+      // 八卦熔金石阵底座
+      const coreG = ctx.createRadialGradient(0, 0, 5, 0, 0, R * 1.28);
+      coreG.addColorStop(0, '#ffffff');
+      coreG.addColorStop(0.28, '#fef08a');
+      coreG.addColorStop(0.55, '#d97706');
+      coreG.addColorStop(1, 'rgba(69, 26, 3, 0)');
+      ctx.fillStyle = coreG;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 1.28, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 八方升起的奇门石墙
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4 + p * 0.35;
+        ctx.save();
+        ctx.rotate(a);
+        ctx.fillStyle = '#451a03';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.fillRect(-R * 0.24, R * 0.52, R * 0.48, R * 0.22);
+        ctx.strokeRect(-R * 0.24, R * 0.52, R * 0.48, R * 0.22);
+        ctx.fillRect(-R * 0.32, R * 0.84, R * 0.64, R * 0.24);
+        ctx.strokeRect(-R * 0.32, R * 0.84, R * 0.64, R * 0.24);
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // 坠入八卦阵眼的「將」棋子 (01:50)
+      if (p < 0.72) {
+        const dp = p / 0.72;
+        this.drawJJMedallion2D(
+          ctx,
+          cx,
+          THREE.MathUtils.lerp(cy - R * 0.85, arrayY, dp * dp),
+          R * THREE.MathUtils.lerp(0.32, 0.16, dp),
+          enemyKingChar,
+          !isRedWinner,
+          1.0,
+          0.75,
+          dp * 4,
+          '#fef08a',
+          1 - dp * 0.6
+        );
+      }
+    }
+
+    // 17. 海底捞月 (01:54 - 02:01): 金轮沉海水中映月 (01:58) + 碧海莲华巨浪绽放 (01:59-02:00)
+    else {
+      if (p < 0.48) {
+        // 水中映月波纹倒影 (01:58)
+        const wp = p / 0.48;
+        ctx.save();
+        ctx.translate(cx, cy - R * 0.08);
+        for (let wIdx = 0; wIdx < 6; wIdx++) {
+          const wy = (wIdx - 2.5) * R * 0.16 + Math.sin(wp * 14 + wIdx) * 8;
+          ctx.fillStyle = 'rgba(254, 240, 138, 0.22)';
+          ctx.beginPath();
+          ctx.ellipse(Math.sin(wp * 10 + wIdx) * 16, wy, R * (0.68 - Math.abs(wIdx - 2.5) * 0.1), R * 0.12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        this.drawJJMedallion2D(ctx, cx, cy - R * 0.08, R * 0.48, checkerChar, isRedWinner, 1.0, 0.88, wp * 0.4, '#fef08a', 0.92);
+      } else {
+        // 碧海冰莲巨浪绽放 + 棋子居中 (01:59 - 02:00)
+        const lp = (p - 0.48) / 0.52;
+        ctx.save();
+        ctx.translate(cx, cy - R * 0.05);
+        const petalCount = 12;
+        for (let i = 0; i < petalCount; i++) {
+          const a = (i / petalCount) * Math.PI * 2 + lp * 0.35;
+          const pLen = R * (0.55 + lp * 0.68) * (i % 2 === 0 ? 1.12 : 0.88);
+          ctx.save();
+          ctx.rotate(a);
+          const pg = ctx.createLinearGradient(0, 0, 0, -pLen);
+          pg.addColorStop(0, 'rgba(224, 242, 254, 0.92)');
+          pg.addColorStop(0.55, 'rgba(56, 189, 248, 0.78)');
+          pg.addColorStop(1, 'rgba(2, 132, 199, 0.05)');
+          ctx.fillStyle = pg;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(R * 0.24, -pLen * 0.55, 0, -pLen);
+          ctx.quadraticCurveTo(-R * 0.24, -pLen * 0.55, 0, 0);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
+        this.drawJJMedallion2D(ctx, cx, cy - R * 0.02, R * (0.42 * (1 - lp * 0.35)), checkerChar, isRedWinner, 1.0, 0.72, 0, '#38bdf8', 1 - lp * 0.4);
+      }
+    }
+
     ctx.restore();
   },
 
@@ -10944,7 +12235,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     const group = new THREE.Group();
     this.checkmateVFXGroup.add(group);
     const slashTex = typeof getSlashArcTexture === 'function' ? getSlashArcTexture() : null;
-    const baguaTex = typeof getBaguaMagicTexture === 'function' ? getBaguaMagicTexture() : null;
 
     const goldMat = new THREE.MeshStandardMaterial({
       color: 0xfbbf24,
@@ -11467,14 +12757,14 @@ Object.assign(Xiangqi3DApp.prototype, {
       group.add(skyRing, crossX, crossZ);
 
       return (p, dt, fade = 1) => {
-        skyRing.rotation.z += dt * 4.2;
-        const pulse = (0.85 + Math.sin(p * 26) * 0.22) * fade;
-        skyRing.scale.set(pulse, pulse, 1);
-        crossX.scale.z = pulse;
-        crossZ.scale.x = pulse;
-        skyRing.material.opacity = 0.9 * fade;
-        crossX.material.opacity = 0.85 * fade;
-        crossZ.material.opacity = 0.85 * fade;
+        skyRing.rotation.z -= dt * 3.2;
+        skyRing.position.y = THREE.MathUtils.lerp(3.6, 0.45, Math.min(1, p * 1.6));
+        skyRing.scale.setScalar((0.8 + p * 0.9) * fade);
+        const pulse = (0.7 + Math.sin(p * 26) * 0.3) * fade;
+        crossX.scale.set(1, pulse, pulse);
+        crossZ.scale.set(pulse, pulse, 1);
+        crossX.material.opacity = 0.88 * fade;
+        crossZ.material.opacity = 0.88 * fade;
       };
     }
 
@@ -11482,20 +12772,12 @@ Object.assign(Xiangqi3DApp.prototype, {
       const monoliths = [];
       for (let i = 0; i < 8; i++) {
         const a = (i * Math.PI) / 4;
-        const slab = new THREE.Mesh(new THREE.BoxGeometry(0.78, 2.15, 0.22), darkIronMat);
-        const rune = new THREE.Mesh(
-          new THREE.PlaneGeometry(0.58, 1.65),
-          new THREE.MeshBasicMaterial({
-            map: baguaTex,
-            color: 0xfef08a,
-            transparent: true,
-            blending: THREE.AdditiveBlending,
-            side: THREE.DoubleSide
-          })
-        );
-        rune.position.z = 0.13;
-        slab.add(rune);
-        slab.position.set(kPos.x + Math.cos(a) * 2.55, 1.12, kPos.z + Math.sin(a) * 2.55);
+        const slab = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.75, 2.25, 0.24), darkIronMat);
+        const trim = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.18, 0.28), goldMat);
+        trim.position.y = 1.08;
+        slab.add(body, trim);
+        slab.position.set(kPos.x + Math.cos(a) * 2.4, 1.15, kPos.z + Math.sin(a) * 2.4);
         slab.rotation.y = -a + Math.PI / 2;
         group.add(slab);
         monoliths.push({ slab, a });
@@ -11511,6 +12793,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       };
     }
 
+    // Default / frost_lotus_strike (海底捞月)
     const icePetals = [];
     for (let i = 0; i < 12; i++) {
       const a = (i * Math.PI) / 6;
@@ -11545,13 +12828,13 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.lastCheckmatePattern = pattern;
     this.lastWinnerColor = winnerColor;
 
-    const vfxType = pattern.vfxType || 'frost_lotus_strike';
+    const vfxType = (pattern.vfxType === 'sea_bottom_moon' ? 'frost_lotus_strike' : pattern.vfxType) || 'frost_lotus_strike';
     const stampTitle = pattern.stampText || (pattern.title || '绝杀').replace(/\s*·.*$/, '');
     const subBannerText = pattern.subBanner || pattern.badge || 'JJ象棋名局杀法 · 雷霆绝杀';
 
     this.sfx.playCheckmateVFXSound(vfxType);
 
-    const TOTAL_DURATION = 3.80;
+    const TOTAL_DURATION = 3.90;
     this.vfxAtmosphereDuration = TOTAL_DURATION;
     this.vfxAtmosphereTimer = TOTAL_DURATION;
 
@@ -11591,7 +12874,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     const focusZ = (cPos.z * 0.42 + kPos.z * 0.58);
     const baseTheta = this._savedCamBeforeVFX.spherical.theta;
 
-    const vfxLight = new THREE.PointLight(0xffb700, 3.6, 22, 1.5);
+    const vfxLight = new THREE.PointLight(0xffb700, 3.8, 22, 1.5);
     vfxLight.position.set(kPos.x, 3.6, kPos.z);
     this.checkmateVFXGroup.add(vfxLight);
 
@@ -11645,7 +12928,7 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     const updateCustom3D = this.build3DSpectacleForType(vfxType, kPos, cPos, rPos, winnerColor);
 
-    const spawn3DBurst = (wx, wy, wz, primaryHex = 0xff5500, secondaryHex = 0xfef08a, count = 48) => {
+    const spawn3DBurst = (wx, wy, wz, primaryHex = 0xff5500, secondaryHex = 0xfef08a, count = 52) => {
       for (let i = 0; i < count; i++) {
         const sprite = new THREE.Sprite(
           new THREE.SpriteMaterial({
@@ -11679,9 +12962,9 @@ Object.assign(Xiangqi3DApp.prototype, {
       }
     };
 
-    const sparks2D = Array.from({ length: 64 }, (_, i) => {
-      const ang = (i / 64) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-      const spd = 120 + Math.random() * 420;
+    const sparks2D = Array.from({ length: 72 }, (_, i) => {
+      const ang = (i / 72) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+      const spd = 120 + Math.random() * 440;
       return {
         ang,
         vx: Math.cos(ang) * spd,
@@ -11689,7 +12972,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         size: 3.0 + Math.random() * 8.5,
         rot: Math.random() * Math.PI * 2,
         vRot: (Math.random() - 0.5) * 9,
-        color: i % 4 === 0 ? '#ffffff' : (i % 2 === 0 ? '#fef08a' : '#ef4444')
+        color: i % 4 === 0 ? '#ffffff' : (i % 2 === 0 ? '#fef08a' : '#f97316')
       };
     });
 
@@ -11709,8 +12992,8 @@ Object.assign(Xiangqi3DApp.prototype, {
         ctx.scale(dpr, dpr);
         ctx.clearRect(0, 0, w, h);
 
-        if (sec < 0.60) {
-          const p1 = sec / 0.60;
+        if (sec < 0.62) {
+          const p1 = sec / 0.62;
           const ease1 = 1 - Math.pow(1 - p1, 3);
 
           this.camTarget.set(
@@ -11718,13 +13001,13 @@ Object.assign(Xiangqi3DApp.prototype, {
             THREE.MathUtils.lerp(0, 0.28, ease1),
             THREE.MathUtils.lerp(0.3, focusZ, ease1 * 0.85)
           );
-          this.desiredSpherical.radius = THREE.MathUtils.lerp(this._savedCamBeforeVFX.spherical.radius, 11.8, ease1);
+          this.desiredSpherical.radius = THREE.MathUtils.lerp(this._savedCamBeforeVFX.spherical.radius, 11.6, ease1);
           this.desiredSpherical.phi = THREE.MathUtils.lerp(this._savedCamBeforeVFX.spherical.phi, 0.92, ease1);
           this.desiredSpherical.theta = baseTheta + ease1 * 0.14;
 
           this._activeCheckerMeshes.forEach((item, idx) => {
             if (!item.mesh) return;
-            const lift = Math.sin(ease1 * Math.PI * 0.5) * (item.isKing ? 0.28 : 0.72);
+            const lift = Math.sin(ease1 * Math.PI * 0.5) * (item.isKing ? 0.32 : 0.78);
             item.mesh.position.set(item.basePos.x, lift, item.basePos.z);
             item.mesh.rotation.y = ease1 * Math.PI * (idx % 2 === 0 ? 2 : -2);
           });
@@ -11736,20 +13019,38 @@ Object.assign(Xiangqi3DApp.prototype, {
           baguaOuter.rotation.z += dt * 2.2;
 
           const kScreen = this.projectWorldToScreen(kPos.x, 0.35, kPos.z, w, h);
-          const vig = ctx.createRadialGradient(kScreen.x, kScreen.y, Math.min(w, h) * 0.18, kScreen.x, kScreen.y, Math.max(w, h) * 0.78);
+          const cScreen = this.projectWorldToScreen(cPos.x, 0.35, cPos.z, w, h);
+          const vig = ctx.createRadialGradient(kScreen.x, kScreen.y, Math.min(w, h) * 0.16, kScreen.x, kScreen.y, Math.max(w, h) * 0.78);
           vig.addColorStop(0, 'rgba(0, 0, 0, 0)');
-          vig.addColorStop(0.55, `rgba(18, 10, 16, ${0.24 * ease1})`);
-          vig.addColorStop(1, `rgba(4, 4, 10, ${0.64 * ease1})`);
+          vig.addColorStop(0.55, `rgba(24, 10, 16, ${0.28 * ease1})`);
+          vig.addColorStop(1, `rgba(6, 4, 12, ${0.68 * ease1})`);
           ctx.fillStyle = vig;
           ctx.fillRect(0, 0, w, h);
 
-          this.drawJJTopCinematicBar(ctx, w * 0.5, h * 0.12, subBannerText, ease1, '#f59e0b');
-        } else if (sec < 2.45) {
-          const p2 = (sec - 0.60) / 1.85;
+          // 阶段1：制胜杀子流光升腾动画
+          const flyX = THREE.MathUtils.lerp(cScreen.x, w * 0.5, ease1);
+          const flyY = THREE.MathUtils.lerp(cScreen.y, h * 0.44, ease1) - Math.sin(p1 * Math.PI) * 65;
+          this.drawJJMedallion2D(
+            ctx,
+            flyX,
+            flyY,
+            Math.min(w, h) * (0.055 + ease1 * 0.045),
+            checker?.char || (winnerColor === RED ? '俥' : '車'),
+            winnerColor === RED,
+            1.0,
+            0.85,
+            ease1 * 0.4,
+            '#fef08a',
+            ease1 * 0.92
+          );
+
+          this.drawJJTopCinematicBar(ctx, w * 0.5, h * 0.11, subBannerText, ease1, '#f59e0b');
+        } else if (sec < 2.58) {
+          const p2 = (sec - 0.62) / 1.96;
           if (!stage2Triggered) {
             stage2Triggered = true;
             this.triggerScreenFlash();
-            this.cameraShake = 0.85;
+            this.cameraShake = 0.88;
             this._activeCheckerMeshes.forEach(item => {
               if (item.mesh && item.basePos) {
                 item.mesh.position.copy(item.basePos);
@@ -11757,27 +13058,28 @@ Object.assign(Xiangqi3DApp.prototype, {
               }
             });
             const primaryColor = (vfxType === 'fishing_horse' || vfxType === 'frost_lotus_strike') ? 0x38bdf8 : 0xef4444;
-            spawn3DBurst(kPos.x, 0.35, kPos.z, primaryColor, 0xfef08a, 56);
+            spawn3DBurst(kPos.x, 0.35, kPos.z, primaryColor, 0xfef08a, 60);
           }
 
-          this.desiredSpherical.theta = baseTheta + 0.14 + Math.sin(p2 * Math.PI) * 0.08;
-          crackDisc.material.opacity = Math.min(0.84, p2 * 2.4) * (1 - p2 * 0.22);
+          this.desiredSpherical.theta = baseTheta + 0.14 + Math.sin(p2 * Math.PI) * 0.09;
+          crackDisc.material.opacity = Math.min(0.86, p2 * 2.4) * (1 - p2 * 0.22);
           baguaOuter.material.opacity = 0.78 * (1 - p2 * 0.18);
           baguaOuter.rotation.z += dt * 1.6;
           if (updateCustom3D) updateCustom3D(p2, dt, 1.0);
 
-          this.renderJJTypeSpectacle2D(ctx, w, h, p2, vfxType, stampTitle, subBannerText, winnerColor, checker, kCoord, sparks2D);
+          this.renderJJTypeSpectacle2D(ctx, w, h, p2, vfxType, stampTitle, subBannerText, winnerColor, checker, kCoord, sparks2D, pattern);
         } else {
-          const p3 = (sec - 2.45) / Math.max(0.01, TOTAL_DURATION - 2.45);
+          const p3 = (sec - 2.58) / Math.max(0.01, TOTAL_DURATION - 2.58);
           const ease3 = 1 - Math.pow(1 - p3, 3);
           if (!stage3Triggered) {
             stage3Triggered = true;
-            this.cameraShake = 0.72;
-            spawn3DBurst(kPos.x, 0.45, kPos.z, 0xfbbf24, 0xef4444, 48);
+            this.triggerScreenFlash();
+            this.cameraShake = 0.78;
+            spawn3DBurst(kPos.x, 0.45, kPos.z, 0xfbbf24, 0xef4444, 54);
           }
 
           this.camTarget.lerpVectors(new THREE.Vector3(focusX, 0.28, focusZ), this._savedCamBeforeVFX.target, ease3);
-          this.desiredSpherical.radius = THREE.MathUtils.lerp(11.8, this._savedCamBeforeVFX.spherical.radius, ease3);
+          this.desiredSpherical.radius = THREE.MathUtils.lerp(11.6, this._savedCamBeforeVFX.spherical.radius, ease3);
           this.desiredSpherical.phi = THREE.MathUtils.lerp(0.92, this._savedCamBeforeVFX.spherical.phi, ease3);
           this.desiredSpherical.theta = THREE.MathUtils.lerp(baseTheta + 0.14, this._savedCamBeforeVFX.spherical.theta, ease3);
 
@@ -11786,128 +13088,133 @@ Object.assign(Xiangqi3DApp.prototype, {
           baguaOuter.material.opacity = fade3D * 0.75;
           if (updateCustom3D) updateCustom3D(1.0, dt, fade3D);
 
-          this.renderJJFinalJueshaSeal2D(ctx, w, h, p3, stampTitle, subBannerText, sparks2D);
+          this.renderJJFinalJueshaSeal2D(ctx, w, h, p3, stampTitle, subBannerText, sparks2D, vfxType);
         }
 
-        vfxLight.intensity = (1 - normT * 0.55) * (3.4 + Math.sin(normT * 36) * 0.9);
+        vfxLight.intensity = (1 - normT * 0.55) * (3.6 + Math.sin(normT * 36) * 0.9);
         ctx.restore();
       }
     });
   },
 
-  renderJJTypeSpectacle2D(ctx, w, h, p, vfxType, stampTitle, subBannerText, winnerColor, checker, kCoord, sparks2D) {
+  renderJJTypeSpectacle2D(ctx, w, h, p, vfxType, stampTitle, subBannerText, winnerColor, checker, kCoord, sparks2D, pattern) {
     const cx = w * 0.5;
     const cy = h * 0.44;
     const minDim = Math.min(w, h);
 
     ctx.save();
 
+    // 1. 专属氛围背景晕染
     const isIceOrWater = vfxType === 'fishing_horse' || vfxType === 'frost_lotus_strike';
-    const vig = ctx.createRadialGradient(cx, cy, minDim * 0.26, cx, cy, Math.max(w, h) * 0.76);
-    vig.addColorStop(0.0, 'rgba(0, 0, 0, 0.0)');
-    vig.addColorStop(0.52, 'rgba(0, 0, 0, 0.08)');
-    vig.addColorStop(0.82, isIceOrWater ? 'rgba(8, 47, 73, 0.46)' : 'rgba(48, 10, 10, 0.48)');
-    vig.addColorStop(1.0, 'rgba(6, 6, 12, 0.74)');
+    const isNightMoon = vfxType === 'octagon_horse';
+    const vig = ctx.createRadialGradient(cx, cy, minDim * 0.18, cx, cy, Math.max(w, h) * 0.78);
+    if (isIceOrWater) {
+      vig.addColorStop(0.0, 'rgba(3, 105, 161, 0.24)');
+      vig.addColorStop(0.55, 'rgba(12, 74, 110, 0.52)');
+      vig.addColorStop(1.0, 'rgba(4, 22, 42, 0.82)');
+    } else if (isNightMoon) {
+      vig.addColorStop(0.0, 'rgba(49, 46, 129, 0.22)');
+      vig.addColorStop(0.55, 'rgba(30, 27, 75, 0.56)');
+      vig.addColorStop(1.0, 'rgba(9, 9, 24, 0.85)');
+    } else {
+      vig.addColorStop(0.0, 'rgba(180, 83, 9, 0.18)');
+      vig.addColorStop(0.55, 'rgba(69, 18, 12, 0.48)');
+      vig.addColorStop(1.0, 'rgba(12, 6, 8, 0.80)');
+    }
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, w, h);
 
-    const frameAlpha = Math.sin(Math.min(1, p * 1.15) * Math.PI) * 0.75;
-    if (vfxType === 'iron_bolt' || vfxType === 'smothered_palace' || vfxType === 'smothered_kill') {
-      const reach = Math.min(0.28, p * 0.55);
-      const corners = [[0, 0], [w, 0], [0, h], [w, h]];
-      corners.forEach(([sx, sy]) => {
-        this.drawJJChain2D(ctx, sx, sy, sx + (cx - sx) * reach, sy + (cy - sy) * reach, 8, '#f59e0b', frameAlpha);
-      });
-    } else if (vfxType === 'double_chariot' || vfxType === 'double_check' || vfxType === 'side_tiger') {
-      ctx.save();
-      ctx.globalAlpha = frameAlpha;
-      ctx.strokeStyle = '#fef08a';
-      ctx.shadowColor = '#ef4444';
-      ctx.shadowBlur = 18;
-      ctx.lineWidth = 4;
-      const len = minDim * 0.22 * Math.min(1, p * 2.2);
-      ctx.beginPath();
-      ctx.moveTo(w * 0.08, h * 0.16);
-      ctx.lineTo(w * 0.08 + len, h * 0.16 + len * 0.35);
-      ctx.moveTo(w * 0.92, h * 0.16);
-      ctx.lineTo(w * 0.92 - len, h * 0.16 + len * 0.35);
-      ctx.stroke();
-      ctx.restore();
-    }
+    // 2. 绘制 17 种 JJ 象棋专属史诗法相画卷
+    this.renderJJHeroSpectacle2D(ctx, w, h, p, vfxType, winnerColor, checker, kCoord, pattern);
 
+    // 3. 火星星屑粒子飞舞
     sparks2D.forEach((sp, idx) => {
       if (idx % 2 !== 0) return;
       const sx = cx + sp.vx * p * 1.15;
       const sy = cy + sp.vy * p * 1.15 + 140 * p * p;
-      if (Math.hypot(sx - cx, sy - cy) < minDim * 0.18) return;
+      if (Math.hypot(sx - cx, sy - cy) < minDim * 0.14) return;
       ctx.save();
-      ctx.globalAlpha = Math.max(0, 1 - p * 0.85);
+      ctx.globalAlpha = Math.max(0, 1 - p * 0.82);
       ctx.translate(sx, sy);
       ctx.rotate(sp.rot + sp.vRot * p);
-      ctx.fillStyle = sp.color;
+      ctx.fillStyle = isIceOrWater ? (idx % 4 === 0 ? '#ffffff' : '#7dd3fc') : sp.color;
       const s = sp.size * (1 - p * 0.35);
       ctx.fillRect(-s * 0.5, -s * 0.5, s, s);
       ctx.restore();
     });
 
     const accent = isIceOrWater ? '#38bdf8' : '#f59e0b';
-    const topBarAlpha = p > 0.85 ? Math.max(0, (1 - p) / 0.15) : Math.min(1, p / 0.15);
-    this.drawJJTopCinematicBar(ctx, cx, h * 0.12, subBannerText, topBarAlpha, accent);
+    const topBarAlpha = p > 0.86 ? Math.max(0, (1 - p) / 0.14) : Math.min(1, p / 0.14);
+    this.drawJJTopCinematicBar(ctx, cx, h * 0.11, subBannerText, topBarAlpha, accent);
 
+    // 4. 3D 浮雕鎏金杀法名号大字（钓鱼马先呈现碧水冰晶色再化为鎏金，复刻 00:55-00:56）
     const slamT = Math.min(1, p / 0.16);
     const slamScale = slamT < 1
-      ? THREE.MathUtils.lerp(2.35, 0.96, slamT * slamT)
-      : 1.0 + Math.sin((p - 0.16) * 14) * 0.018;
-    const titleAlpha = p > 0.84 ? Math.max(0, (1 - p) / 0.16) : 1.0;
-    const fontSize = Math.round(Math.min(w * 0.125, h * 0.095, 86));
-    this.drawJJBrushTitle(ctx, cx, h * 0.80, stampTitle, fontSize, slamScale, titleAlpha, '', accent);
+      ? THREE.MathUtils.lerp(2.45, 0.98, slamT * slamT)
+      : 1.0 + Math.sin((p - 0.16) * 14) * 0.02;
+    const titleAlpha = p > 0.86 ? Math.max(0, (1 - p) / 0.14) : 1.0;
+    const fontSize = Math.round(Math.min(w * 0.14, h * 0.105, 94));
+    const colorPhase = vfxType === 'fishing_horse' ? p : 1.0;
+    this.drawJJBrushTitle(ctx, cx, h * 0.62, stampTitle, fontSize, slamScale, titleAlpha, '', accent, colorPhase);
 
     ctx.restore();
   },
 
-  renderJJFinalJueshaSeal2D(ctx, w, h, p3, stampTitle, subBannerText, sparks2D) {
+  renderJJFinalJueshaSeal2D(ctx, w, h, p3, stampTitle, subBannerText, sparks2D, vfxType = '') {
     const cx = w * 0.5;
-    const cy = h * 0.45;
+    const cy = h * 0.46;
     const fadeOut = p3 > 0.72 ? Math.max(0, 1 - (p3 - 0.72) / 0.28) : 1.0;
     if (fadeOut <= 0.01) return;
+
+    const isIceOrWater = vfxType === 'fishing_horse' || vfxType === 'frost_lotus_strike';
 
     ctx.save();
     ctx.globalAlpha = fadeOut;
 
-    const bg = ctx.createRadialGradient(cx, cy, 40, cx, cy, Math.max(w, h) * 0.72);
-    bg.addColorStop(0, 'rgba(185, 28, 28, 0.24)');
-    bg.addColorStop(0.55, 'rgba(24, 10, 10, 0.48)');
-    bg.addColorStop(1, 'rgba(4, 4, 8, 0.68)');
+    const bg = ctx.createRadialGradient(cx, cy, 35, cx, cy, Math.max(w, h) * 0.72);
+    if (isIceOrWater) {
+      bg.addColorStop(0, 'rgba(56, 189, 248, 0.30)');
+      bg.addColorStop(0.55, 'rgba(12, 74, 110, 0.46)');
+      bg.addColorStop(1, 'rgba(4, 16, 32, 0.68)');
+    } else {
+      bg.addColorStop(0, 'rgba(245, 158, 11, 0.30)');
+      bg.addColorStop(0.55, 'rgba(68, 16, 12, 0.48)');
+      bg.addColorStop(1, 'rgba(8, 4, 8, 0.68)');
+    }
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    const ringR = Math.min(w, h) * (0.16 + p3 * 0.38);
-    ctx.strokeStyle = `rgba(254, 240, 138, ${(1 - p3) * 0.82})`;
-    ctx.lineWidth = 5 * (1 - p3 * 0.6);
+    // 冲击波光环
+    const ringR = Math.min(w, h) * (0.14 + p3 * 0.42);
+    ctx.strokeStyle = isIceOrWater
+      ? `rgba(186, 230, 253, ${(1 - p3) * 0.85})`
+      : `rgba(254, 240, 138, ${(1 - p3) * 0.85})`;
+    ctx.lineWidth = 6 * (1 - p3 * 0.55);
     ctx.beginPath();
     ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
     ctx.stroke();
 
-    sparks2D.forEach(sp => {
-      const sx = cx + sp.vx * (0.22 + p3 * 0.85);
-      const sy = cy + sp.vy * (0.22 + p3 * 0.85) + 190 * p3 * p3;
+    sparks2D.forEach((sp, i) => {
+      const sx = cx + sp.vx * (0.20 + p3 * 0.88);
+      const sy = cy + sp.vy * (0.20 + p3 * 0.88) + 185 * p3 * p3;
       ctx.save();
       ctx.translate(sx, sy);
       ctx.rotate(sp.rot + sp.vRot * p3);
-      ctx.fillStyle = sp.color;
+      ctx.fillStyle = isIceOrWater && i % 2 === 0 ? '#bae6fd' : sp.color;
       const s = sp.size * Math.max(0.2, 1 - p3 * 0.5);
       ctx.fillRect(-s * 0.5, -s * 0.5, s, s);
       ctx.restore();
     });
 
-    const slamT = Math.min(1, p3 / 0.18);
+    const slamT = Math.min(1, p3 / 0.16);
     const slamScale = slamT < 1
-      ? THREE.MathUtils.lerp(2.75, 0.96, slamT * slamT)
-      : 1.0 + Math.sin((p3 - 0.18) * 18) * 0.015;
-    const bigFontSize = Math.round(Math.min(w * 0.18, h * 0.14, 118));
-    const finalText = stampTitle === '困毙' ? '困毙' : '绝杀';
+      ? THREE.MathUtils.lerp(2.85, 0.96, slamT * slamT)
+      : 1.0 + Math.sin((p3 - 0.16) * 18) * 0.018;
+    const bigFontSize = Math.round(Math.min(w * 0.21, h * 0.16, 132));
+    // 复刻 JJ象棋绝杀视频：所有17种终局最后均呈现震撼「绝杀」金印大字！
+    const finalText = '绝杀';
     const caption = stampTitle && stampTitle !== '绝杀' ? `${stampTitle} · ${subBannerText}` : subBannerText;
-    this.drawJJBrushTitle(ctx, cx, cy, finalText, bigFontSize, slamScale, fadeOut, caption, '#f59e0b');
+    this.drawJJBrushTitle(ctx, cx, cy, finalText, bigFontSize, slamScale, fadeOut, caption, '#f59e0b', 1.0);
 
     ctx.restore();
   },

@@ -1,14 +1,3 @@
-/*************************************************************************
- * CORE 3D SCENE, PARK ENVIRONMENT & MAIN GAME CONTROLLER
- * Modularized Architecture:
- *   - constants.js : Piece tables & Path2D calligraphic vector glyphs
- *   - textures.js  : 2D Canvas procedural textures & carved piece medallions
- *   - vfx3d.js     : 18 Classic Checkmate 3D VFX & Hint trajectory
- *   - online.js    : PeerJS multiplayer, rematch/play-again consent, in-page modals
- *   - share-qr.js  : Endgame Workshop, newly redrawn scroll poster, social share, QR scanner
- *   - replay.js    : Treasure Box Replay ("复盘") & final-board replay sharing
- *************************************************************************/
-
 class Xiangqi3DApp {
   constructor() {
     window.gameApp = this;
@@ -17,20 +6,20 @@ class Xiangqi3DApp {
     this.engine = new XiangqiEngine();
 
     this.gameMode = 'inferno';
-    this.variantMode = 'xiangqi'; // 'xiangqi' (象棋) | 'jieqi' (揭棋)
+    this.variantMode = 'xiangqi';
     this.variantRegistry = [
       {
         id: 'xiangqi',
         name: '象棋',
-        badge: '传统标准局',
-        desc: '32子明置标准排阵，循传统中国象棋规则博弈（替代原标准新局）',
+        badge: '传统国粹',
+        desc: '三十二子明置排阵，依传统规则博弈',
         icon: 'chess'
       },
       {
         id: 'jieqi',
         name: '揭棋',
-        badge: '暗子新玩法',
-        desc: '将帅明置九宫原点，其余各15子暗置随机摆放；暗子按初始位规则行棋并翻开，明相明仕允许过河',
+        badge: '暗子奇谋',
+        desc: '将帅明置，十五子暗布；暗子依初位行棋翻明，相仕可过河',
         icon: 'style'
       }
     ];
@@ -38,31 +27,48 @@ class Xiangqi3DApp {
     this.sceneRegistry = [
       {
         id: 'bamboo_park',
-        name: '竹林石桌',
-        badge: '古典雅集',
-        desc: '翠竹掩映、青石棋案、落英微风的古典公园雅集意境',
+        name: '翠竹石案',
+        badge: '听泉雅集',
+        desc: '晴日翠竹、青瓷香炉、温润石案与落英微风',
         icon: 'park',
-        bgHex: 0xdce8dc,
-        fogDensity: 0.015,
-        sunColor: 0xfff5e0,
-        sunIntensity: 1.15,
-        hemiSky: 0xfef9e7,
-        hemiGround: 0x688264,
-        hemiIntensity: 0.75
+        bgHex: 0xddece0,
+        bodyCss: '#ddece0',
+        fogDensity: 0.009,
+        sunColor: 0xfff8eb,
+        sunIntensity: 0.86,
+        hemiSky: 0xffffff,
+        hemiGround: 0x5c7c58,
+        hemiIntensity: 0.66
       },
       {
         id: 'ancient_battlefield',
-        name: '古风战场',
-        badge: '楚汉峥嵘',
-        desc: '金戈铁马、玄铁点将台、猎猎帅旗与烽火流萤的楚汉古战场意境',
+        name: '楚汉将台',
+        badge: '赤壁烽火',
+        desc: '暖金斜阳、玄铁将台、青铜火鼎与猎猎战旗',
         icon: 'local_fire_department',
-        bgHex: 0x261a16,
-        fogDensity: 0.014,
-        sunColor: 0xffcfa3,
-        sunIntensity: 1.28,
-        hemiSky: 0xffb38a,
-        hemiGround: 0x3b2318,
-        hemiIntensity: 0.72
+        bgHex: 0x36231a,
+        bodyCss: '#36231a',
+        fogDensity: 0.009,
+        sunColor: 0xffe0b5,
+        sunIntensity: 0.88,
+        hemiSky: 0xffd2a6,
+        hemiGround: 0x4a2f21,
+        hemiIntensity: 0.62
+      },
+      {
+        id: 'imperial_study',
+        name: '紫宸御弈',
+        badge: '宫灯夜宴',
+        desc: '紫檀雕案、朱漆蟠龙金柱、暖玉宫灯与金粟瑞气',
+        icon: 'temple_buddhist',
+        bgHex: 0x231c30,
+        bodyCss: '#231c30',
+        fogDensity: 0.009,
+        sunColor: 0xffebc2,
+        sunIntensity: 0.85,
+        hemiSky: 0xfff0c4,
+        hemiGround: 0x382940,
+        hemiIntensity: 0.64
       }
     ];
     this.isBusy = false;
@@ -87,7 +93,6 @@ class Xiangqi3DApp {
     this.pendingDrawRequest = false;
     this.pendingRematchRequest = false;
 
-    // 移动端默认收起吃子浮层以绝不遮挡棋盘；桌面端在左右两侧博古架展示，同样绝不遮挡棋盘
     this.capturedTrayCollapsed = window.innerWidth < 1024;
 
     this.selectedSquare = null;
@@ -103,6 +108,8 @@ class Xiangqi3DApp {
     this.illegalWarningRings = [];
     this.illegalToastTimer = null;
     this.cycleBannerTimer = null;
+    this.calloutHideTimer = null;
+    this.actionBurstTimer = null;
     this.checkmateVFXAnimations = [];
     this.vfxAtmosphereTimer = 0;
     this.vfxAtmosphereDuration = 0;
@@ -115,13 +122,15 @@ class Xiangqi3DApp {
     this._boardPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.15);
     this._intersectPt = new THREE.Vector3();
     this._tempVec3 = new THREE.Vector3();
-    this._tempDayColor = new THREE.Color(0xdce8dc);
-    this._tempNightColor = new THREE.Color(0x13111c);
+    this.lastMoveCoords = null;
+    this._tempDayColor = new THREE.Color(0xddece0);
+    this._tempNightColor = new THREE.Color(0x161224);
 
     this.initAIWorker();
     this.initThree();
     this.buildParkEnvironment();
     this.buildBattlefieldEnvironment();
+    this.buildImperialStudyEnvironment();
     this.buildChessboard3D();
     this.buildInteractionMarkers();
     this.piecesGroup = new THREE.Group();
@@ -131,7 +140,6 @@ class Xiangqi3DApp {
     this.syncPiecesFromEngine();
     this.setupControlsAndEvents();
 
-    // 初始化默认标准对局的复盘会话
     this.initReplaySession?.(this.engine.board, this.engine.turn, 'standard');
     this.updateRestartButtonLabel();
     this.updateUI();
@@ -172,7 +180,7 @@ class Xiangqi3DApp {
         }
       }
     };
-    worker.onerror = (err) => {
+    worker.onerror = () => {
       const cb = this.aiCallback;
       const reqPayload = this.lastAIPayload;
       const wasBlob = Boolean(worker._isBlobWorker);
@@ -194,7 +202,6 @@ class Xiangqi3DApp {
           return;
         }
       }
-      console.warn('AI Worker 切换至主线程宗师引擎回退：', err);
       this.aiCallback = null;
       if (cb && reqPayload) {
         this.runMainThreadAIFallback(reqPayload, cb);
@@ -206,7 +213,7 @@ class Xiangqi3DApp {
     this.aiWorker = null;
     this.aiCallback = null;
     this.aiWorkerVerified = false;
-    const isFileProtocol = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
+    const isFileProtocol = true;
     if (isFileProtocol) {
       const blobWorker = this.createBlobAIWorker();
       if (blobWorker) {
@@ -218,13 +225,11 @@ class Xiangqi3DApp {
     try {
       this.aiWorker = new Worker('ChineseChessJS/ai-worker.js?v=20261021');
       this.bindAIWorkerEvents(this.aiWorker);
-    } catch (err) {
+    } catch (_) {
       const blobWorker = this.createBlobAIWorker();
       if (blobWorker) {
         this.aiWorker = blobWorker;
         this.bindAIWorkerEvents(blobWorker);
-      } else {
-        console.warn('Web Worker fallback active:', err);
       }
     }
   }
@@ -262,16 +267,13 @@ class Xiangqi3DApp {
     if (Math.abs(scoreFromMover) > 25000) {
       const matePly = Math.max(1, Math.ceil((29000 - Math.abs(scoreFromMover)) / 40));
       const winnerName = (scoreFromMover > 0 ? moverColor : (moverColor === RED ? BLACK : RED)) === RED ? '红方' : '黑方';
-      telEl.textContent = `${depth} · ${nodesStr}节点 · ${winnerName}必胜 M${matePly}`;
+      telEl.textContent = `${depth} · ${nodesStr} · ${winnerName}胜定 M${matePly}`;
     } else {
       const adv = Math.abs(redScore) < 60 ? '均势' : (redScore > 0 ? `红优 +${Math.round(redScore / 100)}` : `黑优 +${Math.round(-redScore / 100)}`);
-      telEl.textContent = depth === '开局库' ? `开局库 · ${adv}` : `深${depth} · ${nodesStr}节点 · ${adv}`;
+      telEl.textContent = depth === '开局库' ? `库着 · ${adv}` : `深${depth} · ${nodesStr} · ${adv}`;
     }
   }
 
-  /**
-   * 修复 2：切换模式（对弈难度模式 / 象棋揭棋模式）或新局重置时，同步重置标题栏预测文本与胜率条
-   */
   resetTelemetryUI(customText = null) {
     const barEl = document.getElementById('eval-bar-red');
     if (barEl) barEl.style.width = '50%';
@@ -287,13 +289,13 @@ class Xiangqi3DApp {
     if (this.endgameEditor) {
       telEl.textContent = '残局工坊 · 自由布阵';
     } else if (this.replayMode && !this.replayBranchActive) {
-      telEl.textContent = `复盘推演 · ${modeLabel}就绪`;
+      telEl.textContent = `复盘演武 · ${modeLabel}`;
     } else if (this.gameMode === 'pvp' || this.onlineRole) {
       telEl.textContent = `${modeLabel} · 均势`;
     } else if (isJieqi) {
-      telEl.textContent = `${modeLabel}就绪 · 均势`;
+      telEl.textContent = `${modeLabel} · 均势`;
     } else {
-      telEl.textContent = `开局库就绪 · 均势`;
+      telEl.textContent = `库着就绪 · 均势`;
     }
   }
 
@@ -366,7 +368,7 @@ class Xiangqi3DApp {
             this.runMainThreadAIFallback(payload, callbackAtRequest);
           }
         }, timeoutMs);
-      } catch (err) {
+      } catch (_) {
         this.aiCallback = null;
         this.runMainThreadAIFallback(payload, callback);
       }
@@ -375,9 +377,6 @@ class Xiangqi3DApp {
     }
   }
 
-  /**
-   * 支招功能（极高水准，兼顾残局破解与全局推演，弹窗提示中无“宗师支招：”前缀）
-   */
   requestRedGrandmasterMove() {
     const side = this.engine.turn;
     if (this.isBusy || (this.gameOver && !this.replayMode) || this.onlineRole || this.replayTrialCheckmated) return;
@@ -385,7 +384,7 @@ class Xiangqi3DApp {
     if (this.replayMode) {
       this.stopReplayAutoPlay?.();
     }
-    this.sfx.playSelect();
+    this.sfx.playHint ? this.sfx.playHint() : this.sfx.playSelect();
     this.isBusy = true;
     this.clearLegalMoveIndicators();
     this.clearGrandmasterHint3D?.();
@@ -395,7 +394,7 @@ class Xiangqi3DApp {
     const label = document.getElementById('ai-thinking-label');
     badge?.classList.remove('hidden');
     badge?.classList.add('inline-flex');
-    if (label) label.textContent = '深度推演支招中…';
+    if (label) label.textContent = '推演妙手…';
 
     this.requestAIMove(side, 'grandmaster_hint', (move) => {
       badge?.classList.add('hidden');
@@ -408,7 +407,7 @@ class Xiangqi3DApp {
       const notation = this.formatChineseMoveNotation(move);
       const mover = this.engine.board[move.fr]?.[move.fc];
       const target = this.engine.board[move.tr]?.[move.tc];
-      let tactic = target ? `争取吃子：${target.char || '子'}` : '锦囊妙手';
+      let tactic = target ? `破阵取${target.char || '子'}` : '锦囊妙手';
       try {
         const after = this.engine.cloneBoard(this.engine.board);
         after[move.tr][move.tc] = mover;
@@ -420,7 +419,7 @@ class Xiangqi3DApp {
       } catch (_) { }
 
       this.showGrandmasterHint3D?.(move);
-      this.showCenterCallout(`【${notation}】· ${tactic}`, side);
+      this.showCenterCallout(`${notation} · ${tactic}`, side, '锦囊支招');
 
       setTimeout(() => {
         if (this.gameOver && !this.replayMode) {
@@ -478,8 +477,8 @@ class Xiangqi3DApp {
 
   initThree() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xdce8dc);
-    this.scene.fog = new THREE.FogExp2(0xdce8dc, 0.015);
+    this.scene.background = new THREE.Color(0xddece0);
+    this.scene.fog = new THREE.FogExp2(0xddece0, 0.009);
 
     const w = Math.max(320, window.innerWidth || 1024);
     const h = Math.max(320, window.innerHeight || 768);
@@ -502,11 +501,11 @@ class Xiangqi3DApp {
     this.desiredSpherical = { ...this.camSpherical };
     this.cameraShake = 0;
 
-    this.hemiLight = new THREE.HemisphereLight(0xfef9e7, 0x688264, 0.75);
+    this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x5c7c58, 0.66);
     this.hemiLight.position.set(0, 30, 0);
     this.scene.add(this.hemiLight);
 
-    this.sunLight = new THREE.DirectionalLight(0xfff5e0, 1.15);
+    this.sunLight = new THREE.DirectionalLight(0xfff8eb, 0.86);
     this.sunLight.position.set(12, 22, 14);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 2048;
@@ -521,9 +520,11 @@ class Xiangqi3DApp {
     this.sunLight.shadow.bias = -0.0005;
     this.scene.add(this.sunLight);
 
-    const fillLight = new THREE.DirectionalLight(0xdbeafe, 0.45);
+    const fillLight = new THREE.DirectionalLight(0xfff7e6, 0.24);
     fillLight.position.set(-14, 12, -10);
     this.scene.add(fillLight);
+
+    this.boardGlowLight = null;
 
     this.basePresetRadius = 17.5;
     this.updateViewportScale(false);
@@ -533,29 +534,37 @@ class Xiangqi3DApp {
     this.parkGroup = new THREE.Group();
     this.scene.add(this.parkGroup);
 
-    const groundGeo = new THREE.CylinderGeometry(55, 55, 1, 64);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x8fb381 });
+    const groundGeo = new THREE.CylinderGeometry(56, 56, 1, 64);
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x90be84 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.position.y = -4.8;
     ground.receiveShadow = true;
     this.parkGroup.add(ground);
 
-    const patioGeo = new THREE.CylinderGeometry(9.5, 9.8, 0.25, 48);
+    const patioGeo = new THREE.CylinderGeometry(9.8, 10.2, 0.28, 48);
     const stoneMat = new THREE.MeshStandardMaterial({
-      color: 0xcbd5cf,
-      roughness: 0.85,
-      metalness: 0.05
+      color: 0xd8e3dc,
+      roughness: 0.78,
+      metalness: 0.08
     });
     const patio = new THREE.Mesh(patioGeo, stoneMat);
-    patio.position.y = -4.25;
+    patio.position.y = -4.24;
     patio.receiveShadow = true;
     this.parkGroup.add(patio);
 
+    const jadeInlayRing = new THREE.Mesh(
+      new THREE.RingGeometry(8.5, 8.9, 48),
+      new THREE.MeshBasicMaterial({ color: 0x4d7c5d, side: THREE.DoubleSide })
+    );
+    jadeInlayRing.rotation.x = -Math.PI / 2;
+    jadeInlayRing.position.y = -4.09;
+    this.parkGroup.add(jadeInlayRing);
+
     for (let i = 0; i < 6; i++) {
-      const stepGeo = new THREE.CylinderGeometry(1.3, 1.4, 0.2, 7);
+      const stepGeo = new THREE.CylinderGeometry(1.35, 1.45, 0.22, 8);
       const step = new THREE.Mesh(stepGeo, stoneMat);
       const angle = 0.8 + i * 0.22;
-      const dist = 11.2 + i * 2.6;
+      const dist = 11.4 + i * 2.6;
       step.position.set(Math.cos(angle) * dist, -4.25, Math.sin(angle) * dist);
       step.rotation.y = i;
       step.receiveShadow = true;
@@ -563,41 +572,67 @@ class Xiangqi3DApp {
     }
 
     const tableTopMat = new THREE.MeshStandardMaterial({
-      color: 0x949e99,
-      roughness: 0.65,
-      metalness: 0.1
+      color: 0xa4b2ac,
+      roughness: 0.58,
+      metalness: 0.12
     });
     const tableDarkStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x737d78,
-      roughness: 0.8,
-      metalness: 0.08
+      color: 0x6e7a74,
+      roughness: 0.75,
+      metalness: 0.10
+    });
+    const bronzeAccentMat = new THREE.MeshStandardMaterial({
+      color: 0xc59638,
+      roughness: 0.3,
+      metalness: 0.85
     });
 
-    const slabGeo = new THREE.CylinderGeometry(7.9, 7.6, 0.75, 48);
+    const slabGeo = new THREE.CylinderGeometry(8.05, 7.75, 0.76, 48);
     const slab = new THREE.Mesh(slabGeo, tableTopMat);
     slab.position.y = -0.62;
     slab.castShadow = true;
     slab.receiveShadow = true;
     this.parkGroup.add(slab);
 
-    const rimGeo = new THREE.TorusGeometry(7.72, 0.16, 12, 64);
+    const rimGeo = new THREE.TorusGeometry(7.92, 0.16, 14, 64);
     const rim = new THREE.Mesh(rimGeo, tableDarkStoneMat);
     rim.rotation.x = Math.PI / 2;
     rim.position.y = -0.45;
     this.parkGroup.add(rim);
 
-    const pillarGeo = new THREE.CylinderGeometry(2.4, 3.1, 3.6, 24);
+    const bronzeRim = new THREE.Mesh(new THREE.TorusGeometry(8.06, 0.055, 10, 64), bronzeAccentMat);
+    bronzeRim.rotation.x = Math.PI / 2;
+    bronzeRim.position.y = -0.35;
+    this.parkGroup.add(bronzeRim);
+
+    const pillarGeo = new THREE.CylinderGeometry(2.45, 3.15, 3.6, 24);
     const pillar = new THREE.Mesh(pillarGeo, tableDarkStoneMat);
     pillar.position.y = -2.6;
     pillar.castShadow = true;
     pillar.receiveShadow = true;
     this.parkGroup.add(pillar);
 
+    const censerGroup = new THREE.Group();
+    censerGroup.position.set(-6.35, -0.24, -4.65);
+    const celadonMat = new THREE.MeshStandardMaterial({
+      color: 0x84b59f,
+      roughness: 0.25,
+      metalness: 0.12
+    });
+    const censerBody = new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 16), celadonMat);
+    censerBody.scale.set(1, 0.72, 1);
+    censerBody.position.y = 0.26;
+    const censerRim = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.045, 10, 24), bronzeAccentMat);
+    censerRim.rotation.x = Math.PI / 2;
+    censerRim.position.y = 0.48;
+    censerGroup.add(censerBody, censerRim);
+    this.parkGroup.add(censerGroup);
+
     const stoolPositions = [
-      { x: 0, z: 9.2 },
-      { x: 0, z: -9.2 },
-      { x: 9.2, z: 0 },
-      { x: -9.2, z: 0 }
+      { x: 0, z: 9.3 },
+      { x: 0, z: -9.3 },
+      { x: 9.3, z: 0 },
+      { x: -9.3, z: 0 }
     ];
     stoolPositions.forEach(pos => {
       const stoolGroup = new THREE.Group();
@@ -615,22 +650,22 @@ class Xiangqi3DApp {
     });
 
     this.trees = [];
-    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x6d543e });
-    const foliageColors = [0x4d7c5d, 0x5c9269, 0x74a678, 0xd48c96];
+    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x5c4632 });
+    const foliageColors = [0x3d6e4f, 0x4e8560, 0x679c73, 0xd88c9a];
 
     const treeConfigs = [
-      { x: -13.5, z: -11.5, scale: 1.35, colorIdx: 0 },
-      { x: 14.0, z: -10.5, scale: 1.5, colorIdx: 1 },
-      { x: -15.0, z: 9.5, scale: 1.2, colorIdx: 2 },
-      { x: 13.0, z: 11.5, scale: 1.25, colorIdx: 3 },
-      { x: -6.5, z: -16.5, scale: 1.1, colorIdx: 1 },
-      { x: 7.5, z: -17.0, scale: 1.4, colorIdx: 0 },
-      { x: 18.5, z: 1.0, scale: 1.15, colorIdx: 2 }
+      { x: -13.5, z: -11.5, scale: 1.38, colorIdx: 0 },
+      { x: 14.0, z: -10.5, scale: 1.52, colorIdx: 1 },
+      { x: -15.0, z: 9.5, scale: 1.22, colorIdx: 2 },
+      { x: 13.0, z: 11.5, scale: 1.28, colorIdx: 3 },
+      { x: -6.5, z: -16.5, scale: 1.12, colorIdx: 1 },
+      { x: 7.5, z: -17.0, scale: 1.42, colorIdx: 0 },
+      { x: 18.5, z: 1.0, scale: 1.18, colorIdx: 2 }
     ];
 
     treeConfigs.forEach((cfg, idx) => {
       const tree = new THREE.Group();
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 4.5, 7), trunkMat);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.54, 4.5, 8), trunkMat);
       trunk.position.y = -2.0;
       trunk.castShadow = true;
       trunk.receiveShadow = true;
@@ -640,9 +675,9 @@ class Xiangqi3DApp {
       const leafMat = new THREE.MeshLambertMaterial({ color: foliageColors[cfg.colorIdx] });
 
       for (let tier = 0; tier < 3; tier++) {
-        const radius = (2.8 - tier * 0.65);
-        const height = (3.2 - tier * 0.45);
-        const cone = new THREE.Mesh(new THREE.ConeGeometry(radius, height, 7), leafMat);
+        const radius = (2.85 - tier * 0.65);
+        const height = (3.25 - tier * 0.45);
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(radius, height, 8), leafMat);
         cone.position.y = 0.8 + tier * 1.75;
         cone.rotation.y = tier * 0.6;
         cone.castShadow = true;
@@ -675,10 +710,10 @@ class Xiangqi3DApp {
       color: 0xffe4e6,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.84
     });
 
-    for (let i = 0; i < 42; i++) {
+    for (let i = 0; i < 44; i++) {
       const p = new THREE.Mesh(petalGeo, petalMat);
       p.position.set(
         (Math.random() - 0.5) * 26,
@@ -696,25 +731,18 @@ class Xiangqi3DApp {
     }
   }
 
-  /**
-   * 需求 7：新增场景 —— 古风战场 (Ancient Chu-Han Battlefield 3D Environment)
-   * 包含：赤壁焦土大地、八角玄铁青铜点将台、战鼓座墩、四隅青铜篝火鼎（动态烈焰+火光点光源）、
-   *       楚汉帅旗战幡（迎风猎猎摆动）、古战场鹿角拒马、画戟兵器架与漫天烽火流萤火星
-   */
   buildBattlefieldEnvironment() {
     this.battlefieldGroup = new THREE.Group();
     this.battlefieldGroup.visible = this.currentSceneId === 'ancient_battlefield';
     this.scene.add(this.battlefieldGroup);
 
-    // 1. 苍茫赤壁黄沙古战场大地
     const groundGeo = new THREE.CylinderGeometry(58, 58, 1, 64);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x3b271e });
+    const groundMat = new THREE.MeshLambertMaterial({ color: 0x523628 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.position.y = -4.8;
     ground.receiveShadow = true;
     this.battlefieldGroup.add(ground);
 
-    // 外围古战场砂石环带
     const outerRingGeo = new THREE.RingGeometry(11.5, 28.0, 48);
     const outerRingMat = new THREE.MeshLambertMaterial({
       color: 0x2a1b14,
@@ -749,7 +777,6 @@ class Xiangqi3DApp {
       metalness: 0.22
     });
 
-    // 2. 八角玄铁点将台基座 (Stepped Octagonal Command Dais)
     const daisBase = new THREE.Mesh(new THREE.CylinderGeometry(10.8, 11.6, 0.36, 8), obsidianStoneMat);
     daisBase.position.y = -4.22;
     daisBase.receiveShadow = true;
@@ -766,7 +793,6 @@ class Xiangqi3DApp {
     daisBronzeRim.position.y = -3.85;
     this.battlefieldGroup.add(daisBronzeRim);
 
-    // 3. 中央玄铁鎏金帅案与巨型战鼓台座
     const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.05, 7.75, 0.78, 32), darkIronMat);
     tableSlab.position.y = -0.62;
     tableSlab.castShadow = true;
@@ -778,7 +804,6 @@ class Xiangqi3DApp {
     tableBronzeRim.position.y = -0.44;
     this.battlefieldGroup.add(tableBronzeRim);
 
-    // 帅案外缘 16 颗青铜虎头铆钉
     const rivetGeo = new THREE.SphereGeometry(0.14, 12, 12);
     for (let i = 0; i < 16; i++) {
       const a = (i * Math.PI) / 8;
@@ -801,7 +826,6 @@ class Xiangqi3DApp {
     drumRingBot.position.y = -3.6;
     this.battlefieldGroup.add(drumRingTop, drumRingBot);
 
-    // 4. 四方牛皮朱漆战鼓坐墩
     const drumStoolCoords = [
       { x: 0, z: 9.2 },
       { x: 0, z: -9.2 },
@@ -825,7 +849,6 @@ class Xiangqi3DApp {
       this.battlefieldGroup.add(sg);
     });
 
-    // 5. 四隅青铜烽火篝火鼎 (Flaming Bronze Braziers)
     this.battlefieldFlames = [];
     this.battlefieldLights = [];
     const brazierCoords = [
@@ -852,7 +875,6 @@ class Xiangqi3DApp {
       pillar.position.y = -3.1;
       bg.add(pillar);
 
-      // 赤红炭火床与动态多层火焰
       const coalBed = new THREE.Mesh(
         new THREE.CircleGeometry(0.92, 20),
         new THREE.MeshBasicMaterial({ color: 0xea580c })
@@ -888,16 +910,15 @@ class Xiangqi3DApp {
       flameGroup.add(outerFlame, innerFlame);
       bg.add(flameGroup);
 
-      const fireLight = new THREE.PointLight(0xff7b24, 1.25, 16, 1.6);
+      const fireLight = new THREE.PointLight(0xff7b24, 0.45, 15, 1.8);
       fireLight.position.set(0, -0.2, 0);
       bg.add(fireLight);
 
       this.battlefieldGroup.add(bg);
       this.battlefieldFlames.push({ group: flameGroup, outer: outerFlame, inner: innerFlame, phase: idx * 1.7 });
-      this.battlefieldLights.push({ light: fireLight, baseIntensity: 1.25, phase: idx * 2.1 });
+      this.battlefieldLights.push({ light: fireLight, baseIntensity: 0.45, phase: idx * 2.1 });
     });
 
-    // 6. 楚汉古战场猎猎帅旗与长戈战戟
     this.warBanners = [];
     const bannerConfigs = [
       { x: -13.2, z: -10.8, isRed: false, scale: 1.15 },
@@ -912,7 +933,6 @@ class Xiangqi3DApp {
       bGroup.position.set(cfg.x, 0, cfg.z);
       bGroup.scale.setScalar(cfg.scale);
 
-      // 旗杆与矛尖
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.16, 10.5, 10), darkIronMat);
       pole.position.y = 1.0;
       pole.castShadow = true;
@@ -927,11 +947,10 @@ class Xiangqi3DApp {
       crossBar.position.set(1.15, 5.65, 0);
       bGroup.add(crossBar);
 
-      // 战旗布面
       const clothGeo = new THREE.PlaneGeometry(2.3, 4.4, 8, 8);
       const clothMat = new THREE.MeshStandardMaterial({
-        color: cfg.isRed ? 0x991b1b : 0x1e293b,
-        emissive: cfg.isRed ? 0x450a0a : 0x0f172a,
+        color: cfg.isRed ? 0x991b1b : 0x111827,
+        emissive: cfg.isRed ? 0x450a0a : 0x090d16,
         emissiveIntensity: 0.35,
         roughness: 0.6,
         side: THREE.DoubleSide
@@ -945,7 +964,6 @@ class Xiangqi3DApp {
       this.warBanners.push({ mesh: cloth, phase: idx * 1.4, baseX: 1.18 });
     });
 
-    // 7. 战场外围鹿角拒马与古烽火台剪影
     const barricadeCoords = [
       { x: -11.5, z: -15.5, ry: 0.35 },
       { x: 11.5, z: -15.5, ry: -0.35 },
@@ -974,7 +992,6 @@ class Xiangqi3DApp {
       this.battlefieldGroup.add(bg);
     });
 
-    // 8. 漫天烽火流萤火星粒子 (Battlefield Floating Embers)
     this.battlefieldEmbers = [];
     const glowTex = typeof getGlowParticleTexture === 'function' ? getGlowParticleTexture() : null;
     for (let i = 0; i < 46; i++) {
@@ -1006,17 +1023,157 @@ class Xiangqi3DApp {
     }
   }
 
+  buildImperialStudyEnvironment() {
+    this.studyGroup = new THREE.Group();
+    this.studyGroup.visible = this.currentSceneId === 'imperial_study';
+    this.scene.add(this.studyGroup);
+
+    const rosewoodFloorMat = new THREE.MeshStandardMaterial({
+      color: 0x38221e,
+      roughness: 0.35,
+      metalness: 0.18
+    });
+    const gildedMat = new THREE.MeshStandardMaterial({
+      color: 0xeab308,
+      emissive: 0x78350f,
+      emissiveIntensity: 0.28,
+      roughness: 0.25,
+      metalness: 0.9
+    });
+    const vermilionMat = new THREE.MeshStandardMaterial({
+      color: 0x7f1d1d,
+      roughness: 0.32,
+      metalness: 0.18
+    });
+    const sandalwoodMat = new THREE.MeshStandardMaterial({
+      color: 0x3b1f14,
+      roughness: 0.32,
+      metalness: 0.22
+    });
+
+    const floor = new THREE.Mesh(new THREE.CylinderGeometry(58, 58, 1, 64), rosewoodFloorMat);
+    floor.position.y = -4.8;
+    floor.receiveShadow = true;
+    this.studyGroup.add(floor);
+
+    const carpetTex = typeof getBaguaMagicTexture === 'function' ? getBaguaMagicTexture() : null;
+    const carpetDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(11.2, 64),
+      new THREE.MeshBasicMaterial({
+        map: carpetTex,
+        color: 0xfde047,
+        transparent: true,
+        opacity: 0.34,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    carpetDisc.rotation.x = -Math.PI / 2;
+    carpetDisc.position.y = -4.24;
+    this.studyGroup.add(carpetDisc);
+
+    const dais = new THREE.Mesh(new THREE.CylinderGeometry(9.6, 10.2, 0.34, 32), sandalwoodMat);
+    dais.position.y = -4.15;
+    dais.receiveShadow = true;
+    this.studyGroup.add(dais);
+
+    const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.1, 7.8, 0.82, 48), sandalwoodMat);
+    tableSlab.position.y = -0.62;
+    tableSlab.castShadow = true;
+    tableSlab.receiveShadow = true;
+    this.studyGroup.add(tableSlab);
+
+    const goldRim = new THREE.Mesh(new THREE.TorusGeometry(7.96, 0.16, 14, 64), gildedMat);
+    goldRim.rotation.x = Math.PI / 2;
+    goldRim.position.y = -0.42;
+    this.studyGroup.add(goldRim);
+
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 3.5, 24), vermilionMat);
+    pedestal.position.y = -2.55;
+    pedestal.castShadow = true;
+    this.studyGroup.add(pedestal);
+
+    const pillarCoords = [
+      { x: -13.5, z: -11.5 },
+      { x: 13.5, z: -11.5 },
+      { x: -13.5, z: 11.5 },
+      { x: 13.5, z: 11.5 }
+    ];
+    pillarCoords.forEach(pc => {
+      const pg = new THREE.Group();
+      pg.position.set(pc.x, 0, pc.z);
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.96, 16, 24), vermilionMat);
+      col.position.y = 3.5;
+      col.castShadow = true;
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.28, 1.42, 0.75, 24), gildedMat);
+      base.position.y = -4.0;
+      const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.08, 10, 32), gildedMat);
+      ring1.rotation.x = Math.PI / 2;
+      ring1.position.y = -1.2;
+      const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.08, 10, 32), gildedMat);
+      ring2.rotation.x = Math.PI / 2;
+      ring2.position.y = 4.5;
+      pg.add(col, base, ring1, ring2);
+      this.studyGroup.add(pg);
+    });
+
+    this.studyLanterns = [];
+    const lanternCoords = [
+      { x: -8.6, y: 4.8, z: -8.2 },
+      { x: 8.6, y: 4.8, z: -8.2 },
+      { x: -8.6, y: 4.8, z: 8.2 },
+      { x: 8.6, y: 4.8, z: 8.2 }
+    ];
+    lanternCoords.forEach((lc, idx) => {
+      const lg = new THREE.Group();
+      lg.position.set(lc.x, lc.y, lc.z);
+      const shade = new THREE.Mesh(
+        new THREE.SphereGeometry(0.75, 16, 14),
+        new THREE.MeshBasicMaterial({
+          color: 0xffedd5,
+          transparent: true,
+          opacity: 0.9
+        })
+      );
+      shade.scale.set(1, 1.25, 1);
+      const topCap = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 0.24, 12), gildedMat);
+      topCap.position.y = 0.92;
+      const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.35, 0.22, 12), gildedMat);
+      botCap.position.y = -0.92;
+      const ptLight = new THREE.PointLight(0xffb74d, 0.42, 16, 1.8);
+      lg.add(shade, topCap, botCap, ptLight);
+      this.studyGroup.add(lg);
+      this.studyLanterns.push({ group: lg, baseY: lc.y, phase: idx * 1.6, light: ptLight });
+    });
+  }
+
   buildChessboard3D() {
     this.boardGroup = new THREE.Group();
     this.scene.add(this.boardGroup);
 
-    const boardOuterW = BOARD_WIDTH + 1.8;
-    const boardOuterH = BOARD_HEIGHT + 1.8;
-    const boardThickness = 0.44;
+    const boardOuterW = BOARD_WIDTH + 1.84;
+    const boardOuterH = BOARD_HEIGHT + 1.84;
+    const boardThickness = 0.46;
 
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.45 });
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0x4a2812,
+      roughness: 0.34,
+      metalness: 0.16
+    });
+    const brassMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a338,
+      emissive: 0x78350f,
+      emissiveIntensity: 0.18,
+      roughness: 0.25,
+      metalness: 0.88
+    });
     const topTex = createChessboardTexture();
-    const topMat = new THREE.MeshStandardMaterial({ map: topTex, roughness: 0.38 });
+    const topMat = new THREE.MeshStandardMaterial({
+      map: topTex,
+      color: 0xf4e4c8,
+      roughness: 0.46,
+      metalness: 0.04
+    });
 
     const materials = [frameMat, frameMat, topMat, frameMat, frameMat, frameMat];
     const boardMesh = new THREE.Mesh(new THREE.BoxGeometry(boardOuterW, boardThickness, boardOuterH), materials);
@@ -1024,6 +1181,24 @@ class Xiangqi3DApp {
     boardMesh.castShadow = true;
     boardMesh.receiveShadow = true;
     this.boardGroup.add(boardMesh);
+
+    const subBase = new THREE.Mesh(
+      new THREE.BoxGeometry(boardOuterW + 0.34, 0.18, boardOuterH + 0.34),
+      frameMat
+    );
+    subBase.position.y = -boardThickness - 0.08;
+    subBase.castShadow = true;
+    subBase.receiveShadow = true;
+    this.boardGroup.add(subBase);
+
+    const cornerGeo = new THREE.BoxGeometry(0.68, boardThickness + 0.04, 0.68);
+    const halfW = boardOuterW / 2 - 0.28;
+    const halfH = boardOuterH / 2 - 0.28;
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+      const bracket = new THREE.Mesh(cornerGeo, brassMat);
+      bracket.position.set(sx * halfW, -boardThickness / 2 + 0.005, sz * halfH);
+      this.boardGroup.add(bracket);
+    });
   }
 
   buildInteractionMarkers() {
@@ -1036,13 +1211,12 @@ class Xiangqi3DApp {
       color: 0xffffff,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.95,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.94,
       depthWrite: false
     });
-    this.selectedRing = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 1.36), selMat);
+    this.selectedRing = new THREE.Mesh(new THREE.PlaneGeometry(1.16, 1.16), selMat);
     this.selectedRing.rotation.x = -Math.PI / 2;
-    this.selectedRing.position.y = 0.022;
+    this.selectedRing.position.y = 0.018;
     this.selectedRing.visible = false;
     this.scene.add(this.selectedRing);
 
@@ -1052,14 +1226,14 @@ class Xiangqi3DApp {
       color: 0xffffff,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.88,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.86,
       depthWrite: false
     });
-    this.lastFromRing = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 1.06), fromMat);
+    this.lastFromRing = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.92), fromMat);
     this.lastFromRing.rotation.x = -Math.PI / 2;
-    this.lastFromRing.position.y = 0.015;
+    this.lastFromRing.position.y = 0.012;
     this.lastFromRing.visible = false;
+    this.lastFromCoord = null;
 
     const toTex = typeof getBoardMarkerTexture === 'function' ? getBoardMarkerTexture('last_to') : null;
     const toMat = new THREE.MeshBasicMaterial({
@@ -1067,170 +1241,145 @@ class Xiangqi3DApp {
       color: 0xffffff,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.92,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.90,
       depthWrite: false
     });
-    this.lastToRing = new THREE.Mesh(new THREE.PlaneGeometry(1.32, 1.32), toMat);
+    this.lastToRing = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 1.14), toMat);
     this.lastToRing.rotation.x = -Math.PI / 2;
-    this.lastToRing.position.y = 0.016;
+    this.lastToRing.position.y = 0.013;
     this.lastToRing.visible = false;
+    this.lastToCoord = null;
     this.scene.add(this.lastFromRing, this.lastToRing);
 
     this.moveIndicators = [];
   }
 
-  /**
-   * 需求 1（美化所有光效）：预构建并缓存棋子共享几何体与高精莲华/丝绸气旋光晕材质
-   */
+  syncLastMoveMarkerVisibility() {
+    if (!this.lastFromRing || !this.lastToRing) return;
+    if (!this.lastFromCoord || !this.lastToCoord) {
+      this.lastFromRing.visible = false;
+      this.lastToRing.visible = false;
+      return;
+    }
+    const sel = this.selectedSquare;
+    const hasIndicatorAt = (r, c) => {
+      if (!this.moveIndicators || this.moveIndicators.length === 0) return false;
+      return this.moveIndicators.some(ind => ind.userData && ind.userData.tr === r && ind.userData.tc === c);
+    };
+
+    const hideFrom = (sel && sel.r === this.lastFromCoord.r && sel.c === this.lastFromCoord.c) ||
+                     hasIndicatorAt(this.lastFromCoord.r, this.lastFromCoord.c);
+    const hideTo = (sel && sel.r === this.lastToCoord.r && sel.c === this.lastToCoord.c) ||
+                   hasIndicatorAt(this.lastToCoord.r, this.lastToCoord.c);
+
+    this.lastFromRing.visible = !hideFrom;
+    this.lastToRing.visible = !hideTo;
+  }
+
+  setLastMoveMarkers(fr, fc, tr, tc) {
+    if (typeof fr !== 'number' || typeof tr !== 'number') {
+      this.lastFromCoord = null;
+      this.lastToCoord = null;
+      if (this.lastFromRing) this.lastFromRing.visible = false;
+      if (this.lastToRing) this.lastToRing.visible = false;
+      return;
+    }
+    this.lastFromCoord = { r: fr, c: fc };
+    this.lastToCoord = { r: tr, c: tc };
+    const startPos = gridToWorld(fr, fc);
+    const endPos = gridToWorld(tr, tc);
+    if (this.lastFromRing) {
+      this.lastFromRing.position.set(startPos.x, 0.012, startPos.z);
+    }
+    if (this.lastToRing) {
+      this.lastToRing.position.set(endPos.x, 0.013, endPos.z);
+    }
+    this.syncLastMoveMarkerVisibility();
+  }
+
+  clearAllTransientVFX(clearLastMove = false) {
+    this.clearLegalMoveIndicators();
+    this.clearIllegalWarningRings();
+    this.clearGrandmasterHint3D?.();
+    if (this.impactWaves && this.impactWaves.length > 0) {
+      for (const w of this.impactWaves) {
+        this.scene?.remove(w.mesh);
+        w.mesh?.geometry?.dispose?.();
+        w.mesh?.material?.dispose?.();
+      }
+      this.impactWaves = [];
+    }
+    if (this.shatterParticles && this.shatterParticles.length > 0) {
+      for (const sp of this.shatterParticles) {
+        this.scene?.remove(sp.mesh);
+        sp.mesh?.geometry?.dispose?.();
+        sp.mesh?.material?.dispose?.();
+      }
+      this.shatterParticles = [];
+    }
+    if (clearLastMove) {
+      this.setLastMoveMarkers(null, null, null, null);
+    } else {
+      this.syncLastMoveMarkerVisibility();
+    }
+  }
+
   ensureSharedPieceAssets() {
     if (this.sharedPieceAssets) return this.sharedPieceAssets;
-    const height = 0.34;
-    const radius = 0.44;
-    const dangerTex = getTacticalAuraTextures('danger');
-    const safeTex = getTacticalAuraTextures('safe');
-
-    const createTacticalMatSet = (auraTex) => ({
-      haloMat: new THREE.MeshBasicMaterial({
-        map: auraTex.radialMap,
-        transparent: true,
-        opacity: 0.90,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-      }),
-      outerRingMat: new THREE.MeshBasicMaterial({
-        map: auraTex.coronaMap,
-        transparent: true,
-        opacity: 0.92,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-      }),
-      cylShellMat: new THREE.MeshBasicMaterial({
-        map: auraTex.cylinderMap,
-        transparent: true,
-        opacity: 0.74,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-      }),
-      topCoronaMat: new THREE.MeshBasicMaterial({
-        map: auraTex.coronaMap,
-        transparent: true,
-        opacity: 0.72,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-      })
-    });
+    const height = 0.35;
+    const radius = 0.445;
 
     this.sharedPieceAssets = {
       height,
       radius,
-      cylGeo: new THREE.CylinderGeometry(radius * 0.94, radius, height, 36),
-      rimGeo: new THREE.TorusGeometry(radius * 0.92, 0.028, 12, 36),
-      topDiscGeo: new THREE.CircleGeometry(radius * 0.91, 36),
-      auraRingGeo: new THREE.PlaneGeometry(1.24, 1.24),
-      haloPlaneGeo: new THREE.PlaneGeometry(1.42, 1.42),
-      outerRingGeo: new THREE.PlaneGeometry(1.28, 1.28),
-      cylShellGeo: new THREE.CylinderGeometry(radius * 1.12, radius * 1.03, height * 1.32, 36, 1, true),
-      topCoronaGeo: new THREE.PlaneGeometry(1.02, 1.02),
-      redRimMat: new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 }),
-      blackRimMat: new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.2 }),
-      turnRedTex: typeof getTurnAuraTexture === 'function' ? getTurnAuraTexture('red') : null,
-      turnBlackTex: typeof getTurnAuraTexture === 'function' ? getTurnAuraTexture('black') : null,
-      turnSelTex: typeof getTurnAuraTexture === 'function' ? getTurnAuraTexture('selected') : null,
-      tacticalMats: {
-        danger: createTacticalMatSet(dangerTex),
-        safe: createTacticalMatSet(safeTex)
-      }
+      cylGeo: new THREE.CylinderGeometry(radius * 0.93, radius, height, 40),
+      rimGeo: new THREE.TorusGeometry(radius * 0.92, 0.028, 14, 40),
+      baseRimGeo: new THREE.TorusGeometry(radius * 0.98, 0.022, 12, 40),
+      topDiscGeo: new THREE.CircleGeometry(radius * 0.91, 40),
+      redRimMat: new THREE.MeshStandardMaterial({ color: 0xb5852b, metalness: 0.65, roughness: 0.36 }),
+      blackRimMat: new THREE.MeshStandardMaterial({ color: 0xc29332, metalness: 0.68, roughness: 0.32 })
     };
     return this.sharedPieceAssets;
   }
 
-  /**
-   * 需求 1（美化所有落点）：预构建并缓存 3D 翠玉灵珠 / 朱砂警珠 / 四方金戈锁敌阵的共享几何体与材质
-   */
   ensureSharedIndicatorAssets() {
     if (this.sharedIndicatorAssets) return this.sharedIndicatorAssets;
-    const dangerAura = getTacticalAuraTextures('danger');
-    const safeAura = getTacticalAuraTextures('safe');
     const dotSafeTex = getMoveIndicatorTexture('dot_safe');
     const dotUnsafeTex = getMoveIndicatorTexture('dot_unsafe');
     const capSafeTex = getMoveIndicatorTexture('capture_safe');
     const capUnsafeTex = getMoveIndicatorTexture('capture_unsafe');
 
     this.sharedIndicatorAssets = {
-      captureBaseGeo: new THREE.PlaneGeometry(1.38, 1.38),
-      captureCrownGeo: new THREE.PlaneGeometry(1.06, 1.06),
-      softGlowGeo: new THREE.PlaneGeometry(0.92, 0.92),
-      lotusDotGeo: new THREE.PlaneGeometry(0.76, 0.76),
-      gemOrbGeo: new THREE.SphereGeometry(0.105, 24, 16),
-      hitGeo: new THREE.CylinderGeometry(0.62, 0.62, 0.55, 16),
+      captureBaseGeo: new THREE.PlaneGeometry(1.18, 1.18),
+      lotusDotGeo: new THREE.PlaneGeometry(0.68, 0.68),
+      hitGeo: new THREE.CylinderGeometry(0.56, 0.56, 0.50, 16),
       captureSafeMat: new THREE.MeshBasicMaterial({
         map: capSafeTex,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.96,
-        blending: THREE.AdditiveBlending,
+        opacity: 0.95,
         depthWrite: false
       }),
       captureUnsafeMat: new THREE.MeshBasicMaterial({
         map: capUnsafeTex,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.96,
-        blending: THREE.AdditiveBlending,
+        opacity: 0.95,
         depthWrite: false
-      }),
-      glowSafeMat: new THREE.MeshBasicMaterial({
-        map: safeAura.radialMap,
-        transparent: true,
-        opacity: 0.52,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-      }),
-      glowUnsafeMat: new THREE.MeshBasicMaterial({
-        map: dangerAura.radialMap,
-        transparent: true,
-        opacity: 0.65,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
       }),
       dotSafeMat: new THREE.MeshBasicMaterial({
         map: dotSafeTex,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.96,
+        opacity: 0.95,
         depthWrite: false
       }),
       dotUnsafeMat: new THREE.MeshBasicMaterial({
         map: dotUnsafeTex,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.96,
+        opacity: 0.95,
         depthWrite: false
-      }),
-      orbSafeMat: new THREE.MeshStandardMaterial({
-        color: 0x6ee7b7,
-        emissive: 0x10b981,
-        emissiveIntensity: 0.75,
-        roughness: 0.15,
-        metalness: 0.25,
-        transparent: true,
-        opacity: 0.95
-      }),
-      orbUnsafeMat: new THREE.MeshStandardMaterial({
-        color: 0xfca5a5,
-        emissive: 0xef4444,
-        emissiveIntensity: 0.82,
-        roughness: 0.15,
-        metalness: 0.25,
-        transparent: true,
-        opacity: 0.95
       }),
       hitMat: new THREE.MeshBasicMaterial({ visible: false })
     };
@@ -1245,8 +1394,20 @@ class Xiangqi3DApp {
     const isHidden = Boolean(pieceData.isHidden);
 
     const bodyMat = isRed
-      ? new THREE.MeshPhysicalMaterial({ color: 0xfaf3e3, roughness: 0.22, metalness: 0.03, clearcoat: 0.65 })
-      : new THREE.MeshPhysicalMaterial({ color: 0x131924, roughness: 0.08, metalness: 0.22, clearcoat: 1.0 });
+      ? new THREE.MeshPhysicalMaterial({
+          color: 0xead8be,
+          roughness: 0.32,
+          metalness: 0.04,
+          clearcoat: 0.26,
+          clearcoatRoughness: 0.30
+        })
+      : new THREE.MeshPhysicalMaterial({
+          color: 0x0b0f17,
+          roughness: 0.22,
+          metalness: 0.18,
+          clearcoat: 0.42,
+          clearcoatRoughness: 0.20
+        });
 
     const cylMesh = new THREE.Mesh(assets.cylGeo, bodyMat);
     cylMesh.position.y = height / 2;
@@ -1259,56 +1420,20 @@ class Xiangqi3DApp {
     rimMesh.position.y = height - 0.01;
     group.add(rimMesh);
 
+    const baseRimMesh = new THREE.Mesh(assets.baseRimGeo, rimMat);
+    baseRimMesh.rotation.x = Math.PI / 2;
+    baseRimMesh.position.y = 0.02;
+    group.add(baseRimMesh);
+
     const topMat = typeof getPieceTopMaterial === 'function'
       ? getPieceTopMaterial(pieceData.color, pieceData.char, isHidden)
-      : new THREE.MeshStandardMaterial({ ...getPieceMedallionTextures(pieceData.color, pieceData.char, isHidden), bumpScale: 0.028 });
+      : new THREE.MeshStandardMaterial({ ...getPieceMedallionTextures(pieceData.color, pieceData.char, isHidden), bumpScale: 0.032 });
     const topDisc = new THREE.Mesh(assets.topDiscGeo, topMat);
     topDisc.rotation.x = -Math.PI / 2;
     const flipForBlack = (this.onlineRole === BLACK) || (!this.onlineRole && this.gameMode === 'pvp' && pieceData.color === BLACK);
     topDisc.rotation.z = flipForBlack ? Math.PI : 0;
     topDisc.position.y = height + 0.002;
     group.add(topDisc);
-
-    const auraMat = new THREE.MeshBasicMaterial({
-      map: isRed ? assets.turnRedTex : assets.turnBlackTex,
-      color: 0xffffff,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    const auraRing = new THREE.Mesh(assets.auraRingGeo, auraMat);
-    auraRing.rotation.x = -Math.PI / 2;
-    auraRing.position.y = 0.01;
-    auraRing.visible = false;
-    group.add(auraRing);
-
-    // 新增 2 & 3：棋子立体光晕组件（己方危险冒红光 / 对面可被安全吃掉冒绿光），使用预编译共享材质
-    const tacticalGlowGroup = new THREE.Group();
-    tacticalGlowGroup.visible = false;
-    const dangerSet = assets.tacticalMats.danger;
-
-    const haloMesh = new THREE.Mesh(assets.haloPlaneGeo, dangerSet.haloMat);
-    haloMesh.rotation.x = -Math.PI / 2;
-    haloMesh.position.y = 0.014;
-    tacticalGlowGroup.add(haloMesh);
-
-    const outerRingMesh = new THREE.Mesh(assets.outerRingGeo, dangerSet.outerRingMat);
-    outerRingMesh.rotation.x = -Math.PI / 2;
-    outerRingMesh.position.y = 0.022;
-    tacticalGlowGroup.add(outerRingMesh);
-
-    const cylShellMesh = new THREE.Mesh(assets.cylShellGeo, dangerSet.cylShellMat);
-    cylShellMesh.position.y = height * 0.62;
-    tacticalGlowGroup.add(cylShellMesh);
-
-    const topCoronaRing = new THREE.Mesh(assets.topCoronaGeo, dangerSet.topCoronaMat);
-    topCoronaRing.rotation.x = -Math.PI / 2;
-    topCoronaRing.position.y = height + 0.008;
-    tacticalGlowGroup.add(topCoronaRing);
-
-    group.add(tacticalGlowGroup);
 
     const pos = gridToWorld(r, c);
     group.position.set(pos.x, 0, pos.z);
@@ -1320,20 +1445,9 @@ class Xiangqi3DApp {
       isHidden,
       r,
       c,
-      auraRing,
-      auraMat,
       topDisc,
       bodyMat,
       rimMat,
-      tacticalGlowGroup,
-      haloMesh,
-      outerRingMesh,
-      cylShellMesh,
-      topCoronaRing,
-      haloMat: dangerSet.haloMat,
-      outerRingMat: dangerSet.outerRingMat,
-      cylShellMat: dangerSet.cylShellMat,
-      topCoronaMat: dangerSet.topCoronaMat,
       tacticalState: null
     };
     if (this.piecesGroup) {
@@ -1403,92 +1517,17 @@ class Xiangqi3DApp {
     this.updateTacticalGlowState();
   }
 
-  /**
-   * 实时计算并更新：
-   *   - 新增 2：己方有危险的棋子冒红光 (danger)
-   *   - 新增 3：己方能吃的对面棋子且吃过去不会被吃时，对面棋子冒绿光 (safe_capture)
-   */
   updateTacticalGlowState() {
     if (!this.engine || !this.pieceMeshes) return;
-    const hideAll = this.endgameEditor || (this.gameOver && !this.replayMode) || this.replayTrialCheckmated;
-    if (hideAll) {
-      this.threatenedFriendlyIds = new Set();
-      this.safeCapturableEnemyIds = new Set();
-      for (const mesh of this.pieceMeshes.values()) {
-        if (!mesh.userData) continue;
-        mesh.userData.tacticalState = null;
-        if (mesh.userData.tacticalGlowGroup) mesh.userData.tacticalGlowGroup.visible = false;
-        if (mesh.userData.bodyMat) {
-          mesh.userData.bodyMat.emissive.setHex(0x000000);
-          mesh.userData.bodyMat.emissiveIntensity = 0.0;
-        }
-      }
-      return;
-    }
-
-    const friendlyColor = this.onlineRole
-      ? this.onlineRole
-      : (this.replayMode
-          ? (this.replayBranchActive && this.gameMode !== 'pvp' ? (this.replayHumanColor || RED) : this.engine.turn)
-          : (this.gameMode !== 'pvp' ? RED : this.engine.turn));
-
-    this.threatenedFriendlyIds = this.engine.getThreatenedFriendlyPieceIds(friendlyColor, this.engine.board);
-    this.safeCapturableEnemyIds = this.engine.getSafeCapturableEnemyPieceIds(friendlyColor, this.selectedSquare, this.engine.board);
-
-    const assets = this.ensureSharedPieceAssets();
-    const dangerSet = assets.tacticalMats.danger;
-    const safeSet = assets.tacticalMats.safe;
-
+    this.threatenedFriendlyIds = new Set();
+    this.safeCapturableEnemyIds = new Set();
     for (const mesh of this.pieceMeshes.values()) {
       const ud = mesh.userData;
-      if (!ud || !ud.tacticalGlowGroup) continue;
-      const pid = ud.pieceId;
-      const isFriendly = ud.color === friendlyColor;
-
-      let nextState = null;
-      if (isFriendly && this.threatenedFriendlyIds.has(pid)) {
-        nextState = 'danger';
-      } else if (!isFriendly && this.safeCapturableEnemyIds.has(pid)) {
-        nextState = 'safe_capture';
-      }
-
-      if (nextState === 'danger') {
-        if (ud.tacticalState !== 'danger') {
-          ud.tacticalState = 'danger';
-          ud.haloMesh.material = dangerSet.haloMat;
-          ud.outerRingMesh.material = dangerSet.outerRingMat;
-          ud.cylShellMesh.material = dangerSet.cylShellMat;
-          ud.topCoronaRing.material = dangerSet.topCoronaMat;
-          ud.haloMat = dangerSet.haloMat;
-          ud.outerRingMat = dangerSet.outerRingMat;
-          ud.cylShellMat = dangerSet.cylShellMat;
-          ud.topCoronaMat = dangerSet.topCoronaMat;
-          ud.bodyMat.emissive.setHex(0x991b1b);
-          ud.bodyMat.emissiveIntensity = 0.25;
-        }
-        ud.tacticalGlowGroup.visible = true;
-      } else if (nextState === 'safe_capture') {
-        if (ud.tacticalState !== 'safe_capture') {
-          ud.tacticalState = 'safe_capture';
-          ud.haloMesh.material = safeSet.haloMat;
-          ud.outerRingMesh.material = safeSet.outerRingMat;
-          ud.cylShellMesh.material = safeSet.cylShellMat;
-          ud.topCoronaRing.material = safeSet.topCoronaMat;
-          ud.haloMat = safeSet.haloMat;
-          ud.outerRingMat = safeSet.outerRingMat;
-          ud.cylShellMat = safeSet.cylShellMat;
-          ud.topCoronaMat = safeSet.topCoronaMat;
-          ud.bodyMat.emissive.setHex(0x065f46);
-          ud.bodyMat.emissiveIntensity = 0.28;
-        }
-        ud.tacticalGlowGroup.visible = true;
-      } else {
-        if (ud.tacticalState !== null) {
-          ud.tacticalState = null;
-          ud.bodyMat.emissive.setHex(0x000000);
-          ud.bodyMat.emissiveIntensity = 0.0;
-        }
-        ud.tacticalGlowGroup.visible = false;
+      if (!ud) continue;
+      ud.tacticalState = null;
+      if (ud.bodyMat) {
+        ud.bodyMat.emissive.setHex(0x000000);
+        ud.bodyMat.emissiveIntensity = 0.0;
       }
     }
   }
@@ -1502,14 +1541,31 @@ class Xiangqi3DApp {
   }
 
   clearLegalMoveIndicators() {
-    for (const m of this.moveIndicators) this.markersGroup.remove(m);
+    if (this.moveIndicators && this.moveIndicators.length > 0) {
+      for (const m of this.moveIndicators) {
+        this.markersGroup?.remove(m);
+        this.scene?.remove(m);
+      }
+    }
     this.moveIndicators = [];
-    this.selectedRing.visible = false;
+    if (this.markersGroup) {
+      while (this.markersGroup.children.length > 0) {
+        this.markersGroup.remove(this.markersGroup.children[0]);
+      }
+    }
+    if (this.selectedRing) {
+      this.selectedRing.visible = false;
+    }
+    this.syncLastMoveMarkerVisibility();
   }
 
   clearIllegalWarningRings() {
     if (!this.illegalWarningRings) return;
-    for (const item of this.illegalWarningRings) this.scene.remove(item.mesh);
+    for (const item of this.illegalWarningRings) {
+      this.scene?.remove(item.mesh);
+      item.mesh?.geometry?.dispose?.();
+      item.mesh?.material?.dispose?.();
+    }
     this.illegalWarningRings = [];
   }
 
@@ -1524,9 +1580,10 @@ class Xiangqi3DApp {
       clearTimeout(this.illegalToastTimer);
       this.illegalToastTimer = null;
     }
+    this.clearIllegalWarningRings();
   }
 
-  showIllegalMovePrompt(diagnosis, duration = 2500) {
+  showIllegalMovePrompt(diagnosis, duration = 2400) {
     if (!diagnosis) return;
     this.sfx.playIllegal();
     this.cameraShake = 0.12;
@@ -1540,7 +1597,7 @@ class Xiangqi3DApp {
     if (toastEl && titleEl && descEl) {
       if (iconEl) iconEl.textContent = diagnosis.icon || 'gpp_maybe';
       titleEl.textContent = diagnosis.title || '禁着提示';
-      descEl.textContent = diagnosis.message || '该步违反走子规则，请重新选择落点。';
+      descEl.textContent = diagnosis.message || '该步违反行棋规则，请另选落点。';
 
       if (barEl) {
         barEl.style.setProperty('--toast-duration', `${duration}ms`);
@@ -1565,21 +1622,20 @@ class Xiangqi3DApp {
         const pos = gridToWorld(sq.r, sq.c);
         const tex = idx === 0 ? warnTex : selTex;
         const ring = new THREE.Mesh(
-          tex ? new THREE.PlaneGeometry(1.36, 1.36) : new THREE.RingGeometry(0.42, 0.56, 32),
+          tex ? new THREE.PlaneGeometry(1.18, 1.18) : new THREE.RingGeometry(0.42, 0.54, 32),
           new THREE.MeshBasicMaterial({
             map: tex || null,
             color: tex ? 0xffffff : (idx === 0 ? 0xef4444 : 0xf59e0b),
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.95,
-            blending: THREE.AdditiveBlending,
+            opacity: 0.92,
             depthWrite: false
           })
         );
         ring.rotation.x = -Math.PI / 2;
-        ring.position.set(pos.x, 0.036, pos.z);
+        ring.position.set(pos.x, 0.026, pos.z);
         this.scene.add(ring);
-        this.illegalWarningRings.push({ mesh: ring, age: 0, maxAge: 1.6 });
+        this.illegalWarningRings.push({ mesh: ring, age: 0, maxAge: 1.35 });
       });
     }
   }
@@ -1587,7 +1643,7 @@ class Xiangqi3DApp {
   showLegalMoveIndicators(r, c, moves) {
     this.clearLegalMoveIndicators();
     const selPos = gridToWorld(r, c);
-    this.selectedRing.position.set(selPos.x, 0.022, selPos.z);
+    this.selectedRing.position.set(selPos.x, 0.018, selPos.z);
     this.selectedRing.visible = true;
 
     const indAssets = this.ensureSharedIndicatorAssets();
@@ -1595,11 +1651,10 @@ class Xiangqi3DApp {
     for (const m of moves) {
       const pos = gridToWorld(m.tr, m.tc);
       const isCapture = Boolean(m.capture);
-      // 检测己方棋子下到该落点后是否会被敌方吃掉
       const isUnsafe = this.engine.wouldPieceBeCapturedAfterMove(m, this.engine.board);
       const holder = new THREE.Group();
-      holder.position.set(pos.x, 0.024, pos.z);
-      holder.userData = { isCapture, isUnsafe, phase: (m.tr * 0.65 + m.tc * 0.45) };
+      holder.position.set(pos.x, 0.016, pos.z);
+      holder.userData = { isCapture, isUnsafe, tr: m.tr, tc: m.tc, phase: (m.tr * 0.65 + m.tc * 0.45) };
 
       if (isCapture) {
         const baseLock = new THREE.Mesh(
@@ -1607,28 +1662,10 @@ class Xiangqi3DApp {
           isUnsafe ? indAssets.captureUnsafeMat : indAssets.captureSafeMat
         );
         baseLock.rotation.x = -Math.PI / 2;
-        baseLock.position.y = 0.012;
+        baseLock.position.y = 0.004;
         holder.add(baseLock);
-
-        const crownLock = new THREE.Mesh(
-          indAssets.captureCrownGeo,
-          isUnsafe ? indAssets.captureUnsafeMat : indAssets.captureSafeMat
-        );
-        crownLock.rotation.x = -Math.PI / 2;
-        crownLock.position.y = 0.345;
-        holder.add(crownLock);
-
         holder.userData.baseLock = baseLock;
-        holder.userData.crownLock = crownLock;
       } else {
-        const softGlow = new THREE.Mesh(
-          indAssets.softGlowGeo,
-          isUnsafe ? indAssets.glowUnsafeMat : indAssets.glowSafeMat
-        );
-        softGlow.rotation.x = -Math.PI / 2;
-        softGlow.position.y = -0.006;
-        holder.add(softGlow);
-
         const lotusDisc = new THREE.Mesh(
           indAssets.lotusDotGeo,
           isUnsafe ? indAssets.dotUnsafeMat : indAssets.dotSafeMat
@@ -1636,17 +1673,7 @@ class Xiangqi3DApp {
         lotusDisc.rotation.x = -Math.PI / 2;
         lotusDisc.position.y = 0.002;
         holder.add(lotusDisc);
-
-        const gemOrb = new THREE.Mesh(
-          indAssets.gemOrbGeo,
-          isUnsafe ? indAssets.orbUnsafeMat : indAssets.orbSafeMat
-        );
-        gemOrb.scale.set(1, 0.44, 1);
-        gemOrb.position.y = 0.026;
-        holder.add(gemOrb);
-
         holder.userData.lotusDisc = lotusDisc;
-        holder.userData.gemOrb = gemOrb;
       }
 
       const hitMesh = new THREE.Mesh(indAssets.hitGeo, indAssets.hitMat);
@@ -1657,6 +1684,7 @@ class Xiangqi3DApp {
       this.markersGroup.add(holder);
       this.moveIndicators.push(holder);
     }
+    this.syncLastMoveMarkerVisibility();
     this.updateTacticalGlowState();
   }
 
@@ -1673,11 +1701,225 @@ class Xiangqi3DApp {
     }
   }
 
+  showActionBurstPopup(mainText, subText = '', color = RED, styleKind = 'capture') {
+    const wrap = document.getElementById('action-burst-popup');
+    const mainEl = document.getElementById('action-burst-char');
+    const subEl = document.getElementById('action-burst-sub');
+    const sealEl = document.getElementById('action-burst-seal');
+    if (!wrap || !mainEl) return;
+
+    mainEl.textContent = mainText;
+    if (subEl) {
+      subEl.textContent = subText;
+      subEl.classList.toggle('hidden', !subText);
+    }
+    if (sealEl) {
+      sealEl.textContent = styleKind === 'check' ? '雷霆叫将' : (styleKind === 'capture_check' ? '破阵斩将' : '锋芒夺子');
+    }
+
+    wrap.dataset.theme = color === BLACK ? 'black' : 'red';
+    wrap.dataset.kind = styleKind;
+    wrap.classList.remove('hidden', 'action-burst-active');
+    void wrap.offsetWidth;
+    wrap.classList.add('action-burst-active');
+
+    if (this.actionBurstTimer) clearTimeout(this.actionBurstTimer);
+    this.actionBurstTimer = setTimeout(() => {
+      wrap.classList.add('hidden');
+      wrap.classList.remove('action-burst-active');
+    }, 1350);
+  }
+
+  computePieceMotionTransform(pieceType, startPos, endPos, isCapture, wasFlipped, t) {
+    const dx = endPos.x - startPos.x;
+    const dz = endPos.z - startPos.z;
+    const dist = Math.hypot(dx, dz) || 0.001;
+    const dirX = dx / dist;
+    const dirZ = dz / dist;
+    const perpX = -dirZ;
+    const perpZ = dirX;
+
+    let x = startPos.x;
+    let y = 0;
+    let z = startPos.z;
+    let rx = 0, ry = 0, rz = 0;
+    let sx = 1, sy = 1, sz = 1;
+
+    if (wasFlipped) {
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      x = THREE.MathUtils.lerp(startPos.x, endPos.x, ease);
+      z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease);
+      y = Math.sin(ease * Math.PI) * 1.42;
+      rx = ease * Math.PI * 2;
+      rz = Math.sin(ease * Math.PI * 2) * 0.26;
+      const pulse = 1 + Math.sin(ease * Math.PI) * 0.14;
+      sx = pulse; sy = pulse; sz = pulse;
+      return { x, y, z, rx, ry, rz, sx, sy, sz };
+    }
+
+    if (pieceType === 'n') {
+      if (t < 0.13) {
+        const p = t / 0.13;
+        sy = 1 - p * 0.22;
+        sx = 1 + p * 0.11;
+        sz = 1 + p * 0.11;
+        rx = -dirZ * p * 0.28;
+        rz = dirX * p * 0.28;
+      } else if (t < 0.86) {
+        const p = (t - 0.13) / 0.73;
+        const ease = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+        const sway = Math.sin(p * Math.PI) * (isCapture ? 0.28 : 0.20);
+        x = THREE.MathUtils.lerp(startPos.x, endPos.x, ease) + perpX * sway;
+        z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease) + perpZ * sway;
+        y = Math.sin(p * Math.PI) * (isCapture ? 1.85 : 1.48);
+        const somersault = ease * Math.PI * 2;
+        rx = dirZ * somersault;
+        rz = -dirX * somersault + Math.sin(p * Math.PI) * 0.36;
+        ry = Math.sin(p * Math.PI) * 0.45;
+      } else {
+        const p = (t - 0.86) / 0.14;
+        x = endPos.x;
+        z = endPos.z;
+        const bounce = Math.sin(p * Math.PI);
+        sy = 1 - bounce * 0.20;
+        sx = 1 + bounce * 0.10;
+        sz = 1 + bounce * 0.10;
+        rx = dirZ * Math.sin(p * Math.PI * 2) * 0.14 * (1 - p);
+        rz = -dirX * Math.sin(p * Math.PI * 2) * 0.14 * (1 - p);
+      }
+      return { x, y, z, rx, ry, rz, sx, sy, sz };
+    }
+
+    if (pieceType === 'c') {
+      if (isCapture) {
+        if (t < 0.15) {
+          const p = t / 0.15;
+          x = startPos.x - dirX * p * 0.22;
+          z = startPos.z - dirZ * p * 0.22;
+          y = p * 0.28;
+          rx = -dirZ * p * 0.44;
+          rz = dirX * p * 0.44;
+          sy = 1 - p * 0.15;
+          sx = 1 + p * 0.08;
+          sz = 1 + p * 0.08;
+        } else if (t < 0.78) {
+          const p = (t - 0.15) / 0.63;
+          const ease = 1 - Math.pow(1 - p, 2.2);
+          x = THREE.MathUtils.lerp(startPos.x - dirX * 0.22, endPos.x, ease);
+          z = THREE.MathUtils.lerp(startPos.z - dirZ * 0.22, endPos.z, ease);
+          y = Math.sin(p * Math.PI) * 2.35 + (1 - p) * 0.28;
+          const tilt = Math.cos(p * Math.PI) * -0.58;
+          rx = dirZ * tilt;
+          rz = -dirX * tilt;
+          ry = p * Math.PI;
+          const boost = 1 + Math.sin(p * Math.PI) * 0.16;
+          sx = boost; sy = boost; sz = boost;
+        } else {
+          const p = (t - 0.78) / 0.22;
+          x = endPos.x;
+          z = endPos.z;
+          y = Math.max(0, (1 - p * 2.5) * 0.18);
+          const squash = Math.sin(p * Math.PI) * 0.24;
+          sy = 1 - squash;
+          sx = 1 + squash * 0.55;
+          sz = 1 + squash * 0.55;
+        }
+      } else {
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        x = THREE.MathUtils.lerp(startPos.x, endPos.x, ease);
+        z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease);
+        y = Math.sin(t * Math.PI) * 0.46;
+        const tilt = Math.sin(t * Math.PI * 2) * 0.24;
+        rx = dirZ * tilt;
+        rz = -dirX * tilt;
+        ry = Math.sin(t * Math.PI) * 0.28;
+      }
+      return { x, y, z, rx, ry, rz, sx, sy, sz };
+    }
+
+    if (pieceType === 'r') {
+      if (t < 0.12) {
+        const p = t / 0.12;
+        x = startPos.x - dirX * p * 0.16;
+        z = startPos.z - dirZ * p * 0.16;
+        y = p * 0.14;
+        rx = -dirZ * p * 0.24;
+        rz = dirX * p * 0.24;
+      } else if (t < 0.82) {
+        const p = (t - 0.12) / 0.70;
+        const ease = 1 - Math.pow(1 - p, 3);
+        x = THREE.MathUtils.lerp(startPos.x - dirX * 0.16, endPos.x, ease);
+        z = THREE.MathUtils.lerp(startPos.z - dirZ * 0.16, endPos.z, ease);
+        y = 0.14 + Math.sin(p * Math.PI) * (isCapture ? 0.34 : 0.18);
+        const lean = (1 - p * 0.65) * 0.38;
+        rx = dirZ * lean;
+        rz = -dirX * lean;
+        sx = 1.05; sy = 0.95; sz = 1.05;
+      } else {
+        const p = (t - 0.82) / 0.18;
+        x = endPos.x + dirX * Math.sin(p * Math.PI) * 0.08 * (1 - p);
+        z = endPos.z + dirZ * Math.sin(p * Math.PI) * 0.08 * (1 - p);
+        y = 0;
+        const brake = Math.sin(p * Math.PI) * -0.28 * (1 - p * 0.4);
+        rx = dirZ * brake;
+        rz = -dirX * brake;
+      }
+      return { x, y, z, rx, ry, rz, sx, sy, sz };
+    }
+
+    if (pieceType === 'b' || pieceType === 'a') {
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      const curveOffset = Math.sin(t * Math.PI) * (pieceType === 'b' ? 0.34 : 0.18);
+      x = THREE.MathUtils.lerp(startPos.x, endPos.x, ease) + perpX * curveOffset;
+      z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease) + perpZ * curveOffset;
+      y = Math.sin(t * Math.PI) * (pieceType === 'b' ? 1.15 : 0.72);
+      ry = ease * Math.PI * 2;
+      const bank = Math.sin(t * Math.PI) * 0.32;
+      rx = perpZ * bank + dirZ * Math.sin(t * Math.PI * 2) * 0.16;
+      rz = -perpX * bank - dirX * Math.sin(t * Math.PI * 2) * 0.16;
+      return { x, y, z, rx, ry, rz, sx, sy, sz };
+    }
+
+    if (t < 0.16) {
+      const p = t / 0.16;
+      y = p * 0.25;
+      rx = -dirZ * p * 0.26;
+      rz = dirX * p * 0.26;
+      sy = 1 - p * 0.12;
+      sx = 1 + p * 0.06;
+      sz = 1 + p * 0.06;
+    } else if (t < 0.82) {
+      const p = (t - 0.16) / 0.66;
+      const ease = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      x = THREE.MathUtils.lerp(startPos.x, endPos.x, ease);
+      z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease);
+      y = 0.25 * (1 - p) + Math.sin(p * Math.PI) * (isCapture ? 1.08 : 0.76);
+      const tilt = Math.sin(p * Math.PI) * 0.36;
+      rx = dirZ * tilt;
+      rz = -dirX * tilt;
+    } else {
+      const p = (t - 0.82) / 0.18;
+      x = endPos.x;
+      z = endPos.z;
+      y = 0;
+      const wobble = Math.sin(p * Math.PI * 2) * 0.15 * (1 - p);
+      rx = dirZ * wobble;
+      rz = -dirX * wobble;
+      const sq = Math.sin(p * Math.PI) * 0.14;
+      sy = 1 - sq;
+      sx = 1 + sq * 0.5;
+      sz = 1 + sq * 0.5;
+    }
+    return { x, y, z, rx, ry, rz, sx, sy, sz };
+  }
+
   executeMoveAnimated(move, onComplete, isRemote = false) {
     this.hideIllegalMovePrompt();
     this.isBusy = true;
-    this.clearLegalMoveIndicators();
     this.selectedSquare = null;
+    this.legalMovesForSelected = [];
+    this.clearLegalMoveIndicators();
+    this.clearGrandmasterHint3D?.();
 
     const movingPiece = this.engine.board[move.fr][move.fc];
     const targetPiece = this.engine.board[move.tr][move.tc];
@@ -1687,6 +1929,8 @@ class Xiangqi3DApp {
     const startPos = gridToWorld(move.fr, move.fc);
     const endPos = gridToWorld(move.tr, move.tc);
     const isCapture = Boolean(targetPiece);
+    const capturedCharSnapshot = targetPiece ? (targetPiece.isHidden ? '暗子' : targetPiece.char) : '';
+    const movePieceType = movingPiece.isHidden ? (movingPiece.posType || movingPiece.type) : movingPiece.type;
 
     if (this.gameMode !== 'pvp' && movingPiece.color === BLACK) {
       this.sfx.playPickUp(movingPiece.color, true);
@@ -1707,32 +1951,32 @@ class Xiangqi3DApp {
       });
     }
 
-    this.lastFromRing.position.set(startPos.x, 0.015, startPos.z);
-    this.lastFromRing.visible = true;
-    this.lastToRing.position.set(endPos.x, 0.015, endPos.z);
-    this.lastToRing.visible = true;
+    this.setLastMoveMarkers(move.fr, move.fc, move.tr, move.tc);
+
+    this.spawnMoveTrailRibbon?.(startPos, endPos, moverColor, isCapture);
+
+    const animDuration = isCapture
+      ? (movePieceType === 'c' ? 0.54 : (movePieceType === 'n' ? 0.50 : 0.44))
+      : (wasFlipped ? 0.48 : (movePieceType === 'n' ? 0.44 : (movePieceType === 'r' ? 0.34 : 0.38)));
 
     let midFlipApplied = false;
     this.activeAnimations.push({
       mesh: movingMesh,
       elapsed: 0,
-      duration: isCapture ? 0.5 : (wasFlipped ? 0.44 : 0.34),
+      duration: animDuration,
       update: (t) => {
         if (!movingMesh) return;
-        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-        movingMesh.position.x = THREE.MathUtils.lerp(startPos.x, endPos.x, ease);
-        movingMesh.position.z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease);
-        movingMesh.position.y = Math.sin(ease * Math.PI) * (wasFlipped ? 1.05 : 0.8);
-        if (wasFlipped) {
-          movingMesh.rotation.x = ease * Math.PI * 2;
-          if (t >= 0.48 && !midFlipApplied) {
-            midFlipApplied = true;
-            movingMesh.userData.isHidden = false;
-            movingMesh.userData.type = movingPiece.type;
-            movingMesh.userData.char = movingPiece.char;
-            if (movingMesh.userData.topDisc && typeof getPieceTopMaterial === 'function') {
-              movingMesh.userData.topDisc.material = getPieceTopMaterial(movingPiece.color, movingPiece.char, false);
-            }
+        const tf = this.computePieceMotionTransform(movePieceType, startPos, endPos, isCapture, wasFlipped, t);
+        movingMesh.position.set(tf.x, tf.y, tf.z);
+        movingMesh.rotation.set(tf.rx, tf.ry, tf.rz);
+        movingMesh.scale.set(tf.sx, tf.sy, tf.sz);
+        if (wasFlipped && t >= 0.48 && !midFlipApplied) {
+          midFlipApplied = true;
+          movingMesh.userData.isHidden = false;
+          movingMesh.userData.type = movingPiece.type;
+          movingMesh.userData.char = movingPiece.char;
+          if (movingMesh.userData.topDisc && typeof getPieceTopMaterial === 'function') {
+            movingMesh.userData.topDisc.material = getPieceTopMaterial(movingPiece.color, movingPiece.char, false);
           }
         }
       },
@@ -1740,6 +1984,7 @@ class Xiangqi3DApp {
         if (movingMesh) {
           movingMesh.position.set(endPos.x, 0, endPos.z);
           movingMesh.rotation.set(0, 0, 0);
+          movingMesh.scale.set(1, 1, 1);
           movingMesh.userData.r = move.tr;
           movingMesh.userData.c = move.tc;
           movingMesh.userData.isHidden = Boolean(movingPiece.isHidden);
@@ -1756,11 +2001,17 @@ class Xiangqi3DApp {
           this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color);
           this.sfx.playAttackShatter();
         } else {
-          this.spawnMoveImpactWave?.(endPos.x, endPos.z, false);
+          this.spawnMoveImpactWave?.(endPos.x, endPos.z, movePieceType === 'r' || movePieceType === 'n');
           this.sfx.playMove(movingPiece.color, movingPiece.type);
         }
         this.updateTacticalGlowState();
-        this.onTurnFinished();
+        this.onTurnFinished({
+          wasCapture: isCapture,
+          moverColor,
+          moverChar: movingPiece.char,
+          capturedChar: capturedCharSnapshot,
+          notation
+        });
         if (onComplete) onComplete();
       }
     });
@@ -1800,7 +2051,7 @@ class Xiangqi3DApp {
     document.getElementById('cycle-red-tag').textContent = cycleStatus.redInfo.fullLabel;
     document.getElementById('cycle-black-tag').textContent = cycleStatus.blackInfo.fullLabel;
     document.getElementById('cycle-rule-desc').textContent = cycleStatus.ruleExplanation;
-    document.getElementById('cycle-countdown-badge').textContent = `⚠️ 再走 ${cycleStatus.remainingSteps} 步判负`;
+    document.getElementById('cycle-countdown-badge').textContent = `余 ${cycleStatus.remainingSteps} 步裁决`;
 
     delete banner.dataset.forceHidden;
     banner.style.removeProperty('display');
@@ -1818,27 +2069,28 @@ class Xiangqi3DApp {
     this.isBusy = false;
     this.hideCycleWarningBanner();
     let winnerColor = 'draw';
-    let calloutTitle = '双方不变 · 判和！';
-    if (cycleStatus.verdict === 'RED_LOSE') { winnerColor = BLACK; calloutTitle = '红方循环不变 · 判负！'; }
-    else if (cycleStatus.verdict === 'BLACK_LOSE') { winnerColor = RED; calloutTitle = '黑方循环不变 · 判负！'; }
+    let calloutTitle = '双方不变 · 判和';
+    if (cycleStatus.verdict === 'RED_LOSE') { winnerColor = BLACK; calloutTitle = '红方长打不变 · 判负'; }
+    else if (cycleStatus.verdict === 'BLACK_LOSE') { winnerColor = RED; calloutTitle = '黑方长打不变 · 判负'; }
 
     const rulePattern = {
       title: calloutTitle,
-      badge: `竞赛循环裁决 · ${cycleStatus.verdictShort}`,
+      stampText: winnerColor === 'draw' ? '握手言和' : '循环判负',
+      badge: `循环裁决 · ${cycleStatus.verdictShort}`,
       poem: '“天道有常须变着，执迷不悟判负还。”',
       analysis: cycleStatus.ruleExplanation,
       highlightCoords: [],
-      vfxType: 'stalemate_vortex'
+      vfxType: 'stalemate_trap'
     };
     this.recordReplayOutcome?.(winnerColor, calloutTitle);
     this.updateRestartButtonLabel();
     this.updateUI(this.engine.isInCheck(this.engine.turn));
     this.sfx.playVictorySeal();
-    this.showCenterCallout(calloutTitle, winnerColor === 'draw' ? RED : winnerColor);
+    this.showCenterCallout(calloutTitle, winnerColor === 'draw' ? RED : winnerColor, '循环裁定');
     setTimeout(() => { if (this.gameOver) this.showGameOverModal(winnerColor, rulePattern); }, 1450);
   }
 
-  onTurnFinished() {
+  onTurnFinished(moveMeta = null) {
     const currentTurn = this.engine.turn;
     const inCheck = this.engine.isInCheck(currentTurn);
     const hasMoves = this.engine.hasAnyLegalMove(currentTurn);
@@ -1849,7 +2101,6 @@ class Xiangqi3DApp {
       const winner = currentTurn === RED ? BLACK : RED;
       const pattern = CheckmateClassifier.classify(this.engine, currentTurn);
 
-      // 新增 1：复盘尝试另一种思路时若被绝杀，不会结束对局，播放绝杀动画并提示用户悔棋以继续复盘
       if (this.replayMode) {
         this.replayTrialCheckmated = true;
         this.isBusy = false;
@@ -1859,12 +2110,11 @@ class Xiangqi3DApp {
         this.updateUI(inCheck);
         this.showCheckmateHighlights(pattern.highlightCoords);
         this.triggerCheckmateVFX(pattern, winner);
-        this.showCenterCallout(`${pattern.title} · 请悔棋继续复盘`, winner);
         this.showIllegalMovePrompt({
           icon: 'undo',
-          title: `复盘试招绝杀 · ${pattern.title}`,
-          message: '当前尝试分支已被绝杀（不结束对局）。请点击下方「悔棋」按钮退回重选其他思路继续复盘！'
-        }, 6500);
+          title: `试招绝杀 · ${pattern.title}`,
+          message: '当前分支已被绝杀，点击底部「悔棋」可退回继续推演。'
+        }, 6000);
         return;
       }
 
@@ -1877,8 +2127,7 @@ class Xiangqi3DApp {
       this.updateUI(inCheck);
       this.showCheckmateHighlights(pattern.highlightCoords);
       this.triggerCheckmateVFX(pattern, winner);
-      this.showCenterCallout(pattern.title, winner);
-      setTimeout(() => { if (this.gameOver) this.showGameOverModal(winner, pattern); }, 2100);
+      setTimeout(() => { if (this.gameOver) this.showGameOverModal(winner, pattern); }, 3850);
       return;
     }
 
@@ -1892,12 +2141,12 @@ class Xiangqi3DApp {
           this.updateReplayPanelUI?.();
           this.updateTacticalGlowState();
           this.updateUI(inCheck);
-          this.showCenterCallout(`${cycleStatus.verdictShort} · 请悔棋继续复盘`, RED);
+          this.showCenterCallout(`${cycleStatus.verdictShort} · 请悔棋继续`, RED, '复盘裁定');
           this.showIllegalMovePrompt({
             icon: 'undo',
-            title: `复盘试招裁决 · ${cycleStatus.verdictShort}`,
-            message: `${cycleStatus.ruleExplanation} 请点击下方「悔棋」按钮退回继续复盘！`
-          }, 6000);
+            title: `试招裁决 · ${cycleStatus.verdictShort}`,
+            message: `${cycleStatus.ruleExplanation} 请点击「悔棋」退回继续推演。`
+          }, 5500);
           return;
         }
         this.triggerRuleAdjudication(cycleStatus);
@@ -1905,15 +2154,21 @@ class Xiangqi3DApp {
       }
       this.updateCycleWarningUI(cycleStatus);
       if (cycleStatus.remainingSteps === cycleStatus.period || cycleStatus.remainingSteps <= 2) {
-        this.showIllegalMovePrompt({ icon: 'gavel', title: `循环裁决警告 (${cycleStatus.remainingSteps}步)`, message: cycleStatus.ruleExplanation }, 3000);
+        this.showIllegalMovePrompt({ icon: 'gavel', title: `循环警告 · 余${cycleStatus.remainingSteps}步`, message: cycleStatus.ruleExplanation }, 2800);
       }
     } else {
       this.hideCycleWarningBanner();
     }
 
-    if (inCheck) {
+    const attackerColor = currentTurn === RED ? BLACK : RED;
+    if (inCheck && moveMeta?.wasCapture) {
       this.sfx.playCheck();
-      this.showCenterCallout('将军！', currentTurn === RED ? BLACK : RED);
+      this.showActionBurstPopup('吃·将', `${moveMeta.moverChar}斩${moveMeta.capturedChar} · 雷霆叫将`, attackerColor, 'capture_check');
+    } else if (inCheck) {
+      this.sfx.playCheck();
+      this.showActionBurstPopup('將軍', moveMeta?.notation ? `${moveMeta.notation} · 威逼九宫` : '兵临城下 · 速解将围', attackerColor, 'check');
+    } else if (moveMeta?.wasCapture) {
+      this.showActionBurstPopup('吃', `${moveMeta.moverChar}吃${moveMeta.capturedChar} · ${moveMeta.notation}`, attackerColor, 'capture');
     }
 
     const shouldAITakeTurn = !this.replayMode
@@ -1926,7 +2181,7 @@ class Xiangqi3DApp {
       const aiLabel = document.getElementById('ai-thinking-label');
       aiBadge?.classList.remove('hidden');
       aiBadge?.classList.add('inline-flex');
-      if (aiLabel) aiLabel.textContent = this.gameMode === 'inferno' ? '宗师推演中...' : 'AI 思考中...';
+      if (aiLabel) aiLabel.textContent = this.gameMode === 'inferno' ? '宗师推演…' : 'AI 推演…';
 
       this.requestAIMove(currentTurn, this.gameMode, (aiMove) => {
         aiBadge?.classList.add('hidden');
@@ -1948,7 +2203,6 @@ class Xiangqi3DApp {
   }
 
   handleBoardClick(clientX, clientY) {
-    // 移动端点击棋盘时若吃子浮层展开，自动收起以保持视野清爽无遮挡
     if (window.innerWidth < 1024 && !this.capturedTrayCollapsed) {
       this.capturedTrayCollapsed = true;
       this.syncCapturedTrayVisibility();
@@ -1960,9 +2214,9 @@ class Xiangqi3DApp {
       if (this.replayTrialCheckmated) {
         this.showIllegalMovePrompt({
           icon: 'undo',
-          title: '当前复盘分支已绝杀',
-          message: '请点击底部「悔棋」按钮退回上一步，即可继续尝试其他走法思路！'
-        }, 3200);
+          title: '当前分支已绝杀',
+          message: '请点击底部「悔棋」退回上一步，继续尝试其他着法。'
+        }, 3000);
         return;
       }
     }
@@ -2045,7 +2299,7 @@ class Xiangqi3DApp {
             this.clearIllegalWarningRings();
             if (this.replayMode) {
               this.replayHumanColor = this.engine.turn;
-            this.prepareReplayBranchAtCurrentStep?.(this.engine.turn);
+              this.prepareReplayBranchAtCurrentStep?.(this.engine.turn);
             }
             this.executeMoveAnimated(matchingMove);
             return;
@@ -2149,9 +2403,10 @@ class Xiangqi3DApp {
     const dt = Math.min(this.clock.getDelta(), 0.1);
     const elapsed = this.clock.getElapsedTime();
 
-    this.camSpherical.radius = THREE.MathUtils.lerp(this.camSpherical.radius, this.desiredSpherical.radius, 0.1);
-    this.camSpherical.phi = THREE.MathUtils.lerp(this.camSpherical.phi, this.desiredSpherical.phi, 0.1);
-    this.camSpherical.theta = THREE.MathUtils.lerp(this.camSpherical.theta, this.desiredSpherical.theta, 0.1);
+    const camLerp = this.vfxAtmosphereTimer > 0 ? 0.18 : 0.1;
+    this.camSpherical.radius = THREE.MathUtils.lerp(this.camSpherical.radius, this.desiredSpherical.radius, camLerp);
+    this.camSpherical.phi = THREE.MathUtils.lerp(this.camSpherical.phi, this.desiredSpherical.phi, camLerp);
+    this.camSpherical.theta = THREE.MathUtils.lerp(this.camSpherical.theta, this.desiredSpherical.theta, camLerp);
 
     const sinPhi = Math.sin(this.camSpherical.phi);
     const camX = this.camTarget.x + this.camSpherical.radius * sinPhi * Math.sin(this.camSpherical.theta);
@@ -2160,105 +2415,60 @@ class Xiangqi3DApp {
 
     if (this.cameraShake > 0.005) {
       const shakeOffset = (Math.random() - 0.5) * this.cameraShake;
-      this.camera.position.set(camX + shakeOffset, camY + shakeOffset, camZ + shakeOffset);
-      this.cameraShake *= 0.85;
+      this.camera.position.set(camX + shakeOffset, camY + shakeOffset * 0.7, camZ + shakeOffset);
+      this.cameraShake *= 0.84;
     } else {
       this.camera.position.set(camX, camY, camZ);
       this.cameraShake = 0;
     }
     this.camera.lookAt(this.camTarget);
 
-    if (this.sharedPieceAssets?.tacticalMats) {
-      const globalPulse = 0.5 + 0.5 * Math.sin(elapsed * 4.2);
-      const { danger, safe } = this.sharedPieceAssets.tacticalMats;
-      danger.haloMat.opacity = 0.52 + globalPulse * 0.38;
-      danger.outerRingMat.opacity = 0.65 + globalPulse * 0.32;
-      danger.cylShellMat.opacity = 0.42 + globalPulse * 0.36;
-      danger.topCoronaMat.opacity = 0.40 + globalPulse * 0.38;
-
-      safe.haloMat.opacity = 0.52 + globalPulse * 0.38;
-      safe.outerRingMat.opacity = 0.65 + globalPulse * 0.32;
-      safe.cylShellMat.opacity = 0.42 + globalPulse * 0.36;
-      safe.topCoronaMat.opacity = 0.40 + globalPulse * 0.38;
-    }
-
     for (const mesh of this.pieceMeshes.values()) {
       if (this.activeAnimations.some(a => a.mesh === mesh)) continue;
+      if (this._activeCheckerMeshes && this._activeCheckerMeshes.some(x => x.mesh === mesh) && this.vfxAtmosphereTimer > 0) continue;
       const ud = mesh.userData;
-      const { r, c, color, auraMat, auraRing } = ud;
-      const isSelected = this.selectedSquare && this.selectedSquare.r === r && this.selectedSquare.c === c;
-      const isTurnSide = color === this.engine.turn && (!this.gameOver || this.replayMode) && !this.replayTrialCheckmated;
+      if (!ud) continue;
+      const { r, c } = ud;
+      const isSelected = Boolean(this.selectedSquare && this.selectedSquare.r === r && this.selectedSquare.c === c);
 
-      let targetAuraOpacity = 0.0;
       if (isSelected) {
-        mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, 0.32 + Math.sin(elapsed * 5.0) * 0.07, 0.18);
-        targetAuraOpacity = 0.85 + Math.sin(elapsed * 5.0) * 0.15;
-        if (this.sharedPieceAssets?.turnSelTex && auraMat.map !== this.sharedPieceAssets.turnSelTex) {
-          auraMat.map = this.sharedPieceAssets.turnSelTex;
-          auraMat.needsUpdate = true;
-        }
+        mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, 0.36 + Math.sin(elapsed * 5.2) * 0.06, 0.22);
+        mesh.rotation.x = Math.sin(elapsed * 4.0) * 0.07;
+        mesh.rotation.z = Math.cos(elapsed * 4.0) * 0.07;
       } else {
-        if (Math.abs(mesh.position.y) > 0.001) mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, 0, 0.22);
-        const normalTex = color === RED ? this.sharedPieceAssets?.turnRedTex : this.sharedPieceAssets?.turnBlackTex;
-        if (normalTex && auraMat.map !== normalTex) {
-          auraMat.map = normalTex;
-          auraMat.needsUpdate = true;
-        }
-        if (isTurnSide && !ud.tacticalState) {
-          targetAuraOpacity = 0.24 + Math.sin(elapsed * 2.8 + r * 0.5 + c * 0.3) * 0.12;
-        }
-      }
-      auraMat.opacity = targetAuraOpacity;
-      if (auraRing) {
-        auraRing.visible = targetAuraOpacity > 0.005;
-        if (auraRing.visible) {
-          auraRing.rotation.z = elapsed * (isSelected ? 1.15 : 0.45);
-        }
-      }
-
-      if (ud.tacticalState && ud.tacticalGlowGroup && ud.tacticalGlowGroup.visible) {
-        const pulse = 0.5 + 0.5 * Math.sin(elapsed * 4.2 + (r * 0.7 + c * 0.5));
-        const haloScale = 0.94 + pulse * 0.12;
-        ud.haloMesh.scale.set(haloScale, haloScale, 1);
-        ud.haloMesh.rotation.z = elapsed * (ud.tacticalState === 'danger' ? -0.65 : 0.65);
-        ud.outerRingMesh.rotation.z = elapsed * (ud.tacticalState === 'danger' ? 1.25 : -1.25);
-        ud.topCoronaRing.rotation.z = elapsed * (ud.tacticalState === 'danger' ? -1.6 : 1.6);
-        ud.cylShellMesh.rotation.y = elapsed * (ud.tacticalState === 'danger' ? -1.35 : 1.35);
-        if (ud.bodyMat) {
-          ud.bodyMat.emissiveIntensity = 0.20 + pulse * 0.24;
+        if (Math.abs(mesh.position.y) > 0.001) mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, 0, 0.24);
+        if (Math.abs(mesh.rotation.x) > 0.001 || Math.abs(mesh.rotation.z) > 0.001) {
+          mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, 0, 0.24);
+          mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, 0, 0.24);
         }
       }
     }
 
     if (this.selectedRing.visible) {
-      const s = 1 + Math.sin(elapsed * 4.8) * 0.065;
+      const s = 1.0 + Math.sin(elapsed * 4.8) * 0.04;
       this.selectedRing.scale.set(s, s, 1);
-      this.selectedRing.rotation.z = elapsed * 0.85;
+      this.selectedRing.rotation.z = elapsed * 0.75;
     }
     if (this.lastFromRing?.visible) {
-      this.lastFromRing.rotation.z = -elapsed * 0.45;
+      this.lastFromRing.rotation.z = -elapsed * 0.35;
     }
     if (this.lastToRing?.visible) {
-      const s = 0.97 + Math.sin(elapsed * 3.6) * 0.05;
+      const s = 0.98 + Math.sin(elapsed * 3.2) * 0.03;
       this.lastToRing.scale.set(s, s, 1);
-      this.lastToRing.rotation.z = elapsed * 0.55;
+      this.lastToRing.rotation.z = elapsed * 0.45;
     }
 
     for (const ind of this.moveIndicators) {
       const u = ind.userData;
       const ph = u.phase || 0;
       if (u.isCapture) {
-        const s = 0.96 + Math.sin(elapsed * 5.5 + ph) * 0.085;
+        const s = 0.97 + Math.sin(elapsed * 4.8 + ph) * 0.05;
         ind.scale.set(s, 1, s);
-        if (u.baseLock) u.baseLock.rotation.z = elapsed * 1.1 + ph;
-        if (u.crownLock) u.crownLock.rotation.z = -elapsed * 1.65 - ph;
+        if (u.baseLock) u.baseLock.rotation.z = elapsed * 0.85 + ph;
       } else {
-        const s = 0.95 + Math.sin(elapsed * 4.6 + ph) * 0.08;
+        const s = 0.96 + Math.sin(elapsed * 4.2 + ph) * 0.06;
         ind.scale.set(s, 1, s);
-        if (u.lotusDisc) u.lotusDisc.rotation.z = elapsed * 0.75 + ph;
-        if (u.gemOrb) {
-          u.gemOrb.position.y = 0.028 + Math.sin(elapsed * 4.6 + ph) * 0.012;
-        }
+        if (u.lotusDisc) u.lotusDisc.rotation.z = elapsed * 0.65 + ph;
       }
     }
 
@@ -2267,9 +2477,18 @@ class Xiangqi3DApp {
         const w = this.impactWaves[i];
         w.age += dt;
         const p = Math.min(1, w.age / w.maxAge);
-        const sc = 0.65 + (1 - Math.pow(1 - p, 2)) * (w.maxScale - 0.65);
-        w.mesh.scale.set(sc, sc, 1);
-        w.mesh.material.opacity = (1 - p) * 0.85;
+        if (w.isTrail) {
+          w.mesh.material.opacity = (1 - p) * 0.78;
+        } else if (w.isSlash) {
+          const sc = 0.75 + (1 - Math.pow(1 - p, 3)) * (w.maxScale - 0.75);
+          w.mesh.scale.set(sc, sc, 1);
+          w.mesh.rotation.z += dt * 4.2;
+          w.mesh.material.opacity = (1 - p) * 0.90;
+        } else {
+          const sc = 0.70 + (1 - Math.pow(1 - p, 2)) * (w.maxScale - 0.70);
+          w.mesh.scale.set(sc, sc, 1);
+          w.mesh.material.opacity = (1 - p) * 0.82;
+        }
         if (p >= 1) {
           this.scene.remove(w.mesh);
           w.mesh.geometry?.dispose?.();
@@ -2284,12 +2503,14 @@ class Xiangqi3DApp {
         const item = this.illegalWarningRings[i];
         item.age += dt;
         const p = Math.min(1, item.age / item.maxAge);
-        const s = 0.92 + Math.sin(item.age * 12) * 0.08;
+        const s = 0.94 + Math.sin(item.age * 10) * 0.06;
         item.mesh.scale.set(s, s, 1);
-        item.mesh.rotation.z += dt * 1.5;
-        item.mesh.material.opacity = (1 - p) * 0.92;
+        item.mesh.rotation.z += dt * 1.2;
+        item.mesh.material.opacity = (1 - p) * 0.88;
         if (p >= 1) {
           this.scene.remove(item.mesh);
+          item.mesh.geometry?.dispose?.();
+          item.mesh.material?.dispose?.();
           this.illegalWarningRings.splice(i, 1);
         }
       }
@@ -2308,18 +2529,18 @@ class Xiangqi3DApp {
 
     if (this.vfxAtmosphereTimer > 0) {
       this.vfxAtmosphereTimer = Math.max(0, this.vfxAtmosphereTimer - dt);
-      const progress = 1 - (this.vfxAtmosphereTimer / (this.vfxAtmosphereDuration || 3.8));
+      const progress = 1 - (this.vfxAtmosphereTimer / (this.vfxAtmosphereDuration || 3.80));
       let eclipseFactor = 0;
-      if (progress < 0.12) eclipseFactor = progress / 0.12;
-      else if (progress < 0.72) eclipseFactor = 1;
-      else eclipseFactor = 1 - (progress - 0.72) / 0.28;
+      if (progress < 0.14) eclipseFactor = progress / 0.14;
+      else if (progress < 0.76) eclipseFactor = 1;
+      else eclipseFactor = 1 - (progress - 0.76) / 0.24;
       const sc = this.getActiveSceneConfig();
-      this._tempDayColor.setHex(sc.bgHex || 0xdce8dc);
-      this._tempDayColor.lerp(this._tempNightColor, Math.max(0, Math.min(1, eclipseFactor)) * 0.86);
+      this._tempDayColor.setHex(sc.bgHex || 0xdbe9dc);
+      this._tempDayColor.lerp(this._tempNightColor, Math.max(0, Math.min(1, eclipseFactor)) * 0.76);
       this.scene.background.copy(this._tempDayColor);
       if (this.scene.fog) this.scene.fog.color.copy(this._tempDayColor);
-      if (this.sunLight) this.sunLight.intensity = THREE.MathUtils.lerp(sc.sunIntensity || 1.15, 0.22, eclipseFactor);
-      if (this.hemiLight) this.hemiLight.intensity = THREE.MathUtils.lerp(sc.hemiIntensity || 0.75, 0.18, eclipseFactor);
+      if (this.sunLight) this.sunLight.intensity = THREE.MathUtils.lerp(sc.sunIntensity || 0.88, 0.24, eclipseFactor);
+      if (this.hemiLight) this.hemiLight.intensity = THREE.MathUtils.lerp(sc.hemiIntensity || 0.65, 0.22, eclipseFactor);
     }
     for (let i = this.checkmateVFXAnimations.length - 1; i >= 0; i--) {
       const vfx = this.checkmateVFXAnimations[i];
@@ -2343,6 +2564,8 @@ class Xiangqi3DApp {
       p.life += dt;
       if (p.life >= p.maxLife) {
         this.scene.remove(p.mesh);
+        p.mesh.geometry?.dispose?.();
+        p.mesh.material?.dispose?.();
         this.shatterParticles.splice(i, 1);
         continue;
       }
@@ -2365,7 +2588,7 @@ class Xiangqi3DApp {
       }
       if (this.battlefieldLights) {
         this.battlefieldLights.forEach(bl => {
-          bl.light.intensity = bl.baseIntensity + Math.sin(elapsed * 11.0 + bl.phase) * 0.28;
+          bl.light.intensity = bl.baseIntensity + Math.sin(elapsed * 11.0 + bl.phase) * 0.22;
         });
       }
       if (this.warBanners) {
@@ -2386,6 +2609,14 @@ class Xiangqi3DApp {
             em.sprite.position.x = (Math.random() - 0.5) * 26;
             em.sprite.position.z = (Math.random() - 0.5) * 26;
           }
+        });
+      }
+    } else if (this.currentSceneId === 'imperial_study') {
+      if (this.studyLanterns) {
+        this.studyLanterns.forEach(lt => {
+          lt.group.position.y = lt.baseY + Math.sin(elapsed * 1.6 + lt.phase) * 0.14;
+          lt.group.rotation.y = elapsed * 0.4 + lt.phase;
+          lt.light.intensity = 0.72 + Math.sin(elapsed * 5.0 + lt.phase) * 0.12;
         });
       }
     } else {
@@ -2414,9 +2645,6 @@ class Xiangqi3DApp {
     this.renderer.render(this.scene, this.camera);
   }
 
-  /**
-   * 统一管理底部“新局 / 重置残局 / 重新对局 / 再来一局”按钮文本与图标
-   */
   updateRestartButtonLabel() {
     const restartLabel = document.getElementById('restart-label');
     const restartIcon = document.getElementById('restart-icon');
@@ -2438,9 +2666,6 @@ class Xiangqi3DApp {
     }
   }
 
-  /**
-   * 渲染聚合式精雕微缩棋子（相同兵种合并显示 ×N 角标，彻底杜绝冗长遮挡）
-   */
   renderGroupedCapturedChips(piecesList, chipClass) {
     if (!piecesList || piecesList.length === 0) return '';
     const order = { r: 1, n: 2, c: 3, b: 4, a: 5, p: 6, hidden: 7, k: 0 };
@@ -2464,7 +2689,7 @@ class Xiangqi3DApp {
     return sorted.map(item => {
       const badge = item.count > 1 ? `<em class="chip-count-badge">×${item.count}</em>` : '';
       if (item.isHidden) {
-        return `<span class="captured-chip ${chipClass} chip-hidden-back serif-cn" title="被吃暗子（背面朝上放置，不可翻看）"><span class="chip-back-emblem"></span>${badge}</span>`;
+        return `<span class="captured-chip ${chipClass} chip-hidden-back serif-cn" title="暗子（背面朝上）"><span class="chip-back-emblem"></span>${badge}</span>`;
       }
       return `<span class="captured-chip ${chipClass} serif-cn">${item.char}${badge}</span>`;
     }).join('');
@@ -2484,7 +2709,7 @@ class Xiangqi3DApp {
     if (toggleBtn) {
       toggleBtn.classList.toggle('hidden', !hasAny);
       const arrow = this.capturedTrayCollapsed ? '▶' : '▼';
-      toggleBtn.innerHTML = `<span class="serif-cn">战果</span> <span class="text-red-700">红${this.engine.capturedBlack.length}</span>·<span class="text-slate-800">黑${this.engine.capturedRed.length}</span> ${arrow}`;
+      toggleBtn.innerHTML = `<span class="serif-cn">战果</span> <span class="text-red-700">红${this.engine.capturedBlack.length}</span>·<span class="text-slate-900">黑${this.engine.capturedRed.length}</span> ${arrow}`;
     }
 
     if (redCard) redCard.classList.toggle('hidden', !hasRedCaptures);
@@ -2510,22 +2735,22 @@ class Xiangqi3DApp {
     if (this.replayMode && this.replayTrialCheckmated) {
       turnDot.className = 'w-2.5 h-2.5 rounded-full bg-red-600 ring-4 ring-red-600/30 animate-ping';
       turnText.className = 'serif-cn font-bold text-xs text-red-700';
-      turnText.textContent = '试招被绝杀 · 请点悔棋继续';
+      turnText.textContent = '试招被杀 · 点悔棋继续';
     } else if (this.gameOver && !this.replayMode) {
       turnDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-600 ring-4 ring-amber-600/20';
       turnText.className = 'serif-cn font-bold text-xs text-amber-900';
-      turnText.textContent = this.endgameReasonText || '终局棋盘展示';
+      turnText.textContent = this.endgameReasonText || '终局盘面';
     } else if (this.engine.turn === RED) {
       turnDot.className = 'w-2.5 h-2.5 rounded-full bg-red-600 ring-4 ring-red-600/20';
       turnText.className = 'serif-cn font-bold text-xs text-red-800';
       const isAIOppInReplay = this.replayMode && this.replayBranchActive && this.gameMode !== 'pvp' && this.replayHumanColor === BLACK;
-      turnText.textContent = this.replayMode ? (isAIOppInReplay ? '复盘：红方AI' : '复盘：红方走棋') : '红方走棋';
+      turnText.textContent = this.replayMode ? (isAIOppInReplay ? '复盘 · 红方AI' : '复盘 · 红方') : '红方行棋';
     } else {
       turnDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-900 ring-4 ring-slate-900/20';
       turnText.className = 'serif-cn font-bold text-xs text-slate-900';
-      const modeLabels = { pvp: '黑方走棋', easy: '简单AI', hard: '困难AI', inferno: '宗师AI' };
+      const modeLabels = { pvp: '黑方行棋', easy: '简单AI', hard: '困难AI', inferno: '宗师AI' };
       const isAIOppInReplay = this.replayMode && this.replayBranchActive && this.gameMode !== 'pvp' && (this.replayHumanColor || RED) === RED;
-      turnText.textContent = this.replayMode ? (isAIOppInReplay ? `复盘：${modeLabels[this.gameMode] || 'AI'}` : '复盘：黑方走棋') : (modeLabels[this.gameMode] || 'AI');
+      turnText.textContent = this.replayMode ? (isAIOppInReplay ? `复盘 · ${modeLabels[this.gameMode] || 'AI'}` : '复盘 · 黑方') : (modeLabels[this.gameMode] || 'AI');
     }
 
     if (inCheck && (!this.gameOver || this.replayMode)) {
@@ -2541,8 +2766,8 @@ class Xiangqi3DApp {
       const isJieqi = this.engine.variantMode === 'jieqi';
       variantBadgeEl.textContent = isJieqi ? '揭棋' : '象棋';
       variantBadgeEl.className = isJieqi
-        ? 'inline-block serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600/15 text-amber-900 border border-amber-600/25'
-        : 'inline-block serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-800/10 text-red-900 border border-red-800/15';
+        ? 'inline-block cursor-pointer serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600/15 text-amber-900 border border-amber-600/30'
+        : 'inline-block cursor-pointer serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-800/10 text-red-900 border border-red-800/20';
     }
 
     const isOnline = Boolean(this.onlineRole && (this.isOnlineConnected || this.conn?.open));
@@ -2550,7 +2775,6 @@ class Xiangqi3DApp {
       document.getElementById(id)?.toggleAttribute('disabled', Boolean(this.onlineRole));
     });
 
-    // “求和”和“认输”按钮只在联机状态下才会出现
     btnDraw?.classList.toggle('hidden', !isOnline);
     btnResign?.classList.toggle('hidden', !isOnline);
 
@@ -2560,7 +2784,7 @@ class Xiangqi3DApp {
         el.disabled = Boolean(this.onlineRole);
         el.classList.toggle('opacity-45', Boolean(this.onlineRole));
         el.classList.toggle('cursor-not-allowed', Boolean(this.onlineRole));
-        el.title = this.onlineRole ? '联机对局中不可使用此功能，请先退出房间' : '';
+        el.title = this.onlineRole ? '联机中不可使用' : '';
       }
     });
 
@@ -2622,19 +2846,29 @@ class Xiangqi3DApp {
     this.syncCapturedTrayVisibility();
   }
 
-  showCenterCallout(text, color) {
+  showCenterCallout(text, color = RED, badgeLabel = '') {
     const container = document.getElementById('center-callout');
     const inner = document.getElementById('center-callout-inner');
+    const textEl = document.getElementById('center-callout-text');
+    const badgeEl = document.getElementById('center-callout-badge');
     if (!container || !inner) return;
-    inner.textContent = text;
-    inner.className = color === RED
-      ? 'serif-cn px-7 py-3.5 rounded-3xl text-2xl md:text-4xl font-black tracking-widest shadow-2xl border-2 bg-red-700/95 text-amber-50 border-amber-300 text-center'
-      : 'serif-cn px-7 py-3.5 rounded-3xl text-2xl md:text-4xl font-black tracking-widest shadow-2xl border-2 bg-slate-900/95 text-amber-400 border-slate-500 text-center';
 
+    if (textEl) {
+      textEl.textContent = text;
+    } else {
+      inner.textContent = text;
+    }
+    if (badgeEl) {
+      const autoBadge = badgeLabel || (text.includes('支招') || text.includes('进') || text.includes('平') || text.includes('退') ? '锦囊妙手' : '雅集通告');
+      badgeEl.textContent = autoBadge;
+    }
+
+    inner.dataset.theme = color === BLACK ? 'black' : 'red';
     container.classList.remove('hidden', 'callout-animate');
     void container.offsetWidth;
     container.classList.add('callout-animate');
-    setTimeout(() => container.classList.add('hidden'), 1750);
+    if (this.calloutHideTimer) clearTimeout(this.calloutHideTimer);
+    this.calloutHideTimer = setTimeout(() => container.classList.add('hidden'), 1750);
   }
 
   showGameOverModal(winnerColor, pattern) {
@@ -2650,19 +2884,21 @@ class Xiangqi3DApp {
     const rounds = Math.max(1, Math.ceil(this.engine.history.length / 2));
     if (winnerColor === 'draw') {
       icon.textContent = '和';
-      icon.className = 'w-14 h-14 rounded-2xl bg-amber-700 text-amber-50 flex items-center justify-center serif-cn text-2xl font-black shadow-lg shrink-0';
-      subtitle.textContent = `双方和棋 · 共 ${rounds} 回合`;
+      icon.className = 'w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-800 text-amber-50 flex items-center justify-center serif-cn text-2xl font-black shadow-lg ring-2 ring-amber-300/60 shrink-0';
+      subtitle.textContent = `握手言和 · 共 ${rounds} 回合`;
     } else if (winnerColor === RED) {
       icon.textContent = '帥';
-      icon.className = 'w-14 h-14 rounded-2xl bg-red-700 text-amber-100 flex items-center justify-center serif-cn text-2xl font-black shadow-lg shrink-0';
-      subtitle.textContent = `红方获胜 · 共 ${rounds} 回合`;
+      icon.className = 'w-14 h-14 rounded-2xl bg-gradient-to-br from-red-700 to-amber-800 text-amber-50 flex items-center justify-center serif-cn text-2xl font-black shadow-lg ring-2 ring-amber-300/60 shrink-0';
+      subtitle.className = 'serif-cn text-xs font-bold text-red-800 mt-0.5';
+      subtitle.textContent = `红方（白玉）胜 · 第 ${rounds} 回合终局`;
     } else {
       icon.textContent = '將';
-      icon.className = 'w-14 h-14 rounded-2xl bg-slate-900 text-amber-400 flex items-center justify-center serif-cn text-2xl font-black shadow-lg shrink-0';
-      subtitle.textContent = `黑方获胜 · 共 ${rounds} 回合`;
+      icon.className = 'w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 via-slate-950 to-black text-amber-300 flex items-center justify-center serif-cn text-2xl font-black shadow-lg ring-2 ring-amber-400/60 shrink-0';
+      subtitle.className = 'serif-cn text-xs font-bold text-slate-900 mt-0.5';
+      subtitle.textContent = `黑方（黑曜石）胜 · 第 ${rounds} 回合终局`;
     }
 
-    title.textContent = pattern.title || '绝杀获胜！';
+    title.textContent = pattern.title || '绝杀获胜';
     badgeText.textContent = pattern.badge || '古谱绝杀判定';
     poemEl.textContent = pattern.poem || '“运筹帷幄决千里，一着绝杀定乾坤。”';
     descEl.textContent = pattern.analysis || '精彩对局！';
@@ -2720,16 +2956,16 @@ class Xiangqi3DApp {
       this.sfx.playSelect();
       try {
         this.conn.send({ type: 'undo_request' });
-        this.showCenterCallout('已发送悔棋申请', this.onlineRole);
+        this.showCenterCallout('已发送悔棋请求', this.onlineRole);
         this.undoRequestTimeout = setTimeout(() => {
           if (!this.pendingUndoRequest) return;
           this.pendingUndoRequest = false;
-          this.showCenterCallout('悔棋申请暂无回应', this.onlineRole);
+          this.showCenterCallout('悔棋请求未获回应', this.onlineRole);
           this.updateUI(this.engine.isInCheck(this.engine.turn));
         }, 15000);
-      } catch (err) {
+      } catch (_) {
         this.pendingUndoRequest = false;
-        this.updateOnlineStatusUI('悔棋申请发送失败，请检查联机状态', false);
+        this.updateOnlineStatusUI('悔棋发送失败，请检查连接', false);
       }
       this.updateUI(this.engine.isInCheck(this.engine.turn));
       return;
@@ -2740,10 +2976,11 @@ class Xiangqi3DApp {
     this.gameOver = false;
     this.endgameReasonText = null;
     this.closeModalOnly();
+    this.selectedSquare = null;
+    this.legalMovesForSelected = [];
     this.clearCheckmateHighlights();
     this.clearCheckmateVFX();
-    this.clearLegalMoveIndicators();
-    this.selectedSquare = null;
+    this.clearAllTransientVFX(false);
 
     if (!this.onlineRole && this.gameMode !== 'pvp' && this.engine.turn === RED && this.engine.history.length >= 2) {
       this.engine.undoLastMove();
@@ -2756,8 +2993,12 @@ class Xiangqi3DApp {
     }
     if (this.engine.history.length === 0) {
       this.resetTelemetryUI();
-      if (this.lastFromRing) this.lastFromRing.visible = false;
-      if (this.lastToRing) this.lastToRing.visible = false;
+      this.setLastMoveMarkers(null, null, null, null);
+    } else {
+      const prevH = this.engine.history[this.engine.history.length - 1];
+      if (prevH?.move) {
+        this.setLastMoveMarkers(prevH.move.fr, prevH.move.fc, prevH.move.tr, prevH.move.tc);
+      }
     }
     this.syncPiecesFromEngine();
     this.updateRestartButtonLabel();
@@ -2777,9 +3018,6 @@ class Xiangqi3DApp {
     }
   }
 
-  /**
-   * 底部“新局 / 重置残局 / 重新对局 / 再来一局”按钮与终局弹窗“再来一局”按钮的统一入口
-   */
   handleRestartButton() {
     if (this.replayMode) {
       this.exitReplayMode(true);
@@ -2802,10 +3040,6 @@ class Xiangqi3DApp {
     this.restartGame();
   }
 
-  /**
-   * 点击“再来一局”：
-   * 联机状态下需要向对方发送再来一局申请，经对方同意后双方同步重置棋盘！
-   */
   handlePlayAgain() {
     if (this.onlineRole) {
       this.requestRematchOnline(true);
@@ -2818,12 +3052,9 @@ class Xiangqi3DApp {
     }
   }
 
-  /**
-   * 修改 1：“标准新局”按钮改为“模式选择”按钮，点击后弹出棋局模式选择面板
-   */
   openVariantSelectModal() {
     if (this.onlineRole && this.conn?.open) {
-      this.showCenterCallout('联机对局中不可切换棋局模式，请先退出房间', this.onlineRole);
+      this.showCenterCallout('联机中不可切换棋制', this.onlineRole);
       return;
     }
     this.sfx.playSelect();
@@ -2851,7 +3082,7 @@ class Xiangqi3DApp {
               : 'border-amber-200/80 bg-white/90 hover:bg-amber-50/60'
           }">
           <div class="w-10 h-10 rounded-xl ${
-            v.id === 'jieqi' ? 'bg-gradient-to-br from-amber-600 to-red-700' : 'bg-gradient-to-br from-red-700 to-slate-800'
+            v.id === 'jieqi' ? 'bg-gradient-to-br from-amber-600 to-red-700' : 'bg-gradient-to-br from-red-700 to-slate-950'
           } text-amber-50 flex items-center justify-center shrink-0 shadow-sm serif-cn font-black text-lg">
             ${v.id === 'jieqi' ? '揭' : '象'}
           </div>
@@ -2864,7 +3095,7 @@ class Xiangqi3DApp {
                 }">${v.badge}</span>
               </div>
               <span class="serif-cn text-[11px] font-bold ${isCurrent ? 'text-red-700' : 'text-amber-700'}">
-                ${isCurrent ? '● 当前模式 · 点击新局' : '点击开启 ▶'}
+                ${isCurrent ? '● 当前 · 开启新局' : '开启 ▶'}
               </span>
             </div>
             <p class="serif-cn text-xs text-slate-600 leading-relaxed mt-1">${v.desc}</p>
@@ -2876,7 +3107,7 @@ class Xiangqi3DApp {
 
   selectChessVariant(variantId) {
     if (this.onlineRole && this.conn?.open) {
-      this.showCenterCallout('联机对局中不可切换棋局模式', this.onlineRole);
+      this.showCenterCallout('联机中不可切换棋制', this.onlineRole);
       return;
     }
     const target = this.variantRegistry.find(v => v.id === variantId) || this.variantRegistry[0];
@@ -2887,12 +3118,9 @@ class Xiangqi3DApp {
     this.endgameEditor = false;
     document.getElementById('custom-endgame-panel')?.classList.add('hidden');
     this.restartGame();
-    this.showCenterCallout(`已开启【${target.name}】新局`, RED);
+    this.showCenterCallout(`开启【${target.name}】新局`, RED, '棋制切换');
   }
 
-  /**
-   * 新增 7：点击标题栏“帥”图标后可以切换场景，切换场景不刷新网页且不破坏当前棋局
-   */
   toggleSceneModal(forceState) {
     const modal = document.getElementById('scene-select-modal');
     if (!modal) return;
@@ -2913,16 +3141,21 @@ class Xiangqi3DApp {
     container.innerHTML = this.sceneRegistry.map(sc => {
       const isCurrent = sc.id === this.currentSceneId;
       const isBattlefield = sc.id === 'ancient_battlefield';
+      const isStudy = sc.id === 'imperial_study';
       const activeBorder = isBattlefield
         ? 'border-red-700 bg-gradient-to-r from-amber-50/95 to-red-50/95 shadow-md'
-        : 'border-emerald-700 bg-gradient-to-r from-emerald-50/95 to-teal-50/95 shadow-md';
+        : (isStudy
+            ? 'border-amber-600 bg-gradient-to-r from-amber-50/95 to-purple-50/95 shadow-md'
+            : 'border-emerald-700 bg-gradient-to-r from-emerald-50/95 to-teal-50/95 shadow-md');
       const iconBg = isBattlefield
         ? 'bg-gradient-to-br from-red-700 to-amber-700 text-amber-50'
-        : 'bg-gradient-to-br from-emerald-700 to-teal-800 text-emerald-50';
+        : (isStudy
+            ? 'bg-gradient-to-br from-amber-600 to-purple-900 text-amber-50'
+            : 'bg-gradient-to-br from-emerald-700 to-teal-800 text-emerald-50');
       const badgeCls = isBattlefield
         ? 'bg-red-100 text-red-900'
-        : 'bg-emerald-100 text-emerald-900';
-      const statusCls = isBattlefield ? 'text-red-800' : 'text-emerald-800';
+        : (isStudy ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900');
+      const statusCls = isBattlefield ? 'text-red-800' : (isStudy ? 'text-amber-800' : 'text-emerald-800');
       return `
         <button type="button" onclick="window.gameApp.switchScene('${sc.id}')"
           class="md-btn w-full text-left rounded-2xl p-3.5 border-2 transition-all flex items-start gap-3 ${
@@ -2935,9 +3168,9 @@ class Xiangqi3DApp {
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5">
                 <span class="serif-cn font-black text-sm text-slate-900">${sc.name}</span>
-                <span class="serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}">${sc.badge || (isCurrent ? '当前使用' : '可用场景')}</span>
+                <span class="serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}">${sc.badge}</span>
               </div>
-              <span class="serif-cn text-[11px] font-bold ${statusCls}">${isCurrent ? '✓ 当前场景' : '点击切换 ▶'}</span>
+              <span class="serif-cn text-[11px] font-bold ${statusCls}">${isCurrent ? '✓ 当前' : '切换 ▶'}</span>
             </div>
             <p class="serif-cn text-xs text-slate-600 leading-relaxed mt-1">${sc.desc}</p>
           </div>
@@ -2949,59 +3182,61 @@ class Xiangqi3DApp {
   switchScene(sceneId) {
     const sc = this.sceneRegistry.find(s => s.id === sceneId) || this.sceneRegistry[0];
     this.currentSceneId = sc.id;
+    const isPark = sc.id === 'bamboo_park';
     const isBattlefield = sc.id === 'ancient_battlefield';
+    const isStudy = sc.id === 'imperial_study';
     this.sfx.playSelect();
 
-    // 在不刷新网页、不重置棋盘与对局状态的前提下，无缝切换 3D 场景模型、粒子与光影
-    if (this.parkGroup) this.parkGroup.visible = !isBattlefield;
-    if (this.dappledCanopy) this.dappledCanopy.visible = !isBattlefield;
+    if (this.parkGroup) this.parkGroup.visible = isPark;
+    if (this.dappledCanopy) this.dappledCanopy.visible = isPark;
     if (this.breezeParticles) {
-      this.breezeParticles.forEach(bp => { bp.mesh.visible = !isBattlefield; });
+      this.breezeParticles.forEach(bp => { bp.mesh.visible = isPark; });
     }
     if (this.battlefieldGroup) this.battlefieldGroup.visible = isBattlefield;
     if (this.battlefieldEmbers) {
-      this.battlefieldEmbers.forEach(em => { em.sprite.visible = isBattlefield; });
+      this.battlefieldEmbers.forEach(em => { em.sprite.visible = isBattlefield || isStudy; });
     }
+    if (this.studyGroup) this.studyGroup.visible = isStudy;
 
     if (this.scene) {
       this.scene.background = new THREE.Color(sc.bgHex);
       if (this.scene.fog) {
         this.scene.fog.color.setHex(sc.bgHex);
-        this.scene.fog.density = sc.fogDensity || 0.015;
+        this.scene.fog.density = sc.fogDensity || 0.014;
       }
     }
     if (typeof document !== 'undefined' && document.body) {
-      document.body.style.background = isBattlefield ? '#261a16' : '#dce7dc';
+      document.body.style.background = isBattlefield ? '#432d22' : (isStudy ? '#2d233c' : '#dbe9dc');
     }
     if (this.sunLight) {
-      this.sunLight.color.setHex(sc.sunColor || 0xfff5e0);
-      this.sunLight.intensity = sc.sunIntensity || 1.15;
+      this.sunLight.color.setHex(sc.sunColor || 0xfff6e5);
+      this.sunLight.intensity = sc.sunIntensity || 0.54;
     }
     if (this.hemiLight) {
       this.hemiLight.color.setHex(sc.hemiSky || 0xfef9e7);
-      this.hemiLight.groundColor.setHex(sc.hemiGround || 0x688264);
-      this.hemiLight.intensity = sc.hemiIntensity || 0.75;
+      this.hemiLight.groundColor.setHex(sc.hemiGround || 0x5c7a58);
+      this.hemiLight.intensity = sc.hemiIntensity || 0.30;
     }
 
     const badgeEl = document.getElementById('scene-badge');
     if (badgeEl) {
       badgeEl.textContent = sc.name;
-      badgeEl.className = isBattlefield
+      badgeEl.className = !isPark
         ? 'hidden md:inline-block cursor-pointer serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-800/15 text-amber-950 border border-amber-800/25'
         : 'hidden md:inline-block cursor-pointer serif-cn text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-800/10 text-emerald-900 border border-emerald-800/15';
     }
     const switcherBtn = document.getElementById('btn-scene-switcher');
     if (switcherBtn) {
-      switcherBtn.title = `点击切换 3D 场景（当前：${sc.name}）`;
+      switcherBtn.title = `切换场景（当前：${sc.name}）`;
     }
 
     this.toggleSceneModal(false);
-    this.showCenterCallout(`场景已切换：${sc.name}`, RED);
+    this.showCenterCallout(`已切换至【${sc.name}】`, RED, '雅集换景');
   }
 
   restartStandardGame(isRemote = false) {
     if (this.onlineRole && this.conn?.open && !isRemote) {
-      this.showCenterCallout('联机对局中请使用「重新对局」按钮向对方发起请求', this.onlineRole);
+      this.showCenterCallout('联机中请点「重新对局」发起申请', this.onlineRole);
       return;
     }
     this.openVariantSelectModal();
@@ -3021,15 +3256,14 @@ class Xiangqi3DApp {
     this.activeAnimations = [];
     this.closeModalOnly();
     this.toggleVFXDrawer(false);
-    this.clearCheckmateHighlights();
-    this.clearCheckmateVFX();
-    if (this.lastFromRing) this.lastFromRing.visible = false;
-    if (this.lastToRing) this.lastToRing.visible = false;
     this.gameOver = false;
     this.endgameReasonText = null;
     this.endgameEditor = false;
     this.selectedSquare = null;
-    this.clearLegalMoveIndicators();
+    this.legalMovesForSelected = [];
+    this.clearCheckmateHighlights();
+    this.clearCheckmateVFX();
+    this.clearAllTransientVFX(true);
     this.engine.board = this.customEndgameSnapshot.map(row => row.map(p => p ? { ...p } : null));
     this.engine.turn = this.editorFirstTurn || RED;
     this.engine.clearCapturesAndHistory?.();
@@ -3059,14 +3293,13 @@ class Xiangqi3DApp {
     this.activeAnimations = [];
     this.closeModalOnly();
     this.toggleVFXDrawer(false);
-    this.clearCheckmateHighlights();
-    this.clearCheckmateVFX();
-    if (this.lastFromRing) this.lastFromRing.visible = false;
-    if (this.lastToRing) this.lastToRing.visible = false;
     this.gameOver = false;
     this.endgameReasonText = null;
     this.selectedSquare = null;
-    this.clearLegalMoveIndicators();
+    this.legalMovesForSelected = [];
+    this.clearCheckmateHighlights();
+    this.clearCheckmateVFX();
+    this.clearAllTransientVFX(true);
     this.engine.reset(this.variantMode || 'xiangqi');
 
     this.initReplaySession?.(this.engine.board, this.engine.turn, 'standard');
