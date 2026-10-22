@@ -723,6 +723,7 @@ class Xiangqi3DApp {
       base.position.y = -3.82;
       stoolGroup.add(seat, drumBelly, base);
       stoolGroup.position.set(pos.x, 0, pos.z);
+      stoolGroup.rotation.y = Math.atan2(pos.x, pos.z);
       this.parkGroup.add(stoolGroup);
     });
 
@@ -1072,6 +1073,7 @@ class Xiangqi3DApp {
       goldBand.position.y = -1.92;
       sg.add(body, topSeat, goldBand);
       sg.position.set(pos.x, 0, pos.z);
+      sg.rotation.y = Math.atan2(pos.x, pos.z);
       this.battlefieldGroup.add(sg);
     });
 
@@ -1534,8 +1536,8 @@ class Xiangqi3DApp {
     const chairCoords = [
       { x: 0, z: 8.8, ry: 0 },
       { x: 0, z: -8.8, ry: Math.PI },
-      { x: 8.8, z: 0, ry: -Math.PI / 2 },
-      { x: -8.8, z: 0, ry: Math.PI / 2 }
+      { x: 8.8, z: 0, ry: Math.PI / 2 },
+      { x: -8.8, z: 0, ry: -Math.PI / 2 }
     ];
     chairCoords.forEach(cc => {
       const cg = new THREE.Group();
@@ -2772,7 +2774,25 @@ class Xiangqi3DApp {
 
     if (!hasMoves) {
       const winner = currentTurn === RED ? BLACK : RED;
-      const pattern = CheckmateClassifier.classify(this.engine, currentTurn);
+      let pattern = CheckmateClassifier.classify(this.engine, currentTurn);
+      if (this.activeDrillVfxType && winner === RED && this.engine.history.length <= 2) {
+        if (pattern.vfxType !== this.activeDrillVfxType && typeof CheckmateClassifier.getMetaByType === 'function') {
+          const drillMeta = CheckmateClassifier.getMetaByType(this.activeDrillVfxType);
+          if (drillMeta) {
+            pattern = {
+              ...pattern,
+              title: drillMeta.title,
+              stampText: drillMeta.stampText,
+              subBanner: drillMeta.subBanner,
+              badge: drillMeta.badge,
+              poem: drillMeta.poem,
+              analysis: drillMeta.desc,
+              vfxType: drillMeta.vfxType
+            };
+          }
+        }
+        this.activeDrillVfxType = null;
+      }
 
       if (this.replayMode) {
         this.replayTrialCheckmated = true;
@@ -2800,7 +2820,7 @@ class Xiangqi3DApp {
       this.updateUI(inCheck);
       this.showCheckmateHighlights(pattern.highlightCoords);
       this.triggerCheckmateVFX(pattern, winner);
-      setTimeout(() => { if (this.gameOver) this.showGameOverModal(winner, pattern); }, 3850);
+      setTimeout(() => { if (this.gameOver) this.showGameOverModal(winner, pattern); }, 4150);
       return;
     }
 
@@ -2896,7 +2916,7 @@ class Xiangqi3DApp {
     if (!this.endgameEditor && !this.replayMode && this.gameMode !== 'pvp' && this.engine.turn === BLACK) return;
     if (!this.endgameEditor && this.onlineRole && this.engine.turn !== this.onlineRole) return;
 
-    if (this.checkmateVFXGroup && this.checkmateVFXGroup.children.length > 0) {
+    if ((this.checkmateVFXGroup && this.checkmateVFXGroup.children.length > 0) || (this.checkmateHighlightRings && this.checkmateHighlightRings.length > 0)) {
       this.clearCheckmateVFX();
       this.clearCheckmateHighlights();
     }
@@ -3227,11 +3247,10 @@ class Xiangqi3DApp {
     if (
       this.vfxAtmosphereDuration > 0 &&
       this.vfxAtmosphereTimer <= 0 &&
-      this.checkmateVFXAnimations.length === 0 &&
-      this.checkmateVFXGroup &&
-      this.checkmateVFXGroup.children.length > 0
+      this.checkmateVFXAnimations.length === 0
     ) {
       this.clearCheckmateVFX();
+      this.clearCheckmateHighlights();
       this.vfxAtmosphereDuration = 0;
     }
     for (let i = this.shatterParticles.length - 1; i >= 0; i--) {
