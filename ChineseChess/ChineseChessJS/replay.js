@@ -734,7 +734,7 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     ctx.fillStyle = '#991b1b';
     ctx.font = 'bold 19px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", "KaiTi", serif';
-    ctx.fillText(this.currentSceneId === 'ancient_battlefield' ? '◆ 中国象棋 3D · 楚汉将台演武' : (this.currentSceneId === 'imperial_study' ? '◆ 中国象棋 3D · 紫宸御弈演武' : '◆ 中国象棋 3D · 翠竹石案演武'), cardX + 48, cardY + 166);
+    ctx.fillText(this.currentSceneId === 'ancient_battlefield' ? '◆ 中国象棋 3D · 楚汉将台演武' : (this.currentSceneId === 'imperial_study' ? '◆ 中国象棋 3D · 瑶台揽月演武' : '◆ 中国象棋 3D · 翠竹石案演武'), cardX + 48, cardY + 166);
 
     const finalizePoster = (source) => {
       const qrBoxX = cardX + cardW - 198;
@@ -885,8 +885,72 @@ Object.assign(Xiangqi3DApp.prototype, {
     const title = isReplay
       ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
       : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？';
+    const shareCommand = `${title}\n👉 点击链接直接应战：${url}`;
 
     const blob = this.currentPosterBlob || (this.currentPosterDataUrl ? dataURLToBlobSync(this.currentPosterDataUrl) : null);
+
+    // 微信端优先在用户手势激活期内响应，同时打开专属微信分享面板（避免被高层级弹窗遮挡）
+    if (platform === 'wechat') {
+      const ua = navigator.userAgent || '';
+      const isWeChatBrowser = /MicroMessenger/i.test(ua);
+      const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+
+      if (isMobileDevice && !isWeChatBrowser && typeof navigator.share === 'function') {
+        let file = this.currentPosterFile;
+        if (!file && blob && typeof File !== 'undefined') {
+          try {
+            file = new File([blob], isReplay ? 'xiangqi3d-replay.png' : 'xiangqi3d-endgame.png', { type: 'image/png' });
+            this.currentPosterFile = file;
+          } catch (_) { }
+        }
+        if (file && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+          try {
+            await navigator.share({ files: [file], title: isReplay ? '中国象棋 3D · 棋局复盘' : '中国象棋 3D · 残局战帖', text: title });
+            this.showCenterCallout('已调起系统分享至微信', RED, '微信分享');
+            return;
+          } catch (err) {
+            if (err?.name === 'AbortError') return;
+          }
+        }
+      }
+
+      let imageCopied = false;
+      let textCopied = false;
+      if (blob && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        try {
+          const itemData = { 'image/png': blob };
+          if (typeof Blob !== 'undefined') {
+            itemData['text/plain'] = new Blob([shareCommand], { type: 'text/plain' });
+          }
+          await navigator.clipboard.write([new ClipboardItem(itemData)]);
+          imageCopied = true;
+          textCopied = true;
+        } catch (_) {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            imageCopied = true;
+          } catch (_2) { }
+        }
+      }
+      if (!imageCopied && !textCopied) {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareCommand);
+            textCopied = true;
+          }
+        } catch (_) { }
+      }
+
+      this.openWeChatShareModal({
+        url,
+        title,
+        shareCommand,
+        imageCopied,
+        textCopied,
+        isWeChatBrowser
+      });
+      return;
+    }
 
     let imageCopied = false;
     if (blob && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
@@ -899,42 +963,149 @@ Object.assign(Xiangqi3DApp.prototype, {
     if (platform === 'weibo') {
       const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
       window.open(weiboUrl, '_blank', 'noopener,noreferrer,width=680,height=520');
-      this.showCenterCallout(imageCopied ? '已打开微博分享（海报图片也已复制，可直接粘贴）' : '已打开微博分享窗口', RED);
+      this.showCenterCallout(imageCopied ? '已打开微博分享（海报图片也已复制，可直接粘贴）' : '已打开微博分享窗口', RED, '社交分享');
       return;
     }
 
     if (platform === 'qq') {
       const qqUrl = `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(isReplay ? '中国象棋 3D · 棋局复盘' : '中国象棋 3D · 残局战帖')}&summary=${encodeURIComponent(title)}`;
       window.open(qqUrl, '_blank', 'noopener,noreferrer,width=720,height=540');
-      this.showCenterCallout(imageCopied ? '已打开 QQ 分享（海报图片也已复制，可在聊天框直接粘贴）' : '已打开 QQ 分享窗口', RED);
-      return;
-    }
-
-    if (platform === 'wechat') {
-      if (this.currentPosterFile && navigator.share && (!navigator.canShare || navigator.canShare({ files: [this.currentPosterFile] }))) {
-        try {
-          await navigator.share({ files: [this.currentPosterFile], title: isReplay ? '棋局复盘' : '残局战帖', text: title });
-          return;
-        } catch (err) {
-          if (err?.name === 'AbortError') return;
-        }
-      }
-      if (imageCopied) {
-        this.showCenterCallout('海报图片已复制！打开微信可直接粘贴发送，或长按上方海报转发', RED);
-      } else {
-        this.downloadEndgamePoster();
-        this.showCenterCallout('已保存高清海报图片，打开微信/朋友圈即可直接发送', RED);
-      }
+      this.showCenterCallout(imageCopied ? '已打开 QQ 分享（海报图片也已复制，可在聊天框直接粘贴）' : '已打开 QQ 分享窗口', RED, '社交分享');
       return;
     }
 
     if (platform === 'copy_image') {
       if (imageCopied) {
-        this.showCenterCallout('高清海报图片已复制，可直接粘贴到任意社交平台！', RED);
+        this.showCenterCallout('高清海报图片已复制，可直接粘贴到微信/QQ/社交平台！', RED, '复制成功');
       } else {
         this.downloadEndgamePoster();
-        this.showCenterCallout('当前浏览器限制剪贴板图片，已为您直接下载海报', RED);
+        this.showCenterCallout('当前浏览器限制剪贴板图片，已为您直接保存高清海报', RED, '已存海报');
       }
+    }
+  },
+
+  openWeChatShareModal(opts = {}) {
+    const modal = document.getElementById('wechat-share-modal');
+    const url = opts.url || this.currentShareUrl || window.location.href;
+    const isReplay = this.currentShareKind === 'replay';
+    const title = opts.title || (isReplay
+      ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
+      : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？');
+    this.currentWeChatCommand = opts.shareCommand || `${title}\n👉 点击链接直接应战：${url}`;
+
+    if (!modal) {
+      this.copyTextSafe(this.currentWeChatCommand, opts.imageCopied ? '海报与微信口令已复制，请打开微信粘贴发送' : '微信挑战口令已复制，请打开微信粘贴发送');
+      return;
+    }
+
+    const badgeEl = document.getElementById('wechat-copy-badge');
+    if (badgeEl) {
+      if (opts.imageCopied) {
+        badgeEl.textContent = '✓ 已自动复制高清战帖图片与挑战链接，去微信可直接 Ctrl+V / 粘贴发送';
+      } else if (opts.textCopied) {
+        badgeEl.textContent = '✓ 已自动复制微信挑战口令与链接，去微信可直接粘贴发送';
+      } else {
+        badgeEl.textContent = '✦ 微信扫一扫下方二维码，或点击下方按钮一键复制口令/保存海报';
+      }
+    }
+
+    const inAppGuide = document.getElementById('wechat-inapp-guide');
+    if (inAppGuide) {
+      inAppGuide.classList.toggle('hidden', !opts.isWeChatBrowser);
+    }
+
+    const posterPreview = document.getElementById('wechat-share-poster-preview');
+    if (posterPreview && this.currentPosterDataUrl) {
+      posterPreview.src = this.currentPosterDataUrl;
+    }
+
+    const cmdInput = document.getElementById('wechat-share-command-text');
+    if (cmdInput) {
+      cmdInput.value = this.currentWeChatCommand;
+    }
+
+    const qrBox = document.getElementById('wechat-share-qr-box');
+    if (qrBox) {
+      qrBox.innerHTML = '';
+      let drawn = false;
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(qrBox, {
+            text: url,
+            width: 152,
+            height: 152,
+            colorDark: '#064e3b',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.L : undefined
+          });
+          drawn = true;
+        } catch (_) { }
+      }
+      if (!drawn) {
+        const img = document.createElement('img');
+        img.alt = '微信扫码应战';
+        img.className = 'w-[152px] h-[152px] mx-auto rounded-lg';
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=4&data=' + encodeURIComponent(url);
+        qrBox.appendChild(img);
+      }
+    }
+
+    modal.classList.remove('hidden');
+    this.showCenterCallout(
+      opts.imageCopied ? '战帖图片已复制 · 微信扫码或直接粘贴发送' : '微信分享卡片已就绪 · 扫码或复制口令即可转发',
+      RED,
+      '微信战帖'
+    );
+  },
+
+  closeWeChatShareModal() {
+    document.getElementById('wechat-share-modal')?.classList.add('hidden');
+  },
+
+  copyWeChatShareCommand() {
+    this.sfx?.playSelect?.();
+    const url = this.currentShareUrl || window.location.href;
+    const isReplay = this.currentShareKind === 'replay';
+    const title = isReplay
+      ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
+      : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？';
+    const cmd = this.currentWeChatCommand || `${title}\n👉 点击链接直接应战：${url}`;
+    this.copyTextSafe(cmd, '微信挑战口令已复制，快去微信粘贴给好友吧！');
+  },
+
+  async launchWeChatApp() {
+    this.sfx?.playSelect?.();
+    const url = this.currentShareUrl || window.location.href;
+    const isReplay = this.currentShareKind === 'replay';
+    const title = isReplay
+      ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
+      : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？';
+    const cmd = this.currentWeChatCommand || `${title}\n👉 点击链接直接应战：${url}`;
+    const blob = this.currentPosterBlob || (this.currentPosterDataUrl ? dataURLToBlobSync(this.currentPosterDataUrl) : null);
+
+    let copiedImg = false;
+    if (blob && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        copiedImg = true;
+      } catch (_) { }
+    }
+    if (!copiedImg) {
+      this.copyTextSafe(cmd, '已复制挑战口令，正在为您唤起微信…');
+    } else {
+      this.showCenterCallout('已复制高清战帖图片，正在唤起微信，在聊天框粘贴即可！', RED, '唤起微信');
+    }
+
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = 'weixin://';
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 1800);
+    } catch (_) {
+      window.location.href = 'weixin://';
     }
   },
 

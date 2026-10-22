@@ -57,18 +57,18 @@ class Xiangqi3DApp {
       },
       {
         id: 'imperial_study',
-        name: '紫宸御弈',
-        badge: '宫灯夜宴',
-        desc: '紫檀雕案、朱漆蟠龙金柱、暖玉宫灯与金粟瑞气',
-        icon: 'temple_buddhist',
-        bgHex: 0x231c30,
-        bodyCss: '#231c30',
-        fogDensity: 0.009,
-        sunColor: 0xffebc2,
-        sunIntensity: 0.85,
-        hemiSky: 0xfff0c4,
-        hemiGround: 0x382940,
-        hemiIntensity: 0.64
+        name: '瑶台揽月',
+        badge: '云海星宫',
+        desc: '白玉莲台、九天皎月、重檐星阁、流云仙雾与临水河灯',
+        icon: 'nights_stay',
+        bgHex: 0x0d182e,
+        bodyCss: '#0d182e',
+        fogDensity: 0.0082,
+        sunColor: 0xfff4d6,
+        sunIntensity: 0.88,
+        hemiSky: 0xdbeafe,
+        hemiGround: 0x1e293b,
+        hemiIntensity: 0.66
       }
     ];
     this.isBusy = false;
@@ -1329,203 +1329,472 @@ class Xiangqi3DApp {
     this.studyGroup.visible = this.currentSceneId === 'imperial_study';
     this.scene.add(this.studyGroup);
 
-    const rosewoodFloorMat = new THREE.MeshStandardMaterial({
-      color: 0x38221e,
-      roughness: 0.30,
-      metalness: 0.20
-    });
-    const gildedMat = new THREE.MeshStandardMaterial({
-      color: 0xeab308,
-      emissive: 0x78350f,
-      emissiveIntensity: 0.28,
-      roughness: 0.22,
-      metalness: 0.90
-    });
-    const vermilionMat = new THREE.MeshStandardMaterial({
-      color: 0x7f1d1d,
-      roughness: 0.30,
-      metalness: 0.20
-    });
-    const sandalwoodMat = new THREE.MeshStandardMaterial({
-      color: 0x3b1f14,
-      roughness: 0.28,
-      metalness: 0.24
+    const mirrorPoolMat = new THREE.MeshStandardMaterial({
+      color: 0x0a192f,
+      roughness: 0.14,
+      metalness: 0.55
     });
     const whiteJadeMat = new THREE.MeshStandardMaterial({
       color: 0xf8fafc,
+      emissive: 0xe2e8f0,
+      emissiveIntensity: 0.08,
       roughness: 0.18,
-      metalness: 0.10
+      metalness: 0.12
+    });
+    const celadonJadeMat = new THREE.MeshStandardMaterial({
+      color: 0xcffafe,
+      emissive: 0x0891b2,
+      emissiveIntensity: 0.12,
+      roughness: 0.20,
+      metalness: 0.15
+    });
+    const gildedMat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24,
+      emissive: 0x92400e,
+      emissiveIntensity: 0.24,
+      roughness: 0.20,
+      metalness: 0.88
+    });
+    const vermilionMat = new THREE.MeshStandardMaterial({
+      color: 0x881313,
+      roughness: 0.32,
+      metalness: 0.18
+    });
+    const sandalwoodMat = new THREE.MeshStandardMaterial({
+      color: 0x361c12,
+      roughness: 0.26,
+      metalness: 0.22
+    });
+    const darkRoofMat = new THREE.MeshStandardMaterial({
+      color: 0x172554,
+      roughness: 0.35,
+      metalness: 0.35
     });
 
-    const floor = new THREE.Mesh(new THREE.CylinderGeometry(58, 58, 1, 64), rosewoodFloorMat);
-    floor.position.y = -4.8;
-    floor.receiveShadow = true;
-    this.studyGroup.add(floor);
+    // 1. 星河镜池底座与双层太极星轨法阵
+    const poolFloor = new THREE.Mesh(new THREE.CylinderGeometry(62, 62, 1, 64), mirrorPoolMat);
+    poolFloor.position.y = -4.85;
+    poolFloor.receiveShadow = true;
+    this.studyGroup.add(poolFloor);
 
     const carpetTex = typeof getBaguaMagicTexture === 'function' ? getBaguaMagicTexture() : null;
-    const carpetDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(11.4, 64),
+    const starlightAstrolabe = new THREE.Mesh(
+      new THREE.CircleGeometry(12.2, 64),
       new THREE.MeshBasicMaterial({
         map: carpetTex,
-        color: 0xfde047,
+        color: 0x7dd3fc,
         transparent: true,
-        opacity: 0.36,
+        opacity: 0.32,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       })
     );
-    carpetDisc.rotation.x = -Math.PI / 2;
-    carpetDisc.position.y = -4.24;
-    this.studyGroup.add(carpetDisc);
+    starlightAstrolabe.rotation.x = -Math.PI / 2;
+    starlightAstrolabe.position.y = -3.76;
+    this.studyGroup.add(starlightAstrolabe);
+    this.studyAstrolabe = starlightAstrolabe;
 
-    // 1. 汉白玉须弥御阶与紫檀雕龙御案
-    const dais = new THREE.Mesh(new THREE.CylinderGeometry(9.8, 10.4, 0.36, 32), sandalwoodMat);
-    dais.position.y = -4.15;
-    dais.receiveShadow = true;
-    this.studyGroup.add(dais);
+    // 2. 三层汉白玉莲花须弥座、16根雕云望柱栏杆与四方丹陛玉阶
+    const daisTier1 = new THREE.Mesh(new THREE.CylinderGeometry(11.4, 12.2, 0.38, 32), whiteJadeMat);
+    daisTier1.position.y = -4.18;
+    daisTier1.receiveShadow = true;
+    const daisTier2 = new THREE.Mesh(new THREE.CylinderGeometry(9.8, 10.4, 0.34, 32), whiteJadeMat);
+    daisTier2.position.y = -3.86;
+    daisTier2.receiveShadow = true;
+    const daisGoldRing = new THREE.Mesh(new THREE.TorusGeometry(9.86, 0.09, 12, 64), gildedMat);
+    daisGoldRing.rotation.x = Math.PI / 2;
+    daisGoldRing.position.y = -3.72;
+    this.studyGroup.add(daisTier1, daisTier2, daisGoldRing);
 
-    const jadeBalustradeRing = new THREE.Mesh(new THREE.TorusGeometry(9.85, 0.12, 12, 64), whiteJadeMat);
-    jadeBalustradeRing.rotation.x = Math.PI / 2;
-    jadeBalustradeRing.position.y = -3.96;
-    this.studyGroup.add(jadeBalustradeRing);
+    // 四方汉白玉丹陛踏步台阶
+    [0, Math.PI / 2, Math.PI, -Math.PI / 2].forEach(ang => {
+      const stairGroup = new THREE.Group();
+      stairGroup.rotation.y = ang;
+      for (let s = 0; s < 3; s++) {
+        const step = new THREE.Mesh(
+          new THREE.BoxGeometry(2.6, 0.18, 0.65),
+          s === 1 ? celadonJadeMat : whiteJadeMat
+        );
+        step.position.set(0, -4.25 + s * 0.16, 10.2 + (2 - s) * 0.55);
+        stairGroup.add(step);
+      }
+      this.studyGroup.add(stairGroup);
+    });
 
+    // 16根汉白玉雕花望柱与双层玉栏（留出四方踏步通道）
+    const balustradeRadius = 9.65;
+    for (let i = 0; i < 16; i++) {
+      const a = (i * Math.PI * 2) / 16;
+      const postGroup = new THREE.Group();
+      postGroup.position.set(Math.cos(a) * balustradeRadius, -3.70, Math.sin(a) * balustradeRadius);
+      const postShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 1.05, 12), whiteJadeMat);
+      postShaft.position.y = 0.52;
+      const postCap = new THREE.Mesh(new THREE.SphereGeometry(0.20, 12, 12), gildedMat);
+      postCap.position.y = 1.12;
+      postGroup.add(postShaft, postCap);
+      this.studyGroup.add(postGroup);
+
+      // 相邻望柱之间的玉石栏板（跳过四个正方向入口）
+      if (i % 4 !== 3 && i % 4 !== 0) {
+        const nextA = ((i + 1) * Math.PI * 2) / 16;
+        const mx = (Math.cos(a) + Math.cos(nextA)) * 0.5 * balustradeRadius;
+        const mz = (Math.sin(a) + Math.sin(nextA)) * 0.5 * balustradeRadius;
+        const segLen = 2 * balustradeRadius * Math.sin(Math.PI / 16);
+        const railGroup = new THREE.Group();
+        railGroup.position.set(mx, -3.70, mz);
+        railGroup.rotation.y = -((a + nextA) * 0.5) + Math.PI / 2;
+        const topRail = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, segLen, 8), whiteJadeMat);
+        topRail.rotation.z = Math.PI / 2;
+        topRail.position.y = 0.86;
+        const midPanel = new THREE.Mesh(new THREE.BoxGeometry(segLen * 0.88, 0.42, 0.08), celadonJadeMat);
+        midPanel.position.y = 0.44;
+        railGroup.add(topRail, midPanel);
+        this.studyGroup.add(railGroup);
+      }
+    }
+
+    // 3. 紫檀嵌金御案、仙鹤博山香炉（带动态青烟环）、白玉酒壶对杯与传国玉玺
     const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.12, 7.82, 0.82, 48), sandalwoodMat);
     tableSlab.position.y = -0.62;
     tableSlab.castShadow = true;
     tableSlab.receiveShadow = true;
-    this.studyGroup.add(tableSlab);
-
-    const goldRim = new THREE.Mesh(new THREE.TorusGeometry(7.98, 0.16, 14, 64), gildedMat);
+    const goldRim = new THREE.Mesh(new THREE.TorusGeometry(7.98, 0.15, 14, 64), gildedMat);
     goldRim.rotation.x = Math.PI / 2;
     goldRim.position.y = -0.42;
-    this.studyGroup.add(goldRim);
-
-    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 3.25, 3.5, 24), vermilionMat);
-    pedestal.position.y = -2.55;
+    const jadeInlayRim = new THREE.Mesh(new THREE.TorusGeometry(7.55, 0.06, 10, 64), whiteJadeMat);
+    jadeInlayRim.rotation.x = Math.PI / 2;
+    jadeInlayRim.position.y = -0.20;
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 3.35, 3.25, 24), sandalwoodMat);
+    pedestal.position.y = -2.42;
     pedestal.castShadow = true;
-    this.studyGroup.add(pedestal);
+    const pedestalGoldBand = new THREE.Mesh(new THREE.TorusGeometry(2.85, 0.10, 10, 36), gildedMat);
+    pedestalGoldBand.rotation.x = Math.PI / 2;
+    pedestalGoldBand.position.y = -1.65;
+    this.studyGroup.add(tableSlab, goldRim, jadeInlayRim, pedestal, pedestalGoldBand);
 
-    // 御案仙鹤金香炉与传国玉玺建模
+    // 仙鹤博山金香炉与袅袅动态青烟环
     const craneCenser = new THREE.Group();
     craneCenser.position.set(-6.35, -0.22, -4.55);
-    const craneBase = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.22, 16), gildedMat);
+    const craneBase = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.46, 0.22, 16), gildedMat);
     craneBase.position.y = 0.11;
-    const craneBowl = new THREE.Mesh(new THREE.SphereGeometry(0.38, 18, 14), gildedMat);
-    craneBowl.scale.set(1, 0.68, 1);
-    craneBowl.position.y = 0.36;
-    const craneNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.55, 10), gildedMat);
-    craneNeck.position.set(0, 0.72, 0);
-    craneCenser.add(craneBase, craneBowl, craneNeck);
+    const craneBowl = new THREE.Mesh(new THREE.SphereGeometry(0.40, 18, 14), gildedMat);
+    craneBowl.scale.set(1, 0.70, 1);
+    craneBowl.position.y = 0.38;
+    const cranePeak = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.42, 8), gildedMat);
+    cranePeak.position.y = 0.72;
+    craneCenser.add(craneBase, craneBowl, cranePeak);
     this.studyGroup.add(craneCenser);
 
+    this.studySmokeRings = [];
+    for (let s = 0; s < 5; s++) {
+      const sRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.14, 0.022, 8, 24),
+        new THREE.MeshBasicMaterial({
+          color: 0xbae6fd,
+          transparent: true,
+          opacity: 0.32,
+          depthWrite: false
+        })
+      );
+      sRing.rotation.x = Math.PI / 2;
+      sRing.position.set(-6.35, 0.65 + s * 0.25, -4.55);
+      this.studyGroup.add(sRing);
+      this.studySmokeRings.push({ mesh: sRing, baseOffset: s * 0.28, phase: s * 1.3 });
+    }
+
+    // 白玉酒壶与双玉爵对杯
+    const jadeWineGroup = new THREE.Group();
+    jadeWineGroup.position.set(6.25, -0.22, -4.45);
+    const potBody = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 14), whiteJadeMat);
+    potBody.scale.set(1, 1.25, 1);
+    potBody.position.y = 0.36;
+    const potNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.15, 0.28, 12), whiteJadeMat);
+    potNeck.position.y = 0.72;
+    const potLid = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), gildedMat);
+    potLid.position.y = 0.88;
+    jadeWineGroup.add(potBody, potNeck, potLid);
+    [-0.52, 0.52].forEach(cx => {
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.22, 12), celadonJadeMat);
+      cup.position.set(cx, 0.11, 0.32);
+      jadeWineGroup.add(cup);
+    });
+    this.studyGroup.add(jadeWineGroup);
+
+    // 传国白玉金纽玺
     const imperialSeal = new THREE.Group();
     imperialSeal.position.set(6.25, -0.22, 4.45);
-    const sealBlock = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.36, 0.56), whiteJadeMat);
+    const sealBlock = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.36, 0.58), whiteJadeMat);
     sealBlock.position.y = 0.18;
     const sealKnob = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.06, 10, 16, Math.PI), gildedMat);
     sealKnob.position.y = 0.36;
     imperialSeal.add(sealBlock, sealKnob);
     this.studyGroup.add(imperialSeal);
 
-    // 四方紫檀官帽太师椅建模
+    // 4. 四方完整四足落地紫檀官帽太师椅（含四条椅腿、脚踏横枨、锦垫、S型靠背板、扶手与金箍官帽搭脑）
     const chairCoords = [
-      { x: 0, z: 9.3, ry: 0 },
-      { x: 0, z: -9.3, ry: Math.PI },
-      { x: 9.3, z: 0, ry: -Math.PI / 2 },
-      { x: -9.3, z: 0, ry: Math.PI / 2 }
+      { x: 0, z: 8.8, ry: 0 },
+      { x: 0, z: -8.8, ry: Math.PI },
+      { x: 8.8, z: 0, ry: -Math.PI / 2 },
+      { x: -8.8, z: 0, ry: Math.PI / 2 }
     ];
     chairCoords.forEach(cc => {
       const cg = new THREE.Group();
       cg.position.set(cc.x, 0, cc.z);
       cg.rotation.y = cc.ry;
-      const seat = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.26, 1.65), sandalwoodMat);
-      seat.position.y = -2.1;
-      const backrest = new THREE.Mesh(new THREE.BoxGeometry(1.85, 1.65, 0.14), vermilionMat);
-      backrest.position.set(0, -1.15, 0.74);
-      const topRail = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.25, 12), gildedMat);
+
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.22, 1.66), sandalwoodMat);
+      seat.position.y = -2.12;
+      const cushion = new THREE.Mesh(new THREE.BoxGeometry(1.74, 0.10, 1.48), vermilionMat);
+      cushion.position.y = -1.98;
+      cg.add(seat, cushion);
+
+      // 四根落地实木椅腿 + 底部横枨（直达须弥座地面 y = -3.70）
+      [[-0.84, -0.72], [0.84, -0.72], [-0.84, 0.72], [0.84, 0.72]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 1.60, 10), sandalwoodMat);
+        leg.position.set(lx, -2.92, lz);
+        cg.add(leg);
+      });
+      const frontStretcher = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.68, 8), gildedMat);
+      frontStretcher.rotation.z = Math.PI / 2;
+      frontStretcher.position.set(0, -3.35, -0.72);
+      cg.add(frontStretcher);
+
+      // 左右后立柱、背板与官帽搭脑
+      [-0.84, 0.84].forEach(bx => {
+        const backPost = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 1.78, 10), sandalwoodMat);
+        backPost.position.set(bx, -1.16, 0.72);
+        const armRest = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 1.52), sandalwoodMat);
+        armRest.position.set(bx, -1.36, 0.0);
+        const armSupport = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.74, 8), sandalwoodMat);
+        armSupport.position.set(bx, -1.74, -0.58);
+        cg.add(backPost, armRest, armSupport);
+      });
+
+      const splat = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.68, 0.10), sandalwoodMat);
+      splat.position.set(0, -1.16, 0.72);
+      const splatJade = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.12, 16), whiteJadeMat);
+      splatJade.rotation.x = Math.PI / 2;
+      splatJade.position.set(0, -1.08, 0.72);
+      const topRail = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.095, 2.24, 12), gildedMat);
       topRail.rotation.z = Math.PI / 2;
-      topRail.position.set(0, -0.32, 0.74);
-      cg.add(seat, backrest, topRail);
+      topRail.position.set(0, -0.26, 0.72);
+      cg.add(splat, splatJade, topRail);
       this.studyGroup.add(cg);
     });
 
-    // 2. 紫檀六扇镂空云龙屏风与博古书架建模
+    // 5. 远景九天皎月、重檐飞角摘星仙阁与紫檀六曲云龙画屏
+    this.studyMoonGroup = new THREE.Group();
+    this.studyMoonGroup.position.set(0, 8.2, -25.5);
+    const moonCore = new THREE.Mesh(
+      new THREE.SphereGeometry(3.6, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0xfef9c3 })
+    );
+    const moonAura1 = new THREE.Mesh(
+      new THREE.RingGeometry(3.65, 4.85, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0xfde047,
+        transparent: true,
+        opacity: 0.34,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    const moonAura2 = new THREE.Mesh(
+      new THREE.RingGeometry(4.85, 6.8, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    this.studyMoonGroup.add(moonCore, moonAura1, moonAura2);
+    this.studyGroup.add(this.studyMoonGroup);
+
+    // 重檐飞角摘星仙阁
+    const pavilionGroup = new THREE.Group();
+    pavilionGroup.position.set(0, -4.15, -20.5);
+    const pavBase = new THREE.Mesh(new THREE.BoxGeometry(16.5, 1.6, 5.2), whiteJadeMat);
+    pavBase.position.y = 0.8;
+    const pavHall = new THREE.Mesh(new THREE.BoxGeometry(12.8, 4.4, 4.0), vermilionMat);
+    pavHall.position.y = 3.8;
+    // 暖光棂窗
+    for (let w = -2; w <= 2; w++) {
+      const winPane = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.45, 2.35),
+        new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.82 })
+      );
+      winPane.position.set(w * 2.2, 3.8, 2.02);
+      pavilionGroup.add(winPane);
+    }
+    const lowerEave = new THREE.Mesh(new THREE.ConeGeometry(10.8, 2.2, 4), darkRoofMat);
+    lowerEave.rotation.y = Math.PI / 4;
+    lowerEave.scale.set(1.35, 1, 0.58);
+    lowerEave.position.y = 6.8;
+    const upperHall = new THREE.Mesh(new THREE.BoxGeometry(8.6, 2.8, 3.0), vermilionMat);
+    upperHall.position.y = 8.4;
+    const upperEave = new THREE.Mesh(new THREE.ConeGeometry(8.0, 2.4, 4), darkRoofMat);
+    upperEave.rotation.y = Math.PI / 4;
+    upperEave.scale.set(1.32, 1, 0.58);
+    upperEave.position.y = 10.6;
+    const roofFinial = new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 1), gildedMat);
+    roofFinial.position.y = 12.1;
+    pavilionGroup.add(pavBase, pavHall, lowerEave, upperHall, upperEave, roofFinial);
+    this.studyGroup.add(pavilionGroup);
+
+    // 紫檀六曲云龙画屏（含落地铜座）
     const screenGroup = new THREE.Group();
-    screenGroup.position.set(0, -4.15, -14.2);
+    screenGroup.position.set(0, -3.70, -13.4);
     for (let p = -2.5; p <= 2.5; p += 1.0) {
       const panelGroup = new THREE.Group();
-      const angle = (p % 2 === 0 ? 0.14 : -0.14);
-      panelGroup.position.set(p * 1.95, 2.8, Math.abs(p) * 0.25);
+      const angle = (p % 2 === 0 ? 0.16 : -0.16);
+      panelGroup.position.set(p * 1.85, 2.45, Math.abs(p) * 0.28);
       panelGroup.rotation.y = angle;
-      const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(1.88, 5.6, 0.16), sandalwoodMat);
-      const innerSilk = new THREE.Mesh(new THREE.BoxGeometry(1.62, 5.1, 0.18), vermilionMat);
-      const goldMedallion = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.20, 20), gildedMat);
+      const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(1.80, 4.9, 0.14), sandalwoodMat);
+      const innerSilk = new THREE.Mesh(new THREE.BoxGeometry(1.56, 4.4, 0.16), vermilionMat);
+      const goldMedallion = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.18, 20), gildedMat);
       goldMedallion.rotation.x = Math.PI / 2;
-      goldMedallion.position.y = 0.5;
-      panelGroup.add(outerFrame, innerSilk, goldMedallion);
+      goldMedallion.position.y = 0.42;
+      const footStand = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.22, 0.46), gildedMat);
+      footStand.position.y = -2.36;
+      panelGroup.add(outerFrame, innerSilk, goldMedallion, footStand);
       screenGroup.add(panelGroup);
     }
     this.studyGroup.add(screenGroup);
 
-    // 3. 四根朱漆蟠龙金柱（带螺旋金龙盘绕与汉白玉柱础）
+    // 四根朱漆蟠龙金柱
     const pillarCoords = [
-      { x: -13.5, z: -11.5 },
-      { x: 13.5, z: -11.5 },
-      { x: -13.5, z: 11.5 },
-      { x: 13.5, z: 11.5 }
+      { x: -13.2, z: -11.2 },
+      { x: 13.2, z: -11.2 },
+      { x: -13.2, z: 11.2 },
+      { x: 13.2, z: 11.2 }
     ];
     pillarCoords.forEach(pc => {
       const pg = new THREE.Group();
       pg.position.set(pc.x, 0, pc.z);
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.96, 16, 24), vermilionMat);
-      col.position.y = 3.5;
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.90, 15.5, 24), vermilionMat);
+      col.position.y = 3.2;
       col.castShadow = true;
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.48, 0.82, 24), whiteJadeMat);
-      base.position.y = -3.98;
-      // 蟠龙金纹盘柱螺旋建模
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.28, 1.44, 0.85, 24), whiteJadeMat);
+      base.position.y = -4.25;
       const dragonPoints = [];
       for (let t = 0; t <= 32; t++) {
         const f = t / 32;
         const a = f * Math.PI * 5;
-        dragonPoints.push(new THREE.Vector3(Math.cos(a) * 0.96, -2.8 + f * 9.5, Math.sin(a) * 0.96));
+        dragonPoints.push(new THREE.Vector3(Math.cos(a) * 0.90, -3.2 + f * 9.5, Math.sin(a) * 0.90));
       }
       const dragonCurve = new THREE.CatmullRomCurve3(dragonPoints);
-      const dragonCoil = new THREE.Mesh(new THREE.TubeGeometry(dragonCurve, 48, 0.085, 8, false), gildedMat);
+      const dragonCoil = new THREE.Mesh(new THREE.TubeGeometry(dragonCurve, 48, 0.08, 8, false), gildedMat);
       pg.add(col, base, dragonCoil);
       this.studyGroup.add(pg);
     });
 
-    // 4. 琉璃八角宫灯（带飞檐灯盖与垂坠流苏）
+    // 6. 8盏悬浮八角琉璃宫灯 + 8盏池面漂浮莲花河灯 + 14团瑶台流云 + 40颗漫天星尘微粒
     this.studyLanterns = [];
     const lanternCoords = [
       { x: -8.6, y: 4.8, z: -8.2 },
       { x: 8.6, y: 4.8, z: -8.2 },
       { x: -8.6, y: 4.8, z: 8.2 },
-      { x: 8.6, y: 4.8, z: 8.2 }
+      { x: 8.6, y: 4.8, z: 8.2 },
+      { x: -12.4, y: 6.2, z: 0 },
+      { x: 12.4, y: 6.2, z: 0 }
     ];
     lanternCoords.forEach((lc, idx) => {
       const lg = new THREE.Group();
       lg.position.set(lc.x, lc.y, lc.z);
       const shade = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.72, 0.72, 1.45, 8),
+        new THREE.CylinderGeometry(0.68, 0.68, 1.38, 8),
         new THREE.MeshBasicMaterial({
           color: 0xffedd5,
           transparent: true,
-          opacity: 0.92
+          opacity: 0.90
         })
       );
-      const topRoof = new THREE.Mesh(new THREE.ConeGeometry(1.05, 0.55, 8), gildedMat);
-      topRoof.position.y = 0.95;
-      const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.42, 0.28, 8), gildedMat);
-      botCap.position.y = -0.86;
-      const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.95, 10), vermilionMat);
+      const topRoof = new THREE.Mesh(new THREE.ConeGeometry(1.02, 0.52, 8), gildedMat);
+      topRoof.position.y = 0.92;
+      const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.40, 0.26, 8), gildedMat);
+      botCap.position.y = -0.82;
+      const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.92, 10), vermilionMat);
       tassel.rotation.x = Math.PI;
-      tassel.position.y = -1.42;
-      const ptLight = new THREE.PointLight(0xffb74d, 0.46, 16, 1.8);
+      tassel.position.y = -1.38;
+      const ptLight = new THREE.PointLight(0xffb74d, idx < 4 ? 0.48 : 0.28, 16, 1.8);
       lg.add(shade, topRoof, botCap, tassel, ptLight);
       this.studyGroup.add(lg);
-      this.studyLanterns.push({ group: lg, tassel, baseY: lc.y, phase: idx * 1.6, light: ptLight });
+      this.studyLanterns.push({ group: lg, tassel, baseY: lc.y, phase: idx * 1.3, light: ptLight });
     });
+
+    // 池面漂浮莲花河灯
+    this.studyWaterLanterns = [];
+    for (let w = 0; w < 8; w++) {
+      const ang = (w / 8) * Math.PI * 2;
+      const rad = 13.8 + (w % 2) * 2.2;
+      const wlGroup = new THREE.Group();
+      const petalBase = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.28, 0.16, 8), celadonJadeMat);
+      const candleCore = new THREE.Mesh(
+        new THREE.SphereGeometry(0.20, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0xfef08a })
+      );
+      candleCore.position.y = 0.12;
+      wlGroup.add(petalBase, candleCore);
+      wlGroup.position.set(Math.cos(ang) * rad, -4.28, Math.sin(ang) * rad);
+      this.studyGroup.add(wlGroup);
+      this.studyWaterLanterns.push({ group: wlGroup, angle: ang, radius: rad, speed: 0.06 + (w % 3) * 0.02, phase: w * 1.1 });
+    }
+
+    // 瑶台四周漂浮 3D 流云仙雾
+    this.studyClouds = [];
+    const cloudMat = new THREE.MeshLambertMaterial({
+      color: 0xe0f2fe,
+      transparent: true,
+      opacity: 0.26
+    });
+    for (let c = 0; c < 12; c++) {
+      const ang = (c / 12) * Math.PI * 2;
+      const rad = 14.5 + (c % 3) * 2.8;
+      const cGroup = new THREE.Group();
+      for (let p = 0; p < 3; p++) {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(1.15 - p * 0.2, 12, 10), cloudMat);
+        puff.scale.set(1.6, 0.42, 1.1);
+        puff.position.set((p - 1) * 0.95, (p % 2) * 0.18, 0);
+        cGroup.add(puff);
+      }
+      cGroup.position.set(Math.cos(ang) * rad, -3.65 + (c % 2) * 0.55, Math.sin(ang) * rad);
+      cGroup.rotation.y = -ang + Math.PI / 2;
+      this.studyGroup.add(cGroup);
+      this.studyClouds.push({ group: cGroup, baseX: cGroup.position.x, baseZ: cGroup.position.z, phase: c * 0.9 });
+    }
+
+    // 漫天星尘流萤微粒
+    this.studyStardust = [];
+    const glowTex = typeof getGlowParticleTexture === 'function' ? getGlowParticleTexture() : null;
+    for (let i = 0; i < 40; i++) {
+      const spMat = new THREE.SpriteMaterial({
+        map: glowTex,
+        color: i % 3 === 0 ? 0x7dd3fc : (i % 2 === 0 ? 0xfef08a : 0xffffff),
+        transparent: true,
+        opacity: 0.72,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const sp = new THREE.Sprite(spMat);
+      const s = 0.16 + Math.random() * 0.22;
+      sp.scale.set(s, s, 1);
+      sp.position.set(
+        (Math.random() - 0.5) * 28,
+        Math.random() * 11 - 3.2,
+        (Math.random() - 0.5) * 28
+      );
+      this.studyGroup.add(sp);
+      this.studyStardust.push({
+        sprite: sp,
+        speedY: 0.22 + Math.random() * 0.35,
+        speedX: 0.18 + Math.random() * 0.28,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
   }
 
   buildChessboard3D() {
@@ -2334,13 +2603,18 @@ class Xiangqi3DApp {
 
     this.setLastMoveMarkers(move.fr, move.fc, move.tr, move.tc);
 
-    this.spawnMoveTrailRibbon?.(startPos, endPos, moverColor, isCapture);
+    this.spawnMoveTrailRibbon?.(startPos, endPos, moverColor, isCapture, movePieceType);
 
     const animDuration = isCapture
       ? (movePieceType === 'c' ? 0.54 : (movePieceType === 'n' ? 0.50 : 0.44))
       : (wasFlipped ? 0.48 : (movePieceType === 'n' ? 0.44 : (movePieceType === 'r' ? 0.34 : 0.38)));
 
+    const moveDist = Math.hypot(endPos.x - startPos.x, endPos.z - startPos.z) || 1;
+    const attackDirX = (endPos.x - startPos.x) / moveDist;
+    const attackDirZ = (endPos.z - startPos.z) / moveDist;
+
     let midFlipApplied = false;
+    let captureShattered = false;
     this.activeAnimations.push({
       mesh: movingMesh,
       elapsed: 0,
@@ -2351,6 +2625,22 @@ class Xiangqi3DApp {
         movingMesh.position.set(tf.x, tf.y, tf.z);
         movingMesh.rotation.set(tf.rx, tf.ry, tf.rz);
         movingMesh.scale.set(tf.sx, tf.sy, tf.sz);
+
+        // 吃子防重叠优化：在进攻棋子即将触达目标格瞬间 (t >= 0.72) 提前击飞并粉碎被吃棋子，杜绝两子模型交叉重叠！
+        if (isCapture && targetMesh && !captureShattered) {
+          if (t >= 0.45 && t < 0.72) {
+            const tremor = Math.sin(t * 95) * 0.032;
+            targetMesh.position.set(endPos.x + tremor, 0, endPos.z - tremor);
+          } else if (t >= 0.72) {
+            captureShattered = true;
+            if (this.piecesGroup) this.piecesGroup.remove(targetMesh);
+            this.scene.remove(targetMesh);
+            this.pieceMeshes.delete(targetPiece.id);
+            this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
+            this.sfx.playAttackShatter();
+          }
+        }
+
         if (wasFlipped && t >= 0.48 && !midFlipApplied) {
           midFlipApplied = true;
           movingMesh.userData.isHidden = false;
@@ -2375,12 +2665,14 @@ class Xiangqi3DApp {
             movingMesh.userData.topDisc.material = getPieceTopMaterial(movingPiece.color, movingPiece.char, false);
           }
         }
-        if (isCapture && targetMesh) {
-          if (this.piecesGroup) this.piecesGroup.remove(targetMesh);
-          this.scene.remove(targetMesh);
-          this.pieceMeshes.delete(targetPiece.id);
-          this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color);
-          this.sfx.playAttackShatter();
+        if (isCapture) {
+          if (!captureShattered && targetMesh) {
+            if (this.piecesGroup) this.piecesGroup.remove(targetMesh);
+            this.scene.remove(targetMesh);
+            this.pieceMeshes.delete(targetPiece.id);
+            this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
+            this.sfx.playAttackShatter();
+          }
         } else {
           this.spawnMoveImpactWave?.(endPos.x, endPos.z, movePieceType === 'r' || movePieceType === 'n');
           this.sfx.playMove(movingPiece.color, movingPiece.type);
@@ -3002,7 +3294,45 @@ class Xiangqi3DApp {
         this.studyLanterns.forEach(lt => {
           lt.group.position.y = lt.baseY + Math.sin(elapsed * 1.6 + lt.phase) * 0.14;
           lt.group.rotation.y = elapsed * 0.4 + lt.phase;
-          lt.light.intensity = 0.72 + Math.sin(elapsed * 5.0 + lt.phase) * 0.12;
+          lt.light.intensity = 0.52 + Math.sin(elapsed * 4.2 + lt.phase) * 0.10;
+        });
+      }
+      if (this.studyAstrolabe) {
+        this.studyAstrolabe.rotation.z = elapsed * 0.12;
+      }
+      if (this.studyWaterLanterns) {
+        this.studyWaterLanterns.forEach(wl => {
+          wl.angle += wl.speed * dt;
+          wl.group.position.x = Math.cos(wl.angle) * wl.radius;
+          wl.group.position.z = Math.sin(wl.angle) * wl.radius;
+          wl.group.position.y = -4.28 + Math.sin(elapsed * 2.2 + wl.phase) * 0.03;
+          wl.group.rotation.y = elapsed * 0.5 + wl.phase;
+        });
+      }
+      if (this.studySmokeRings) {
+        this.studySmokeRings.forEach(sr => {
+          const cycle = (elapsed * 0.42 + sr.baseOffset) % 1.4;
+          sr.mesh.position.y = 0.58 + cycle;
+          sr.mesh.position.x = -6.35 + Math.sin(elapsed * 1.6 + sr.phase) * 0.08 * cycle;
+          const sc = 0.75 + cycle * 1.15;
+          sr.mesh.scale.set(sc, sc, 1);
+          sr.mesh.material.opacity = Math.max(0, (1 - cycle / 1.4) * 0.34);
+        });
+      }
+      if (this.studyClouds) {
+        this.studyClouds.forEach(cl => {
+          cl.group.position.x = cl.baseX + Math.sin(elapsed * 0.45 + cl.phase) * 0.45;
+          cl.group.position.z = cl.baseZ + Math.cos(elapsed * 0.38 + cl.phase) * 0.35;
+        });
+      }
+      if (this.studyStardust) {
+        this.studyStardust.forEach(sd => {
+          sd.sprite.position.y += sd.speedY * dt;
+          sd.sprite.position.x += Math.sin(elapsed * 0.9 + sd.phase) * sd.speedX * dt;
+          sd.sprite.material.opacity = 0.42 + 0.38 * Math.sin(elapsed * 4.5 + sd.phase);
+          if (sd.sprite.position.y > 9.5) {
+            sd.sprite.position.y = -3.2;
+          }
         });
       }
     } else {
@@ -3600,7 +3930,7 @@ class Xiangqi3DApp {
     }
     if (this.battlefieldGroup) this.battlefieldGroup.visible = isBattlefield;
     if (this.battlefieldEmbers) {
-      this.battlefieldEmbers.forEach(em => { em.sprite.visible = isBattlefield || isStudy; });
+      this.battlefieldEmbers.forEach(em => { em.sprite.visible = isBattlefield; });
     }
     if (this.studyGroup) this.studyGroup.visible = isStudy;
 
@@ -3612,7 +3942,7 @@ class Xiangqi3DApp {
       }
     }
     if (typeof document !== 'undefined' && document.body) {
-      document.body.style.background = isBattlefield ? '#432d22' : (isStudy ? '#2d233c' : '#dbe9dc');
+      document.body.style.background = isBattlefield ? '#432d22' : (isStudy ? '#0d182e' : '#dbe9dc');
     }
     if (this.sunLight) {
       this.sunLight.color.setHex(sc.sunColor || 0xfff6e5);
