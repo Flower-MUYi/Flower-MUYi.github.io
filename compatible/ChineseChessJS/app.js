@@ -534,167 +534,380 @@ class Xiangqi3DApp {
     this.parkGroup = new THREE.Group();
     this.scene.add(this.parkGroup);
 
-    const groundGeo = new THREE.CylinderGeometry(56, 56, 1, 64);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x90be84 });
+    // 1. 远山层峦与碧水荷塘地面
+    const groundGeo = new THREE.CylinderGeometry(58, 58, 1, 64);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x7ca972, roughness: 0.88, metalness: 0.04 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.position.y = -4.8;
+    ground.position.y = -4.85;
     ground.receiveShadow = true;
     this.parkGroup.add(ground);
 
-    const patioGeo = new THREE.CylinderGeometry(9.8, 10.2, 0.28, 48);
-    const stoneMat = new THREE.MeshStandardMaterial({
-      color: 0xd8e3dc,
-      roughness: 0.78,
-      metalness: 0.08
+    // 环绕式碧玉荷塘水面
+    const pondGeo = new THREE.RingGeometry(10.2, 23.5, 64);
+    const pondMat = new THREE.MeshStandardMaterial({
+      color: 0x2d6a64,
+      roughness: 0.16,
+      metalness: 0.35,
+      transparent: true,
+      opacity: 0.90,
+      side: THREE.DoubleSide
     });
-    const patio = new THREE.Mesh(patioGeo, stoneMat);
-    patio.position.y = -4.24;
+    const pond = new THREE.Mesh(pondGeo, pondMat);
+    pond.rotation.x = -Math.PI / 2;
+    pond.position.y = -4.28;
+    pond.receiveShadow = true;
+    this.parkGroup.add(pond);
+
+    // 远景青黛群山 3D 建模
+    const mountainMat = new THREE.MeshStandardMaterial({ color: 0x4b745d, roughness: 0.85, metalness: 0.05 });
+    const mistMountainMat = new THREE.MeshStandardMaterial({ color: 0x628c74, roughness: 0.82, metalness: 0.05 });
+    const mountainConfigs = [
+      { x: -28, z: -32, r: 14, h: 16, mat: mountainMat },
+      { x: -12, z: -38, r: 18, h: 22, mat: mistMountainMat },
+      { x: 14, z: -36, r: 16, h: 19, mat: mountainMat },
+      { x: 32, z: -26, r: 15, h: 15, mat: mistMountainMat },
+      { x: -35, z: 12, r: 14, h: 14, mat: mistMountainMat },
+      { x: 34, z: 16, r: 15, h: 16, mat: mountainMat }
+    ];
+    mountainConfigs.forEach(mc => {
+      const mGroup = new THREE.Group();
+      const mainPeak = new THREE.Mesh(new THREE.ConeGeometry(mc.r, mc.h, 9), mc.mat);
+      mainPeak.position.y = mc.h * 0.5 - 4.5;
+      const subPeak = new THREE.Mesh(new THREE.ConeGeometry(mc.r * 0.68, mc.h * 0.72, 8), mc.mat);
+      subPeak.position.set(mc.r * 0.45, mc.h * 0.36 - 4.5, mc.r * 0.2);
+      mGroup.add(mainPeak, subPeak);
+      mGroup.position.set(mc.x, 0, mc.z);
+      this.parkGroup.add(mGroup);
+    });
+
+    // 2. 汉白玉雕花石台与青玉嵌环
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0xdbe5de, roughness: 0.65, metalness: 0.10 });
+    const carvedStoneMat = new THREE.MeshStandardMaterial({ color: 0xbac7bf, roughness: 0.58, metalness: 0.14 });
+    const jadeMat = new THREE.MeshStandardMaterial({ color: 0x3b8a6b, roughness: 0.22, metalness: 0.18 });
+    const bronzeAccentMat = new THREE.MeshStandardMaterial({ color: 0xc89838, roughness: 0.28, metalness: 0.86 });
+
+    const patio = new THREE.Mesh(new THREE.CylinderGeometry(10.0, 10.6, 0.36, 48), stoneMat);
+    patio.position.y = -4.22;
     patio.receiveShadow = true;
     this.parkGroup.add(patio);
 
-    const jadeInlayRing = new THREE.Mesh(
-      new THREE.RingGeometry(8.5, 8.9, 48),
-      new THREE.MeshBasicMaterial({ color: 0x4d7c5d, side: THREE.DoubleSide })
-    );
-    jadeInlayRing.rotation.x = -Math.PI / 2;
-    jadeInlayRing.position.y = -4.09;
+    const patioStep = new THREE.Mesh(new THREE.CylinderGeometry(8.9, 9.3, 0.22, 48), carvedStoneMat);
+    patioStep.position.y = -4.02;
+    patioStep.receiveShadow = true;
+    this.parkGroup.add(patioStep);
+
+    const jadeInlayRing = new THREE.Mesh(new THREE.TorusGeometry(8.7, 0.10, 12, 64), jadeMat);
+    jadeInlayRing.rotation.x = Math.PI / 2;
+    jadeInlayRing.position.y = -3.90;
     this.parkGroup.add(jadeInlayRing);
 
-    for (let i = 0; i < 6; i++) {
-      const stepGeo = new THREE.CylinderGeometry(1.35, 1.45, 0.22, 8);
-      const step = new THREE.Mesh(stepGeo, stoneMat);
-      const angle = 0.8 + i * 0.22;
-      const dist = 11.4 + i * 2.6;
-      step.position.set(Math.cos(angle) * dist, -4.25, Math.sin(angle) * dist);
-      step.rotation.y = i;
-      step.receiveShadow = true;
-      this.parkGroup.add(step);
+    // 汉白玉石栏望柱（环绕平台）
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      if (Math.abs(Math.sin(a)) < 0.28 && Math.cos(a) > 0) continue; // 留出石桥通道
+      const postGroup = new THREE.Group();
+      const postShaft = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.95, 0.32), stoneMat);
+      postShaft.position.y = 0.48;
+      const postCap = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), jadeMat);
+      postCap.position.y = 1.05;
+      postGroup.add(postShaft, postCap);
+      postGroup.position.set(Math.cos(a) * 9.8, -4.05, Math.sin(a) * 9.8);
+      postGroup.castShadow = true;
+      this.parkGroup.add(postGroup);
     }
 
-    const tableTopMat = new THREE.MeshStandardMaterial({
-      color: 0xa4b2ac,
-      roughness: 0.58,
-      metalness: 0.12
-    });
-    const tableDarkStoneMat = new THREE.MeshStandardMaterial({
-      color: 0x6e7a74,
-      roughness: 0.75,
-      metalness: 0.10
-    });
-    const bronzeAccentMat = new THREE.MeshStandardMaterial({
-      color: 0xc59638,
-      roughness: 0.3,
-      metalness: 0.85
-    });
+    // 3. 精雕青石棋案、束腰须弥座与桌上茶具香炉
+    const tableTopMat = new THREE.MeshStandardMaterial({ color: 0x9fb0a8, roughness: 0.48, metalness: 0.15 });
+    const tableDarkStoneMat = new THREE.MeshStandardMaterial({ color: 0x62706a, roughness: 0.68, metalness: 0.14 });
 
-    const slabGeo = new THREE.CylinderGeometry(8.05, 7.75, 0.76, 48);
-    const slab = new THREE.Mesh(slabGeo, tableTopMat);
+    const slab = new THREE.Mesh(new THREE.CylinderGeometry(8.12, 7.82, 0.78, 48), tableTopMat);
     slab.position.y = -0.62;
     slab.castShadow = true;
     slab.receiveShadow = true;
     this.parkGroup.add(slab);
 
-    const rimGeo = new THREE.TorusGeometry(7.92, 0.16, 14, 64);
-    const rim = new THREE.Mesh(rimGeo, tableDarkStoneMat);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(7.98, 0.16, 14, 64), tableDarkStoneMat);
     rim.rotation.x = Math.PI / 2;
-    rim.position.y = -0.45;
+    rim.position.y = -0.44;
     this.parkGroup.add(rim);
 
-    const bronzeRim = new THREE.Mesh(new THREE.TorusGeometry(8.06, 0.055, 10, 64), bronzeAccentMat);
+    const bronzeRim = new THREE.Mesh(new THREE.TorusGeometry(8.12, 0.06, 12, 64), bronzeAccentMat);
     bronzeRim.rotation.x = Math.PI / 2;
-    bronzeRim.position.y = -0.35;
+    bronzeRim.position.y = -0.34;
     this.parkGroup.add(bronzeRim);
 
-    const pillarGeo = new THREE.CylinderGeometry(2.45, 3.15, 3.6, 24);
-    const pillar = new THREE.Mesh(pillarGeo, tableDarkStoneMat);
-    pillar.position.y = -2.6;
-    pillar.castShadow = true;
-    pillar.receiveShadow = true;
-    this.parkGroup.add(pillar);
+    // 束腰莲瓣须弥座石柱
+    const pillarUpper = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.2, 1.4, 24), tableDarkStoneMat);
+    pillarUpper.position.y = -1.65;
+    const pillarWaist = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.7, 20), carvedStoneMat);
+    pillarWaist.position.y = -2.55;
+    const pillarLower = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 3.4, 1.4, 24), tableDarkStoneMat);
+    pillarLower.position.y = -3.45;
+    const waistRing = new THREE.Mesh(new THREE.TorusGeometry(2.18, 0.08, 10, 32), bronzeAccentMat);
+    waistRing.rotation.x = Math.PI / 2;
+    waistRing.position.y = -2.55;
+    this.parkGroup.add(pillarUpper, pillarWaist, pillarLower, waistRing);
 
+    // 案头三足青瓷香炉与袅袅青烟建模
     const censerGroup = new THREE.Group();
-    censerGroup.position.set(-6.35, -0.24, -4.65);
-    const celadonMat = new THREE.MeshStandardMaterial({
-      color: 0x84b59f,
-      roughness: 0.25,
-      metalness: 0.12
-    });
-    const censerBody = new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 16), celadonMat);
-    censerBody.scale.set(1, 0.72, 1);
-    censerBody.position.y = 0.26;
-    const censerRim = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.045, 10, 24), bronzeAccentMat);
+    censerGroup.position.set(-6.35, -0.23, -4.65);
+    const celadonMat = new THREE.MeshStandardMaterial({ color: 0x7eb8a2, roughness: 0.20, metalness: 0.16 });
+    const censerBody = new THREE.Mesh(new THREE.SphereGeometry(0.44, 24, 18), celadonMat);
+    censerBody.scale.set(1, 0.70, 1);
+    censerBody.position.y = 0.30;
+    const censerNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.14, 20), celadonMat);
+    censerNeck.position.y = 0.56;
+    const censerRim = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.045, 10, 24), bronzeAccentMat);
     censerRim.rotation.x = Math.PI / 2;
-    censerRim.position.y = 0.48;
-    censerGroup.add(censerBody, censerRim);
+    censerRim.position.y = 0.62;
+    for (let l = 0; l < 3; l++) {
+      const la = (l * Math.PI * 2) / 3;
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.28, 10), bronzeAccentMat);
+      leg.position.set(Math.cos(la) * 0.26, 0.12, Math.sin(la) * 0.26);
+      censerGroup.add(leg);
+    }
+    this.incenseSmokeRings = [];
+    for (let s = 0; s < 5; s++) {
+      const smokeRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.10 + s * 0.04, 0.022, 8, 20),
+        new THREE.MeshBasicMaterial({ color: 0xf1f5f9, transparent: true, opacity: 0.38 - s * 0.06, depthWrite: false })
+      );
+      smokeRing.rotation.x = Math.PI / 2;
+      smokeRing.position.y = 0.75 + s * 0.26;
+      censerGroup.add(smokeRing);
+      this.incenseSmokeRings.push({ mesh: smokeRing, baseOffset: s * 0.26, phase: s * 1.1 });
+    }
+    censerGroup.add(censerBody, censerNeck, censerRim);
     this.parkGroup.add(censerGroup);
 
+    // 案头汝窑青瓷茶壶与对弈双茶盏建模
+    const teaGroup = new THREE.Group();
+    teaGroup.position.set(6.25, -0.23, 4.45);
+    const teapotBody = new THREE.Mesh(new THREE.SphereGeometry(0.36, 20, 16), celadonMat);
+    teapotBody.scale.set(1, 0.78, 1);
+    teapotBody.position.y = 0.26;
+    const teapotLid = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.08, 16), celadonMat);
+    teapotLid.position.y = 0.52;
+    const lidFinial = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), bronzeAccentMat);
+    lidFinial.position.y = 0.58;
+    const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.08, 0.32, 10), celadonMat);
+    spout.position.set(-0.36, 0.32, 0);
+    spout.rotation.z = 0.85;
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.035, 8, 16, Math.PI), celadonMat);
+    handle.position.set(0.30, 0.30, 0);
+    handle.rotation.z = -Math.PI / 2;
+    teaGroup.add(teapotBody, teapotLid, lidFinial, spout, handle);
+    [[-0.58, 0.48], [0.46, -0.52]].forEach(([cx, cz]) => {
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.10, 0.16, 16), celadonMat);
+      cup.position.set(cx, 0.08, cz);
+      teaGroup.add(cup);
+    });
+    this.parkGroup.add(teaGroup);
+
+    // 四方鼓形雕花石凳
     const stoolPositions = [
-      { x: 0, z: 9.3 },
-      { x: 0, z: -9.3 },
-      { x: 9.3, z: 0 },
-      { x: -9.3, z: 0 }
+      { x: 0, z: 9.2 },
+      { x: 0, z: -9.2 },
+      { x: 9.2, z: 0 },
+      { x: -9.2, z: 0 }
     ];
     stoolPositions.forEach(pos => {
       const stoolGroup = new THREE.Group();
-      const seat = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.55, 0.45, 24), tableTopMat);
-      seat.position.y = -2.1;
+      const seat = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.48, 0.42, 24), tableTopMat);
+      seat.position.y = -2.08;
       seat.castShadow = true;
-      seat.receiveShadow = true;
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.45, 1.9, 16), tableDarkStoneMat);
-      base.position.y = -3.25;
-      base.castShadow = true;
-      base.receiveShadow = true;
-      stoolGroup.add(seat, base);
+      const drumBelly = new THREE.Mesh(new THREE.SphereGeometry(1.38, 20, 16), carvedStoneMat);
+      drumBelly.scale.set(1, 0.85, 1);
+      drumBelly.position.y = -2.95;
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.18, 1.48, 0.55, 20), tableDarkStoneMat);
+      base.position.y = -3.82;
+      stoolGroup.add(seat, drumBelly, base);
       stoolGroup.position.set(pos.x, 0, pos.z);
       this.parkGroup.add(stoolGroup);
     });
 
-    this.trees = [];
-    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x5c4632 });
-    const foliageColors = [0x3d6e4f, 0x4e8560, 0x679c73, 0xd88c9a];
+    // 4. 远景古典六角飞檐听泉亭 3D 建模
+    const pavilionGroup = new THREE.Group();
+    pavilionGroup.position.set(-16.5, -4.15, -15.5);
+    const pavWoodMat = new THREE.MeshStandardMaterial({ color: 0x6e2c1b, roughness: 0.45, metalness: 0.12 });
+    const pavRoofMat = new THREE.MeshStandardMaterial({ color: 0x2c3e35, roughness: 0.52, metalness: 0.22 });
+    const pavFloor = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.5, 0.45, 6), stoneMat);
+    pavFloor.position.y = 0.22;
+    pavilionGroup.add(pavFloor);
+    for (let i = 0; i < 6; i++) {
+      const a = (i * Math.PI) / 3;
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.20, 4.6, 12), pavWoodMat);
+      col.position.set(Math.cos(a) * 3.4, 2.6, Math.sin(a) * 3.4);
+      col.castShadow = true;
+      pavilionGroup.add(col);
+      // 飞檐翘角脊兽
+      const eaveSpur = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.2, 4), bronzeAccentMat);
+      eaveSpur.position.set(Math.cos(a) * 4.8, 5.15, Math.sin(a) * 4.8);
+      eaveSpur.rotation.z = -Math.cos(a) * 1.1;
+      eaveSpur.rotation.x = Math.sin(a) * 1.1;
+      pavilionGroup.add(eaveSpur);
+    }
+    const roofLower = new THREE.Mesh(new THREE.ConeGeometry(5.2, 1.8, 6), pavRoofMat);
+    roofLower.position.y = 5.4;
+    const roofUpper = new THREE.Mesh(new THREE.ConeGeometry(3.4, 1.5, 6), pavRoofMat);
+    roofUpper.position.y = 6.65;
+    const roofFinial = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 16), bronzeAccentMat);
+    roofFinial.position.y = 7.55;
+    pavilionGroup.add(roofLower, roofUpper, roofFinial);
+    this.parkGroup.add(pavilionGroup);
 
-    const treeConfigs = [
-      { x: -13.5, z: -11.5, scale: 1.38, colorIdx: 0 },
-      { x: 14.0, z: -10.5, scale: 1.52, colorIdx: 1 },
-      { x: -15.0, z: 9.5, scale: 1.22, colorIdx: 2 },
-      { x: 13.0, z: 11.5, scale: 1.28, colorIdx: 3 },
-      { x: -6.5, z: -16.5, scale: 1.12, colorIdx: 1 },
-      { x: 7.5, z: -17.0, scale: 1.42, colorIdx: 0 },
-      { x: 18.5, z: 1.0, scale: 1.18, colorIdx: 2 }
+    // 5. 荷塘汉白玉拱桥、游弋 3D 锦鲤与盛开荷花荷叶
+    const bridgeGroup = new THREE.Group();
+    bridgeGroup.position.set(14.5, -4.1, 4.2);
+    bridgeGroup.rotation.y = 0.35;
+    for (let s = -4; s <= 4; s++) {
+      const archY = Math.cos((s / 5) * (Math.PI / 2)) * 1.35;
+      const plank = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.22, 2.6), stoneMat);
+      plank.position.set(s * 0.78, archY, 0);
+      bridgeGroup.add(plank);
+      [-1.15, 1.15].forEach(rz => {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.65, 0.14), carvedStoneMat);
+        post.position.set(s * 0.78, archY + 0.42, rz);
+        bridgeGroup.add(post);
+      });
+    }
+    this.parkGroup.add(bridgeGroup);
+
+    // 荷塘立体荷叶与多层花瓣荷花
+    const lotusLeafMat = new THREE.MeshStandardMaterial({ color: 0x2e6f40, roughness: 0.65, side: THREE.DoubleSide });
+    const lotusPetalMat = new THREE.MeshStandardMaterial({ color: 0xfbcfe8, emissive: 0xf472b6, emissiveIntensity: 0.12, roughness: 0.35 });
+    const lotusCoords = [
+      { x: -11.5, z: 6.5, s: 1.1, hasFlower: true },
+      { x: -13.2, z: 4.8, s: 0.85, hasFlower: false },
+      { x: 11.8, z: -7.5, s: 1.2, hasFlower: true },
+      { x: 13.5, z: -5.8, s: 0.9, hasFlower: false },
+      { x: -8.5, z: -12.8, s: 1.05, hasFlower: true },
+      { x: 8.8, z: 12.6, s: 1.15, hasFlower: true }
+    ];
+    lotusCoords.forEach(lc => {
+      const lGroup = new THREE.Group();
+      lGroup.position.set(lc.x, -4.22, lc.z);
+      lGroup.scale.setScalar(lc.s);
+      const pad = new THREE.Mesh(new THREE.CircleGeometry(0.95, 20, 0, Math.PI * 1.92), lotusLeafMat);
+      pad.rotation.x = -Math.PI / 2;
+      lGroup.add(pad);
+      if (lc.hasFlower) {
+        const flower = new THREE.Group();
+        flower.position.set(0.15, 0.08, 0.1);
+        for (let p = 0; p < 8; p++) {
+          const pa = (p * Math.PI) / 4;
+          const petal = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.42, 5), lotusPetalMat);
+          petal.position.set(Math.cos(pa) * 0.18, 0.12, Math.sin(pa) * 0.18);
+          petal.rotation.z = -Math.cos(pa) * 0.55;
+          petal.rotation.x = Math.sin(pa) * 0.55;
+          flower.add(petal);
+        }
+        const pistil = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), bronzeAccentMat);
+        pistil.position.y = 0.12;
+        flower.add(pistil);
+        lGroup.add(flower);
+      }
+      this.parkGroup.add(lGroup);
+    });
+
+    // 动态游弋 3D 锦鲤模型
+    this.koiFishList = [];
+    const koiColors = [0xef4444, 0xf59e0b, 0xffffff, 0xf97316];
+    for (let k = 0; k < 6; k++) {
+      const koiGroup = new THREE.Group();
+      const kMat = new THREE.MeshStandardMaterial({ color: koiColors[k % koiColors.length], roughness: 0.25, metalness: 0.12 });
+      const body = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.72, 12), kMat);
+      body.rotation.x = Math.PI / 2;
+      const tail = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.34, 4), kMat);
+      tail.rotation.x = -Math.PI / 2;
+      tail.position.z = -0.46;
+      koiGroup.add(body, tail);
+      this.parkGroup.add(koiGroup);
+      this.koiFishList.push({
+        group: koiGroup,
+        tail,
+        radius: 12.2 + (k % 3) * 2.4,
+        angle: (k / 6) * Math.PI * 2,
+        speed: 0.22 + (k % 2) * 0.08,
+        phase: k * 1.3
+      });
+    }
+
+    // 6. 精细分节翠竹林（带竹节环与放射竹叶簇）与太湖奇石
+    this.trees = [];
+    const bambooCulmMat = new THREE.MeshStandardMaterial({ color: 0x4d8b55, roughness: 0.36, metalness: 0.08 });
+    const bambooNodeMat = new THREE.MeshStandardMaterial({ color: 0xc2d8b8, roughness: 0.45 });
+    const bambooLeafMat = new THREE.MeshStandardMaterial({ color: 0x366e42, roughness: 0.52, side: THREE.DoubleSide });
+    const blossomLeafMat = new THREE.MeshStandardMaterial({ color: 0xe295a6, roughness: 0.48, side: THREE.DoubleSide });
+
+    const bambooClusters = [
+      { x: -13.2, z: -10.2, scale: 1.25, isBlossom: false },
+      { x: 13.8, z: -10.8, scale: 1.32, isBlossom: false },
+      { x: -14.8, z: 9.2, scale: 1.18, isBlossom: false },
+      { x: 12.8, z: 11.4, scale: 1.22, isBlossom: true },
+      { x: -6.8, z: -16.2, scale: 1.12, isBlossom: false },
+      { x: 7.5, z: -16.8, scale: 1.28, isBlossom: false },
+      { x: 18.2, z: 0.8, scale: 1.15, isBlossom: false }
     ];
 
-    treeConfigs.forEach((cfg, idx) => {
-      const tree = new THREE.Group();
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.54, 4.5, 8), trunkMat);
-      trunk.position.y = -2.0;
-      trunk.castShadow = true;
-      trunk.receiveShadow = true;
-      tree.add(trunk);
+    bambooClusters.forEach((cfg, idx) => {
+      const clusterGroup = new THREE.Group();
+      clusterGroup.position.set(cfg.x, -4.2, cfg.z);
+      clusterGroup.scale.setScalar(cfg.scale);
 
-      const crownGroup = new THREE.Group();
-      const leafMat = new THREE.MeshLambertMaterial({ color: foliageColors[cfg.colorIdx] });
+      // 太湖石底座点缀
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.95, 1), tableDarkStoneMat);
+      rock.position.set(0.4, 0.55, -0.3);
+      rock.scale.set(1.2, 1.4, 0.9);
+      rock.castShadow = true;
+      clusterGroup.add(rock);
 
-      for (let tier = 0; tier < 3; tier++) {
-        const radius = (2.85 - tier * 0.65);
-        const height = (3.25 - tier * 0.45);
-        const cone = new THREE.Mesh(new THREE.ConeGeometry(radius, height, 8), leafMat);
-        cone.position.y = 0.8 + tier * 1.75;
-        cone.rotation.y = tier * 0.6;
-        cone.castShadow = true;
-        cone.receiveShadow = true;
-        crownGroup.add(cone);
-      }
+      const swayGroup = new THREE.Group();
+      const culmOffsets = [[0, 0, 0, 1.0], [-0.45, 0.32, 0.06, 0.88], [0.42, -0.28, -0.05, 0.92], [0.18, 0.48, 0.04, 0.80]];
+      culmOffsets.forEach(([ox, oz, tilt, hScale]) => {
+        const stalkGroup = new THREE.Group();
+        stalkGroup.position.set(ox, 0, oz);
+        stalkGroup.rotation.z = tilt;
+        const segments = 6;
+        const segH = 1.35 * hScale;
+        for (let s = 0; s < segments; s++) {
+          const r = 0.14 * (1 - s * 0.08);
+          const seg = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.95, r, segH, 10), bambooCulmMat);
+          seg.position.y = s * segH + segH * 0.5;
+          seg.castShadow = true;
+          stalkGroup.add(seg);
 
-      tree.add(crownGroup);
-      tree.position.set(cfg.x, 0, cfg.z);
-      tree.scale.setScalar(cfg.scale);
-      this.parkGroup.add(tree);
-      this.trees.push({ group: crownGroup, phase: idx * 1.3 });
+          const nodeRing = new THREE.Mesh(new THREE.TorusGeometry(r * 1.04, 0.022, 8, 14), bambooNodeMat);
+          nodeRing.rotation.x = Math.PI / 2;
+          nodeRing.position.y = (s + 1) * segH;
+          stalkGroup.add(nodeRing);
+
+          if (s >= 2) {
+            for (let b = 0; b < 4; b++) {
+              const ba = (b * Math.PI) / 2 + s * 0.7;
+              const leaf = new THREE.Mesh(
+                new THREE.ConeGeometry(0.24, 1.25, 4),
+                cfg.isBlossom && (s + b) % 2 === 0 ? blossomLeafMat : bambooLeafMat
+              );
+              leaf.scale.set(0.32, 1, 1);
+              leaf.position.set(Math.cos(ba) * 0.55, (s + 0.8) * segH, Math.sin(ba) * 0.55);
+              leaf.rotation.z = -Math.cos(ba) * 1.15;
+              leaf.rotation.x = Math.sin(ba) * 1.15;
+              stalkGroup.add(leaf);
+            }
+          }
+        }
+        swayGroup.add(stalkGroup);
+      });
+
+      clusterGroup.add(swayGroup);
+      this.parkGroup.add(clusterGroup);
+      this.trees.push({ group: swayGroup, phase: idx * 1.3 });
     });
 
     this.dappledCanopy = new THREE.Group();
     const canopyGeo = new THREE.DodecahedronGeometry(1.6, 0);
-    const highBranchMat = new THREE.MeshLambertMaterial({ color: 0x5c9269 });
+    const highBranchMat = new THREE.MeshLambertMaterial({ color: 0x4c8559 });
     for (let i = 0; i < 5; i++) {
       const puff = new THREE.Mesh(canopyGeo, highBranchMat);
       puff.position.set(7.5 + i * 1.1, 10.5 + (i % 2) * 0.8, 6.5 - i * 0.9);
@@ -737,15 +950,16 @@ class Xiangqi3DApp {
     this.scene.add(this.battlefieldGroup);
 
     const groundGeo = new THREE.CylinderGeometry(58, 58, 1, 64);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x523628 });
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a2f22, roughness: 0.86, metalness: 0.08 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.position.y = -4.8;
     ground.receiveShadow = true;
     this.battlefieldGroup.add(ground);
 
-    const outerRingGeo = new THREE.RingGeometry(11.5, 28.0, 48);
-    const outerRingMat = new THREE.MeshLambertMaterial({
-      color: 0x2a1b14,
+    const outerRingGeo = new THREE.RingGeometry(11.2, 29.0, 48);
+    const outerRingMat = new THREE.MeshStandardMaterial({
+      color: 0x2c1b13,
+      roughness: 0.90,
       side: THREE.DoubleSide
     });
     const outerSandRing = new THREE.Mesh(outerRingGeo, outerRingMat);
@@ -756,50 +970,52 @@ class Xiangqi3DApp {
 
     const obsidianStoneMat = new THREE.MeshStandardMaterial({
       color: 0x262322,
-      roughness: 0.72,
-      metalness: 0.25
+      roughness: 0.65,
+      metalness: 0.28
     });
     const darkIronMat = new THREE.MeshStandardMaterial({
-      color: 0x1c1917,
-      roughness: 0.45,
-      metalness: 0.65
+      color: 0x1b1918,
+      roughness: 0.38,
+      metalness: 0.72
     });
     const gildedBronzeMat = new THREE.MeshStandardMaterial({
       color: 0xd97706,
       emissive: 0x78350f,
-      emissiveIntensity: 0.25,
-      roughness: 0.32,
+      emissiveIntensity: 0.26,
+      roughness: 0.28,
       metalness: 0.88
     });
     const crimsonLacquerMat = new THREE.MeshStandardMaterial({
       color: 0x7f1d1d,
-      roughness: 0.48,
-      metalness: 0.22
+      roughness: 0.42,
+      metalness: 0.24
     });
+    const woodBeamMat = new THREE.MeshStandardMaterial({ color: 0x472d1e, roughness: 0.75 });
 
-    const daisBase = new THREE.Mesh(new THREE.CylinderGeometry(10.8, 11.6, 0.36, 8), obsidianStoneMat);
+    // 1. 八角玄铁点将台与饕餮兽首护角
+    const daisBase = new THREE.Mesh(new THREE.CylinderGeometry(10.8, 11.8, 0.38, 8), obsidianStoneMat);
     daisBase.position.y = -4.22;
     daisBase.receiveShadow = true;
     this.battlefieldGroup.add(daisBase);
 
-    const daisStep = new THREE.Mesh(new THREE.CylinderGeometry(9.2, 9.8, 0.28, 8), darkIronMat);
-    daisStep.position.y = -3.95;
+    const daisStep = new THREE.Mesh(new THREE.CylinderGeometry(9.3, 9.9, 0.30, 8), darkIronMat);
+    daisStep.position.y = -3.94;
     daisStep.receiveShadow = true;
     this.battlefieldGroup.add(daisStep);
 
-    const daisBronzeRim = new THREE.Mesh(new THREE.TorusGeometry(9.45, 0.12, 10, 8), gildedBronzeMat);
+    const daisBronzeRim = new THREE.Mesh(new THREE.TorusGeometry(9.52, 0.12, 12, 8), gildedBronzeMat);
     daisBronzeRim.rotation.x = Math.PI / 2;
     daisBronzeRim.rotation.z = Math.PI / 8;
-    daisBronzeRim.position.y = -3.85;
+    daisBronzeRim.position.y = -3.84;
     this.battlefieldGroup.add(daisBronzeRim);
 
-    const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.05, 7.75, 0.78, 32), darkIronMat);
+    const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.10, 7.78, 0.80, 32), darkIronMat);
     tableSlab.position.y = -0.62;
     tableSlab.castShadow = true;
     tableSlab.receiveShadow = true;
     this.battlefieldGroup.add(tableSlab);
 
-    const tableBronzeRim = new THREE.Mesh(new THREE.TorusGeometry(7.88, 0.18, 14, 64), gildedBronzeMat);
+    const tableBronzeRim = new THREE.Mesh(new THREE.TorusGeometry(7.92, 0.18, 14, 64), gildedBronzeMat);
     tableBronzeRim.rotation.x = Math.PI / 2;
     tableBronzeRim.position.y = -0.44;
     this.battlefieldGroup.add(tableBronzeRim);
@@ -808,20 +1024,30 @@ class Xiangqi3DApp {
     for (let i = 0; i < 16; i++) {
       const a = (i * Math.PI) / 8;
       const rivet = new THREE.Mesh(rivetGeo, gildedBronzeMat);
-      rivet.position.set(Math.cos(a) * 7.92, -0.62, Math.sin(a) * 7.92);
+      rivet.position.set(Math.cos(a) * 7.96, -0.62, Math.sin(a) * 7.96);
       this.battlefieldGroup.add(rivet);
     }
 
-    const drumPedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 3.25, 3.5, 24), crimsonLacquerMat);
+    // 点将台案面虎符令箭架与青铜酒爵建模
+    const tallyGroup = new THREE.Group();
+    tallyGroup.position.set(-6.35, -0.22, 4.55);
+    const tallyStand = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.14, 0.45), gildedBronzeMat);
+    tallyStand.position.y = 0.07;
+    const tigerTally = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.24, 0.22), gildedBronzeMat);
+    tigerTally.position.y = 0.22;
+    tallyGroup.add(tallyStand, tigerTally);
+    this.battlefieldGroup.add(tallyGroup);
+
+    const drumPedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.68, 3.28, 3.5, 24), crimsonLacquerMat);
     drumPedestal.position.y = -2.55;
     drumPedestal.castShadow = true;
     drumPedestal.receiveShadow = true;
     this.battlefieldGroup.add(drumPedestal);
 
-    const drumRingTop = new THREE.Mesh(new THREE.TorusGeometry(2.72, 0.11, 10, 36), gildedBronzeMat);
+    const drumRingTop = new THREE.Mesh(new THREE.TorusGeometry(2.74, 0.11, 10, 36), gildedBronzeMat);
     drumRingTop.rotation.x = Math.PI / 2;
     drumRingTop.position.y = -1.2;
-    const drumRingBot = new THREE.Mesh(new THREE.TorusGeometry(3.15, 0.11, 10, 36), gildedBronzeMat);
+    const drumRingBot = new THREE.Mesh(new THREE.TorusGeometry(3.18, 0.11, 10, 36), gildedBronzeMat);
     drumRingBot.rotation.x = Math.PI / 2;
     drumRingBot.position.y = -3.6;
     this.battlefieldGroup.add(drumRingTop, drumRingBot);
@@ -849,44 +1075,54 @@ class Xiangqi3DApp {
       this.battlefieldGroup.add(sg);
     });
 
+    // 2. 四角三足双耳青铜火鼎与多层动态烈焰
     this.battlefieldFlames = [];
     this.battlefieldLights = [];
     const brazierCoords = [
-      { x: -7.6, z: -7.6 },
-      { x: 7.6, z: -7.6 },
-      { x: -7.6, z: 7.6 },
-      { x: 7.6, z: 7.6 }
+      { x: -7.8, z: -7.8 },
+      { x: 7.8, z: -7.8 },
+      { x: -7.8, z: 7.8 },
+      { x: 7.8, z: 7.8 }
     ];
     brazierCoords.forEach((bp, idx) => {
       const bg = new THREE.Group();
       bg.position.set(bp.x, 0, bp.z);
 
-      const bowl = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.58, 0.9, 16), darkIronMat);
+      const bowl = new THREE.Mesh(new THREE.CylinderGeometry(1.12, 0.68, 0.95, 20), darkIronMat);
       bowl.position.y = -1.75;
       bowl.castShadow = true;
       bg.add(bowl);
 
-      const rim = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.09, 10, 24), gildedBronzeMat);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(1.12, 0.10, 12, 28), gildedBronzeMat);
       rim.rotation.x = Math.PI / 2;
-      rim.position.y = -1.32;
+      rim.position.y = -1.28;
       bg.add(rim);
 
-      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.52, 2.2, 12), obsidianStoneMat);
-      pillar.position.y = -3.1;
-      bg.add(pillar);
+      // 双立耳与三足鼎腿
+      [-1.08, 1.08].forEach(ex => {
+        const ear = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.48, 0.36), gildedBronzeMat);
+        ear.position.set(ex, -1.06, 0);
+        bg.add(ear);
+      });
+      for (let l = 0; l < 3; l++) {
+        const la = (l * Math.PI * 2) / 3 + idx * 0.4;
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.12, 2.2, 12), gildedBronzeMat);
+        leg.position.set(Math.cos(la) * 0.65, -3.1, Math.sin(la) * 0.65);
+        bg.add(leg);
+      }
 
       const coalBed = new THREE.Mesh(
-        new THREE.CircleGeometry(0.92, 20),
+        new THREE.CircleGeometry(0.96, 20),
         new THREE.MeshBasicMaterial({ color: 0xea580c })
       );
       coalBed.rotation.x = -Math.PI / 2;
-      coalBed.position.y = -1.31;
+      coalBed.position.y = -1.29;
       bg.add(coalBed);
 
       const flameGroup = new THREE.Group();
-      flameGroup.position.y = -1.28;
+      flameGroup.position.y = -1.26;
       const outerFlame = new THREE.Mesh(
-        new THREE.ConeGeometry(0.72, 1.85, 10),
+        new THREE.ConeGeometry(0.76, 1.95, 12),
         new THREE.MeshBasicMaterial({
           color: 0xf97316,
           transparent: true,
@@ -895,37 +1131,102 @@ class Xiangqi3DApp {
           depthWrite: false
         })
       );
-      outerFlame.position.y = 0.85;
+      outerFlame.position.y = 0.88;
       const innerFlame = new THREE.Mesh(
-        new THREE.ConeGeometry(0.42, 1.35, 10),
+        new THREE.ConeGeometry(0.45, 1.42, 12),
         new THREE.MeshBasicMaterial({
           color: 0xfef08a,
           transparent: true,
-          opacity: 0.92,
+          opacity: 0.94,
           blending: THREE.AdditiveBlending,
           depthWrite: false
         })
       );
-      innerFlame.position.y = 0.62;
+      innerFlame.position.y = 0.64;
       flameGroup.add(outerFlame, innerFlame);
       bg.add(flameGroup);
 
-      const fireLight = new THREE.PointLight(0xff7b24, 0.45, 15, 1.8);
+      const fireLight = new THREE.PointLight(0xff7b24, 0.48, 16, 1.8);
       fireLight.position.set(0, -0.2, 0);
       bg.add(fireLight);
 
       this.battlefieldGroup.add(bg);
       this.battlefieldFlames.push({ group: flameGroup, outer: outerFlame, inner: innerFlame, phase: idx * 1.7 });
-      this.battlefieldLights.push({ light: fireLight, baseIntensity: 0.45, phase: idx * 2.1 });
+      this.battlefieldLights.push({ light: fireLight, baseIntensity: 0.48, phase: idx * 2.1 });
     });
 
+    // 3. 远景巍峨城堞箭楼、夔纹巨型战鼓架与十八般兵器架建模
+    const wallGroup = new THREE.Group();
+    wallGroup.position.set(0, -4.2, -21.5);
+    const mainWall = new THREE.Mesh(new THREE.BoxGeometry(28, 5.2, 2.6), obsidianStoneMat);
+    mainWall.position.y = 2.6;
+    wallGroup.add(mainWall);
+    for (let m = -12; m <= 12; m += 2.0) {
+      const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.95, 0.65), obsidianStoneMat);
+      merlon.position.set(m, 5.65, 0.95);
+      wallGroup.add(merlon);
+    }
+    // 城门洞与重檐箭楼
+    const gateTower = new THREE.Mesh(new THREE.BoxGeometry(7.6, 3.8, 3.2), crimsonLacquerMat);
+    gateTower.position.y = 7.1;
+    const towerRoof = new THREE.Mesh(new THREE.ConeGeometry(6.4, 2.2, 4), darkIronMat);
+    towerRoof.rotation.y = Math.PI / 4;
+    towerRoof.position.y = 10.1;
+    wallGroup.add(gateTower, towerRoof);
+    this.battlefieldGroup.add(wallGroup);
+
+    // 夔纹巨型战鼓与动态击鼓槌建模
+    this.warDrumGroup = new THREE.Group();
+    this.warDrumGroup.position.set(-14.5, -4.15, -4.5);
+    this.warDrumGroup.rotation.y = 0.45;
+    const drumStandL = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 4.5, 10), woodBeamMat);
+    drumStandL.position.set(-1.6, 2.25, 0);
+    const drumStandR = drumStandL.clone();
+    drumStandR.position.x = 1.6;
+    const drumCrossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 3.8, 10), gildedBronzeMat);
+    drumCrossbar.rotation.z = Math.PI / 2;
+    drumCrossbar.position.y = 4.2;
+    const bigDrumBody = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 1.8, 24), crimsonLacquerMat);
+    bigDrumBody.rotation.x = Math.PI / 2;
+    bigDrumBody.position.y = 2.6;
+    const drumSkin = new THREE.Mesh(new THREE.CircleGeometry(1.22, 24), new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.55 }));
+    drumSkin.position.set(0, 2.6, 0.92);
+    this.warDrumMallet = new THREE.Group();
+    this.warDrumMallet.position.set(0, 2.6, 1.45);
+    const malletShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.1, 8), woodBeamMat);
+    malletShaft.position.y = -0.35;
+    const malletHead = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), gildedBronzeMat);
+    malletHead.position.y = 0.22;
+    this.warDrumMallet.add(malletShaft, malletHead);
+    this.warDrumGroup.add(drumStandL, drumStandR, drumCrossbar, bigDrumBody, drumSkin, this.warDrumMallet);
+    this.battlefieldGroup.add(this.warDrumGroup);
+
+    // 十八般兵器架与方天画戟建模
+    const rackGroup = new THREE.Group();
+    rackGroup.position.set(14.5, -4.15, -4.2);
+    rackGroup.rotation.y = -0.45;
+    const rackBase = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.28, 0.9), woodBeamMat);
+    rackBase.position.y = 0.14;
+    const rackBar = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.16, 0.18), gildedBronzeMat);
+    rackBar.position.y = 2.2;
+    rackGroup.add(rackBase, rackBar);
+    for (let w = -2; w <= 2; w++) {
+      const spear = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 4.4, 8), woodBeamMat);
+      spear.position.set(w * 0.55, 2.2, 0);
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.55, 4), gildedBronzeMat);
+      tip.position.set(w * 0.55, 4.55, 0);
+      rackGroup.add(spear, tip);
+    }
+    this.battlefieldGroup.add(rackGroup);
+
+    // 4. 猎猎战旗（带戟头与横杆）
     this.warBanners = [];
     const bannerConfigs = [
       { x: -13.2, z: -10.8, isRed: false, scale: 1.15 },
       { x: 13.2, z: -10.8, isRed: false, scale: 1.15 },
       { x: -13.2, z: 10.8, isRed: true, scale: 1.15 },
       { x: 13.2, z: 10.8, isRed: true, scale: 1.15 },
-      { x: -16.5, z: -2.2, isRed: false, scale: 1.0 },
+      { x: -16.5, z: 2.2, isRed: false, scale: 1.0 },
       { x: 16.5, z: 2.2, isRed: true, scale: 1.0 }
     ];
     bannerConfigs.forEach((cfg, idx) => {
@@ -964,13 +1265,13 @@ class Xiangqi3DApp {
       this.warBanners.push({ mesh: cloth, phase: idx * 1.4, baseX: 1.18 });
     });
 
+    // 拒马鹿角防线
     const barricadeCoords = [
       { x: -11.5, z: -15.5, ry: 0.35 },
       { x: 11.5, z: -15.5, ry: -0.35 },
-      { x: -15.8, z: 5.5, ry: 1.1 },
-      { x: 15.8, z: -5.5, ry: -1.1 }
+      { x: -15.8, z: 6.5, ry: 1.1 },
+      { x: 15.8, z: -6.5, ry: -1.1 }
     ];
-    const woodBeamMat = new THREE.MeshLambertMaterial({ color: 0x452c1e });
     barricadeCoords.forEach(bc => {
       const bg = new THREE.Group();
       bg.position.set(bc.x, -3.55, bc.z);
@@ -1030,25 +1331,30 @@ class Xiangqi3DApp {
 
     const rosewoodFloorMat = new THREE.MeshStandardMaterial({
       color: 0x38221e,
-      roughness: 0.35,
-      metalness: 0.18
+      roughness: 0.30,
+      metalness: 0.20
     });
     const gildedMat = new THREE.MeshStandardMaterial({
       color: 0xeab308,
       emissive: 0x78350f,
       emissiveIntensity: 0.28,
-      roughness: 0.25,
-      metalness: 0.9
+      roughness: 0.22,
+      metalness: 0.90
     });
     const vermilionMat = new THREE.MeshStandardMaterial({
       color: 0x7f1d1d,
-      roughness: 0.32,
-      metalness: 0.18
+      roughness: 0.30,
+      metalness: 0.20
     });
     const sandalwoodMat = new THREE.MeshStandardMaterial({
       color: 0x3b1f14,
-      roughness: 0.32,
-      metalness: 0.22
+      roughness: 0.28,
+      metalness: 0.24
+    });
+    const whiteJadeMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      roughness: 0.18,
+      metalness: 0.10
     });
 
     const floor = new THREE.Mesh(new THREE.CylinderGeometry(58, 58, 1, 64), rosewoodFloorMat);
@@ -1058,12 +1364,12 @@ class Xiangqi3DApp {
 
     const carpetTex = typeof getBaguaMagicTexture === 'function' ? getBaguaMagicTexture() : null;
     const carpetDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(11.2, 64),
+      new THREE.CircleGeometry(11.4, 64),
       new THREE.MeshBasicMaterial({
         map: carpetTex,
         color: 0xfde047,
         transparent: true,
-        opacity: 0.34,
+        opacity: 0.36,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       })
@@ -1072,27 +1378,96 @@ class Xiangqi3DApp {
     carpetDisc.position.y = -4.24;
     this.studyGroup.add(carpetDisc);
 
-    const dais = new THREE.Mesh(new THREE.CylinderGeometry(9.6, 10.2, 0.34, 32), sandalwoodMat);
+    // 1. 汉白玉须弥御阶与紫檀雕龙御案
+    const dais = new THREE.Mesh(new THREE.CylinderGeometry(9.8, 10.4, 0.36, 32), sandalwoodMat);
     dais.position.y = -4.15;
     dais.receiveShadow = true;
     this.studyGroup.add(dais);
 
-    const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.1, 7.8, 0.82, 48), sandalwoodMat);
+    const jadeBalustradeRing = new THREE.Mesh(new THREE.TorusGeometry(9.85, 0.12, 12, 64), whiteJadeMat);
+    jadeBalustradeRing.rotation.x = Math.PI / 2;
+    jadeBalustradeRing.position.y = -3.96;
+    this.studyGroup.add(jadeBalustradeRing);
+
+    const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.12, 7.82, 0.82, 48), sandalwoodMat);
     tableSlab.position.y = -0.62;
     tableSlab.castShadow = true;
     tableSlab.receiveShadow = true;
     this.studyGroup.add(tableSlab);
 
-    const goldRim = new THREE.Mesh(new THREE.TorusGeometry(7.96, 0.16, 14, 64), gildedMat);
+    const goldRim = new THREE.Mesh(new THREE.TorusGeometry(7.98, 0.16, 14, 64), gildedMat);
     goldRim.rotation.x = Math.PI / 2;
     goldRim.position.y = -0.42;
     this.studyGroup.add(goldRim);
 
-    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 3.5, 24), vermilionMat);
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 3.25, 3.5, 24), vermilionMat);
     pedestal.position.y = -2.55;
     pedestal.castShadow = true;
     this.studyGroup.add(pedestal);
 
+    // 御案仙鹤金香炉与传国玉玺建模
+    const craneCenser = new THREE.Group();
+    craneCenser.position.set(-6.35, -0.22, -4.55);
+    const craneBase = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.22, 16), gildedMat);
+    craneBase.position.y = 0.11;
+    const craneBowl = new THREE.Mesh(new THREE.SphereGeometry(0.38, 18, 14), gildedMat);
+    craneBowl.scale.set(1, 0.68, 1);
+    craneBowl.position.y = 0.36;
+    const craneNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.55, 10), gildedMat);
+    craneNeck.position.set(0, 0.72, 0);
+    craneCenser.add(craneBase, craneBowl, craneNeck);
+    this.studyGroup.add(craneCenser);
+
+    const imperialSeal = new THREE.Group();
+    imperialSeal.position.set(6.25, -0.22, 4.45);
+    const sealBlock = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.36, 0.56), whiteJadeMat);
+    sealBlock.position.y = 0.18;
+    const sealKnob = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.06, 10, 16, Math.PI), gildedMat);
+    sealKnob.position.y = 0.36;
+    imperialSeal.add(sealBlock, sealKnob);
+    this.studyGroup.add(imperialSeal);
+
+    // 四方紫檀官帽太师椅建模
+    const chairCoords = [
+      { x: 0, z: 9.3, ry: 0 },
+      { x: 0, z: -9.3, ry: Math.PI },
+      { x: 9.3, z: 0, ry: -Math.PI / 2 },
+      { x: -9.3, z: 0, ry: Math.PI / 2 }
+    ];
+    chairCoords.forEach(cc => {
+      const cg = new THREE.Group();
+      cg.position.set(cc.x, 0, cc.z);
+      cg.rotation.y = cc.ry;
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.26, 1.65), sandalwoodMat);
+      seat.position.y = -2.1;
+      const backrest = new THREE.Mesh(new THREE.BoxGeometry(1.85, 1.65, 0.14), vermilionMat);
+      backrest.position.set(0, -1.15, 0.74);
+      const topRail = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.25, 12), gildedMat);
+      topRail.rotation.z = Math.PI / 2;
+      topRail.position.set(0, -0.32, 0.74);
+      cg.add(seat, backrest, topRail);
+      this.studyGroup.add(cg);
+    });
+
+    // 2. 紫檀六扇镂空云龙屏风与博古书架建模
+    const screenGroup = new THREE.Group();
+    screenGroup.position.set(0, -4.15, -14.2);
+    for (let p = -2.5; p <= 2.5; p += 1.0) {
+      const panelGroup = new THREE.Group();
+      const angle = (p % 2 === 0 ? 0.14 : -0.14);
+      panelGroup.position.set(p * 1.95, 2.8, Math.abs(p) * 0.25);
+      panelGroup.rotation.y = angle;
+      const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(1.88, 5.6, 0.16), sandalwoodMat);
+      const innerSilk = new THREE.Mesh(new THREE.BoxGeometry(1.62, 5.1, 0.18), vermilionMat);
+      const goldMedallion = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.20, 20), gildedMat);
+      goldMedallion.rotation.x = Math.PI / 2;
+      goldMedallion.position.y = 0.5;
+      panelGroup.add(outerFrame, innerSilk, goldMedallion);
+      screenGroup.add(panelGroup);
+    }
+    this.studyGroup.add(screenGroup);
+
+    // 3. 四根朱漆蟠龙金柱（带螺旋金龙盘绕与汉白玉柱础）
     const pillarCoords = [
       { x: -13.5, z: -11.5 },
       { x: 13.5, z: -11.5 },
@@ -1105,18 +1480,22 @@ class Xiangqi3DApp {
       const col = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.96, 16, 24), vermilionMat);
       col.position.y = 3.5;
       col.castShadow = true;
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.28, 1.42, 0.75, 24), gildedMat);
-      base.position.y = -4.0;
-      const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.08, 10, 32), gildedMat);
-      ring1.rotation.x = Math.PI / 2;
-      ring1.position.y = -1.2;
-      const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.08, 10, 32), gildedMat);
-      ring2.rotation.x = Math.PI / 2;
-      ring2.position.y = 4.5;
-      pg.add(col, base, ring1, ring2);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.48, 0.82, 24), whiteJadeMat);
+      base.position.y = -3.98;
+      // 蟠龙金纹盘柱螺旋建模
+      const dragonPoints = [];
+      for (let t = 0; t <= 32; t++) {
+        const f = t / 32;
+        const a = f * Math.PI * 5;
+        dragonPoints.push(new THREE.Vector3(Math.cos(a) * 0.96, -2.8 + f * 9.5, Math.sin(a) * 0.96));
+      }
+      const dragonCurve = new THREE.CatmullRomCurve3(dragonPoints);
+      const dragonCoil = new THREE.Mesh(new THREE.TubeGeometry(dragonCurve, 48, 0.085, 8, false), gildedMat);
+      pg.add(col, base, dragonCoil);
       this.studyGroup.add(pg);
     });
 
+    // 4. 琉璃八角宫灯（带飞檐灯盖与垂坠流苏）
     this.studyLanterns = [];
     const lanternCoords = [
       { x: -8.6, y: 4.8, z: -8.2 },
@@ -1128,22 +1507,24 @@ class Xiangqi3DApp {
       const lg = new THREE.Group();
       lg.position.set(lc.x, lc.y, lc.z);
       const shade = new THREE.Mesh(
-        new THREE.SphereGeometry(0.75, 16, 14),
+        new THREE.CylinderGeometry(0.72, 0.72, 1.45, 8),
         new THREE.MeshBasicMaterial({
           color: 0xffedd5,
           transparent: true,
-          opacity: 0.9
+          opacity: 0.92
         })
       );
-      shade.scale.set(1, 1.25, 1);
-      const topCap = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 0.24, 12), gildedMat);
-      topCap.position.y = 0.92;
-      const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.35, 0.22, 12), gildedMat);
-      botCap.position.y = -0.92;
-      const ptLight = new THREE.PointLight(0xffb74d, 0.42, 16, 1.8);
-      lg.add(shade, topCap, botCap, ptLight);
+      const topRoof = new THREE.Mesh(new THREE.ConeGeometry(1.05, 0.55, 8), gildedMat);
+      topRoof.position.y = 0.95;
+      const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.42, 0.28, 8), gildedMat);
+      botCap.position.y = -0.86;
+      const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.95, 10), vermilionMat);
+      tassel.rotation.x = Math.PI;
+      tassel.position.y = -1.42;
+      const ptLight = new THREE.PointLight(0xffb74d, 0.46, 16, 1.8);
+      lg.add(shade, topRoof, botCap, tassel, ptLight);
       this.studyGroup.add(lg);
-      this.studyLanterns.push({ group: lg, baseY: lc.y, phase: idx * 1.6, light: ptLight });
+      this.studyLanterns.push({ group: lg, tassel, baseY: lc.y, phase: idx * 1.6, light: ptLight });
     });
   }
 
@@ -1772,10 +2153,10 @@ class Xiangqi3DApp {
         x = THREE.MathUtils.lerp(startPos.x, endPos.x, ease) + perpX * sway;
         z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease) + perpZ * sway;
         y = Math.sin(p * Math.PI) * (isCapture ? 1.85 : 1.48);
-        const somersault = ease * Math.PI * 2;
-        rx = dirZ * somersault;
-        rz = -dirX * somersault + Math.sin(p * Math.PI) * 0.36;
-        ry = Math.sin(p * Math.PI) * 0.45;
+        const pitch = Math.sin(p * Math.PI * 2) * 0.36;
+        rx = dirZ * pitch;
+        rz = -dirX * pitch;
+        ry = 0;
       } else {
         const p = (t - 0.86) / 0.14;
         x = endPos.x;
@@ -2529,18 +2910,20 @@ class Xiangqi3DApp {
 
     if (this.vfxAtmosphereTimer > 0) {
       this.vfxAtmosphereTimer = Math.max(0, this.vfxAtmosphereTimer - dt);
-      const progress = 1 - (this.vfxAtmosphereTimer / (this.vfxAtmosphereDuration || 3.80));
-      let eclipseFactor = 0;
-      if (progress < 0.14) eclipseFactor = progress / 0.14;
-      else if (progress < 0.76) eclipseFactor = 1;
-      else eclipseFactor = 1 - (progress - 0.76) / 0.24;
-      const sc = this.getActiveSceneConfig();
-      this._tempDayColor.setHex(sc.bgHex || 0xdbe9dc);
-      this._tempDayColor.lerp(this._tempNightColor, Math.max(0, Math.min(1, eclipseFactor)) * 0.76);
-      this.scene.background.copy(this._tempDayColor);
-      if (this.scene.fog) this.scene.fog.color.copy(this._tempDayColor);
-      if (this.sunLight) this.sunLight.intensity = THREE.MathUtils.lerp(sc.sunIntensity || 0.88, 0.24, eclipseFactor);
-      if (this.hemiLight) this.hemiLight.intensity = THREE.MathUtils.lerp(sc.hemiIntensity || 0.65, 0.22, eclipseFactor);
+      if (!this._vfxCustomColorGrading) {
+        const progress = 1 - (this.vfxAtmosphereTimer / (this.vfxAtmosphereDuration || 3.80));
+        let eclipseFactor = 0;
+        if (progress < 0.14) eclipseFactor = progress / 0.14;
+        else if (progress < 0.76) eclipseFactor = 1;
+        else eclipseFactor = 1 - (progress - 0.76) / 0.24;
+        const sc = this.getActiveSceneConfig();
+        this._tempDayColor.setHex(sc.bgHex || 0xdbe9dc);
+        this._tempDayColor.lerp(this._tempNightColor, Math.max(0, Math.min(1, eclipseFactor)) * 0.76);
+        this.scene.background.copy(this._tempDayColor);
+        if (this.scene.fog) this.scene.fog.color.copy(this._tempDayColor);
+        if (this.sunLight) this.sunLight.intensity = THREE.MathUtils.lerp(sc.sunIntensity || 0.88, 0.24, eclipseFactor);
+        if (this.hemiLight) this.hemiLight.intensity = THREE.MathUtils.lerp(sc.hemiIntensity || 0.65, 0.22, eclipseFactor);
+      }
     }
     for (let i = this.checkmateVFXAnimations.length - 1; i >= 0; i--) {
       const vfx = this.checkmateVFXAnimations[i];
@@ -2591,6 +2974,9 @@ class Xiangqi3DApp {
           bl.light.intensity = bl.baseIntensity + Math.sin(elapsed * 11.0 + bl.phase) * 0.22;
         });
       }
+      if (this.warDrumMallet) {
+        this.warDrumMallet.rotation.x = Math.abs(Math.sin(elapsed * 3.6)) * 0.55 - 0.15;
+      }
       if (this.warBanners) {
         this.warBanners.forEach(wb => {
           wb.mesh.rotation.y = Math.sin(elapsed * 2.4 + wb.phase) * 0.18;
@@ -2624,6 +3010,26 @@ class Xiangqi3DApp {
         t.group.rotation.z = Math.sin(elapsed * 1.2 + t.phase) * 0.035;
         t.group.rotation.x = Math.cos(elapsed * 0.9 + t.phase) * 0.025;
       });
+      if (this.koiFishList) {
+        this.koiFishList.forEach(koi => {
+          koi.angle += koi.speed * dt;
+          const kx = Math.cos(koi.angle) * koi.radius;
+          const kz = Math.sin(koi.angle) * koi.radius;
+          koi.group.position.set(kx, -4.25 + Math.sin(elapsed * 2.5 + koi.phase) * 0.03, kz);
+          koi.group.rotation.y = -koi.angle + Math.PI;
+          if (koi.tail) koi.tail.rotation.y = Math.sin(elapsed * 10.0 + koi.phase) * 0.35;
+        });
+      }
+      if (this.incenseSmokeRings) {
+        this.incenseSmokeRings.forEach(sr => {
+          const cycle = (elapsed * 0.45 + sr.baseOffset) % 1.4;
+          sr.mesh.position.y = 0.68 + cycle;
+          sr.mesh.position.x = Math.sin(elapsed * 1.8 + sr.phase) * 0.08 * cycle;
+          const sc = 0.8 + cycle * 1.1;
+          sr.mesh.scale.set(sc, sc, 1);
+          sr.mesh.material.opacity = Math.max(0, (1 - cycle / 1.4) * 0.38);
+        });
+      }
       this.dappledCanopy.position.x = Math.sin(elapsed * 1.1) * 0.35;
       this.dappledCanopy.position.z = Math.cos(elapsed * 0.9) * 0.35;
 

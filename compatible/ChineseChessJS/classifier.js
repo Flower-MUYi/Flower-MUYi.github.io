@@ -1,6 +1,6 @@
 /*************************************************************************
- * 25+ CLASSIC & JJ XIANGQI CHECKMATE PATTERN RECOGNITION ENGINE
- * (古谱杀法与JJ象棋十七大绝杀因果推演智能判定系统)
+ * 25+ CLASSIC XIANGQI CHECKMATE PATTERN RECOGNITION ENGINE
+ * (古谱十七大名局杀法与经典衍生杀法 · 因果推演智能判定系统)
  *************************************************************************/
 class CheckmateClassifier {
   static getCatalog() {
@@ -216,6 +216,29 @@ class CheckmateClassifier {
       return out.length ? out : [kingCoord];
     };
 
+    const toCheckerSummary = (item) => {
+      if (!item) return null;
+      const p = item.piece || board[item.r]?.[item.c];
+      const effType = item.type || (p ? (p.isHidden ? (p.posType || p.type) : p.type) : 'r');
+      return {
+        r: item.r,
+        c: item.c,
+        type: effType,
+        char: item.char || p?.char || (winnerColor === RED ? '俥' : '車'),
+        color: item.color || p?.color || winnerColor
+      };
+    };
+
+    const dedupeCheckers = (arr) => {
+      const out = [];
+      for (const item of (arr || [])) {
+        const s = toCheckerSummary(item);
+        if (!s || typeof s.r !== 'number' || typeof s.c !== 'number') continue;
+        if (!out.some(x => x.r === s.r && x.c === s.c)) out.push(s);
+      }
+      return out;
+    };
+
     const buildResult = (vfxType, highlightCoords, extra = {}) => {
       const meta = CheckmateClassifier.getMetaByType(vfxType);
       return {
@@ -229,14 +252,25 @@ class CheckmateClassifier {
         highlightCoords: dedupeCoords(highlightCoords),
         kingCoord,
         royalCoord,
-        checkers: extra.checkers || [],
+        checkers: dedupeCheckers(extra.checkers || []),
         mountCoord: extra.mountCoord || null
       };
     };
 
     // 1. 欠行 · 困毙 (Stalemate: Not in check, but no legal moves)
     if (!inCheck) {
-      return buildResult('stalemate_trap', [kingCoord], {
+      const pinningAttackers = [];
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 9; c++) {
+          const p = board[r][c];
+          if (p && p.color === winnerColor && p.type !== 'k') {
+            pinningAttackers.push({ r, c, piece: p, type: p.isHidden ? (p.posType || p.type) : p.type });
+          }
+        }
+      }
+      const keyLockers = pinningAttackers.slice(0, 2);
+      return buildResult('stalemate_trap', [kingCoord, ...keyLockers], {
+        checkers: keyLockers,
         analysis: `${loserColor === RED ? '红方' : '黑方'}虽未被直接将军，但全局子力均被封锁或牵制，无任何合法着法可走，依规判【困毙】负。`
       });
     }
@@ -261,14 +295,7 @@ class CheckmateClassifier {
       }
     }
 
-    const checkerSummaries = checkers.map(ch => ({
-      r: ch.r,
-      c: ch.c,
-      type: ch.type,
-      char: ch.piece.char,
-      color: ch.piece.color
-    }));
-
+    const checkerSummaries = checkers.map(ch => toCheckerSummary(ch));
     const highlightCoords = checkers.map(ch => ({ r: ch.r, c: ch.c }));
     if (kr !== -1) highlightCoords.push({ r: kr, c: kc });
 
@@ -318,6 +345,20 @@ class CheckmateClassifier {
       return list;
     };
 
+    // 因果反事实推演：若移除攻方某子 (ar, ac)，受攻方是否脱离绝杀（不再被将或拥有合法解将着法）
+    const isPieceEssentialToMate = (ar, ac) => {
+      if (ar === primaryChecker.r && ac === primaryChecker.c) return true;
+      const p = board[ar]?.[ac];
+      if (!p || p.color !== winnerColor || p.type === 'k') return false;
+      const simBoard = engine.cloneBoard(board);
+      simBoard[ar][ac] = null;
+      if (!engine.isInCheck(loserColor, simBoard)) return true;
+      if (typeof engine.hasAnyLegalMove === 'function') {
+        return engine.hasAnyLegalMove(loserColor, simBoard);
+      }
+      return false;
+    };
+
     const analyzeKingStep = (nr, nc) => {
       const simBoard = engine.cloneBoard(board);
       const kingObj = simBoard[kr][kc];
@@ -357,6 +398,22 @@ class CheckmateClassifier {
       simBoard[tr][tc] = { color: loserColor, type: 'p', isHidden: false };
       const moves = engine.getPseudoMoves(ar, ac, simBoard);
       return moves.some(m => m.tr === tr && m.tc === tc);
+    };
+
+    // 判断攻方车/炮是否在王线上牵制了敌方护驾子力
+    const doesPiecePinDefender = (ar, ac) => {
+      const p = board[ar]?.[ac];
+      if (!p || p.color !== winnerColor) return false;
+      const effType = p.isHidden ? (p.posType || p.type) : p.type;
+      if (ar !== kr && ac !== kc) return false;
+      const between = getPiecesBetweenOnLine(ar, ac, kr, kc);
+      if (effType === 'r') {
+        return between.length === 1 && between[0].piece.color === loserColor;
+      }
+      if (effType === 'c') {
+        return between.length === 2 && between.some(x => x.piece.color === loserColor);
+      }
+      return false;
     };
 
     const orthDirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -400,25 +457,44 @@ class CheckmateClassifier {
       }
     }
 
-    // Check if Flying General pins a defender on file kc that could otherwise capture primaryChecker
-    if (wkr !== -1 && wkc === kc) {
-      const betweenKings = getPiecesBetweenOnLine(kr, kc, wkr, wkc);
-      if (betweenKings.length === 1 && betweenKings[0].piece.color === loserColor) {
-        const pinned = betweenKings[0];
-        const pMoves = engine.getPseudoMoves(pinned.r, pinned.c, board);
-        if (pMoves.some(m => m.tr === primaryChecker.r && m.tc === primaryChecker.c)) {
-          royalAssistUsed = true;
-          essentialRoyalAssist = true;
+    // 检查己方将帅是否隔空牵制了敌方唯一能吃掉将死子的护卫，或保护了贴身将军子
+    if (wkr !== -1) {
+      if (wkc === kc) {
+        const betweenKings = getPiecesBetweenOnLine(kr, kc, wkr, wkc);
+        if (betweenKings.length === 1 && betweenKings[0].piece.color === loserColor) {
+          const pinned = betweenKings[0];
+          const pMoves = engine.getPseudoMoves(pinned.r, pinned.c, board);
+          if (pMoves.some(m => m.tr === primaryChecker.r && m.tc === primaryChecker.c)) {
+            royalAssistUsed = true;
+            essentialRoyalAssist = true;
+          }
+        }
+      }
+      // 己方将帅在中路或肋道直接替贴身将死子（如车/兵）充当保护伞（敌将无法吃该子因为会照面）
+      if (primaryChecker.c === wkc && Math.abs(primaryChecker.r - kr) + Math.abs(primaryChecker.c - kc) === 1) {
+        if (countBetweenOnLine(primaryChecker.r, primaryChecker.c, wkr, wkc) === 0) {
+          const otherProtectors = attackerPieces.filter(
+            a => a.type !== 'k' &&
+              !(a.r === primaryChecker.r && a.c === primaryChecker.c) &&
+              doesPieceProtectOrAttackSquare(a.r, a.c, primaryChecker.r, primaryChecker.c)
+          );
+          if (otherProtectors.length === 0) {
+            royalAssistUsed = true;
+            essentialRoyalAssist = true;
+          }
         }
       }
     }
 
     let ownPiecesInPalace = 0;
+    let ownAdvisorsInPalace = 0;
     for (let r = (loserColor === BLACK ? 0 : 7); r <= (loserColor === BLACK ? 2 : 9); r++) {
       for (let c = 3; c <= 5; c++) {
         const p = board[r][c];
         if (p && p.color === loserColor && !(r === kr && c === kc)) {
           ownPiecesInPalace++;
+          const pt = p.isHidden ? (p.posType || p.type) : p.type;
+          if (pt === 'a' || pt === 'b') ownAdvisorsInPalace++;
         }
       }
     }
@@ -426,9 +502,17 @@ class CheckmateClassifier {
     const enemyBaseRow = loserColor === BLACK ? 0 : 9;
     const enemySecondRow = loserColor === BLACK ? 1 : 8;
     const enemyThirdRow = loserColor === BLACK ? 2 : 7;
-    const enemyFourthRow = loserColor === BLACK ? 3 : 6;
 
+    // 闷宫结构判定：敌将直系退路被己方棋子塞住 >= 2 格，或敌将在底角被 1 个正交士塞路且花心位 (enemySecondRow, 4) 另有第 2 个士/子锁死九宫
+    const isSmotheredPalaceShape =
+      palacePossibleCount > 0 &&
+      (ownBlockedCount >= 2 ||
+        (ownBlockedCount >= 1 && ownPiecesInPalace >= 2 && (ownAdvisorsInPalace >= 2 || board[enemySecondRow]?.[4]?.color === loserColor)));
+
+    // 卧槽马标准位：敌方底线前一格（二路）的三、七路要津 (r === enemySecondRow, c === 2 or 6)
     const isTroughPos = (r, c) => r === enemySecondRow && (c === 2 || c === 6);
+
+    // 八角马：占据九宫士角且与敌将呈对角定马之势，或者驻守九宫四角
     const isDiagonalOctagonLock = (hr, hc) =>
       engine.inPalace(hr, hc, loserColor) &&
       Math.abs(hr - kr) === 2 &&
@@ -439,14 +523,17 @@ class CheckmateClassifier {
       engine.inPalace(hr, hc, loserColor) && (hc === 3 || hc === 5) && (hr === enemyBaseRow || hr === enemyThirdRow);
     const isOctagonPos = (hr, hc) => isDiagonalOctagonLock(hr, hc) || isPalaceCornerHorse(hr, hc) || engine.inPalace(hr, hc, loserColor);
 
+    // 钓鱼马位：三七路高钓马 (r === enemyThirdRow, c === 2 or 6) 或侧面低钓马 (r === enemySecondRow, c === 1 or 7)
     const isFishingPos = (r, c) =>
       (r === enemyThirdRow && (c === 2 || c === 6)) ||
       (r === enemySecondRow && (c === 1 || c === 7));
 
+    // 侧面虎位：敌宫侧翼三格以内控场马位
     const isSideTigerPos = (r, c) =>
       Math.abs(r - enemyBaseRow) <= 3 && (c >= 1 && c <= 7) && c !== 4;
 
     const doesPieceControlKingEscape = (pieceCoord) => {
+      if (!pieceCoord) return false;
       for (const sq of escapeSquareDetails) {
         if (sq.nonGeneralControllers && sq.nonGeneralControllers.some(ctrl => ctrl.r === pieceCoord.r && ctrl.c === pieceCoord.c)) {
           return true;
@@ -455,7 +542,15 @@ class CheckmateClassifier {
       if (doesPieceProtectOrAttackSquare(pieceCoord.r, pieceCoord.c, primaryChecker.r, primaryChecker.c)) {
         return true;
       }
+      if (doesPiecePinDefender(pieceCoord.r, pieceCoord.c)) {
+        return true;
+      }
       return false;
+    };
+
+    const isAttackerParticipating = (pieceCoord) => {
+      if (!pieceCoord) return false;
+      return doesPieceControlKingEscape(pieceCoord) || isPieceEssentialToMate(pieceCoord.r, pieceCoord.c);
     };
 
     // =========================================================================
@@ -464,13 +559,21 @@ class CheckmateClassifier {
     if (checkers.length >= 2) {
       const hasHorse = checkers.some(c => c.type === 'n');
       const hasCannon = checkers.some(c => c.type === 'c');
-      const extra = (hasHorse && hasCannon)
-        ? {
-            badge: '古谱十八杀法 · 拔簧马双将',
-            subBanner: '拔簧跃马 · 双将齐发',
-            analysis: '致胜方跃马闪击，战马与火炮同时从两路照将（拔簧马双将），敌将无法兼顾，一击毙命！'
-          }
-        : {};
+      const hasRook = checkers.some(c => c.type === 'r');
+      let extra = {};
+      if (hasHorse && hasCannon) {
+        extra = {
+          badge: '古谱名局 · 拔簧马双将',
+          subBanner: '拔簧跃马 · 双将齐发',
+          analysis: '致胜方跃马闪击，战马与火炮同时从两路照将（拔簧马双将），敌将无法兼顾，一击毙命！'
+        };
+      } else if (hasRook && hasCannon) {
+        extra = {
+          badge: '古谱名局 · 车炮双将',
+          subBanner: '铁车轰炮 · 双刃凌空',
+          analysis: '致胜方强车与火炮从纵横两路同时照将，敌方纵有千军万马亦无法同时消解两路杀机！'
+        };
+      }
       return buildResult('double_check', highlightCoords, {
         checkers: checkerSummaries,
         ...extra
@@ -482,23 +585,27 @@ class CheckmateClassifier {
     // =========================================================================
     const centralCannons = attackerPieces.filter(a => a.type === 'c' && a.c === 4);
     const activeCentralCannon = centralCannons.find(cc => {
-      if (kc === 4) {
-        const b = countBetweenOnLine(cc.r, cc.c, kr, kc);
-        return b >= 0 && b <= 2;
-      }
+      if (cc.r === primaryChecker.r && cc.c === primaryChecker.c) return true;
       const b = countBetweenOnLine(cc.r, 4, kr, 4);
-      return b >= 0 && b <= 2;
+      if (b < 0 || b > 2) return false;
+      const locksCenterEscape = escapeSquareDetails.some(
+        sq => sq.c === 4 && sq.nonGeneralControllers?.some(ctrl => ctrl.r === cc.r && ctrl.c === cc.c)
+      );
+      if (locksCenterEscape) return true;
+      if (kc === 4 && b === 2) {
+        const between = getPiecesBetweenOnLine(cc.r, 4, kr, 4);
+        if (between.some(x => x.piece.color === loserColor)) return true;
+      }
+      return isPieceEssentialToMate(cc.r, cc.c);
     });
 
     const bottomRowCannons = attackerPieces.filter(a => {
       if (a.type !== 'c' || (a.r !== enemyBaseRow && a.r !== enemySecondRow)) return false;
       if (activeCentralCannon && a.r === activeCentralCannon.r && a.c === activeCentralCannon.c) return false;
-      if (kr === a.r) {
-        const b = countBetweenOnLine(a.r, a.c, kr, kc);
-        return b >= 1 && b <= 2;
-      }
+      if (a.r === primaryChecker.r && a.c === primaryChecker.c) return true;
       const b = countBetweenOnLine(a.r, a.c, a.r, kc);
-      return b >= 0 && b <= 2;
+      if (b < 0 || b > 2) return false;
+      return isAttackerParticipating(a);
     });
 
     if (
@@ -506,10 +613,11 @@ class CheckmateClassifier {
       bottomRowCannons.length > 0 &&
       (primaryChecker.type === 'c' || bottomRowCannons.some(bc => bc.r === primaryChecker.r && bc.c === primaryChecker.c))
     ) {
+      const bottomCannon = bottomRowCannons.find(bc => bc.r === primaryChecker.r && bc.c === primaryChecker.c) || bottomRowCannons[0];
       highlightCoords.push({ r: activeCentralCannon.r, c: activeCentralCannon.c });
       bottomRowCannons.forEach(bc => highlightCoords.push({ r: bc.r, c: bc.c }));
       return buildResult('heaven_earth_cannon', highlightCoords, {
-        checkers: checkerSummaries
+        checkers: [activeCentralCannon, bottomCannon, ...checkerSummaries]
       });
     }
 
@@ -522,19 +630,27 @@ class CheckmateClassifier {
         (primaryChecker.r === enemyBaseRow || primaryChecker.c === 3 || primaryChecker.c === 5 || primaryChecker.c === 4)
       ) {
         highlightCoords.push({ r: activeCentralCannon.r, c: activeCentralCannon.c });
+        const extra = (primaryChecker.type === 'r' && primaryChecker.c === 4 && primaryChecker.r === enemyBaseRow && ownAdvisorBishopBlockedCount >= 1)
+          ? {
+              badge: '古谱名局 · 大胆穿心',
+              subBanner: '中炮镇宫 · 强车穿心',
+              analysis: '中炮死锁九宫中轴，强车破士直取九宫中路，成就古谱奇杀【铁门栓 · 大胆穿心】！'
+            }
+          : {};
         return buildResult('iron_bolt', highlightCoords, {
-          checkers: checkerSummaries
+          checkers: [primaryChecker, activeCentralCannon],
+          ...extra
         });
       }
       if (primaryChecker.type === 'c' && primaryChecker.c === 4) {
         const gateCrasher = attackerPieces.find(
-          a => a.type === 'r' && doesPieceControlKingEscape(a) &&
+          a => (a.type === 'r' || a.type === 'p') && isAttackerParticipating(a) &&
             (a.r === enemyBaseRow || (engine.inPalace(a.r, a.c, loserColor) && (a.c === 3 || a.c === 5 || a.c === 4)))
         );
         if (gateCrasher) {
           highlightCoords.push({ r: gateCrasher.r, c: gateCrasher.c });
           return buildResult('iron_bolt', highlightCoords, {
-            checkers: checkerSummaries
+            checkers: [gateCrasher, activeCentralCannon]
           });
         }
       }
@@ -552,32 +668,51 @@ class CheckmateClassifier {
       const clampingRook = attackerPieces.find(a =>
         a.type === 'r' &&
         Math.abs(a.r - enemyBaseRow) <= 2 &&
-        doesPieceControlKingEscape(a)
+        isAttackerParticipating(a)
       );
 
+      // 前炮作架、后炮催命
       if (mount && mount.piece.color === winnerColor && mountType === 'c') {
         if (clampingRook) {
           highlightCoords.push({ r: clampingRook.r, c: clampingRook.c });
           return buildResult('chariot_cannon_clamp', highlightCoords, {
-            checkers: checkerSummaries,
+            checkers: [clampingRook, primaryChecker, mount],
             mountCoord: { r: mount.r, c: mount.c }
           });
         }
         return buildResult('double_cannon', highlightCoords, {
-          checkers: checkerSummaries,
+          checkers: [primaryChecker, mount],
           mountCoord: { r: mount.r, c: mount.c }
         });
       }
 
+      // 同线后方还有另一门己方火炮叠阵（前炮将军、后炮同线压阵）
+      const tandemCannon = attackerPieces.find(a =>
+        a.type === 'c' &&
+        !(a.r === primaryChecker.r && a.c === primaryChecker.c) &&
+        ((a.r === kr && primaryChecker.r === kr) || (a.c === kc && primaryChecker.c === kc)) &&
+        countBetweenOnLine(a.r, a.c, kr, kc) <= 2
+      );
+      if (tandemCannon && !clampingRook) {
+        highlightCoords.push({ r: tandemCannon.r, c: tandemCannon.c });
+        return buildResult('double_cannon', highlightCoords, {
+          checkers: [primaryChecker, tandemCannon],
+          mountCoord: mount ? { r: mount.r, c: mount.c } : { r: primaryChecker.r, c: primaryChecker.c }
+        });
+      }
+
+      // 以己方战马为炮架隔山打将 -> 马后炮
       if (mount && mount.piece.color === winnerColor && mountType === 'n') {
         return buildResult('horse_cannon', highlightCoords, {
-          checkers: checkerSummaries,
+          checkers: [mount, primaryChecker],
           mountCoord: { r: mount.r, c: mount.c }
         });
       }
 
+      // 战马在九宫近处封锁敌将垂直方向退路，火炮轰击 -> 马后炮
       const perpHorse = attackerPieces.find(a => {
         if (a.type !== 'n') return false;
+        if (Math.abs(a.r - kr) > 4 || Math.abs(a.c - kc) > 4) return false;
         return escapeSquareDetails.some(sq => {
           const isPerp = (primaryChecker.r === kr) ? (sq.r !== kr) : (sq.c !== kc);
           return isPerp && sq.nonGeneralControllers?.some(ctrl => ctrl.r === a.r && ctrl.c === a.c);
@@ -586,43 +721,58 @@ class CheckmateClassifier {
       if (perpHorse) {
         highlightCoords.push({ r: perpHorse.r, c: perpHorse.c });
         return buildResult('horse_cannon', highlightCoords, {
-          checkers: checkerSummaries,
+          checkers: [perpHorse, primaryChecker],
           mountCoord: { r: perpHorse.r, c: perpHorse.c }
         });
       }
     }
 
+    // 战马直接将军，且存在同线锁宫火炮协同（排除纯粹由强车锁门的标准卧槽马）
     if (primaryChecker.type === 'n') {
-      const alignedCannon = attackerPieces.find(a => {
-        if (a.type !== 'c') return false;
-        if (a.r === kr || a.c === kc) {
-          const between = countBetweenOnLine(a.r, a.c, kr, kc);
-          return between >= 0 && between <= 2;
-        }
-        return doesPieceControlKingEscape(a);
-      });
-      if (alignedCannon) {
-        highlightCoords.push({ r: alignedCannon.r, c: alignedCannon.c });
-        return buildResult('horse_cannon', highlightCoords, {
-          checkers: checkerSummaries,
-          mountCoord: { r: alignedCannon.r, c: alignedCannon.c }
+      const troughWithChariot = isTroughPos(primaryChecker.r, primaryChecker.c) &&
+        attackerPieces.some(a => a.type === 'r' && isAttackerParticipating(a));
+      if (!troughWithChariot) {
+        const alignedCannon = attackerPieces.find(a => {
+          if (a.type !== 'c') return false;
+          if (a.r === kr || a.c === kc) {
+            const between = countBetweenOnLine(a.r, a.c, kr, kc);
+            return between >= 0 && between <= 2 && isAttackerParticipating(a);
+          }
+          return escapeSquareDetails.some(
+            sq => sq.nonGeneralControllers?.some(ctrl => ctrl.r === a.r && ctrl.c === a.c)
+          );
         });
+        if (alignedCannon) {
+          highlightCoords.push({ r: alignedCannon.r, c: alignedCannon.c });
+          return buildResult('horse_cannon', highlightCoords, {
+            checkers: [primaryChecker, alignedCannon],
+            mountCoord: { r: primaryChecker.r, c: primaryChecker.c }
+          });
+        }
       }
     }
 
     // =========================================================================
-    // 6. 双车错 (Double Chariot Alternating Mate)
+    // 6. 双车错 / 双车胁士 (Double Chariot Alternating Mate)
     // =========================================================================
     const allWinnerChariots = attackerPieces.filter(a => a.type === 'r');
     if (primaryChecker.type === 'r' && allWinnerChariots.length >= 2) {
       const otherChariot = allWinnerChariots.find(r => {
         if (r.r === primaryChecker.r && r.c === primaryChecker.c) return false;
-        return Math.abs(r.r - kr) <= 2 || Math.abs(r.c - kc) <= 1 || doesPieceControlKingEscape(r);
+        return Math.abs(r.r - kr) <= 2 || Math.abs(r.c - kc) <= 1 || isAttackerParticipating(r);
       });
       if (otherChariot) {
         highlightCoords.push({ r: otherChariot.r, c: otherChariot.c });
+        const bothRibs = (primaryChecker.c === 3 && otherChariot.c === 5) || (primaryChecker.c === 5 && otherChariot.c === 3);
+        const extra = bothRibs
+          ? {
+              badge: '古谱名局 · 双车胁士',
+              subBanner: '双车锁肋 · 左右合击'
+            }
+          : {};
         return buildResult('double_chariot', highlightCoords, {
-          checkers: checkerSummaries
+          checkers: [primaryChecker, otherChariot],
+          ...extra
         });
       }
     }
@@ -631,13 +781,27 @@ class CheckmateClassifier {
     // 7. 夹车炮 (Chariot + Cannon Clamp in bottom 3 ranks)
     // =========================================================================
     if (primaryChecker.type === 'c' || primaryChecker.type === 'r') {
-      const clampC = attackerPieces.find(a => a.type === 'c' && Math.abs(a.r - enemyBaseRow) <= 2 && (a === primaryChecker || doesPieceControlKingEscape(a)));
-      const clampR = attackerPieces.find(a => a.type === 'r' && Math.abs(a.r - enemyBaseRow) <= 2 && (a === primaryChecker || doesPieceControlKingEscape(a)));
+      const clampC = attackerPieces.find(
+        a => a.type === 'c' && Math.abs(a.r - enemyBaseRow) <= 3 &&
+          ((a.r === primaryChecker.r && a.c === primaryChecker.c) || isAttackerParticipating(a))
+      );
+      const clampR = attackerPieces.find(
+        a => a.type === 'r' && Math.abs(a.r - enemyBaseRow) <= 3 &&
+          ((a.r === primaryChecker.r && a.c === primaryChecker.c) || isAttackerParticipating(a))
+      );
       if (clampC && clampR) {
-        highlightCoords.push({ r: clampC.r, c: clampC.c }, { r: clampR.r, c: clampR.c });
-        return buildResult('chariot_cannon_clamp', highlightCoords, {
-          checkers: checkerSummaries
-        });
+        const activeHorseInPalaceZone = primaryChecker.type === 'r' && attackerPieces.some(
+          a => a.type === 'n' && Math.abs(a.r - kr) <= 3 && Math.abs(a.c - kc) <= 3 && doesPieceControlKingEscape(a)
+        );
+        const cannonDirectlyControlsEscape = primaryChecker.type === 'c' || escapeSquareDetails.some(
+          sq => sq.nonGeneralControllers?.some(ctrl => ctrl.r === clampC.r && ctrl.c === clampC.c)
+        );
+        if (!activeHorseInPalaceZone || cannonDirectlyControlsEscape) {
+          highlightCoords.push({ r: clampC.r, c: clampC.c }, { r: clampR.r, c: clampR.c });
+          return buildResult('chariot_cannon_clamp', highlightCoords, {
+            checkers: [clampR, clampC]
+          });
+        }
       }
     }
 
@@ -645,13 +809,22 @@ class CheckmateClassifier {
     // 8. 马系绝杀与车马协同绝杀 (卧槽马 / 八角马 / 钓鱼马 / 列马车 / 侧面虎 / 双马饮泉)
     // =========================================================================
     if (primaryChecker.type === 'n') {
+      const partnerRook = attackerPieces.find(
+        a => a.type === 'r' && isAttackerParticipating(a)
+      );
+      const partnerRookOrCannon = partnerRook || attackerPieces.find(
+        a => a.type === 'c' && isAttackerParticipating(a)
+      );
+      const horseCheckersList = partnerRookOrCannon ? [primaryChecker, partnerRookOrCannon] : [primaryChecker];
+      if (partnerRookOrCannon) highlightCoords.push({ r: partnerRookOrCannon.r, c: partnerRookOrCannon.c });
+
       if (isTroughPos(primaryChecker.r, primaryChecker.c)) {
         return buildResult('trough_horse', highlightCoords, {
-          checkers: checkerSummaries
+          checkers: horseCheckersList
         });
       }
       const secondHorse = attackerPieces.find(
-        a => a.type === 'n' && (a.r !== primaryChecker.r || a.c !== primaryChecker.c) && doesPieceControlKingEscape(a)
+        a => a.type === 'n' && (a.r !== primaryChecker.r || a.c !== primaryChecker.c) && isAttackerParticipating(a)
       );
       if (secondHorse) {
         highlightCoords.push({ r: secondHorse.r, c: secondHorse.c });
@@ -659,69 +832,84 @@ class CheckmateClassifier {
           title: '双马饮泉 · 绝杀',
           stampText: '双马饮泉',
           subBanner: '双骏踏波 · 饮泉锁宫',
-          badge: '古谱十八杀法 · 双马饮泉',
+          badge: '古谱名局 · 双马饮泉',
           poem: '“双骏奔腾饮玉泉，左盘右蹙锁金殿；纵横蹄影封生路，一跃擒王定凯旋。”',
           analysis: '致胜方双马在九宫左右盘旋呼应，一马封门、一马致命将军，成就古谱名杀【双马饮泉】！',
-          checkers: checkerSummaries
+          checkers: [primaryChecker, secondHorse]
         });
       }
       if (isOctagonPos(primaryChecker.r, primaryChecker.c)) {
         return buildResult('octagon_horse', highlightCoords, {
-          checkers: checkerSummaries
+          checkers: horseCheckersList
+        });
+      }
+      // 双士塞路闷宫（如视频第2局：双士阻塞王路、单马跃入宫侧绝杀）优先于泛化的单马钓位
+      if (isSmotheredPalaceShape && !partnerRook) {
+        return buildResult('smothered_palace', highlightCoords, {
+          checkers: horseCheckersList
         });
       }
       if (isFishingPos(primaryChecker.r, primaryChecker.c)) {
         return buildResult('fishing_horse', highlightCoords, {
-          checkers: checkerSummaries
+          checkers: horseCheckersList
         });
       }
-      if (ownBlockedCount >= 2 && palacePossibleCount > 0) {
+      if (isSmotheredPalaceShape) {
         return buildResult('smothered_palace', highlightCoords, {
-          checkers: checkerSummaries
+          checkers: horseCheckersList
         });
       }
       return buildResult('side_tiger', highlightCoords, {
-        checkers: checkerSummaries
+        checkers: horseCheckersList
       });
     }
 
     if (primaryChecker.type === 'r') {
       const supportingHorses = attackerPieces.filter(
-        a => a.type === 'n' && Math.abs(a.r - kr) <= 4 && Math.abs(a.c - kc) <= 3 && doesPieceControlKingEscape(a)
+        a => a.type === 'n' && Math.abs(a.r - kr) <= 4 && Math.abs(a.c - kc) <= 3 && isAttackerParticipating(a)
       );
       if (supportingHorses.length > 0) {
         const h = supportingHorses[0];
         highlightCoords.push({ r: h.r, c: h.c });
+        const horseAndRookCheckers = [h, primaryChecker];
         const rookAdjacentToKing = (Math.abs(primaryChecker.r - kr) + Math.abs(primaryChecker.c - kc)) === 1;
         const horseProtectsRook = doesPieceProtectOrAttackSquare(h.r, h.c, primaryChecker.r, primaryChecker.c);
 
         if (isDiagonalOctagonLock(h.r, h.c) || isPalaceCornerHorse(h.r, h.c)) {
           return buildResult('octagon_horse', highlightCoords, {
-            checkers: checkerSummaries
+            checkers: horseAndRookCheckers
           });
         }
         if (isTroughPos(h.r, h.c)) {
           return buildResult('trough_horse', highlightCoords, {
-            checkers: checkerSummaries
+            checkers: horseAndRookCheckers
           });
         }
+        // 列马车：强车贴身切入九宫肋道或花心且受战马护持
         if (rookAdjacentToKing && horseProtectsRook) {
           return buildResult('standing_horse_chariot', highlightCoords, {
-            checkers: checkerSummaries
+            checkers: horseAndRookCheckers
           });
         }
+        // 侧面虎：战马跃居侧翼虎位并直接护持侧翼切入的强车（如高钓马保二路底车绝杀）
+        if (horseProtectsRook && isSideTigerPos(h.r, h.c)) {
+          return buildResult('side_tiger', highlightCoords, {
+            checkers: horseAndRookCheckers
+          });
+        }
+        // 钓鱼马：战马据守三七路钓位封锁将门，强车远距离直入底线绝杀
         if (isFishingPos(h.r, h.c)) {
           return buildResult('fishing_horse', highlightCoords, {
-            checkers: checkerSummaries
+            checkers: horseAndRookCheckers
           });
         }
         if (isSideTigerPos(h.r, h.c)) {
           return buildResult('side_tiger', highlightCoords, {
-            checkers: checkerSummaries
+            checkers: horseAndRookCheckers
           });
         }
         return buildResult('standing_horse_chariot', highlightCoords, {
-          checkers: checkerSummaries
+          checkers: horseAndRookCheckers
         });
       }
     }
@@ -734,7 +922,7 @@ class CheckmateClassifier {
         title: '大刀剜心 · 绝杀',
         stampText: '大刀剜心',
         subBanner: '中心开花 · 大刀剜心',
-        badge: '古谱十八杀法 · 大刀剜心',
+        badge: '古谱名局 · 大刀剜心',
         poem: '“铁骑长驱入九宫，大刀直取九五尊；中心开花惊四座，霸气纵横贯长虹。”',
         analysis: '致胜方强車在后方子力掩护下直接闯入敌方九宫正中心（花心位），四面威慑令敌将寸步难行！',
         checkers: checkerSummaries
@@ -746,7 +934,7 @@ class CheckmateClassifier {
         title: '小鬼坐龙廷 · 绝杀',
         stampText: '老卒搜山',
         subBanner: '过河老卒 · 擒王定鼎',
-        badge: '古谱十八杀法 · 老卒搜山',
+        badge: '古谱名局 · 老卒搜山',
         poem: '“过河小卒当车使，步步紧逼入深宫；莫欺微末无大志，一朝擒王立奇功。”',
         analysis: '过河老兵深入敌方九宫腹地，在主力子力协同封锁下亲自捉拿敌帅，完成传奇绝杀！',
         checkers: checkerSummaries
@@ -756,7 +944,7 @@ class CheckmateClassifier {
     // =========================================================================
     // 10. 闷杀 (Smothered Kill) vs 闷宫 (Smothered Palace)
     // =========================================================================
-    if (palacePossibleCount > 0 && ownBlockedCount >= 2) {
+    if (isSmotheredPalaceShape) {
       if (
         emptyKingAdjCount === 0 &&
         ownBlockedCount === palacePossibleCount &&
@@ -797,7 +985,7 @@ class CheckmateClassifier {
         title: '空头炮 · 绝杀',
         stampText: '空头炮',
         subBanner: '当头空炮 · 直轰中宫',
-        badge: '古谱十八杀法 · 空头炮',
+        badge: '古谱名局 · 空头炮',
         poem: '“当头一炮最堪夸，直指中宫破帝家；莫道隔山方显威，空头落子乱如麻。”',
         analysis: '中路【空头炮】直指九宫核心，隔山发炮瞬间引爆雷霆一击，令敌将无路可逃！',
         checkers: checkerSummaries
@@ -818,20 +1006,20 @@ class CheckmateClassifier {
         title: '双鬼拍门 · 绝杀',
         stampText: '双鬼拍门',
         subBanner: '双卒叩门 · 左右夹击',
-        badge: '古谱十八杀法 · 双鬼拍门',
+        badge: '古谱名局 · 双鬼拍门',
         poem: '“双卒过河赛猛虎，左右叩门入王府；九宫两肋皆失守，纵有良将亦无补。”',
         analysis: '致胜方两路尖兵（或车兵）一左一右紧逼九宫两肋门户，如“双鬼拍门”锁死敌将生路！',
-        checkers: checkerSummaries
+        checkers: ribAttackers
       });
     }
 
     // =========================================================================
     // 14. 对面笑 / 白脸将 (Royal Gaze / Flying General Assist - Video Case 3, 00:13)
     // =========================================================================
-    if (essentialRoyalAssist && wkr !== -1) {
+    if ((essentialRoyalAssist || royalAssistUsed) && wkr !== -1) {
       highlightCoords.push({ r: wkr, c: wkc });
       return buildResult('royal_gaze', highlightCoords, {
-        checkers: checkerSummaries
+        checkers: [primaryChecker, { r: wkr, c: wkc, type: 'k', char: winnerColor === RED ? '帥' : '將', color: winnerColor }]
       });
     }
 
@@ -846,7 +1034,7 @@ class CheckmateClassifier {
         title: '小鬼坐龙廷 · 绝杀',
         stampText: '老卒搜山',
         subBanner: '过河老卒 · 擒王定鼎',
-        badge: '古谱十八杀法 · 老卒搜山',
+        badge: '古谱名局 · 老卒搜山',
         poem: '“过河小卒当车使，步步紧逼入深宫；莫欺微末无大志，一朝擒王立奇功。”',
         analysis: '过河老兵深入敌方九宫腹地，在主力子力协同封锁下亲自捉拿敌帅，完成传奇绝杀！',
         checkers: checkerSummaries
