@@ -1,17 +1,4 @@
-/*************************************************************************
- * SUPREME GRANDMASTER XIANGQI AI ENGINE WORKER
- * Supports 4 Distinct Tiers:
- *   1. easy             - 新手友好（浅层直觉评估 + 柔和着法选择 + 收到长将/长捉自动变招）
- *   2. hard             - 高手进阶（开局库 + 迭代加深 PVS + 置换表 + 历史/杀手启发 + 自动变招）
- *   3. inferno          - 宗师（全开局/中局定式库 + 连将/叫杀双阶算杀器 + 残局必胜定式 + 深度 PVS，不败/必胜级）
- *   4. grandmaster_hint - 支招（残局连将/冷着叫杀算杀器 + 全局宗师深算，兼顾破解残局与全局最优推演）
- *
- * Built-in Rule & Variation Guard:
- *   Strictly filters and penalizes perpetual check (长将), perpetual chase (长捉),
- *   and repetitive cycles at both root and search-tree nodes across all 4 modes.
- *************************************************************************/
 function __xiangqiAIWorkerBootstrap() {
-
 
 const AI_RED = 'r';
 const AI_BLACK = 'b';
@@ -126,7 +113,6 @@ const ZOBRIST_HI = Array.from({ length: 14 }, () => Array.from({ length: 90 }, (
 const ZOBRIST_TURN_LO = rand32();
 const ZOBRIST_TURN_HI = rand32();
 
-// 1M entries Transposition Table for deep Grandmaster & Hint search
 const TT_SIZE = 1 << 20;
 const TT_MASK = TT_SIZE - 1;
 const ttHashHi = new Uint32Array(TT_SIZE);
@@ -139,7 +125,6 @@ const historyTable = new Int32Array(90 * 90);
 const counterMoveTable = new Uint32Array(90 * 90);
 const killerMoves = Array.from({ length: 64 }, () => [0, 0]);
 
-// Search state & path tracking for repetition / perpetual check / chase avoidance
 const pathHashLo = new Uint32Array(128);
 const pathHashHi = new Uint32Array(128);
 const pathGaveCheck = new Uint8Array(128);
@@ -492,16 +477,6 @@ function evaluateNovice(board, perspectiveColor) {
   return perspectiveColor === AI_RED ? diff : -diff;
 }
 
-/**
- * Supreme Grandmaster & Endgame Mastery Evaluation
- * Includes:
- *   - Material & Phase-scaled PST
- *   - Horse leg freedom & palace infiltration (卧槽马 / 挂角马 / 钓鱼马)
- *   - Cannon central control (当头炮 / 空头炮 / 重炮 / 沉底炮 / 天地炮)
- *   - Chariot open files, 7th rank (卒林线), rib files (占肋), bottom rank (沉底)
- *   - Iron Bolt (铁门栓) & White-faced King (对面笑/白脸将) synergy
- *   - Classical Endgame Winning Formulae (单车擒王、马兵必胜、炮兵必胜、车兵控中、双鬼拍门)
- */
 function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) {
   let redScore = 0;
   let blackScore = 0;
@@ -563,7 +538,6 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
         else if (type === 'p') blackPawns++;
       }
 
-      // 1. Horse tactical evaluation (马腿灵活度 + 卧槽马/挂角马/高钓马)
       if (type === 'n') {
         let openLegs = 0;
         if (r > 1 && !board[r - 1][c]) openLegs++;
@@ -580,7 +554,7 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
             val += (5 - dist) * 28;
             if (isRed) redAttackUnits += 2; else blackAttackUnits += 2;
           }
-          // 卧槽马位 (r=1/8, c=2/6) 与 挂角马/高钓马位
+
           if (isRed && r <= 2 && (c === 2 || c === 6 || c === 3 || c === 5)) {
             val += 58;
             redAttackUnits += 1;
@@ -591,7 +565,6 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
         }
       }
 
-      // 2. Cannon tactical evaluation (空头炮 / 当头中炮 / 沉底炮 / 重炮)
       if (type === 'c') {
         const ekR = isRed ? bkr : rkr;
         const ekC = isRed ? bkc : rkc;
@@ -607,7 +580,7 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
             for (let cc = minC; cc < maxC; cc++) if (board[r][cc]) between++;
           }
           if (between === 0) {
-            val += 185; // 空头炮 / 照面空炮
+            val += 185;
             if (isRed) { redAttackUnits += 3; if (c === 4) redCentralCannon = true; }
             else { blackAttackUnits += 3; if (c === 4) blackCentralCannon = true; }
           } else if (between === 1) {
@@ -621,12 +594,11 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
           }
         }
         if ((isRed && r <= 1) || (!isRed && r >= 8)) {
-          val += 52; // 沉底炮
+          val += 52;
           if (isRed) redAttackUnits += 1; else blackAttackUnits += 1;
         }
       }
 
-      // 3. Chariot dominance (占肋道 / 沉底 / 压卒林线 / 通头车)
       if (type === 'r') {
         if (isRed) {
           if (c === 3 || c === 5) { val += 42; redRibChariot = true; }
@@ -648,7 +620,6 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
         }
       }
 
-      // 4. Crossed pawn & palace throat pawn (过河兵/锁喉兵 vs 老卒/底兵)
       if (type === 'p') {
         const crossed = isRed ? r <= 4 : r >= 5;
         if (crossed) {
@@ -659,7 +630,7 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
             val += (4 - dist) * 38;
             if (isRed) redAttackUnits += 1; else blackAttackUnits += 1;
           }
-          // 九宫花心与两肋高兵加成
+
           if (isRed && (r === 1 || r === 2) && c >= 3 && c <= 5) val += 55;
           if (!isRed && (r === 7 || r === 8) && c >= 3 && c <= 5) val += 55;
         }
@@ -670,7 +641,6 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
     }
   }
 
-  // 5. Defensive synergy & palace vulnerability
   if (redAdvisors === 2) redScore += 55;
   if (blackAdvisors === 2) blackScore += 55;
   if (redElephants === 2) redScore += 42;
@@ -689,7 +659,6 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
     blackScore -= (2 - blackElephants) * redCannons * 52;
   }
 
-  // 6. Iron Bolt (铁门栓) & Multi-piece Siege Synergy
   if (isDeepGrandmaster) {
     if (redCentralCannon && redRibChariot && bkc === 4) redScore += 110;
     if (blackCentralCannon && blackRibChariot && rkc === 4) blackScore += 110;
@@ -697,7 +666,6 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
     if (redAttackUnits >= 3) redScore += (redAttackUnits - 2) * (redAttackUnits - 1) * 22;
     if (blackAttackUnits >= 3) blackScore += (blackAttackUnits - 2) * (blackAttackUnits - 1) * 22;
 
-    // White-faced King (白脸将/帅助攻)
     if (rkc === bkc) {
       let blockers = 0;
       for (let rr = bkr + 1; rr < rkr; rr++) {
@@ -710,10 +678,9 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
     }
   }
 
-  // 7. Endgame Mastery Formulae (残局定式加权)
   if (totalPieces <= 14) {
     const phase = totalPieces <= 8 ? 1.45 : (16 - totalPieces) / 8;
-    // 马在残局胜过炮（除非炮有仕相可借）
+
     if (totalPieces <= 10) {
       redScore += redHorses * 35;
       blackScore += blackHorses * 35;
@@ -721,7 +688,6 @@ function evaluateGrandmaster(board, perspectiveColor, isDeepGrandmaster = true) 
       if (blackAdvisors === 0 && blackElephants === 0) blackScore -= blackCannons * 45;
     }
 
-    // 单车/车兵破缺士象或控中将帅助攻
     if (rkc === 4) redScore += 28 * phase;
     if (bkc === 4) blackScore += 28 * phase;
 
@@ -843,10 +809,6 @@ function isRepeatedInMateBranch(lo, hi, ply) {
   return false;
 }
 
-/**
- * Stage 3A: Non-Repeating Forced Mate / Continuous Check Solver (连将绝杀算杀器)
- * Tracks mateBranchHashLo/Hi so it NEVER confuses perpetual check (长将) with forced checkmate!
- */
 function solveForcedMate(board, attackerColor, maxCheckPlies, ply = 0) {
   if ((nodesSearched & 255) === 0 && Date.now() - startTime > maxTimeMs) {
     stopSearch = true;
@@ -861,7 +823,7 @@ function solveForcedMate(board, attackerColor, maxCheckPlies, ply = 0) {
   const { lo, hi } = computeBoardHash(board, curTurn);
 
   if (ply > 0 && isRepeatedInMateBranch(lo, hi, ply)) {
-    return null; // Reject repeating check loops (长将不是绝杀)
+    return null;
   }
   mateBranchHashLo[ply] = lo;
   mateBranchHashHi[ply] = hi;
@@ -943,13 +905,6 @@ function solveForcedMate(board, attackerColor, maxCheckPlies, ply = 0) {
   }
 }
 
-/**
- * Stage 3B: Quiet Mate-Threat & Stalemate-Kill Solver (冷着叫杀 / 困毙绝杀算杀器)
- * Finds unstoppable quiet moves (e.g. 占肋叫杀、铁门栓成形、拱兵锁喉、欠行困毙) where:
- *   1. The move immediately leaves the defender with 0 legal moves (困毙), OR
- *   2. The move creates a Mate-in-1 threat (叫杀) AND every legal defense by the opponent
- *      still fails against solveForcedMate within 3 plies!
- */
 function solveQuietKillerThreat(board, attackerColor, allowedMoves) {
   const defenderColor = attackerColor === AI_RED ? AI_BLACK : AI_RED;
   if (isInCheck(attackerColor, board)) return null;
@@ -966,12 +921,12 @@ function solveQuietKillerThreat(board, attackerColor, allowedMoves) {
     if (!givesCheck) {
       const defMoves = generateLegalMoves(defenderColor, board, false);
       if (defMoves.length === 0) {
-        // Immediate stalemate victory (欠行困毙绝杀)!
+
         board[m.fr][m.fc] = mover;
         board[m.tr][m.tc] = saved;
         return { move: m, mateInPly: 1 };
       }
-      // Check if this quiet move creates a Mate-in-1 (叫杀)
+
       const mate1 = solveForcedMate(board, attackerColor, 1, 0);
       if (mate1) {
         candidates.push({ move: m, defMoves });
@@ -1103,7 +1058,6 @@ function pvs(board, depth, alpha, beta, color, hashLo, hashHi, ply, canNull, pre
   pathHashLo[ply] = hashLo;
   pathHashHi[ply] = hashHi;
 
-  // Repetition & Perpetual Check / Chase Detection inside Search Tree
   if (ply > 0) {
     const rep = checkPositionRepetition(hashLo, hashHi, ply);
     if (rep) {
@@ -1246,7 +1200,6 @@ function pvs(board, depth, alpha, beta, color, hashLo, hashHi, ply, canNull, pre
       }
     }
 
-    // Root-level extra guard: penalize any root move that repeats a previous board state
     if (ply === 0 && !saved && score < 24000) {
       const repAtRoot = checkPositionRepetition(nLo, nHi, 0);
       if (repAtRoot) {
@@ -1291,22 +1244,15 @@ function pvs(board, depth, alpha, beta, color, hashLo, hashHi, ply, canNull, pre
   return bestScore;
 }
 
-/**
- * Symmetry-Aware Grandmaster Opening & Middlegame Book (支持左右镜像自动匹配的宗师全开局库)
- * Covers Central Cannon (当头炮), Screen Horses (屏风马), Same-Direction Cannons (顺炮),
- * Opposite Cannons (列炮), Pawn Opening (仙人指路), Elephant Opening (飞相局),
- * Horse Opening (起马局), Palace Cannon (过宫炮), Advisor-Corner Cannon (士角炮),
- * Sandwiched Horse (反宫马), and Anti-Trap refutations!
- */
 const GRANDMASTER_LINE_BOOK = {
-  // === 红方先手开局 ===
+
   '': [
-    { fr: 7, fc: 7, tr: 7, tc: 4 }, // 炮二平五 (当头炮)
-    { fr: 7, fc: 1, tr: 7, tc: 4 }, // 炮八平五
-    { fr: 6, fc: 6, tr: 5, tc: 6 }, // 兵三进一 (仙人指路)
-    { fr: 9, fc: 6, tr: 7, tc: 4 }  // 相三进五 (飞相局)
+    { fr: 7, fc: 7, tr: 7, tc: 4 },
+    { fr: 7, fc: 1, tr: 7, tc: 4 },
+    { fr: 6, fc: 6, tr: 5, tc: 6 },
+    { fr: 9, fc: 6, tr: 7, tc: 4 }
   ],
-  // === 中炮对屏风马 / 顺炮 / 列炮 / 反宫马 / 单提马 ===
+
   '7774': [{ fr: 0, fc: 7, tr: 2, tc: 6 }, { fr: 2, fc: 7, tr: 2, tc: 4 }],
   '7774,0726': [{ fr: 9, fc: 7, tr: 7, tc: 6 }],
   '7774,2724': [{ fr: 9, fc: 7, tr: 7, tc: 6 }],
@@ -1327,22 +1273,22 @@ const GRANDMASTER_LINE_BOOK = {
   '7774,0726,9776,0807,9897,0122,6252,3242': [{ fr: 9, fc: 7, tr: 3, tc: 7 }, { fr: 9, fc: 1, tr: 7, tc: 2 }],
   '7774,0726,9776,0807,9897,0122,6252,3646,9757': [{ fr: 2, fc: 1, tr: 2, tc: 0 }],
   '7774,0726,9776,0807,9897,0122,6252,3646,9757,2120': [{ fr: 5, fc: 7, tr: 5, tc: 6 }, { fr: 9, fc: 1, tr: 7, tc: 2 }],
-  // === 顺炮直车对横车 ===
+
   '7774,2724,9776,0726': [{ fr: 9, fc: 8, tr: 9, tc: 7 }],
   '7774,2724,9776,0726,9897': [{ fr: 0, fc: 8, tr: 1, tc: 8 }, { fr: 0, fc: 1, tr: 2, tc: 2 }],
   '7774,2724,9776,0726,9897,0818': [{ fr: 9, fc: 1, tr: 7, tc: 2 }],
   '7774,2724,9776,0726,9897,0818,9172': [{ fr: 1, fc: 8, tr: 1, tc: 3 }],
-  // === 中炮急进中兵 / 五七炮 / 五八炮 ===
+
   '7774,0726,9776,3646': [{ fr: 9, fc: 8, tr: 9, tc: 7 }],
   '7774,0726,9776,3646,9897': [{ fr: 0, fc: 1, tr: 2, tc: 2 }],
   '7774,0726,9776,3646,9897,0122': [{ fr: 9, fc: 7, tr: 3, tc: 7 }, { fr: 6, fc: 2, tr: 5, tc: 2 }],
-  // === 仙人指路体系 ===
+
   '6656': [{ fr: 2, fc: 7, tr: 2, tc: 6 }, { fr: 3, fc: 6, tr: 4, tc: 6 }, { fr: 0, fc: 6, tr: 2, tc: 4 }],
   '6656,2726': [{ fr: 9, fc: 7, tr: 7, tc: 6 }, { fr: 7, fc: 7, tr: 7, tc: 4 }, { fr: 9, fc: 6, tr: 7, tc: 4 }],
   '6656,2726,9776': [{ fr: 0, fc: 7, tr: 2, tc: 8 }, { fr: 0, fc: 1, tr: 2, tc: 2 }],
   '6656,3646': [{ fr: 7, fc: 1, tr: 7, tc: 4 }, { fr: 9, fc: 6, tr: 7, tc: 4 }],
   '6656,0624': [{ fr: 7, fc: 1, tr: 7, tc: 4 }, { fr: 9, fc: 7, tr: 7, tc: 6 }],
-  // === 飞相局 / 起马局 / 过宫炮 / 士角炮 ===
+
   '9674': [{ fr: 2, fc: 1, tr: 2, tc: 4 }, { fr: 2, fc: 7, tr: 2, tc: 3 }, { fr: 3, fc: 6, tr: 4, tc: 6 }],
   '9674,2124': [{ fr: 9, fc: 7, tr: 7, tc: 6 }, { fr: 6, fc: 6, tr: 5, tc: 6 }],
   '9776': [{ fr: 3, fc: 6, tr: 4, tc: 6 }, { fr: 0, fc: 7, tr: 2, tc: 6 }],
@@ -1465,7 +1411,6 @@ function runXiangqiAIEngine(payload, onProgress) {
     return { type: 'result', move: null, depth: 0, nodes: 0, score: -29000 };
   }
 
-  // Strictly filter out forbidden repetition / perpetual check / perpetual chase moves at root
   if (Array.isArray(forbiddenMoves) && forbiddenMoves.length > 0) {
     const filtered = legalMoves.filter(
       m => !forbiddenMoves.some(f => f.fr === m.fr && f.fc === m.fc && f.tr === m.tr && f.tc === m.tc)
@@ -1486,7 +1431,6 @@ function runXiangqiAIEngine(payload, onProgress) {
     };
   }
 
-  // 1. EASY MODE: Novice-friendly fast response with variation guard
   if (currentDifficulty === 'easy') {
     const easyRes = selectEasyModeMove(board, turn, legalMoves);
     return {
@@ -1498,7 +1442,6 @@ function runXiangqiAIEngine(payload, onProgress) {
     };
   }
 
-  // 2. OPENING BOOK PROBE (for Hard, Inferno Grandmaster, and Full-Game Hint)
   if (useBook && (currentDifficulty === 'inferno' || currentDifficulty === 'hard' || currentDifficulty === 'grandmaster_hint')) {
     const bookMove = probeOpeningBook(historyMoves || [], turn, board, legalMoves);
     if (bookMove) {
@@ -1528,7 +1471,6 @@ function runXiangqiAIEngine(payload, onProgress) {
     maxTimeMs = isDeepEndgame ? 3600 : (isEndgame ? 2900 : 2300);
   }
 
-  // 3. TWO-STAGE FORCED MATE & QUIET KILLER SOLVER (连将算杀器 + 冷着叫杀/困毙算杀器)
   if (isHint || isInferno) {
     const mateSolverBudget = Math.min(1050, maxTimeMs * 0.34);
     const savedMaxTime = maxTimeMs;
@@ -1585,7 +1527,6 @@ function runXiangqiAIEngine(payload, onProgress) {
   let bestScore = 0;
   let completedDepth = 1;
 
-  // 4. ITERATIVE DEEPENING PVS WITH ASPIRATION WINDOWS
   for (let d = 1; d <= maxTargetDepth; d++) {
     let alpha = -30000;
     let beta = 30000;

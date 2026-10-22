@@ -1,11 +1,6 @@
-/*************************************************************************
- * CHINESE CHESS & JIEQI MAIN ENGINE
- * (Core Rules, Jieqi Hidden/Revealed Mechanics, Tactical Safety Analysis,
- *  Cycle Adjudication, Proactive Variation Guard)
- *************************************************************************/
 class XiangqiEngine {
   constructor() {
-    this.variantMode = 'xiangqi'; // 'xiangqi' | 'jieqi'
+    this.variantMode = 'xiangqi';
     this.nextPieceId = 1;
     this._tacticalCache = { key: '', threatened: null, safeCaptures: null, legalMovesBySq: null };
     this.reset('xiangqi');
@@ -109,11 +104,6 @@ class XiangqiEngine {
     }
   }
 
-  /**
-   * 揭棋 (Jieqi) 摆子规则：
-   * 对局前，红黑双方把帅（将）作为明子放在九宫之内的原点，
-   * 其余各15个棋子作为暗子反面朝上，按中国象棋开局前所布位置随机摆放。
-   */
   setupJieqiBoard() {
     const shuffle = (arr) => {
       const copy = arr.slice();
@@ -130,7 +120,6 @@ class XiangqiEngine {
     const blackPool = shuffle(basePool);
     const redPool = shuffle(basePool);
 
-    // 帅（将）作为明子放在九宫原点
     this.board[0][4] = {
       id: this.allocPieceId(),
       color: BLACK,
@@ -161,7 +150,7 @@ class XiangqiEngine {
       this.board[r][c] = {
         id: this.allocPieceId(),
         color,
-        type: posType, // 暗子走法依其所在初始位置而定
+        type: posType,
         posType,
         realType,
         char: PIECE_CHARS[color][posType],
@@ -226,7 +215,7 @@ class XiangqiEngine {
     const { color } = p;
     const isJieqi = this.variantMode === 'jieqi';
     const isHidden = Boolean(p.isHidden);
-    // 暗子按其所在初始位置的棋子规则走子；明子按其翻开后的真实棋子规则走子
+
     const type = isHidden ? (p.posType || this.getJieqiPositionalType(r, c) || p.type) : p.type;
 
     const addIfValid = (nr, nc) => {
@@ -252,7 +241,7 @@ class XiangqiEngine {
       const dirs = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
       for (let i = 0; i < 4; i++) {
         const nr = r + dirs[i][0], nc = c + dirs[i][1];
-        // 揭棋规则：明子仕（士）允许出九宫与过河；暗子在初始士位仍按初始九宫斜走一步
+
         if (isJieqi && !isHidden) {
           addIfValid(nr, nc);
         } else if (this.inPalace(nr, nc, color)) {
@@ -266,7 +255,7 @@ class XiangqiEngine {
         const nr = r + dr, nc = c + dc;
         const er = r + (dr >> 1), ec = c + (dc >> 1);
         if (nr < 0 || nr >= 10 || nc < 0 || nc >= 9) continue;
-        // 揭棋规则：明子相（象）允许过河；传统象棋或暗子不可过河
+
         if (!isJieqi || isHidden) {
           if (color === RED && nr < 5) continue;
           if (color === BLACK && nr > 4) continue;
@@ -324,7 +313,7 @@ class XiangqiEngine {
     } else if (type === 'p') {
       const forward = color === RED ? -1 : 1;
       addIfValid(r + forward, c);
-      // 暗子在兵的原始位置第一步只能往前行进一步；明子过河后可横走
+
       const crossedRiver = !isHidden && (color === RED ? r <= 4 : r >= 5);
       if (crossedRiver) {
         addIfValid(r, c - 1);
@@ -356,10 +345,6 @@ class XiangqiEngine {
     return true;
   }
 
-  /**
-   * O(1) 射线与邻域逆向攻击检测（零数组分配，同时支持象棋与揭棋明暗子规则）
-   * 若 requireLegal 为 true，则验证敌方吃子后不会导致敌方自身送将
-   */
   canSquareBeCapturedBy(tr, tc, attackerColor, board = this.board, requireLegal = false) {
     const isJieqi = this.variantMode === 'jieqi';
     const checkCandidate = (er, ec) => {
@@ -374,7 +359,6 @@ class XiangqiEngine {
       return !selfChk;
     };
 
-    // 1. 十字方向检测：车 (r)、炮 (c)、老将九宫内一步吃 (k)、兵/卒一步吃 (p)
     const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
     for (let d = 0; d < 4; d++) {
       const dr = dirs[d][0], dc = dirs[d][1];
@@ -416,7 +400,6 @@ class XiangqiEngine {
       }
     }
 
-    // 2. 马 (n) 八方日字攻击与马腿检测
     const hOffsets = [
       [-2, -1, 1, 0], [-2, 1, 1, 0],
       [2, -1, -1, 0], [2, 1, -1, 0],
@@ -437,7 +420,6 @@ class XiangqiEngine {
       }
     }
 
-    // 3. 斜向一步士/仕 (a) 与斜向两步象/相 (b)
     const diags = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
     for (let i = 0; i < 4; i++) {
       const dr = diags[i][0], dc = diags[i][1];
@@ -501,9 +483,6 @@ class XiangqiEngine {
     return this.canSquareBeCapturedBy(kr, kc, enemy, board, false);
   }
 
-  /**
-   * 模拟执行单步（用于合法性与安全检测，支持揭棋暗子移动后翻开的状态模拟）
-   */
   simulateMoveInPlace(m, board = this.board) {
     const p = board[m.fr][m.fc];
     const savedTarget = board[m.tr][m.tc];
@@ -577,12 +556,6 @@ class XiangqiEngine {
     return false;
   }
 
-  /**
-   * 判断己方棋子执行 move (fr,fc -> tr,tc) 落子后，该棋子在 (tr,tc) 是否会被敌方合法吃掉
-   * 用于：
-   *   - 新增 3：己方能吃对面棋子且己方吃过去的棋子不会被吃时，对面棋子冒绿光
-   *   - 新增 4：己方棋子可下到的路径上若下过去后会被吃，标点变为美观的红色
-   */
   wouldPieceBeCapturedAfterMove(move, board = this.board) {
     if (move && typeof move._isUnsafe === 'boolean' && board === this.board) {
       return move._isUnsafe;
@@ -606,9 +579,6 @@ class XiangqiEngine {
     return canBeCaptured;
   }
 
-  /**
-   * 构建或复用当前盘面的战术安全缓存（避免点击棋子与刷新光晕时重复全盘推演）
-   */
   _ensureTacticalCache(friendlyColor = this.turn, board = this.board) {
     if (board !== this.board) return null;
     const posKey = this.getPositionKey(board, friendlyColor);
@@ -644,9 +614,6 @@ class XiangqiEngine {
     return this._tacticalCache;
   }
 
-  /**
-   * 新增 2：获取当前盘面上所有处于危险中（可被敌方下一步合法吃掉）的己方棋子 ID 集合
-   */
   getThreatenedFriendlyPieceIds(friendlyColor = this.turn, board = this.board) {
     const cache = this._ensureTacticalCache(friendlyColor, board);
     if (cache) {
@@ -668,10 +635,6 @@ class XiangqiEngine {
     return threatenedIds;
   }
 
-  /**
-   * 新增 3：获取当前盘面上“己方能吃的对面的棋子，且己方吃过去的棋子不会被吃”的对面棋子 ID 集合
-   * 若传入 selectedSq，则对 selectedSq 可吃的敌子严格按 selectedSq 吃过去后是否安全来判定。
-   */
   getSafeCapturableEnemyPieceIds(friendlyColor = this.turn, selectedSq = null, board = this.board) {
     const safeTargetIds = new Set();
     const unsafeForSelectedIds = new Set();
@@ -828,7 +791,7 @@ class XiangqiEngine {
         return {
           type: 'pawn_zhuo',
           label: `兵捉${pawnChase.targetChar}`,
-          desc: `${pawnChase.attackerChar}捉${pawnChase.targetChar}（单方算闲/长打算打）`,
+          desc: `${pawnChase.attackerChar}捉${pawnChase.targetChar}`,
           chasedTargetIds: targetIds
         };
       }
@@ -838,7 +801,7 @@ class XiangqiEngine {
         return {
           type: 'king_zhuo',
           label: `${kingChase.attackerChar}捉${kingChase.targetChar}`,
-          desc: `${kingChase.attackerChar}捉${kingChase.targetChar}（允许着法）`,
+          desc: `${kingChase.attackerChar}捉${kingChase.targetChar}`,
           chasedTargetIds: targetIds
         };
       }
@@ -916,7 +879,7 @@ class XiangqiEngine {
         if (rawTypes.every(t => t === 'king_zhuo')) {
           shortName = '将帅长捉';
         } else if (rawTypes.every(t => t === 'pawn_zhuo')) {
-          shortName = '兵卒长捉(算闲)';
+          shortName = '兵卒常捉';
         } else if (effectiveTypes.includes('jiang')) {
           shortName = '一将一闲';
         } else if (effectiveTypes.includes('sha')) {
@@ -928,7 +891,7 @@ class XiangqiEngine {
           permitted: true,
           isPerpetualCheck: false,
           shortName,
-          fullLabel: `${sideName}：${shortName}（允许）`,
+          fullLabel: `${sideName} · ${shortName}`,
           stepLabels
         };
       }
@@ -949,7 +912,7 @@ class XiangqiEngine {
         permitted: false,
         isPerpetualCheck: allJiang,
         shortName,
-        fullLabel: `${sideName}：${shortName}（禁止）`,
+        fullLabel: `${sideName} · ${shortName}(禁)`,
         stepLabels
       };
     };
@@ -965,28 +928,28 @@ class XiangqiEngine {
     if (redInfo.isPerpetualCheck && !blackInfo.isPerpetualCheck) {
       verdict = 'RED_LOSE';
       violator = RED;
-      verdictShort = '红方负（单方长将）';
-      ruleExplanation = `单方长将者不变判负，红方必须变着！`;
+      verdictShort = '红方长将判负';
+      ruleExplanation = `红方单方长将，不变判负。`;
     } else if (blackInfo.isPerpetualCheck && !redInfo.isPerpetualCheck) {
       verdict = 'BLACK_LOSE';
       violator = BLACK;
-      verdictShort = '黑方负（单方长将）';
-      ruleExplanation = `单方长将者不变判负，黑方必须变着！`;
+      verdictShort = '黑方长将判负';
+      ruleExplanation = `黑方单方长将，不变判负。`;
     } else if ((redInfo.permitted && blackInfo.permitted) || (!redInfo.permitted && !blackInfo.permitted)) {
       verdict = 'DRAW';
       violator = null;
       verdictShort = '双方不变判和';
-      ruleExplanation = `双方同属允许着法或双方长打，不变作和。`;
+      ruleExplanation = `双方允许着法或互打，不变判和。`;
     } else if (!redInfo.permitted && blackInfo.permitted) {
       verdict = 'RED_LOSE';
       violator = RED;
-      verdictShort = `红方负（${redInfo.shortName}不变）`;
-      ruleExplanation = `红方为禁止着法【${redInfo.shortName}】，应变着，否则判负！`;
+      verdictShort = `红方${redInfo.shortName}判负`;
+      ruleExplanation = `红方【${redInfo.shortName}】属禁着，不变判负。`;
     } else {
       verdict = 'BLACK_LOSE';
       violator = BLACK;
-      verdictShort = `黑方负（${blackInfo.shortName}不变）`;
-      ruleExplanation = `黑方为禁止着法【${blackInfo.shortName}】，应变着，否则判负！`;
+      verdictShort = `黑方${blackInfo.shortName}判负`;
+      ruleExplanation = `黑方【${blackInfo.shortName}】属禁着，不变判负。`;
     }
 
     const nextCycleEntry = this.history[M - period];
@@ -1288,8 +1251,8 @@ class XiangqiEngine {
         }
         return {
           icon: 'visibility_off',
-          title: '禁着提示 · 将帅不可照面',
-          message: `移动【${pieceLabel}】后会导致红黑【帥/將】在同一直线上直接照面（飞将）！`,
+          title: '禁着 · 将帅照面',
+          message: `移【${pieceLabel}】致将帅同线照面，请另选落点。`,
           highlightSquares: [rk, bk, { r: tr, c: tc }].filter(Boolean)
         };
       }
@@ -1307,23 +1270,23 @@ class XiangqiEngine {
         if (wasInCheckBefore) {
           return {
             icon: 'warning',
-            title: '禁着提示 · 当前正被将军',
-            message: `己方【${kingChar}】正受敌方${attackerNames}将军，请先应将解围！`,
+            title: '禁着 · 正被将军',
+            message: `己方【${kingChar}】受${attackerNames}将军，请先应将。`,
             highlightSquares: highlights
           };
         }
         if (activeType === 'k') {
           return {
             icon: 'gpp_bad',
-            title: '禁着提示 · 不可送将',
-            message: `不可将【${pieceLabel}】移至敌方${attackerNames}的攻击火力下！`,
+            title: '禁着 · 不可送将',
+            message: `【${pieceLabel}】不可踏入敌方${attackerNames}火力网。`,
             highlightSquares: highlights
           };
         }
         return {
           icon: 'shield_locked',
-          title: '禁着提示 · 移动后己方被将军',
-          message: `【${pieceLabel}】正护住将门，移走会导致己方【${kingChar}】被${attackerNames}将军！`,
+          title: '禁着 · 暴露将门',
+          message: `移【${pieceLabel}】致己方【${kingChar}】受${attackerNames}攻击。`,
           highlightSquares: highlights
         };
       }
@@ -1343,16 +1306,16 @@ class XiangqiEngine {
         if (blocker) {
           return {
             icon: 'block',
-            title: '走法受阻 · 蹩马腿',
-            message: `【${pieceLabel}】前进方向的马腿被阻挡，无法跃出！`,
+            title: '受阻 · 蹩马腿',
+            message: `【${pieceLabel}】马腿受阻，无法跃日。`,
             highlightSquares: [{ r: legR, c: legC }, { r: tr, c: tc }]
           };
         }
       }
       return {
         icon: 'route',
-        title: `走法违规 · 【${pieceLabel}】走日字`,
-        message: `【${pieceLabel}】只能按“日”字对角线跃进。`,
+        title: `步法不符 · ${pieceLabel}走日`,
+        message: `【${pieceLabel}】须按“日”字对角跃进。`,
         highlightSquares: [{ r: tr, c: tc }]
       };
     }
@@ -1361,8 +1324,8 @@ class XiangqiEngine {
       if ((!isJieqi || isHidden) && ((color === RED && tr < 5) || (color === BLACK && tr > 4))) {
         return {
           icon: 'water',
-          title: '走法违规 · 相/象不可过河',
-          message: `【${pieceLabel}】只能在己方河界内飞“田”字，不可过河！`,
+          title: '步法不符 · 不可过河',
+          message: `【${pieceLabel}】限己方河界内飞田。`,
           highlightSquares: [{ r: tr, c: tc }]
         };
       }
@@ -1373,16 +1336,16 @@ class XiangqiEngine {
         if (blocker) {
           return {
             icon: 'block',
-            title: '走法受阻 · 塞象眼',
-            message: `【${pieceLabel}】田字中心被阻挡（塞象眼）！`,
+            title: '受阻 · 塞象眼',
+            message: `【${pieceLabel}】田心受阻，无法飞象。`,
             highlightSquares: [{ r: eyeR, c: eyeC }, { r: tr, c: tc }]
           };
         }
       }
       return {
         icon: 'route',
-        title: `走法违规 · 【${pieceLabel}】飞田字`,
-        message: `【${pieceLabel}】只能斜走两格（“田”字对角）。`,
+        title: `步法不符 · ${pieceLabel}飞田`,
+        message: `【${pieceLabel}】须沿“田”字对角斜行。`,
         highlightSquares: [{ r: tr, c: tc }]
       };
     }
@@ -1391,15 +1354,15 @@ class XiangqiEngine {
       if ((activeType === 'k' || !isJieqi || isHidden) && !this.inPalace(tr, tc, color)) {
         return {
           icon: 'grid_off',
-          title: '走法违规 · 不可出九宫',
-          message: `【${pieceLabel}】只能在己方九宫格内活动！`,
+          title: '步法不符 · 限居九宫',
+          message: `【${pieceLabel}】限在己方九宫内行棋。`,
           highlightSquares: [{ r: tr, c: tc }]
         };
       }
       return {
         icon: 'route',
-        title: `走法违规 · 【${pieceLabel}】步法不符`,
-        message: activeType === 'k' ? `【${pieceLabel}】每次只能沿横竖线走一格。` : `【${pieceLabel}】每次只能沿斜线走一格。`,
+        title: `步法不符 · ${pieceLabel}`,
+        message: activeType === 'k' ? `【${pieceLabel}】每步限横竖走一格。` : `【${pieceLabel}】每步限九宫斜走一格。`,
         highlightSquares: [{ r: tr, c: tc }]
       };
     }
@@ -1419,32 +1382,32 @@ class XiangqiEngine {
           if (between === 0) {
             return {
               icon: 'flare',
-              title: '走法违规 · 炮打隔山',
-              message: `【${pieceLabel}】吃子时中间必须隔一枚棋子（炮架）！`,
+              title: '步法不符 · 炮打隔山',
+              message: `【${pieceLabel}】吃子须隔一子作炮架。`,
               highlightSquares: [{ r: tr, c: tc }]
             };
           }
           if (between > 1) {
             return {
               icon: 'flare',
-              title: '走法违规 · 炮架超过一子',
-              message: `【${pieceLabel}】隔山打子只能隔一枚棋子，当前隔了 ${between} 枚！`,
+              title: '受阻 · 炮架过多',
+              message: `【${pieceLabel}】隔山打子限隔一子（当前隔${between}子）。`,
               highlightSquares: [{ r: tr, c: tc }]
             };
           }
         } else if (!target && between > 0) {
           return {
             icon: 'block',
-            title: '走法受阻 · 不吃子不可越子',
-            message: `【${pieceLabel}】不吃子移动时路径上不能越过其他棋子！`,
+            title: '受阻 · 路径有子',
+            message: `【${pieceLabel}】移动时不可越子。`,
             highlightSquares: [{ r: tr, c: tc }]
           };
         }
       }
       return {
         icon: 'route',
-        title: `走法违规 · 【${pieceLabel}】只能直走`,
-        message: `【${pieceLabel}】只能沿横线或竖线直线移动。`,
+        title: `步法不符 · ${pieceLabel}直行`,
+        message: `【${pieceLabel}】限沿横竖直线行棋。`,
         highlightSquares: [{ r: tr, c: tc }]
       };
     }
@@ -1453,15 +1416,15 @@ class XiangqiEngine {
       if (fr === tr || fc === tc) {
         return {
           icon: 'block',
-          title: '走法受阻 · 車路被挡',
-          message: `【${pieceLabel}】路径上有棋子阻挡，不能越子移动！`,
+          title: '受阻 · 車路被挡',
+          message: `【${pieceLabel}】路径受阻，不可越子。`,
           highlightSquares: [{ r: tr, c: tc }]
         };
       }
       return {
         icon: 'route',
-        title: `走法违规 · 【${pieceLabel}】只能直走`,
-        message: `【${pieceLabel}】只能沿横线或竖线直线移动。`,
+        title: `步法不符 · ${pieceLabel}直行`,
+        message: `【${pieceLabel}】限沿横竖直线行棋。`,
         highlightSquares: [{ r: tr, c: tc }]
       };
     }
@@ -1471,8 +1434,8 @@ class XiangqiEngine {
       if (isBackward) {
         return {
           icon: 'undo',
-          title: '走法违规 · 兵/卒不可后退',
-          message: `【${pieceLabel}】只能向前或过河后平走，不可后退！`,
+          title: '步法不符 · 不可后退',
+          message: `【${pieceLabel}】只可进或平，不可退。`,
           highlightSquares: [{ r: tr, c: tc }]
         };
       }
@@ -1480,23 +1443,23 @@ class XiangqiEngine {
       if (notCrossedRiver && fr === tr && absC === 1) {
         return {
           icon: 'water',
-          title: '走法违规 · 未过河不可横走',
-          message: `【${pieceLabel}】未越过楚河汉界（或作为暗子第一步）只能向前直走一步！`,
+          title: '步法不符 · 未过河禁横',
+          message: `【${pieceLabel}】未过河限向前一步。`,
           highlightSquares: [{ r: tr, c: tc }]
         };
       }
       return {
         icon: 'route',
-        title: `走法违规 · 【${pieceLabel}】每次走一格`,
-        message: `【${pieceLabel}】每次只能移动一格。`,
+        title: `步法不符 · ${pieceLabel}走一格`,
+        message: `【${pieceLabel}】每步限走一格。`,
         highlightSquares: [{ r: tr, c: tc }]
       };
     }
 
     return {
       icon: 'error',
-      title: '走法违规 · 不可移动至此',
-      message: `请点击棋盘上高亮的合法落点。`,
+      title: '禁着 · 落点无效',
+      message: `请选择棋盘高亮落点。`,
       highlightSquares: [{ r: tr, c: tc }]
     };
   }
@@ -1512,7 +1475,6 @@ class XiangqiEngine {
     this.board[move.tr][move.tc] = piece;
     this.board[move.fr][move.fc] = null;
 
-    // 揭棋规则：暗子走子完毕后，必须翻开成为明子，原有的暗棋走子功能不复存在
     let flipped = false;
     if (piece && piece.isHidden) {
       flipped = true;
@@ -1521,7 +1483,6 @@ class XiangqiEngine {
       piece.char = piece.realChar || PIECE_CHARS[piece.color][piece.type];
     }
 
-    // 暗子被吃后，保持 isHidden = true（背面朝上放置，被吃子的一方不能翻看）
     if (capturedBefore) {
       if (capturedBefore.color === RED) this.capturedRed.push({ ...capturedBefore });
       else this.capturedBlack.push({ ...capturedBefore });
@@ -1554,7 +1515,6 @@ class XiangqiEngine {
     const last = this.history.pop();
     const { move, piece, captured, turnBefore } = last;
 
-    // 恢复移动前的精确棋子对象属性（包括唯一 id 与暗子未翻开状态）
     const currentObj = this.board[move.tr]?.[move.tc];
     if (currentObj && currentObj.id === piece.id) {
       Object.assign(currentObj, piece);

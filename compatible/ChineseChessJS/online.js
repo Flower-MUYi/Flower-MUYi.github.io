@@ -1,20 +1,5 @@
-/*************************************************************************
- * PEERJS ONLINE P2P MULTIPLAYER & IN-PAGE MODAL INTERACTIONS MODULE
- * Extends Xiangqi3DApp.prototype
- *
- * Implements:
- *   - "求和" (#btn-offer-draw) and "认输" (#btn-resign) ONLY appear in online state
- *   - Unified "重新对局" button text for both host and guest during online play
- *   - BOTH "重新对局" (mid-game) AND "再来一局" (post-game) require opponent's agreement
- *     via the unified in-page confirmation modal (#rematch-request-modal)
- *   - In-page confirmation modals for "求和" and "认输" matching "悔棋"
- *   - Post-draw / post-resign unobstructed endgame board showcase & "再来一局" button
- *************************************************************************/
-
 Object.assign(Xiangqi3DApp.prototype, {
-  /**
-   * 判断当前是否处于联机已连接状态
-   */
+
   isOnlineInRoom() {
     return Boolean(this.onlineRole && (this.isOnlineConnected || this.conn?.open));
   },
@@ -25,16 +10,13 @@ Object.assign(Xiangqi3DApp.prototype, {
     });
   },
 
-  /**
-   * 发起求和（仅在联机状态下可用，点击“求和”按钮弹出网页内确认框，样式与悔棋一致）
-   */
   requestDraw() {
     if (!this.isOnlineInRoom() || this.gameOver || this.isBusy || this.replayMode) return;
     this.sfx.playSelect();
     this.hideAllActionModals();
     const descEl = document.getElementById('draw-confirm-desc');
     if (descEl) {
-      descEl.textContent = '确定向对方提出求和申请吗？对方同意后本局将作和并展示终局棋盘。';
+      descEl.textContent = '向对方发起求和？对方同意后本局作和。';
     }
     document.getElementById('draw-confirm-modal')?.classList.remove('hidden');
   },
@@ -48,12 +30,12 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.sfx.playSelect();
     if (this.isOnlineInRoom() && this.conn?.open) {
       if (this.pendingDrawRequest) {
-        this.showCenterCallout('已发送求和申请，请等待对方回应', this.onlineRole);
+        this.showCenterCallout('求和已发送，等待回应', this.onlineRole);
         return;
       }
       this.pendingDrawRequest = true;
       this.conn.send({ type: 'draw_request' });
-      this.showCenterCallout('已发送求和申请，等待对方回应', this.onlineRole);
+      this.showCenterCallout('求和已发送，等待回应', this.onlineRole);
       clearTimeout(this.drawRequestTimeout);
       this.drawRequestTimeout = setTimeout(() => {
         this.pendingDrawRequest = false;
@@ -61,9 +43,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     }
   },
 
-  /**
-   * 响应对方发来的求和请求（网页内弹窗）
-   */
   respondDrawRequest(accepted) {
     document.getElementById('draw-request-modal')?.classList.add('hidden');
     if (!this.conn?.open) return;
@@ -72,13 +51,10 @@ Object.assign(Xiangqi3DApp.prototype, {
       this.finishGameByDraw('双方同意求和 · 握手言和');
     } else {
       this.sfx.playSelect();
-      this.showCenterCallout('已拒绝求和申请', this.onlineRole || RED);
+      this.showCenterCallout('已拒绝求和', this.onlineRole || RED);
     }
   },
 
-  /**
-   * 发起认输（仅在联机状态下可用，点击“认输”按钮弹出网页内确认框，样式与悔棋一致）
-   */
   resignOnline() {
     if (!this.isOnlineInRoom() || this.gameOver || this.isBusy || this.replayMode) return;
     this.sfx.playSelect();
@@ -100,16 +76,11 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.finishGameByResign(resigningSide, true);
   },
 
-  /**
-   * 求和终局处理：
-   * 直接在画面上给出无遮挡的 3D 终局棋盘展示，记录复盘结果，
-   * 底部栏的“重新对局”按钮变为“再来一局”，点击“再来一局”向对方发起再来一局申请。
-   */
   finishGameByDraw(reasonText = '双方握手言和') {
     this.pendingDrawRequest = false;
     clearTimeout(this.drawRequestTimeout);
     this.gameOver = true;
-    this.endgameReasonText = '终局棋盘展示 · 双方和棋';
+    this.endgameReasonText = '终局 · 双方和棋';
     this.isBusy = false;
     this.selectedSquare = null;
     this.clearLegalMoveIndicators();
@@ -131,14 +102,9 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.recordReplayOutcome?.('draw', '握手言和 · 和局');
     this.updateRestartButtonLabel();
     this.updateUI(false);
-    this.showCenterCallout(`${reasonText} · 终局棋盘展示`, this.onlineRole || RED);
+    this.showCenterCallout(`${reasonText}`, this.onlineRole || RED);
   },
 
-  /**
-   * 认输终局处理：
-   * 直接在画面上给出无遮挡的 3D 终局棋盘展示，记录复盘结果，
-   * 底部栏的“重新对局”按钮变为“再来一局”，点击“再来一局”向对方发起再来一局申请。
-   */
   finishGameByResign(resigningSide, isSelfResign = false) {
     this.gameOver = true;
     this.isBusy = false;
@@ -152,7 +118,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     const winnerColor = resigningSide === RED ? BLACK : RED;
     const loserName = resigningSide === RED ? '红方' : '黑方';
     const winnerName = winnerColor === RED ? '红方' : '黑方';
-    this.endgameReasonText = `终局棋盘展示 · ${loserName}认输（${winnerName}胜）`;
+    this.endgameReasonText = `终局 · ${loserName}认输（${winnerName}胜）`;
 
     const kings = [];
     for (let r = 0; r < 10; r++) {
@@ -169,25 +135,21 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.updateRestartButtonLabel();
     this.updateUI(false);
     this.showCenterCallout(
-      isSelfResign ? `您已认输 · 终局棋盘展示` : `${loserName}投子认输 · ${winnerName}获胜`,
+      isSelfResign ? `已投子认输 · 终局展示` : `${loserName}投子认输 · ${winnerName}获胜`,
       winnerColor
     );
   },
 
-  /**
-   * 联机对局中点击“重新对局”或终局后点击“再来一局”：
-   * 均需向对方发送请求，经对方点击网页内确认弹窗同意后，双方同步重置棋盘开启新局！
-   */
   requestRematchOnline(isPlayAgain = false) {
     const playAgainMode = Boolean(isPlayAgain || this.gameOver);
     const actionLabel = playAgainMode ? '再来一局' : '重新对局';
 
     if (!this.isOnlineInRoom() || !this.conn?.open) {
-      this.showCenterCallout(`等待好友连入房间后即可发起${actionLabel}`, this.onlineRole || RED);
+      this.showCenterCallout(`待好友连入后可发起${actionLabel}`, this.onlineRole || RED);
       return;
     }
     if (this.pendingRematchRequest) {
-      this.showCenterCallout(`已发送${actionLabel}申请，请等待对方回应`, this.onlineRole);
+      this.showCenterCallout(`已发起${actionLabel}，等待回应`, this.onlineRole);
       return;
     }
     this.pendingRematchRequest = true;
@@ -196,7 +158,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.sfx.playSelect();
     try {
       this.conn.send({ type: 'rematch_request', isPlayAgain: playAgainMode });
-      this.showCenterCallout(`已向对方发送「${actionLabel}」申请，等待对方同意`, this.onlineRole);
+      this.showCenterCallout(`已发起「${actionLabel}」，等待回应`, this.onlineRole);
       clearTimeout(this.rematchRequestTimeout);
       this.rematchRequestTimeout = setTimeout(() => {
         if (!this.pendingRematchRequest) return;
@@ -209,9 +171,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     }
   },
 
-  /**
-   * 响应对方的“重新对局 / 再来一局”请求（网页内弹窗）
-   */
   respondRematchRequest(accepted) {
     document.getElementById('rematch-request-modal')?.classList.add('hidden');
     if (!this.conn?.open) return;
@@ -220,16 +179,13 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.conn.send({ type: accepted ? 'rematch_accept' : 'rematch_reject', isPlayAgain });
     if (accepted) {
       this.resetOnlineGameBoard();
-      this.showCenterCallout(`已同意${actionLabel}，棋盘已重置`, this.onlineRole || RED);
+      this.showCenterCallout(`已同意${actionLabel} · 棋盘重置`, this.onlineRole || RED);
     } else {
       this.sfx.playSelect();
-      this.showCenterCallout(`已拒绝${actionLabel}申请`, this.onlineRole || RED);
+      this.showCenterCallout(`已拒绝${actionLabel}`, this.onlineRole || RED);
     }
   },
 
-  /**
-   * 重置联机对局棋盘（仅在对方同意“重新对局”或对方同意“再来一局”后调用）
-   */
   resetOnlineGameBoard() {
     this.pendingRematchRequest = false;
     this.pendingDrawRequest = false;
@@ -508,7 +464,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       } else if (data.type === 'draw_reject') {
         this.pendingDrawRequest = false;
         clearTimeout(this.drawRequestTimeout);
-        this.showCenterCallout('对方拒绝了求和申请', this.onlineRole || RED);
+        this.showCenterCallout('对方婉拒求和', this.onlineRole || RED);
       } else if (data.type === 'resign') {
         const resignedSide = data.side === 'red' ? RED : BLACK;
         this.finishGameByResign(resignedSide, false);
@@ -519,11 +475,11 @@ Object.assign(Xiangqi3DApp.prototype, {
         const acceptBtn = document.getElementById('rematch-accept-btn');
         if (this.incomingRematchIsPlayAgain) {
           if (titleEl) titleEl.textContent = '对方请求再来一局';
-          if (descEl) descEl.textContent = '本局已结束，对方邀请您再来一局并重置棋盘，是否同意？';
+          if (descEl) descEl.textContent = '对方邀请再来一局并重置棋盘，是否同意？';
           if (acceptBtn) acceptBtn.textContent = '同意再来一局';
         } else {
           if (titleEl) titleEl.textContent = '对方请求重新对局';
-          if (descEl) descEl.textContent = '对方申请重置当前棋盘并重新开始一局，是否同意？';
+          if (descEl) descEl.textContent = '对方申请重置棋盘重新对局，是否同意？';
           if (acceptBtn) acceptBtn.textContent = '同意重开';
         }
         this.hideAllActionModals();
@@ -532,12 +488,12 @@ Object.assign(Xiangqi3DApp.prototype, {
       } else if (data.type === 'rematch_accept') {
         const label = (data.isPlayAgain || this.lastRematchWasPlayAgain) ? '再来一局' : '重新对局';
         this.resetOnlineGameBoard();
-        this.showCenterCallout(`对方已同意${label}，棋盘已重置`, this.onlineRole || RED);
+        this.showCenterCallout(`对方同意${label} · 棋盘重置`, this.onlineRole || RED);
       } else if (data.type === 'rematch_reject') {
         const label = (data.isPlayAgain || this.lastRematchWasPlayAgain) ? '再来一局' : '重新对局';
         this.pendingRematchRequest = false;
         clearTimeout(this.rematchRequestTimeout);
-        this.showCenterCallout(`对方拒绝了${label}申请`, this.onlineRole || RED);
+        this.showCenterCallout(`对方拒绝了${label}`, this.onlineRole || RED);
       } else if (data.type === 'request_sync' && this.isRoomHost && this.conn?.open) {
         this.conn.send({
           type: 'sync_board',
@@ -569,7 +525,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       } else if (data.type === 'undo_reject') {
         this.pendingUndoRequest = false;
         clearTimeout(this.undoRequestTimeout);
-        this.showCenterCallout('对方拒绝了悔棋申请', this.onlineRole || RED);
+        this.showCenterCallout('对方拒绝悔棋', this.onlineRole || RED);
         this.updateUI(this.engine.isInCheck(this.engine.turn));
       } else if (data.type === 'move' && data.move) {
         if (data.revealedType) {
