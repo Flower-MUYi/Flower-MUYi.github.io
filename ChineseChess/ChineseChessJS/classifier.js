@@ -1,6 +1,6 @@
 /*************************************************************************
- * 25+ CLASSIC & JJ XIANGQI CHECKMATE PATTERN RECOGNITION ENGINE
- * (古谱杀法与JJ象棋十七大绝杀因果推演智能判定系统)
+ * 25+ CLASSIC XIANGQI CHECKMATE PATTERN RECOGNITION ENGINE
+ * (古谱十七大名局杀法因果推演智能判定系统)
  *************************************************************************/
 class CheckmateClassifier {
   static getCatalog() {
