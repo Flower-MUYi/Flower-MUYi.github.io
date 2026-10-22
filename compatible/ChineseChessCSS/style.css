@@ -443,9 +443,9 @@ p,
 
 @keyframes impactFlashAnim {
   0% { opacity: 0; }
-  12% { opacity: 0.34; }
-  28% { opacity: 0.12; }
-  45% { opacity: 0.20; }
+  12% { opacity: 0.10; }
+  28% { opacity: 0.04; }
+  45% { opacity: 0.06; }
   100% { opacity: 0; }
 }
 

@@ -89,275 +89,515 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   /**
-   * 17 种绝杀专属 3D 全屏光影调色配置（柔和电影级光感：降低刺眼曝光与高光强度，凸显3D模型层次与古风质感）
+
+  /**
+   * 17 种绝杀专属 3D 全屏 CG 光影调色配置（柔和电影级光感：显著降低初始光效亮度，避免过曝刺眼）
    */
   getVFXAtmosphereProfile(vfxType) {
     const profiles = {
       double_chariot: {
-        bgHex: 0x1c0a05,
-        fogHex: 0x2a1008,
+        bgHex: 0x261209,
+        fogHex: 0x33180c,
         sunHex: 0xffcf70,
-        sunIntensity: 0.78,
+        sunIntensity: 0.62,
         hemiSky: 0xfde68a,
-        hemiGround: 0x5c2410,
-        hemiIntensity: 0.50,
+        hemiGround: 0x4a2010,
+        hemiIntensity: 0.42,
         pointHex: 0xf97316,
         rimHex: 0xfde047,
         accent: '#f59e0b',
-        tintInner: 'rgba(251, 191, 36, 0.05)',
-        tintOuter: 'rgba(48, 10, 8, 0.62)',
-        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
+        tintInner: 'rgba(251, 191, 36, 0.03)',
+        tintOuter: 'rgba(38, 12, 8, 0.48)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.92)'
       },
       smothered_palace: {
-        bgHex: 0x130d1c,
-        fogHex: 0x1e142d,
+        bgHex: 0x160f20,
+        fogHex: 0x211630,
         sunHex: 0xfbbf24,
-        sunIntensity: 0.74,
+        sunIntensity: 0.58,
         hemiSky: 0xfde68a,
-        hemiGround: 0x2e104b,
-        hemiIntensity: 0.48,
+        hemiGround: 0x2b1244,
+        hemiIntensity: 0.40,
         pointHex: 0xd97706,
         rimHex: 0xc084fc,
         accent: '#fbbf24',
-        tintInner: 'rgba(245, 158, 11, 0.05)',
-        tintOuter: 'rgba(20, 10, 36, 0.64)',
-        cssFilter: 'saturate(1.14) contrast(1.06) brightness(0.94)'
+        tintInner: 'rgba(245, 158, 11, 0.03)',
+        tintOuter: 'rgba(20, 10, 36, 0.48)',
+        cssFilter: 'saturate(1.08) contrast(1.03) brightness(0.91)'
       },
       royal_gaze: {
-        bgHex: 0x201105,
-        fogHex: 0x311a08,
-        sunHex: 0xffe8a3,
-        sunIntensity: 0.82,
+        bgHex: 0x241307,
+        fogHex: 0x341c0b,
+        sunHex: 0xffe49e,
+        sunIntensity: 0.64,
         hemiSky: 0xfef08a,
-        hemiGround: 0x6b300c,
-        hemiIntensity: 0.52,
+        hemiGround: 0x5c280c,
+        hemiIntensity: 0.42,
         pointHex: 0xf59e0b,
         rimHex: 0xfef3c7,
         accent: '#fbbf24',
-        tintInner: 'rgba(254, 240, 138, 0.06)',
-        tintOuter: 'rgba(52, 24, 6, 0.60)',
-        cssFilter: 'saturate(1.18) contrast(1.05) brightness(0.95)'
+        tintInner: 'rgba(254, 240, 138, 0.03)',
+        tintOuter: 'rgba(44, 20, 6, 0.46)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.92)'
       },
       double_cannon: {
-        bgHex: 0x1e0707,
-        fogHex: 0x300a0a,
+        bgHex: 0x230a08,
+        fogHex: 0x33100d,
         sunHex: 0xf97316,
-        sunIntensity: 0.78,
+        sunIntensity: 0.62,
         hemiSky: 0xfde047,
-        hemiGround: 0x5c1515,
-        hemiIntensity: 0.48,
+        hemiGround: 0x4c1414,
+        hemiIntensity: 0.40,
         pointHex: 0xdc2626,
         rimHex: 0xfbbf24,
         accent: '#f97316',
-        tintInner: 'rgba(239, 68, 68, 0.06)',
-        tintOuter: 'rgba(54, 8, 8, 0.64)',
-        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.94)'
+        tintInner: 'rgba(239, 68, 68, 0.03)',
+        tintOuter: 'rgba(46, 8, 8, 0.48)',
+        cssFilter: 'saturate(1.10) contrast(1.04) brightness(0.91)'
       },
       horse_cannon: {
-        bgHex: 0x1d0906,
-        fogHex: 0x2e100a,
+        bgHex: 0x241008,
+        fogHex: 0x34170c,
         sunHex: 0xfb923c,
-        sunIntensity: 0.76,
+        sunIntensity: 0.62,
         hemiSky: 0xfde68a,
-        hemiGround: 0x5c2210,
-        hemiIntensity: 0.48,
+        hemiGround: 0x4e2010,
+        hemiIntensity: 0.42,
         pointHex: 0xea580c,
         rimHex: 0xfde047,
         accent: '#f59e0b',
-        tintInner: 'rgba(249, 115, 22, 0.05)',
-        tintOuter: 'rgba(48, 10, 8, 0.62)',
-        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
+        tintInner: 'rgba(249, 115, 22, 0.03)',
+        tintOuter: 'rgba(42, 10, 8, 0.48)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.92)'
       },
       iron_bolt: {
-        bgHex: 0x101420,
-        fogHex: 0x192034,
+        bgHex: 0x121724,
+        fogHex: 0x1b2236,
         sunHex: 0xfbbf24,
-        sunIntensity: 0.74,
+        sunIntensity: 0.58,
         hemiSky: 0xcbd5e1,
         hemiGround: 0x1e293b,
-        hemiIntensity: 0.48,
+        hemiIntensity: 0.40,
         pointHex: 0xd97706,
         rimHex: 0x38bdf8,
         accent: '#f59e0b',
-        tintInner: 'rgba(251, 191, 36, 0.05)',
-        tintOuter: 'rgba(15, 23, 42, 0.64)',
-        cssFilter: 'saturate(1.14) contrast(1.06) brightness(0.94)'
+        tintInner: 'rgba(251, 191, 36, 0.03)',
+        tintOuter: 'rgba(15, 23, 42, 0.48)',
+        cssFilter: 'saturate(1.08) contrast(1.03) brightness(0.91)'
       },
       side_tiger: {
-        bgHex: 0x1d0c04,
-        fogHex: 0x2e1407,
-        sunHex: 0xf59e0b,
-        sunIntensity: 0.80,
-        hemiSky: 0xfde68a,
-        hemiGround: 0x5c2210,
-        hemiIntensity: 0.50,
-        pointHex: 0xea580c,
-        rimHex: 0xfde047,
+        bgHex: 0x58b2f5,
+        fogHex: 0x86ccf8,
+        sunHex: 0xfffbeb,
+        sunIntensity: 0.66,
+        hemiSky: 0xe0f2fe,
+        hemiGround: 0x22c55e,
+        hemiIntensity: 0.48,
+        pointHex: 0xf59e0b,
+        rimHex: 0xfef08a,
         accent: '#f59e0b',
-        tintInner: 'rgba(245, 158, 11, 0.06)',
-        tintOuter: 'rgba(52, 16, 6, 0.62)',
-        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.95)'
+        tintInner: 'rgba(255, 255, 255, 0.02)',
+        tintOuter: 'rgba(12, 42, 24, 0.32)',
+        cssFilter: 'saturate(1.10) contrast(1.02) brightness(0.94)'
       },
       octagon_horse: {
-        bgHex: 0x091222,
-        fogHex: 0x0f1e3a,
-        sunHex: 0xbae6fd,
-        sunIntensity: 0.76,
-        hemiSky: 0xfef3c7,
-        hemiGround: 0x172554,
-        hemiIntensity: 0.50,
-        pointHex: 0x3b82f6,
-        rimHex: 0xfde68a,
-        accent: '#7dd3fc',
-        tintInner: 'rgba(125, 211, 252, 0.06)',
-        tintOuter: 'rgba(10, 20, 46, 0.64)',
-        cssFilter: 'saturate(1.15) contrast(1.05) brightness(0.95)'
-      },
-      fishing_horse: {
-        bgHex: 0x041624,
-        fogHex: 0x07253b,
-        sunHex: 0x38bdf8,
-        sunIntensity: 0.76,
-        hemiSky: 0xbae6fd,
-        hemiGround: 0x0c4a6e,
-        hemiIntensity: 0.50,
-        pointHex: 0x0284c7,
+        bgHex: 0x5ab4f8,
+        fogHex: 0x8ad0fc,
+        sunHex: 0xfffbeb,
+        sunIntensity: 0.66,
+        hemiSky: 0xe0f2fe,
+        hemiGround: 0x22c55e,
+        hemiIntensity: 0.48,
+        pointHex: 0x38bdf8,
         rimHex: 0xfde68a,
         accent: '#38bdf8',
-        tintInner: 'rgba(56, 189, 248, 0.06)',
-        tintOuter: 'rgba(4, 24, 42, 0.64)',
-        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
+        tintInner: 'rgba(255, 255, 255, 0.02)',
+        tintOuter: 'rgba(12, 38, 28, 0.32)',
+        cssFilter: 'saturate(1.10) contrast(1.02) brightness(0.94)'
+      },
+      fishing_horse: {
+        bgHex: 0x165b8a,
+        fogHex: 0x1d70a8,
+        sunHex: 0xe0f2fe,
+        sunIntensity: 0.64,
+        hemiSky: 0xbae6fd,
+        hemiGround: 0x0369a1,
+        hemiIntensity: 0.46,
+        pointHex: 0x38bdf8,
+        rimHex: 0xfde68a,
+        accent: '#38bdf8',
+        tintInner: 'rgba(56, 189, 248, 0.03)',
+        tintOuter: 'rgba(6, 32, 56, 0.42)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.93)'
       },
       standing_horse_chariot: {
-        bgHex: 0x200808,
-        fogHex: 0x330c0c,
-        sunHex: 0xf97316,
-        sunIntensity: 0.78,
-        hemiSky: 0xfde047,
-        hemiGround: 0x5c1616,
-        hemiIntensity: 0.50,
+        bgHex: 0x330a0a,
+        fogHex: 0x4a1010,
+        sunHex: 0xff6b4a,
+        sunIntensity: 0.64,
+        hemiSky: 0xfca5a5,
+        hemiGround: 0x450a0a,
+        hemiIntensity: 0.44,
         pointHex: 0xdc2626,
         rimHex: 0xfbbf24,
-        accent: '#f97316',
-        tintInner: 'rgba(239, 68, 68, 0.06)',
-        tintOuter: 'rgba(54, 10, 10, 0.64)',
-        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.94)'
+        accent: '#ef4444',
+        tintInner: 'rgba(239, 68, 68, 0.04)',
+        tintOuter: 'rgba(48, 8, 8, 0.48)',
+        cssFilter: 'saturate(1.12) contrast(1.04) brightness(0.92)'
       },
       double_check: {
-        bgHex: 0x1e0d04,
-        fogHex: 0x301406,
+        bgHex: 0x241106,
+        fogHex: 0x361909,
         sunHex: 0xfacc15,
-        sunIntensity: 0.80,
+        sunIntensity: 0.64,
         hemiSky: 0xfef08a,
-        hemiGround: 0x5c2210,
-        hemiIntensity: 0.52,
+        hemiGround: 0x4c1d0c,
+        hemiIntensity: 0.42,
         pointHex: 0xd97706,
         rimHex: 0xef4444,
         accent: '#fde047',
-        tintInner: 'rgba(250, 204, 21, 0.06)',
-        tintOuter: 'rgba(52, 18, 6, 0.62)',
-        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.95)'
+        tintInner: 'rgba(250, 204, 21, 0.03)',
+        tintOuter: 'rgba(44, 16, 6, 0.48)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.92)'
       },
       chariot_cannon_clamp: {
-        bgHex: 0x1d0f05,
-        fogHex: 0x2e1808,
+        bgHex: 0x241307,
+        fogHex: 0x341c0b,
         sunHex: 0xf59e0b,
-        sunIntensity: 0.76,
+        sunIntensity: 0.62,
         hemiSky: 0xfde68a,
-        hemiGround: 0x5c280c,
-        hemiIntensity: 0.48,
+        hemiGround: 0x4e220c,
+        hemiIntensity: 0.42,
         pointHex: 0xea580c,
         rimHex: 0xfde047,
         accent: '#f59e0b',
-        tintInner: 'rgba(245, 158, 11, 0.05)',
-        tintOuter: 'rgba(48, 22, 8, 0.62)',
-        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
+        tintInner: 'rgba(245, 158, 11, 0.03)',
+        tintOuter: 'rgba(42, 18, 8, 0.48)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.92)'
       },
       trough_horse: {
-        bgHex: 0x1d0906,
-        fogHex: 0x2f0f0a,
+        bgHex: 0x220c08,
+        fogHex: 0x33120c,
         sunHex: 0xf59e0b,
-        sunIntensity: 0.78,
+        sunIntensity: 0.62,
         hemiSky: 0xfde68a,
-        hemiGround: 0x5c1616,
-        hemiIntensity: 0.50,
+        hemiGround: 0x4e1616,
+        hemiIntensity: 0.42,
         pointHex: 0xd97706,
         rimHex: 0xef4444,
         accent: '#fbbf24',
-        tintInner: 'rgba(251, 191, 36, 0.06)',
-        tintOuter: 'rgba(52, 10, 10, 0.62)',
-        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
+        tintInner: 'rgba(251, 191, 36, 0.03)',
+        tintOuter: 'rgba(46, 10, 10, 0.48)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.92)'
       },
       smothered_kill: {
-        bgHex: 0x11081a,
-        fogHex: 0x1b0e29,
+        bgHex: 0x140a1e,
+        fogHex: 0x1f102e,
         sunHex: 0xf59e0b,
-        sunIntensity: 0.74,
+        sunIntensity: 0.58,
         hemiSky: 0xfde047,
-        hemiGround: 0x2e094e,
-        hemiIntensity: 0.48,
+        hemiGround: 0x2a0944,
+        hemiIntensity: 0.40,
         pointHex: 0xdc2626,
         rimHex: 0xfbbf24,
         accent: '#f59e0b',
-        tintInner: 'rgba(239, 68, 68, 0.05)',
-        tintOuter: 'rgba(20, 8, 36, 0.64)',
-        cssFilter: 'saturate(1.15) contrast(1.06) brightness(0.94)'
+        tintInner: 'rgba(239, 68, 68, 0.03)',
+        tintOuter: 'rgba(20, 8, 36, 0.48)',
+        cssFilter: 'saturate(1.08) contrast(1.03) brightness(0.91)'
       },
       heaven_earth_cannon: {
-        bgHex: 0x210604,
-        fogHex: 0x360906,
-        sunHex: 0xf97316,
-        sunIntensity: 0.80,
-        hemiSky: 0xfde68a,
-        hemiGround: 0x5c1414,
-        hemiIntensity: 0.52,
+        bgHex: 0x5ab4f8,
+        fogHex: 0x8cd0ff,
+        sunHex: 0xfff7ed,
+        sunIntensity: 0.66,
+        hemiSky: 0xfef08a,
+        hemiGround: 0x22c55e,
+        hemiIntensity: 0.46,
         pointHex: 0xea580c,
         rimHex: 0xfde047,
         accent: '#f97316',
-        tintInner: 'rgba(249, 115, 22, 0.06)',
-        tintOuter: 'rgba(56, 8, 8, 0.64)',
-        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.94)'
+        tintInner: 'rgba(249, 115, 22, 0.03)',
+        tintOuter: 'rgba(44, 10, 6, 0.42)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.93)'
       },
       stalemate_trap: {
-        bgHex: 0x0e151f,
-        fogHex: 0x172130,
+        bgHex: 0x101824,
+        fogHex: 0x192436,
         sunHex: 0xfbbf24,
-        sunIntensity: 0.74,
+        sunIntensity: 0.58,
         hemiSky: 0xcbd5e1,
         hemiGround: 0x1e293b,
-        hemiIntensity: 0.48,
+        hemiIntensity: 0.40,
         pointHex: 0xd97706,
         rimHex: 0x94a3b8,
         accent: '#fbbf24',
-        tintInner: 'rgba(251, 191, 36, 0.05)',
-        tintOuter: 'rgba(15, 23, 42, 0.64)',
-        cssFilter: 'saturate(1.12) contrast(1.05) brightness(0.94)'
+        tintInner: 'rgba(251, 191, 36, 0.03)',
+        tintOuter: 'rgba(15, 23, 42, 0.48)',
+        cssFilter: 'saturate(1.08) contrast(1.03) brightness(0.92)'
       },
       frost_lotus_strike: {
-        bgHex: 0x051624,
-        fogHex: 0x09243b,
-        sunHex: 0x7dd3fc,
-        sunIntensity: 0.76,
+        bgHex: 0x040d1e,
+        fogHex: 0x071733,
+        sunHex: 0xbae6fd,
+        sunIntensity: 0.58,
         hemiSky: 0xe0f2fe,
-        hemiGround: 0x0c4a6e,
-        hemiIntensity: 0.50,
-        pointHex: 0x0284c7,
-        rimHex: 0xfde68a,
+        hemiGround: 0x082f49,
+        hemiIntensity: 0.42,
+        pointHex: 0x38bdf8,
+        rimHex: 0xfef08a,
         accent: '#38bdf8',
-        tintInner: 'rgba(56, 189, 248, 0.06)',
-        tintOuter: 'rgba(6, 24, 40, 0.64)',
-        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
+        tintInner: 'rgba(56, 189, 248, 0.03)',
+        tintOuter: 'rgba(4, 14, 30, 0.52)',
+        cssFilter: 'saturate(1.10) contrast(1.03) brightness(0.92)'
       }
     };
     return profiles[vfxType] || profiles.double_chariot;
   },
 
+  /**
+   * 缓存原场景（棋盘、棋案、竹林/战场/书房环境、全部棋子）的材质与位置状态，
+   * 以便在全屏 CG 绝杀场景浮现时平滑渐隐原棋盘与桌子，并在切回终局棋面时 100% 无损复原！
+   */
+  captureOriginalWorldSnapshot(participatingMeshes = []) {
+    this.restoreOriginalWorldSnapshot();
+    const partSet = new Set(participatingMeshes.filter(Boolean));
+    const matMap = new Map();
+    const groupState = [];
+    const pieceState = [];
+    const clonedPieceMaterials = [];
+
+    const recordMat = (mat) => {
+      if (!mat || matMap.has(mat)) return;
+      matMap.set(mat, {
+        transparent: Boolean(mat.transparent),
+        opacity: typeof mat.opacity === 'number' ? mat.opacity : 1.0,
+        depthWrite: typeof mat.depthWrite === 'boolean' ? mat.depthWrite : true
+      });
+    };
+
+    const recordGroup = (grp) => {
+      if (!grp) return;
+      groupState.push({
+        grp,
+        visible: grp.visible,
+        y: grp.position.y,
+        scale: grp.scale.clone()
+      });
+      grp.traverse?.((obj) => {
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(recordMat);
+          else recordMat(obj.material);
+        }
+      });
+    };
+
+    recordGroup(this.boardGroup);
+    recordGroup(this.markersGroup);
+    if (this.currentSceneId === 'ancient_battlefield') {
+      recordGroup(this.battlefieldGroup);
+    } else if (this.currentSceneId === 'imperial_study') {
+      recordGroup(this.studyGroup);
+    } else {
+      recordGroup(this.parkGroup);
+      recordGroup(this.dappledCanopy);
+    }
+
+    const ringRefs = [
+      this.selectedRing,
+      this.lastFromRing,
+      this.lastToRing,
+      ...(this.checkmateHighlightRings || [])
+    ].filter(Boolean);
+    ringRefs.forEach(r => {
+      groupState.push({
+        grp: r,
+        visible: r.visible,
+        y: r.position.y,
+        scale: r.scale.clone(),
+        isRing: true
+      });
+      if (r.material) recordMat(r.material);
+    });
+
+    if (this.pieceMeshes) {
+      for (const mesh of this.pieceMeshes.values()) {
+        if (!mesh) continue;
+        const isParticipant = partSet.has(mesh);
+        const origMaterials = [];
+        mesh.children.forEach((ch) => {
+          origMaterials.push({ child: ch, mat: ch.material });
+        });
+
+        // 为参演棋子独立克隆材质，使得参演棋子在平滑变身/发光/淡出时绝不影响棋盘上其余同色棋子
+        if (isParticipant) {
+          mesh.children.forEach((ch) => {
+            if (ch.material && typeof ch.material.clone === 'function') {
+              const cloned = ch.material.clone();
+              ch.material = cloned;
+              clonedPieceMaterials.push(cloned);
+            }
+          });
+        } else {
+          mesh.children.forEach((ch) => {
+            if (ch.material) recordMat(ch.material);
+          });
+        }
+
+        pieceState.push({
+          mesh,
+          isParticipant,
+          pos: mesh.position.clone(),
+          rot: mesh.rotation.clone(),
+          scale: mesh.scale.clone(),
+          visible: mesh.visible,
+          origMaterials
+        });
+      }
+    }
+
+    this._vfxWorldSnapshot = {
+      partSet,
+      matMap,
+      groupState,
+      pieceState,
+      clonedPieceMaterials,
+      lastBoardWeight: 1.0
+    };
+  },
+
+  /**
+   * 实时设置原棋盘、桌子、原环境及非参演棋子的显现权重 (boardWeight: 1 = 完全显示原棋盘, 0 = 完全隐去原棋盘)
+   */
+  setOriginalWorldVisibilityWeight(boardWeight) {
+    const snap = this._vfxWorldSnapshot;
+    if (!snap) return;
+    const w = Math.max(0, Math.min(1, boardWeight));
+    snap.lastBoardWeight = w;
+
+    for (const [mat, orig] of snap.matMap.entries()) {
+      if (w >= 0.992) {
+        mat.transparent = orig.transparent;
+        mat.opacity = orig.opacity;
+        mat.depthWrite = orig.depthWrite;
+      } else {
+        mat.transparent = true;
+        mat.opacity = orig.opacity * w;
+        mat.depthWrite = w > 0.45 ? orig.depthWrite : false;
+      }
+    }
+
+    for (const gs of snap.groupState) {
+      const { grp, visible, y, isRing } = gs;
+      if (!grp) continue;
+      if (isRing) {
+        grp.visible = visible && w > 0.06;
+      } else if (grp === this.boardGroup) {
+        grp.visible = visible && w > 0.015;
+        grp.position.y = y - (1 - w) * 0.72;
+      } else {
+        grp.visible = visible && w > 0.02;
+        grp.position.y = y - (1 - w) * 1.45;
+      }
+    }
+
+    for (const ps of snap.pieceState) {
+      if (ps.isParticipant) continue;
+      const m = ps.mesh;
+      if (!m) continue;
+      m.visible = ps.visible && w > 0.02;
+      m.position.set(ps.pos.x, ps.pos.y - (1 - w) * 0.72, ps.pos.z);
+      const sc = 0.88 + 0.12 * w;
+      m.scale.set(ps.scale.x * sc, ps.scale.y * sc, ps.scale.z * sc);
+    }
+  },
+
+  /**
+   * 100% 还原原棋盘、桌子、原环境与所有终局棋子的材质、坐标、旋转与缩放
+   */
+  restoreOriginalWorldSnapshot() {
+    const snap = this._vfxWorldSnapshot;
+    if (!snap) return;
+    for (const [mat, orig] of snap.matMap.entries()) {
+      mat.transparent = orig.transparent;
+      mat.opacity = orig.opacity;
+      mat.depthWrite = orig.depthWrite;
+    }
+    for (const gs of snap.groupState) {
+      if (!gs.grp) continue;
+      gs.grp.visible = gs.visible;
+      gs.grp.position.y = gs.y;
+      gs.grp.scale.copy(gs.scale);
+    }
+    for (const ps of snap.pieceState) {
+      const m = ps.mesh;
+      if (!m) continue;
+      ps.origMaterials.forEach(({ child, mat }) => {
+        if (child && mat) child.material = mat;
+      });
+      m.visible = ps.visible;
+      m.position.copy(ps.pos);
+      m.rotation.copy(ps.rot);
+      m.scale.copy(ps.scale);
+      if (m.userData?.bodyMat) {
+        m.userData.bodyMat.emissive.setHex(0x000000);
+        m.userData.bodyMat.emissiveIntensity = 0.0;
+      }
+    }
+    if (snap.clonedPieceMaterials) {
+      snap.clonedPieceMaterials.forEach(cm => cm.dispose?.());
+    }
+    this._vfxWorldSnapshot = null;
+  },
+
+  /**
+   * 围绕棋子几何中心 (0, height/2, 0) 设置 3D 姿态、缩放与透明度，
+   * 确保棋子在空中多轴自转、翻转至反面（rx = Math.PI）或放大缩小时平滑自然，绝不穿模下陷
+   */
+  setPiece3DPose(mesh, x, y, z, rx = 0, ry = 0, rz = 0, scale = 1.0, opacity = 1.0, glowIntensity = 0.0, glowHex = 0xf59e0b) {
+    if (!mesh) return;
+    const clampedAlpha = Math.max(0, Math.min(1, opacity));
+    if (clampedAlpha <= 0.01) {
+      mesh.visible = false;
+      return;
+    }
+    mesh.visible = true;
+    const sx = Array.isArray(scale) ? scale[0] : scale;
+    const sy = Array.isArray(scale) ? scale[1] : scale;
+    const sz = Array.isArray(scale) ? scale[2] : scale;
+    mesh.scale.set(sx, sy, sz);
+    mesh.rotation.set(rx, ry, rz);
+
+    // 棋子本地圆柱几何中心位于 (0, 0.175, 0)，补偿旋转带来的中心偏移
+    const halfH = 0.175 * sy;
+    const localMid = new THREE.Vector3(0, halfH, 0).applyEuler(mesh.rotation);
+    mesh.position.set(x - localMid.x, y + halfH - localMid.y, z - localMid.z);
+
+    mesh.children.forEach((ch) => {
+      const mat = ch.material;
+      if (!mat) return;
+      if (clampedAlpha < 0.995) {
+        mat.transparent = true;
+        mat.opacity = clampedAlpha;
+      } else {
+        mat.transparent = false;
+        mat.opacity = 1.0;
+      }
+    });
+    const bodyChild = mesh.children[0];
+    if (bodyChild?.material?.emissive) {
+      bodyChild.material.emissive.setHex(glowIntensity > 0.01 ? glowHex : 0x000000);
+      bodyChild.material.emissiveIntensity = glowIntensity;
+    }
+  },
+
   clearCheckmateVFX() {
     this._vfxCustomColorGrading = false;
+    this.restoreOriginalWorldSnapshot();
     this.clearCheckmateHighlights();
     if (this._activeCheckerMeshes && this._activeCheckerMeshes.length > 0) {
       for (const item of this._activeCheckerMeshes) {
         if (item.mesh && item.basePos) {
+          item.mesh.visible = true;
           item.mesh.position.copy(item.basePos);
           item.mesh.rotation.set(0, 0, 0);
           item.mesh.scale.set(1, 1, 1);
@@ -370,6 +610,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       this._activeCheckerMeshes = [];
     }
     if (this._activeCheckerMesh && this._activeCheckerBasePos) {
+      this._activeCheckerMesh.visible = true;
       this._activeCheckerMesh.position.copy(this._activeCheckerBasePos);
       this._activeCheckerMesh.rotation.set(0, 0, 0);
       this._activeCheckerMesh.scale.set(1, 1, 1);
@@ -1452,11 +1693,679 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   /**
-   * 构建 17 种古谱杀法的全 3D 精细建模动态演出
-   * 包含：
-   * - 通用 3D 火炮/神兵爆炸系统 (create3DCannonExplosion)
-   * - 将帅棋子受击物理反馈系统 (applyKingHitFeedback: 撞击 / 剑斩 / 炮轰 / 重砸)
-   * - 动态分镜特写控制器 (vfxContext.setCameraOverride)
+   * =========================================================================
+   * 5 大可复用全屏 CG 绝杀专属场景构建器（与棋盘环境独立，支持平滑浮现与消散）
+   * 1. cg_battlefield     —— 烽火古战场（双车错、对面笑、重炮杀、马后炮、双将、夹车炮等）
+   * 2. cg_grassland       —— 蓝天白云绿草地（侧面虎、八角马、天地炮[配巨型烈日与熔岩焦土]）
+   * 3. cg_ocean_day       —— 碧海晴空俯视海面·无月亮（钓鱼马，海面真实遮挡水下模型）
+   * 4. cg_ocean_night     —— 夜海圆月俯视海面（海底捞月，中心大圆月倒影与层层波纹）
+   * 5. cg_sunset_mountain —— 苍山残阳·远山红日（列马车，远端高山+与“车”同大的红日）
+   * =========================================================================
+   */
+  createCGSceneEnvironment(sceneType, parentGroup, options = {}) {
+    const sceneGroup = new THREE.Group();
+    sceneGroup.visible = false;
+    parentGroup.add(sceneGroup);
+    const fadeMaterials = [];
+    const registerMat = (mat, baseOpacity = 1.0, forceDepthWrite = null) => {
+      mat.transparent = true;
+      mat.opacity = 0;
+      fadeMaterials.push({ mat, baseOpacity, forceDepthWrite });
+      return mat;
+    };
+
+    const animCallbacks = [];
+
+    if (sceneType === 'cg_battlefield') {
+      const groundMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x3b2316,
+        roughness: 0.88,
+        metalness: 0.08
+      }), 1.0);
+      const ground = new THREE.Mesh(new THREE.CylinderGeometry(46, 46, 0.36, 48), groundMat);
+      ground.position.y = -0.18;
+      sceneGroup.add(ground);
+
+      const arenaRingMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x27160e,
+        roughness: 0.82,
+        metalness: 0.18,
+        side: THREE.DoubleSide
+      }), 0.92);
+      const arenaRing = new THREE.Mesh(new THREE.RingGeometry(4.8, 18.5, 48), arenaRingMat);
+      arenaRing.rotation.x = -Math.PI / 2;
+      arenaRing.position.y = 0.008;
+      sceneGroup.add(arenaRing);
+
+      const bronzeTrackMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0xb45309,
+        emissive: 0x78350f,
+        emissiveIntensity: 0.18,
+        roughness: 0.42,
+        metalness: 0.68,
+        side: THREE.DoubleSide
+      }), 0.72);
+      const innerCircle = new THREE.Mesh(new THREE.RingGeometry(4.45, 4.72, 48), bronzeTrackMat);
+      innerCircle.rotation.x = -Math.PI / 2;
+      innerCircle.position.y = 0.012;
+      sceneGroup.add(innerCircle);
+
+      // 远景烽火群山与古长城垛口剪影
+      const peakMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x1e110a,
+        roughness: 0.90,
+        metalness: 0.12
+      }), 0.95);
+      for (let i = 0; i < 10; i++) {
+        const ang = (i / 10) * Math.PI * 2 + 0.18;
+        const dist = 20.5 + (i % 3) * 3.2;
+        const h = 7.5 + (i % 4) * 2.2;
+        const peak = new THREE.Mesh(new THREE.ConeGeometry(5.5 + (i % 2) * 1.8, h, 7), peakMat);
+        peak.position.set(Math.cos(ang) * dist, h * 0.45 - 0.5, Math.sin(ang) * dist);
+        sceneGroup.add(peak);
+      }
+
+      // 战场折戟残兵、战旗与烽火盆
+      const ironMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x1f2937,
+        roughness: 0.45,
+        metalness: 0.75
+      }), 1.0);
+      const flagRedMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x991b1b,
+        emissive: 0x450a0a,
+        emissiveIntensity: 0.25,
+        roughness: 0.6,
+        side: THREE.DoubleSide
+      }), 0.92);
+      const flameMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0xf97316,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }), 0.72);
+
+      const flags = [];
+      for (let i = 0; i < 8; i++) {
+        const ang = (i / 8) * Math.PI * 2 + 0.35;
+        const r = 9.2 + (i % 2) * 2.4;
+        const fg = new THREE.Group();
+        fg.position.set(Math.cos(ang) * r, 0, Math.sin(ang) * r);
+        fg.rotation.z = (i % 2 === 0 ? 0.14 : -0.16);
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 4.6, 8), ironMat);
+        pole.position.y = 2.2;
+        const tip = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.55, 5), bronzeTrackMat);
+        tip.position.y = 4.65;
+        const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.45, 2.2, 6, 4), flagRedMat);
+        cloth.position.set(0.72, 3.3, 0);
+        fg.add(pole, tip, cloth);
+        sceneGroup.add(fg);
+        flags.push({ cloth, phase: i * 1.1 });
+
+        if (i % 2 === 0) {
+          const brazier = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.38, 0.65, 12), ironMat);
+          brazier.position.set(Math.cos(ang + 0.18) * (r - 1.2), 0.32, Math.sin(ang + 0.18) * (r - 1.2));
+          const fire = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.15, 10), flameMat);
+          fire.position.set(brazier.position.x, 0.95, brazier.position.z);
+          sceneGroup.add(brazier, fire);
+          flags.push({ fire, phase: i * 1.7 });
+        }
+      }
+
+      animCallbacks.push((dt, p) => {
+        flags.forEach(item => {
+          if (item.cloth) item.cloth.rotation.y = Math.sin(p * 18 + item.phase) * 0.22;
+          if (item.fire) {
+            const s = 0.88 + Math.sin(p * 28 + item.phase) * 0.16;
+            item.fire.scale.set(s, 0.9 + Math.cos(p * 32 + item.phase) * 0.18, s);
+          }
+        });
+      });
+    } else if (sceneType === 'cg_grassland') {
+      // 蓝天白云与翠绿草地场景
+      const meadowMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x34d399,
+        roughness: 0.78,
+        metalness: 0.02
+      }), 1.0);
+      const outerMeadowMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x16a34a,
+        roughness: 0.84,
+        metalness: 0.02
+      }), 1.0);
+      const hillMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x15803d,
+        roughness: 0.85,
+        metalness: 0.02
+      }), 0.96);
+
+      const meadow = new THREE.Mesh(new THREE.CylinderGeometry(48, 48, 0.36, 48), outerMeadowMat);
+      meadow.position.y = -0.18;
+      sceneGroup.add(meadow);
+
+      const innerLawn = new THREE.Mesh(new THREE.CircleGeometry(14.5, 48), meadowMat);
+      innerLawn.rotation.x = -Math.PI / 2;
+      innerLawn.position.y = 0.006;
+      sceneGroup.add(innerLawn);
+
+      // 远景翠绿层峦与青草簇
+      for (let i = 0; i < 10; i++) {
+        const ang = (i / 10) * Math.PI * 2;
+        const dist = 21.0 + (i % 2) * 3.5;
+        const h = 5.5 + (i % 3) * 1.8;
+        const hill = new THREE.Mesh(new THREE.SphereGeometry(6.8, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), hillMat);
+        hill.scale.set(1.2, h / 6.8, 0.9);
+        hill.position.set(Math.cos(ang) * dist, -0.3, Math.sin(ang) * dist);
+        sceneGroup.add(hill);
+      }
+
+      const bladeMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x10b981,
+        roughness: 0.65
+      }), 0.95);
+      for (let g = 0; g < 32; g++) {
+        const ang = (g / 32) * Math.PI * 2 + (g % 3) * 0.1;
+        const r = 3.8 + (g % 6) * 2.1;
+        const tuft = new THREE.Group();
+        tuft.position.set(Math.cos(ang) * r, 0, Math.sin(ang) * r);
+        for (let b = 0; b < 3; b++) {
+          const blade = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.45 + b * 0.1, 4), bladeMat);
+          blade.position.set((b - 1) * 0.1, 0.22, 0);
+          blade.rotation.z = (b - 1) * 0.25;
+          tuft.add(blade);
+        }
+        sceneGroup.add(tuft);
+      }
+
+      // 蓝天白云：高空立体洁白流云群
+      const cloudMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xf0f9ff,
+        emissiveIntensity: 0.28,
+        roughness: 0.45
+      }), 0.90);
+      const clouds = [];
+      for (let c = 0; c < 10; c++) {
+        const ang = (c / 10) * Math.PI * 2;
+        const rad = 11.5 + (c % 3) * 4.2;
+        const cGrp = new THREE.Group();
+        [[-0.95, 0, 0.95], [0, 0.28, 1.25], [0.95, 0.04, 0.90], [0.35, 0.15, 0.85]].forEach(([ox, oy, s]) => {
+          const puff = new THREE.Mesh(new THREE.SphereGeometry(1.15 * s, 14, 12), cloudMat);
+          puff.scale.set(1.45, 0.58, 1.0);
+          puff.position.set(ox, oy, 0);
+          cGrp.add(puff);
+        });
+        cGrp.position.set(Math.cos(ang) * rad, 6.8 + (c % 3) * 1.6, Math.sin(ang) * rad);
+        cGrp.rotation.y = -ang + Math.PI / 2;
+        sceneGroup.add(cGrp);
+        clouds.push({ cGrp, baseX: cGrp.position.x, baseZ: cGrp.position.z, phase: c * 0.8 });
+      }
+      animCallbacks.push((dt, p) => {
+        clouds.forEach(cl => {
+          cl.cGrp.position.x = cl.baseX + Math.sin(p * 4 + cl.phase) * 0.55;
+        });
+      });
+
+      // 天地炮专属：熔岩焦土渐变地面层
+      if (options.withScorchEarth) {
+        const scorchGroup = new THREE.Group();
+        scorchGroup.position.set(0, 0.015, 0);
+        scorchGroup.visible = false;
+        sceneGroup.add(scorchGroup);
+
+        const crackTex = typeof getMagmaCrackTexture === 'function' ? getMagmaCrackTexture() : null;
+        const charMat = new THREE.MeshStandardMaterial({
+          color: 0x180905,
+          emissive: 0x7c2d12,
+          emissiveIntensity: 0.45,
+          roughness: 0.92,
+          transparent: true,
+          opacity: 0
+        });
+        const charDisc = new THREE.Mesh(new THREE.CircleGeometry(9.5, 48), charMat);
+        charDisc.rotation.x = -Math.PI / 2;
+        scorchGroup.add(charDisc);
+
+        const lavaMat = new THREE.MeshBasicMaterial({
+          map: crackTex,
+          color: 0xff5500,
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        const lavaDisc = new THREE.Mesh(new THREE.CircleGeometry(8.8, 48), lavaMat);
+        lavaDisc.rotation.x = -Math.PI / 2;
+        lavaDisc.position.y = 0.012;
+        scorchGroup.add(lavaDisc);
+
+        const magmaRingMat = new THREE.MeshBasicMaterial({
+          color: 0xfbbf24,
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+        const magmaRing = new THREE.Mesh(new THREE.RingGeometry(2.2, 6.8, 40), magmaRingMat);
+        magmaRing.rotation.x = -Math.PI / 2;
+        magmaRing.position.y = 0.02;
+        scorchGroup.add(magmaRing);
+
+        sceneGroup.userData.setScorchProgress = (sp, fade = 1) => {
+          if (sp <= 0.001) {
+            scorchGroup.visible = false;
+            return;
+          }
+          scorchGroup.visible = true;
+          const clamped = Math.min(1, Math.max(0, sp));
+          const sc = 0.25 + clamped * 1.15;
+          scorchGroup.scale.setScalar(sc);
+          charMat.opacity = clamped * 0.95 * fade;
+          lavaMat.opacity = clamped * 0.92 * fade;
+          magmaRingMat.opacity = Math.sin(clamped * Math.PI * 0.85) * 0.78 * fade;
+          lavaDisc.rotation.z += 0.008;
+        };
+      }
+    } else if (sceneType === 'cg_ocean_day') {
+      // 钓鱼马专属：俯视蔚蓝大海（无月亮），海面具备真实深度遮挡，沉入水下部分完全不可见
+      const deepSeaMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x0369a1,
+        emissive: 0x075985,
+        emissiveIntensity: 0.32,
+        roughness: 0.16,
+        metalness: 0.38
+      }), 0.98, true);
+      const seaSurface = new THREE.Mesh(new THREE.CircleGeometry(48, 64), deepSeaMat);
+      seaSurface.rotation.x = -Math.PI / 2;
+      seaSurface.position.y = 0.0;
+      seaSurface.renderOrder = 2;
+      sceneGroup.add(seaSurface);
+
+      const waveFoamMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0xe0f2fe,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }), 0.62);
+      const waveCyanMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }), 0.55);
+
+      const waveRings = [1.1, 2.1, 3.4, 5.0, 7.2].map((r, idx) => {
+        const pts = [];
+        for (let s = 0; s < 48; s++) {
+          const a = (s / 48) * Math.PI * 2;
+          const rad = r + Math.sin(a * (6 + idx * 2)) * 0.18;
+          pts.push(new THREE.Vector3(Math.cos(a) * rad, 0.04 + (idx % 2) * 0.03, Math.sin(a) * rad));
+        }
+        const curve = new THREE.CatmullRomCurve3(pts, true);
+        const mesh = new THREE.Mesh(
+          new THREE.TubeGeometry(curve, 64, 0.055, 8, true),
+          idx % 2 === 0 ? waveFoamMat : waveCyanMat
+        );
+        sceneGroup.add(mesh);
+        return { mesh, idx, baseR: r };
+      });
+
+      const linearSwells = Array.from({ length: 14 }, (_, i) => {
+        const ang = (i / 14) * Math.PI * 2;
+        const dist = 2.8 + (i % 4) * 2.4;
+        const crest = new THREE.Mesh(
+          new THREE.TorusGeometry(0.68, 0.045, 8, 24, Math.PI * 0.85),
+          i % 2 === 0 ? waveFoamMat : waveCyanMat
+        );
+        crest.position.set(Math.cos(ang) * dist, 0.05, Math.sin(ang) * dist);
+        crest.rotation.x = Math.PI / 2;
+        crest.rotation.z = ang;
+        sceneGroup.add(crest);
+        return { crest, ang, dist, i };
+      });
+
+      animCallbacks.push((dt, p) => {
+        waveRings.forEach(({ mesh, idx }) => {
+          mesh.rotation.y += dt * (idx % 2 === 0 ? 0.85 : -0.65);
+          const sc = 0.94 + Math.sin(p * 10 + idx) * 0.08;
+          mesh.scale.set(sc, 1, sc);
+        });
+        linearSwells.forEach(({ crest, ang, dist, i }) => {
+          const curR = dist + Math.sin(p * 8 + i) * 0.45;
+          crest.position.set(Math.cos(ang + p * 0.5) * curR, 0.05, Math.sin(ang + p * 0.5) * curR);
+        });
+      });
+    } else if (sceneType === 'cg_ocean_night') {
+      // 海底捞月专属：静谧夜海 + 镜头中心巨大圆月倒影 + 阵阵涟漪波纹
+      const nightSeaMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x051329,
+        emissive: 0x08203e,
+        emissiveIntensity: 0.35,
+        roughness: 0.14,
+        metalness: 0.52
+      }), 0.98, true);
+      const nightSea = new THREE.Mesh(new THREE.CircleGeometry(48, 64), nightSeaMat);
+      nightSea.rotation.x = -Math.PI / 2;
+      nightSea.position.y = 0.0;
+      sceneGroup.add(nightSea);
+
+      // 中心巨大的圆月海中倒影
+      const moonReflectGroup = new THREE.Group();
+      moonReflectGroup.position.set(0, 0.022, 0);
+      sceneGroup.add(moonReflectGroup);
+
+      const moonCoreMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0xfef9c3,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }), 0.92);
+      const moonInnerMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0xfde047,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }), 0.68);
+      const moonOuterHaloMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }), 0.42);
+
+      const moonCoreDisc = new THREE.Mesh(new THREE.CircleGeometry(1.95, 48), moonCoreMat);
+      moonCoreDisc.rotation.x = -Math.PI / 2;
+      const moonInnerDisc = new THREE.Mesh(new THREE.CircleGeometry(2.55, 48), moonInnerMat);
+      moonInnerDisc.rotation.x = -Math.PI / 2;
+      moonInnerDisc.position.y = -0.004;
+      const moonOuterHalo = new THREE.Mesh(new THREE.RingGeometry(1.85, 3.35, 48), moonOuterHaloMat);
+      moonOuterHalo.rotation.x = -Math.PI / 2;
+      moonOuterHalo.position.y = -0.006;
+      moonReflectGroup.add(moonOuterHalo, moonInnerDisc, moonCoreDisc);
+
+      // 海面阵阵波纹
+      const rippleRings = Array.from({ length: 6 }, (_, i) => {
+        const rMat = registerMat(new THREE.MeshBasicMaterial({
+          color: i % 2 === 0 ? 0xfef08a : 0x7dd3fc,
+          blending: THREE.AdditiveBlending,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        }), 0.65);
+        const rMesh = new THREE.Mesh(new THREE.RingGeometry(0.45 + i * 0.55, 0.54 + i * 0.55, 48), rMat);
+        rMesh.rotation.x = -Math.PI / 2;
+        rMesh.position.y = 0.03 + i * 0.002;
+        sceneGroup.add(rMesh);
+        return { rMesh, rMat, i };
+      });
+
+      sceneGroup.userData.moonReflectGroup = moonReflectGroup;
+      sceneGroup.userData.moonCoreMat = moonCoreMat;
+      sceneGroup.userData.moonInnerMat = moonInnerMat;
+      sceneGroup.userData.rippleRings = rippleRings;
+    } else if (sceneType === 'cg_sunset_mountain') {
+      // 列马车专属：远端巍峨高山 + 红色残阳巨日 + 峡谷冲锋古道
+      const canyonGroundMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x2d140e,
+        roughness: 0.88,
+        metalness: 0.08
+      }), 1.0);
+      const canyonGround = new THREE.Mesh(new THREE.CylinderGeometry(48, 48, 0.36, 48), canyonGroundMat);
+      canyonGround.position.y = -0.18;
+      sceneGroup.add(canyonGround);
+
+      // 远端主峰（建模马站立其上）与两侧崇山峻岭
+      const mainPeakMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x3b1912,
+        roughness: 0.84,
+        metalness: 0.12
+      }), 1.0);
+      const cliffRockMat = registerMat(new THREE.MeshStandardMaterial({
+        color: 0x4c2016,
+        roughness: 0.80,
+        metalness: 0.15
+      }), 1.0);
+
+      const farSummitGroup = new THREE.Group();
+      farSummitGroup.position.set(0, 0, -5.8);
+      const mainMount = new THREE.Mesh(new THREE.CylinderGeometry(1.85, 4.8, 2.35, 10), mainPeakMat);
+      mainMount.position.y = 1.15;
+      const summitCap = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.95, 0.24, 12), cliffRockMat);
+      summitCap.position.y = 2.28;
+      // 下山斜坡冲锋古道
+      const slopeRamp = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.28, 5.6), cliffRockMat);
+      slopeRamp.position.set(0, 1.12, 2.4);
+      slopeRamp.rotation.x = 0.41;
+      farSummitGroup.add(mainMount, summitCap, slopeRamp);
+      sceneGroup.add(farSummitGroup);
+
+      [[-5.2, -7.2, 4.6, 5.8], [5.2, -7.2, 4.6, 5.6], [-9.2, -5.5, 4.0, 4.5], [9.2, -5.5, 4.0, 4.5]].forEach(([mx, mz, mr, mh]) => {
+        const sidePeak = new THREE.Mesh(new THREE.ConeGeometry(mr, mh, 7), mainPeakMat);
+        sidePeak.position.set(mx, mh * 0.5 - 0.2, mz);
+        sceneGroup.add(sidePeak);
+      });
+
+      // 远山背景的一轮巨大红日（半径 1.68，与浮现放大的“车”棋子等大，且比建模马大）
+      const redSunGroup = new THREE.Group();
+      redSunGroup.position.set(0, 4.15, -8.8);
+      const sunCoreMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0xef4444
+      }), 0.94);
+      const sunHaloMat = registerMat(new THREE.MeshBasicMaterial({
+        color: 0xf97316,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }), 0.58);
+      const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(1.68, 32, 32), sunCoreMat);
+      sunDisc.scale.set(1, 1, 0.25);
+      const sunCorona = new THREE.Mesh(new THREE.RingGeometry(1.58, 2.45, 48), sunHaloMat);
+      redSunGroup.add(sunDisc, sunCorona);
+      sceneGroup.add(redSunGroup);
+      sceneGroup.userData.redSunGroup = redSunGroup;
+    }
+
+    return {
+      sceneGroup,
+      setFade(alpha, dt = 0.016, p = 0) {
+        const clamped = Math.max(0, Math.min(1, alpha));
+        sceneGroup.visible = clamped > 0.01;
+        sceneGroup.position.y = -(1 - clamped) * 0.55;
+        fadeMaterials.forEach(({ mat, baseOpacity, forceDepthWrite }) => {
+          mat.opacity = baseOpacity * clamped;
+          if (forceDepthWrite !== null) {
+            mat.depthWrite = clamped > 0.45 ? forceDepthWrite : false;
+          }
+        });
+        animCallbacks.forEach(cb => cb(dt, p));
+      }
+    };
+  },
+
+  /**
+   * 创建精细化棋子变身光环特效（用于“车”、“马”、“炮”、“将/帅”平滑变身为 3D 建模的过渡瞬间）
+   */
+  createSmoothMorphAura(parentGroup, colorHex = 0xfbbf24) {
+    const aura = new THREE.Group();
+    aura.visible = false;
+    parentGroup.add(aura);
+
+    const ringMat1 = new THREE.MeshBasicMaterial({
+      color: colorHex,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const ringMat2 = new THREE.MeshBasicMaterial({
+      color: 0xfef08a,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.045, 10, 32), ringMat1);
+    ring1.rotation.x = Math.PI / 2;
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.035, 10, 28), ringMat2);
+    ring2.rotation.x = Math.PI / 3;
+    const flashSphere = new THREE.Mesh(new THREE.SphereGeometry(0.65, 18, 18), ringMat2);
+    aura.add(ring1, ring2, flashSphere);
+
+    return {
+      aura,
+      update(pos, morphT, fade = 1) {
+        if (morphT <= 0.01 || morphT >= 0.99) {
+          aura.visible = false;
+          return;
+        }
+        aura.visible = true;
+        aura.position.copy(pos);
+        aura.position.y += 0.45;
+        const env = Math.sin(morphT * Math.PI);
+        ring1.rotation.z += 0.18;
+        ring2.rotation.y += 0.22;
+        ring1.scale.setScalar((0.6 + morphT * 1.35) * fade);
+        ring2.scale.setScalar((0.5 + env * 1.25) * fade);
+        flashSphere.scale.setScalar(env * 1.15 * fade);
+        ringMat1.opacity = env * 0.72 * fade;
+        ringMat2.opacity = env * 0.62 * fade;
+      }
+    };
+  },
+
+  /**
+   * 双将专属：精细化神兵 1（赤焰盘龙神枪剑）与神兵 2（金凰凤翅破天戟）及合体轩辕破天巨剑
+   */
+  createRefinedDivineWeaponPairAndGreatsword(goldMat, crimsonLacquerMat, darkIronMat, goldGlowMat, crimsonGlowMat) {
+    // 武器 1：赤焰盘龙神枪剑
+    const weapon1 = new THREE.Group();
+    const shaft1 = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.064, 2.35, 14), darkIronMat);
+    const gripRing1 = new THREE.Mesh(new THREE.TorusGeometry(0.095, 0.025, 8, 18), goldMat);
+    gripRing1.rotation.x = Math.PI / 2;
+    gripRing1.position.y = -1.12;
+    const dragonGuard1 = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.16, 0.22), goldMat);
+    dragonGuard1.position.y = 0.78;
+    [-1, 1].forEach(s => {
+      const horn = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.38, 6), crimsonLacquerMat);
+      horn.position.set(s * 0.42, 0.92, 0);
+      horn.rotation.z = -s * 0.68;
+      weapon1.add(horn);
+    });
+    const coilPts = [];
+    for (let i = 0; i <= 20; i++) {
+      const f = i / 20;
+      const a = f * Math.PI * 4;
+      coilPts.push(new THREE.Vector3(Math.cos(a) * 0.09, -0.65 + f * 1.35, Math.sin(a) * 0.09));
+    }
+    const dragonCoil = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(coilPts), 32, 0.022, 8, false),
+      goldMat
+    );
+    const spearBlade1 = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.15, 4), crimsonGlowMat.clone());
+    spearBlade1.scale.set(1.25, 1, 0.38);
+    spearBlade1.position.y = 1.42;
+    const bladeSpine1 = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.95, 0.09), goldMat);
+    bladeSpine1.position.y = 1.28;
+    weapon1.add(shaft1, gripRing1, dragonGuard1, dragonCoil, spearBlade1, bladeSpine1);
+
+    // 武器 2：金凰凤翅破天戟
+    const weapon2 = new THREE.Group();
+    const shaft2 = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.064, 2.35, 14), goldMat);
+    const pommel2 = new THREE.Mesh(new THREE.OctahedronGeometry(0.13, 1), crimsonLacquerMat);
+    pommel2.position.y = -1.22;
+    const collar2 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.24, 12), crimsonLacquerMat);
+    collar2.position.y = 0.76;
+    [-1, 1].forEach(s => {
+      const crescent = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.048, 10, 24, Math.PI * 0.92), goldMat);
+      crescent.rotation.z = s === 1 ? -Math.PI * 0.45 : Math.PI * 0.55;
+      crescent.position.set(s * 0.16, 0.96, 0);
+      const featherWing = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.48, 5), goldGlowMat.clone());
+      featherWing.position.set(s * 0.48, 1.12, 0);
+      featherWing.rotation.z = -s * 0.52;
+      weapon2.add(crescent, featherWing);
+    });
+    const halberdTip2 = new THREE.Mesh(new THREE.ConeGeometry(0.19, 1.18, 4), goldGlowMat.clone());
+    halberdTip2.scale.set(1.25, 1, 0.38);
+    halberdTip2.position.y = 1.44;
+    weapon2.add(shaft2, pommel2, collar2, halberdTip2);
+
+    // 合体巨型神剑：龙凤乾坤轩辕破天巨剑（剑尖朝下 -Y，方便直接从空中垂直插落将帅）
+    const greatsword = new THREE.Group();
+    // 剑刃主体（双层棱面+血槽铭文）
+    const outerBlade = new THREE.Mesh(new THREE.ConeGeometry(0.46, 3.85, 4), goldMat);
+    outerBlade.rotation.x = Math.PI;
+    outerBlade.scale.set(1.48, 1, 0.34);
+    outerBlade.position.y = 0.0;
+
+    const bladeEdgeGlow = new THREE.Mesh(new THREE.ConeGeometry(0.50, 3.92, 4), goldGlowMat.clone());
+    bladeEdgeGlow.rotation.x = Math.PI;
+    bladeEdgeGlow.scale.set(1.54, 1, 0.22);
+    bladeEdgeGlow.position.y = -0.02;
+
+    const fullerCore = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.85, 0.18), crimsonLacquerMat);
+    fullerCore.position.y = 0.42;
+    const runeLine = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.65, 0.21), crimsonGlowMat.clone());
+    runeLine.position.y = 0.42;
+
+    // 剑格护手（龙凤双翼展翅护手 + 乾坤太极神环）
+    const guardCenter = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.34, 0.42), crimsonLacquerMat);
+    guardCenter.position.y = 1.92;
+    const guardGem = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 1), goldGlowMat.clone());
+    guardGem.position.set(0, 1.92, 0.22);
+    const guardGemBack = guardGem.clone();
+    guardGemBack.position.set(0, 1.92, -0.22);
+
+    [-1, 1].forEach(s => {
+      for (let w = 0; w < 3; w++) {
+        const wingPinion = new THREE.Mesh(
+          new THREE.ConeGeometry(0.14 - w * 0.02, 0.95 - w * 0.15, 6),
+          w % 2 === 0 ? goldMat : crimsonLacquerMat
+        );
+        wingPinion.position.set(s * (0.72 + w * 0.28), 2.02 + w * 0.14, 0);
+        wingPinion.rotation.z = -s * (0.95 - w * 0.18);
+        greatsword.add(wingPinion);
+      }
+      const lowerFangs = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.52, 5), goldMat);
+      lowerFangs.position.set(s * 0.48, 1.55, 0);
+      lowerFangs.rotation.z = s * 2.75;
+      greatsword.add(lowerFangs);
+    });
+
+    const swordHaloRing = new THREE.Mesh(new THREE.TorusGeometry(1.08, 0.055, 12, 36), goldGlowMat.clone());
+    swordHaloRing.position.y = 1.92;
+
+    // 剑柄与龙珠剑首
+    const hiltShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 1.18, 16), darkIronMat);
+    hiltShaft.position.y = 2.62;
+    for (let r = 0; r < 4; r++) {
+      const gripBand = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.028, 8, 20), goldMat);
+      gripBand.rotation.x = Math.PI / 2;
+      gripBand.position.y = 2.22 + r * 0.26;
+      greatsword.add(gripBand);
+    }
+    const pommelCrown = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.18, 0.22, 12), goldMat);
+    pommelCrown.position.y = 3.28;
+    const pommelSphere = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 1), crimsonGlowMat.clone());
+    pommelSphere.position.y = 3.55;
+
+    greatsword.add(
+      outerBlade,
+      bladeEdgeGlow,
+      fullerCore,
+      runeLine,
+      guardCenter,
+      guardGem,
+      guardGemBack,
+      swordHaloRing,
+      hiltShaft,
+      pommelCrown,
+      pommelSphere
+    );
+    greatsword.userData = { swordHaloRing };
+    return { weapon1, weapon2, greatsword };
+  },
+
+  /**
+   * 构建 17 种古谱杀法的全屏 CG 级 3D 场景切换与棋子动态变身演出
    */
   build3DSpectacleForType(vfxType, kPos, cPos, rPos, winnerColor, pattern = null, kingItem = null, vfxContext = null) {
     const group = new THREE.Group();
@@ -1473,45 +2382,50 @@ Object.assign(Xiangqi3DApp.prototype, {
       return wrapped;
     };
 
+    const smoothstep = (e0, e1, x) => {
+      const t = Math.max(0, Math.min(1, (x - e0) / Math.max(1e-5, e1 - e0)));
+      return t * t * (3 - 2 * t);
+    };
+
     const goldMat = new THREE.MeshStandardMaterial({
       color: 0xfbbf24,
       emissive: 0x92400e,
-      emissiveIntensity: 0.26,
+      emissiveIntensity: 0.22,
       metalness: 0.86,
       roughness: 0.22
     });
     const darkIronMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
       emissive: 0x0f172a,
-      emissiveIntensity: 0.18,
+      emissiveIntensity: 0.16,
       metalness: 0.82,
       roughness: 0.28
     });
     const crimsonLacquerMat = new THREE.MeshStandardMaterial({
       color: 0x991b1b,
       emissive: 0x450a0a,
-      emissiveIntensity: 0.24,
+      emissiveIntensity: 0.20,
       metalness: 0.36,
       roughness: 0.32
     });
     const bronzeWoodMat = new THREE.MeshStandardMaterial({
       color: 0x78350f,
       emissive: 0x270e04,
-      emissiveIntensity: 0.18,
+      emissiveIntensity: 0.16,
       metalness: 0.42,
       roughness: 0.38
     });
     const ivoryFangMat = new THREE.MeshStandardMaterial({
       color: 0xfffbeb,
       emissive: 0xfef3c7,
-      emissiveIntensity: 0.20,
+      emissiveIntensity: 0.18,
       metalness: 0.22,
       roughness: 0.18
     });
     const jadeIceMat = new THREE.MeshStandardMaterial({
       color: 0x38bdf8,
       emissive: 0x0369a1,
-      emissiveIntensity: 0.32,
+      emissiveIntensity: 0.28,
       metalness: 0.32,
       roughness: 0.18,
       transparent: true,
@@ -1520,7 +2434,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     const crimsonGlowMat = new THREE.MeshBasicMaterial({
       color: 0xef4444,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.60,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
@@ -1528,7 +2442,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     const goldGlowMat = new THREE.MeshBasicMaterial({
       color: 0xfde047,
       transparent: true,
-      opacity: 0.68,
+      opacity: 0.62,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
@@ -1536,27 +2450,85 @@ Object.assign(Xiangqi3DApp.prototype, {
     const cyanGlowMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
-      opacity: 0.66,
+      opacity: 0.60,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
     });
 
     const checkersList = Array.isArray(pattern?.checkers) ? pattern.checkers : [];
-    const findCheckerPosByType = (typeChar, fallbackPos) => {
-      const found = checkersList.find(ch => ch && ch.type === typeChar && typeof ch.r === 'number' && typeof ch.c === 'number');
-      if (found) return gridToWorld(found.r, found.c);
+    const attackerItems = (this._activeCheckerMeshes || []).filter(it => !it.isKing && it.isAttacker);
+
+    const findAttackerItemByType = (typeChar, excludeItem = null) => {
+      const found = attackerItems.find(
+        it => it !== excludeItem && (it.piece?.isHidden ? (it.piece.posType || it.piece.type) : it.piece?.type) === typeChar
+      );
+      if (found) return found;
       if (this.engine?.board) {
         for (let r = 0; r < 10; r++) {
           for (let c = 0; c < 9; c++) {
             const p = this.engine.board[r][c];
             if (p && p.color === winnerColor && (p.isHidden ? (p.posType || p.type) : p.type) === typeChar) {
-              return gridToWorld(r, c);
+              const m = this.pieceMeshes.get(p.id);
+              if (m && (!excludeItem || excludeItem.mesh !== m)) {
+                let item = this._activeCheckerMeshes.find(x => x.mesh === m);
+                if (!item) {
+                  item = {
+                    mesh: m,
+                    piece: p,
+                    coord: { r, c },
+                    basePos: m.position.clone(),
+                    isKing: false,
+                    isAttacker: true,
+                    customDriven: false
+                  };
+                  this._activeCheckerMeshes.push(item);
+                }
+                return item;
+              }
             }
           }
         }
       }
+      return attackerItems.find(it => it !== excludeItem) || attackerItems[0] || null;
+    };
+
+    const findCheckerPosByType = (typeChar, fallbackPos) => {
+      const item = findAttackerItemByType(typeChar);
+      if (item && item.basePos) return item.basePos.clone();
+      const found = checkersList.find(ch => ch && ch.type === typeChar && typeof ch.r === 'number' && typeof ch.c === 'number');
+      if (found) return gridToWorld(found.r, found.c);
       return fallbackPos;
+    };
+
+    const findFriendlyGeneralItem = () => {
+      if (this.engine?.board) {
+        for (let r = 0; r < 10; r++) {
+          for (let c = 0; c < 9; c++) {
+            const p = this.engine.board[r][c];
+            if (p && p.color === winnerColor && p.type === 'k') {
+              const m = this.pieceMeshes.get(p.id);
+              if (m) {
+                let item = this._activeCheckerMeshes.find(x => x.mesh === m);
+                if (!item) {
+                  item = {
+                    mesh: m,
+                    piece: p,
+                    coord: { r, c },
+                    basePos: m.position.clone(),
+                    isKing: false,
+                    isAttacker: true,
+                    customDriven: false
+                  };
+                  this._activeCheckerMeshes.push(item);
+                }
+                return item;
+              }
+            }
+          }
+        }
+      }
+      return attackerItems[0] || null;
     };
 
     const create3DChainBetween = (p1, p2, linkCount = 14, parentObj = group) => {
@@ -1578,8 +2550,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     };
 
     /**
-     * 通用 3D 爆炸与冲击波模组（用于重炮、马后炮、夹车炮、铁门栓、天地炮及重兵轰击）
-     * 包含：内层白金火核、中层赤焰爆球、外层双圈气浪冲击波、8团浓烟与14块飞散破片
+     * 通用 3D 爆炸与冲击波模组（支持动态中心位置）
      */
     const create3DCannonExplosion = (centerPos, scale = 1.0) => {
       const expGroup = new THREE.Group();
@@ -1609,51 +2580,54 @@ Object.assign(Xiangqi3DApp.prototype, {
       tiltedWave.rotation.x = Math.PI / 3;
       expGroup.add(coreSphere, fireball, groundWave, tiltedWave);
 
-      const shrapnelList = Array.from({ length: 14 }, (_, i) => {
-        const ang = (i / 14) * Math.PI * 2;
+      const shrapnelList = Array.from({ length: 16 }, (_, i) => {
+        const ang = (i / 16) * Math.PI * 2;
         const frag = new THREE.Mesh(
-          new THREE.DodecahedronGeometry((0.12 + (i % 3) * 0.04) * scale, 0),
+          new THREE.DodecahedronGeometry((0.12 + (i % 3) * 0.045) * scale, 0),
           i % 2 === 0 ? goldMat : darkIronMat
         );
         expGroup.add(frag);
         return {
           frag,
           ang,
-          spd: (2.2 + (i % 4) * 0.65) * scale,
-          lift: (1.4 + (i % 3) * 0.55) * scale
+          spd: (2.3 + (i % 4) * 0.72) * scale,
+          lift: (1.5 + (i % 3) * 0.62) * scale
         };
       });
 
       let soundTriggered = false;
       return {
         expGroup,
-        update(localP, fade = 1) {
+        update(localP, fade = 1, overrideCenter = null) {
           if (localP <= 0 || localP >= 1) {
             expGroup.visible = false;
             return;
           }
+          if (overrideCenter) {
+            expGroup.position.set(overrideCenter.x, (overrideCenter.y || 0) + 0.25, overrideCenter.z);
+          }
           expGroup.visible = true;
           if (!soundTriggered) {
             soundTriggered = true;
-            this.cameraShake = Math.max(this.cameraShake || 0, 0.48 * scale);
+            this.cameraShake = Math.max(this.cameraShake || 0, 0.45 * scale);
           }
           const fastExpand = 1 - Math.pow(1 - localP, 3);
           const alpha = Math.max(0, (1 - localP) * fade);
 
-          coreSphere.scale.setScalar(0.5 + fastExpand * 1.85);
-          coreSphere.material.opacity = alpha * 0.78;
+          coreSphere.scale.setScalar(0.5 + fastExpand * 1.9);
+          coreSphere.material.opacity = alpha * 0.76;
 
-          fireball.scale.setScalar(0.4 + fastExpand * 2.35);
+          fireball.scale.setScalar(0.4 + fastExpand * 2.45);
           fireball.rotation.y += 0.12;
           fireball.rotation.x += 0.08;
-          fireball.material.opacity = alpha * 0.68;
+          fireball.material.opacity = alpha * 0.66;
 
-          groundWave.scale.setScalar(0.5 + fastExpand * 3.4);
-          groundWave.material.opacity = alpha * 0.75;
+          groundWave.scale.setScalar(0.5 + fastExpand * 3.5);
+          groundWave.material.opacity = alpha * 0.72;
 
-          tiltedWave.scale.setScalar(0.5 + fastExpand * 2.8);
+          tiltedWave.scale.setScalar(0.5 + fastExpand * 2.9);
           tiltedWave.rotation.z += 0.15;
-          tiltedWave.material.opacity = alpha * 0.65;
+          tiltedWave.material.opacity = alpha * 0.62;
 
           shrapnelList.forEach(({ frag, ang, spd, lift }) => {
             const dist = 0.25 + fastExpand * spd;
@@ -1662,8 +2636,8 @@ Object.assign(Xiangqi3DApp.prototype, {
               Math.max(-0.15, Math.sin(localP * Math.PI) * lift),
               Math.sin(ang) * dist
             );
-            frag.rotation.x += 0.18;
-            frag.rotation.z += 0.15;
+            frag.rotation.x += 0.20;
+            frag.rotation.z += 0.16;
             frag.scale.setScalar(Math.max(0.01, (1 - localP * 0.65) * fade));
           });
         }
@@ -1671,146 +2645,117 @@ Object.assign(Xiangqi3DApp.prototype, {
     };
 
     /**
-     * 通用受攻击将帅 3D 棋子物理受击反馈（撞飞、剑劈、炮震、重锤砸扁）
+     * 通用受攻击将帅 3D 棋子物理受击反馈（支持自定义中心点 anchorPos 与基础缩放 baseScale）
      */
-    const applyKingHitFeedback = (hitP, style = 'collision', dirX = 0, dirZ = 1) => {
+    const applyKingHitFeedback = (hitP, style = 'collision', dirX = 0, dirZ = 1, anchorPos = null, baseScale = 1.0) => {
       if (!kingItem || !kingItem.mesh || hitP <= 0) return;
       kingItem.customDriven = true;
       const m = kingItem.mesh;
-      const bp = kingItem.basePos;
+      const bp = anchorPos || kingItem.basePos;
       const clamped = Math.min(1, Math.max(0, hitP));
       const env = Math.sin(clamped * Math.PI);
       const decay = 1 - clamped * 0.75;
 
-      if (m.userData?.bodyMat) {
-        m.userData.bodyMat.emissive.setHex(style === 'slash' ? 0xfbbf24 : 0xef4444);
-        m.userData.bodyMat.emissiveIntensity = env * 0.85;
-      }
-
       if (style === 'collision') {
-        const joltX = Math.sin(clamped * 68) * 0.18 * decay + dirX * env * 0.28;
-        const joltZ = Math.cos(clamped * 62) * 0.18 * decay + dirZ * env * 0.28;
-        const jumpY = Math.max(0, Math.sin(clamped * Math.PI * 1.4) * 0.68 * decay);
-        m.position.set(bp.x + joltX, jumpY, bp.z + joltZ);
-        m.rotation.set(
-          Math.sin(clamped * 32) * 0.52 * decay,
-          clamped * Math.PI * 1.5,
-          Math.cos(clamped * 28) * 0.48 * decay
+        const joltX = Math.sin(clamped * 68) * 0.22 * decay + dirX * env * 0.34;
+        const joltZ = Math.cos(clamped * 62) * 0.22 * decay + dirZ * env * 0.34;
+        const jumpY = Math.max(0, Math.sin(clamped * Math.PI * 1.4) * 0.78 * decay);
+        const sq = (1 + Math.sin(clamped * 36) * 0.18 * decay) * baseScale;
+        this.setPiece3DPose(
+          m,
+          bp.x + joltX,
+          (bp.y || 0) + jumpY,
+          bp.z + joltZ,
+          Math.sin(clamped * 32) * 0.65 * decay,
+          clamped * Math.PI * 1.8,
+          Math.cos(clamped * 28) * 0.58 * decay,
+          [sq, (baseScale * baseScale) / Math.max(0.3, sq), sq],
+          1.0,
+          env * 0.75,
+          0xef4444
         );
-        const sq = 1 + Math.sin(clamped * 36) * 0.16 * decay;
-        m.scale.set(sq, 1 / sq, sq);
       } else if (style === 'slash') {
-        const slideBack = Math.sin(clamped * Math.PI) * 0.34;
-        const shake = Math.sin(clamped * 75) * 0.12 * decay;
-        m.position.set(bp.x + shake, Math.max(0, Math.sin(clamped * Math.PI * 2) * 0.26 * decay), bp.z + dirZ * slideBack);
-        m.rotation.set(-dirZ * env * 0.58, shake * 2.0, Math.sin(clamped * 42) * 0.36 * decay);
-        const pressY = 1 - env * 0.34;
-        const spreadXZ = 1 + env * 0.22;
-        m.scale.set(spreadXZ, pressY, spreadXZ);
-      } else if (style === 'cannon_blast') {
-        const blastLift = Math.max(0, Math.sin(clamped * Math.PI) * 0.85);
-        const recoil = Math.sin(clamped * Math.PI * 0.8) * 0.35;
-        const jitter = Math.sin(clamped * 80) * 0.14 * decay;
-        m.position.set(bp.x + dirX * recoil + jitter, blastLift, bp.z + dirZ * recoil - jitter);
-        m.rotation.set(
-          dirZ * env * 0.72 + Math.sin(clamped * 30) * 0.25,
-          clamped * Math.PI * 2.2,
-          -dirX * env * 0.65
+        const slideBack = Math.sin(clamped * Math.PI) * 0.38;
+        const shake = Math.sin(clamped * 75) * 0.14 * decay;
+        const pressY = (1 - env * 0.34) * baseScale;
+        const spreadXZ = (1 + env * 0.22) * baseScale;
+        this.setPiece3DPose(
+          m,
+          bp.x + shake,
+          (bp.y || 0) + Math.max(0, Math.sin(clamped * Math.PI * 2) * 0.28 * decay),
+          bp.z + dirZ * slideBack,
+          -dirZ * env * 0.62,
+          shake * 2.0,
+          Math.sin(clamped * 42) * 0.38 * decay,
+          [spreadXZ, pressY, spreadXZ],
+          1.0,
+          env * 0.78,
+          0xfbbf24
         );
-        const pulse = 1 + Math.sin(clamped * 40) * 0.18 * decay;
-        m.scale.set(pulse, 1 / pulse, pulse);
+      } else if (style === 'cannon_blast') {
+        const blastLift = Math.max(0, Math.sin(clamped * Math.PI) * 0.95);
+        const recoil = Math.sin(clamped * Math.PI * 0.8) * 0.42;
+        const jitter = Math.sin(clamped * 80) * 0.16 * decay;
+        const pulse = (1 + Math.sin(clamped * 40) * 0.20 * decay) * baseScale;
+        this.setPiece3DPose(
+          m,
+          bp.x + dirX * recoil + jitter,
+          (bp.y || 0) + blastLift,
+          bp.z + dirZ * recoil - jitter,
+          dirZ * env * 0.78 + Math.sin(clamped * 30) * 0.28,
+          clamped * Math.PI * 2.4,
+          -dirX * env * 0.68,
+          [pulse, (baseScale * baseScale) / Math.max(0.3, pulse), pulse],
+          1.0,
+          env * 0.80,
+          0xef4444
+        );
       } else if (style === 'heavy_smash') {
         const crush = clamped < 0.35 ? (clamped / 0.35) : Math.max(0.18, 1 - (clamped - 0.35) * 0.9);
-        const tremor = Math.sin(clamped * 85) * 0.11 * decay;
-        m.position.set(bp.x + tremor, -crush * 0.08, bp.z - tremor);
-        m.rotation.set(Math.sin(clamped * 45) * 0.22 * decay, 0, Math.cos(clamped * 45) * 0.22 * decay);
-        m.scale.set(1 + crush * 0.38, Math.max(0.42, 1 - crush * 0.54), 1 + crush * 0.38);
+        const tremor = Math.sin(clamped * 85) * 0.12 * decay;
+        this.setPiece3DPose(
+          m,
+          bp.x + tremor,
+          (bp.y || 0),
+          bp.z - tremor,
+          Math.sin(clamped * 45) * 0.24 * decay,
+          0,
+          Math.cos(clamped * 45) * 0.24 * decay,
+          [(1 + crush * 0.38) * baseScale, Math.max(0.42, 1 - crush * 0.54) * baseScale, (1 + crush * 0.38) * baseScale],
+          1.0,
+          env * 0.78,
+          0xef4444
+        );
       }
     };
 
     // =========================================================================
-    // 1. 双车错 (Double Chariot): 两辆 3D 重甲战车从棋盘双车位出发，在将（帅）位置交会猛烈相撞 + 撞击爆炸反馈！
+    // 1. 双车错 (Double Chariot):
+    // 两“车”棋子飞起绕屏幕中心旋转（含自身多圈翻转+远近缩放），同时“将（帅）”飞至屏幕中心战场地面，
+    // 原棋盘渐隐切为古战场 -> 两“车”落于战场地面平滑变身为战车建模 -> 交错冲撞撞碎“将（帅）” -> 平滑切回终局棋面！
     // =========================================================================
     if (vfxType === 'double_chariot') {
-      const rookCheckers = checkersList.filter(ch => ch && ch.type === 'r' && typeof ch.r === 'number');
-      if (rookCheckers.length < 2 && this.engine?.board) {
-        for (let r = 0; r < 10; r++) {
-          for (let c = 0; c < 9; c++) {
-            const p = this.engine.board[r][c];
-            if (p && p.color === winnerColor && (p.isHidden ? (p.posType || p.type) : p.type) === 'r') {
-              if (!rookCheckers.some(rc => rc.r === r && rc.c === c)) {
-                rookCheckers.push({ r, c, type: 'r' });
-              }
-            }
-          }
-        }
-      }
+      const cgScene = this.createCGSceneEnvironment('cg_battlefield', group);
+      const rookItem0 = findAttackerItemByType('r', null);
+      const rookItem1 = findAttackerItemByType('r', rookItem0);
+      const startPos0 = rookItem0?.basePos ? rookItem0.basePos.clone() : new THREE.Vector3(cPos.x, 0, cPos.z);
+      const startPos1 = rookItem1?.basePos ? rookItem1.basePos.clone() : new THREE.Vector3(kPos.x + 2.8, 0, kPos.z + 1.2);
 
-      const startWorld0 = rookCheckers[0]
-        ? gridToWorld(rookCheckers[0].r, rookCheckers[0].c)
-        : new THREE.Vector3(cPos.x, 0.05, cPos.z);
-      const startWorld1 = rookCheckers[1]
-        ? gridToWorld(rookCheckers[1].r, rookCheckers[1].c)
-        : new THREE.Vector3(kPos.x + (cPos.x <= kPos.x ? 3.2 : -3.2), 0.05, kPos.z + 1.0);
+      const morphAura0 = this.createSmoothMorphAura(group, 0xfbbf24);
+      const morphAura1 = this.createSmoothMorphAura(group, 0xef4444);
 
-      const chariotUnits = [startWorld0, startWorld1].map((sWorld, idx) => {
-        const sign = idx === 0 ? -1 : 1;
-        const startV = new THREE.Vector3(sWorld.x, 0.05, sWorld.z);
-        const toKing = new THREE.Vector3(kPos.x - startV.x, 0, kPos.z - startV.z);
-        if (toKing.length() < 0.8) toKing.set(sign * 2.6, 0, 0.9);
-        const dirNorm = toKing.clone().normalize();
-        const perpNorm = new THREE.Vector3(-dirNorm.z * sign, 0, dirNorm.x * sign);
+      const chariot0 = this.createArticulated3DWarChariot(bronzeWoodMat, goldMat, darkIronMat, goldGlowMat);
+      const chariot1 = this.createArticulated3DWarChariot(bronzeWoodMat, goldMat, darkIronMat, crimsonGlowMat);
+      chariot0.visible = false;
+      chariot1.visible = false;
+      group.add(chariot0, chariot1);
 
-        const midV = new THREE.Vector3(
-          THREE.MathUtils.lerp(startV.x, kPos.x, 0.62) + perpNorm.x * 0.95,
-          0.05,
-          THREE.MathUtils.lerp(startV.z, kPos.z, 0.62) + perpNorm.z * 0.95
-        );
-        const endV = new THREE.Vector3(
-          kPos.x + dirNorm.x * 0.95 - perpNorm.x * 0.55,
-          0.05,
-          kPos.z + dirNorm.z * 0.95 - perpNorm.z * 0.55
-        );
-
-        const pathCurve = new THREE.CatmullRomCurve3([
-          startV,
-          midV,
-          new THREE.Vector3(kPos.x + perpNorm.x * 0.18, 0.05, kPos.z + perpNorm.z * 0.18),
-          endV
-        ]);
-
-        const originPad = new THREE.Mesh(
-          new THREE.RingGeometry(0.32, 0.72, 32),
-          idx === 0 ? goldGlowMat.clone() : crimsonGlowMat.clone()
-        );
-        originPad.rotation.x = -Math.PI / 2;
-        originPad.position.set(startV.x, 0.038, startV.z);
-        group.add(originPad);
-
-        const trackMesh = new THREE.Mesh(
-          new THREE.TubeGeometry(pathCurve, 40, 0.075, 8, false),
-          (idx === 0 ? goldGlowMat : crimsonGlowMat).clone()
-        );
-        group.add(trackMesh);
-
-        const ch = this.createArticulated3DWarChariot(
-          bronzeWoodMat,
-          goldMat,
-          darkIronMat,
-          idx === 0 ? goldGlowMat : crimsonGlowMat
-        );
-        ch.scale.setScalar(0.90);
-        ch.position.copy(startV);
-        const initTan = pathCurve.getTangent(0.02);
-        this.faceTargetHorizontally(ch, startV.x + initTan.x, startV.z + initTan.z);
-        group.add(ch);
-
-        return { ch, pathCurve, originPad, trackMesh, idx };
-      });
+      const centerGround = new THREE.Vector3(0, 0.02, 0);
+      const crashExplosion = create3DCannonExplosion(centerGround, 1.35);
 
       const slashPlanes = [-1, 1].map((dir, idx) => {
         const plane = new THREE.Mesh(
-          new THREE.PlaneGeometry(5.8, 1.45),
+          new THREE.PlaneGeometry(6.8, 1.65),
           new THREE.MeshBasicMaterial({
             map: slashTex,
             color: idx === 0 ? 0xfef08a : 0xef4444,
@@ -1822,46 +2767,179 @@ Object.assign(Xiangqi3DApp.prototype, {
           })
         );
         plane.rotation.x = -Math.PI / 2;
-        plane.rotation.z = dir * 0.58;
-        plane.position.set(kPos.x, 0.48 + idx * 0.1, kPos.z);
+        plane.rotation.z = dir * 0.56;
+        plane.position.set(0, 0.45 + idx * 0.08, 0);
         group.add(plane);
         return plane;
       });
 
-      const crashExplosion = create3DCannonExplosion(kPos, 1.15);
-
       return wrapUpdater((p, dt, fade = 1) => {
-        const rush = Math.min(1, p / 0.52);
-        const ease = 1 - Math.pow(1 - rush, 2.6);
-        chariotUnits.forEach(({ ch, pathCurve, originPad, trackMesh, idx }) => {
-          const curPt = pathCurve.getPoint(ease);
-          const tan = pathCurve.getTangent(Math.min(0.99, ease));
-          ch.position.copy(curPt);
-          this.faceTargetHorizontally(ch, curPt.x + tan.x, curPt.z + tan.z);
-          ch.userData.spinWheels(dt * 22, p * 4.8);
-          ch.scale.setScalar(0.90 * fade);
+        const cgWeight = smoothstep(0.02, 0.24, p) * (1 - smoothstep(0.76, 0.94, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-          originPad.scale.setScalar((1 + Math.sin(p * 14 + idx) * 0.22) * fade);
-          originPad.material.opacity = 0.65 * fade;
-          trackMesh.material.opacity = Math.sin(Math.min(1, p * 1.35) * Math.PI) * 0.62 * fade;
-        });
+        const landSpot0 = new THREE.Vector3(-4.2, 0.04, -1.65);
+        const landSpot1 = new THREE.Vector3(4.2, 0.04, 1.65);
+        const crossEnd0 = new THREE.Vector3(3.6, 0.04, 1.45);
+        const crossEnd1 = new THREE.Vector3(-3.6, 0.04, -1.45);
 
-        if (p >= 0.32) {
-          const hitP = (p - 0.32) / 0.62;
-          crashExplosion.update.call(this, hitP, fade);
-          applyKingHitFeedback(hitP, 'collision', 0, kPos.z < 0 ? -1 : 1);
+        // “将（帅）”飞至屏幕中心战场地面，被双车撞碎后在尾声平滑回到终局棋面
+        if (kingItem && kingItem.mesh) {
+          kingItem.customDriven = true;
+          if (p < 0.58) {
+            const toCenterT = smoothstep(0.02, 0.30, p);
+            const kx = THREE.MathUtils.lerp(kPos.x, 0, toCenterT);
+            const kz = THREE.MathUtils.lerp(kPos.z, 0, toCenterT);
+            const ky = Math.sin(toCenterT * Math.PI) * 1.65;
+            const kSc = THREE.MathUtils.lerp(1.0, 1.38, toCenterT);
+            this.setPiece3DPose(
+              kingItem.mesh,
+              kx,
+              ky,
+              kz,
+              Math.sin(toCenterT * Math.PI) * 0.35,
+              toCenterT * Math.PI * 2,
+              0,
+              kSc,
+              1.0,
+              0.15 * toCenterT
+            );
+          } else if (p < 0.80) {
+            const hitP = (p - 0.58) / 0.22;
+            applyKingHitFeedback(hitP, 'collision', 0, 1, centerGround, 1.38);
+          } else {
+            const backT = smoothstep(0.80, 0.96, p);
+            const kx = THREE.MathUtils.lerp(0, kPos.x, backT);
+            const kz = THREE.MathUtils.lerp(0, kPos.z, backT);
+            const ky = Math.sin(backT * Math.PI) * 0.75;
+            const kSc = THREE.MathUtils.lerp(1.38, 1.0, backT);
+            this.setPiece3DPose(kingItem.mesh, kx, ky, kz, 0, (1 - backT) * Math.PI, 0, kSc, 1.0, 0);
+          }
         }
 
-        slashPlanes.forEach((pl, i) => {
-          pl.material.opacity = Math.sin(Math.min(1, Math.max(0, (p - 0.22) * 1.45)) * Math.PI) * 0.72 * fade;
-          pl.scale.set(0.55 + ease * 1.45, 0.75 + ease * 0.55, 1);
-          pl.rotation.z += (i === 0 ? 1 : -1) * dt * 1.2;
-        });
+        // 双“车”棋子飞起绕屏幕中心立体旋转+自转翻转 -> 落入战场变身战车 -> 交错冲撞 -> 回归棋盘
+        const driveRook = (rItem, sPos, lSpot, cEnd, chModel, mAura, idx) => {
+          const sign = idx === 0 ? 1 : -1;
+          if (p < 0.44) {
+            const orbT = p / 0.44;
+            const liftIn = smoothstep(0.0, 0.22, orbT);
+            const settleToLand = smoothstep(0.72, 1.0, orbT);
+            const angle = orbT * Math.PI * 3.2 + (idx === 0 ? 0 : Math.PI);
+            // 3D 非纯圆倾斜椭圆轨道（近大远小）
+            const orbitRx = 3.6 + Math.sin(orbT * Math.PI * 2) * 0.65;
+            const orbitRz = 2.45 + Math.cos(orbT * Math.PI * 2) * 0.45;
+            const ox = Math.cos(angle) * orbitRx;
+            const oz = Math.sin(angle) * orbitRz;
+            const oy = 1.95 + Math.sin(angle * 2 + idx) * 0.95;
+
+            let curX = THREE.MathUtils.lerp(sPos.x, ox, liftIn);
+            let curZ = THREE.MathUtils.lerp(sPos.z, oz, liftIn);
+            let curY = THREE.MathUtils.lerp(0, oy, liftIn);
+            curX = THREE.MathUtils.lerp(curX, lSpot.x, settleToLand);
+            curZ = THREE.MathUtils.lerp(curZ, lSpot.z, settleToLand);
+            curY = THREE.MathUtils.lerp(curY, lSpot.y, settleToLand);
+
+            // 远近缩放 + 自身多圈立体翻转
+            const depthBoost = 1.18 + (curZ / 4.5) * 0.28;
+            const morphT = smoothstep(0.76, 1.0, orbT);
+            const pieceAlpha = 1 - smoothstep(0.25, 0.92, morphT);
+
+            if (rItem?.mesh) {
+              rItem.customDriven = true;
+              this.setPiece3DPose(
+                rItem.mesh,
+                curX,
+                curY,
+                curZ,
+                orbT * Math.PI * 6 * sign,
+                orbT * Math.PI * 4,
+                orbT * Math.PI * 4 * sign,
+                depthBoost * (1 + morphT * 0.35),
+                pieceAlpha,
+                morphT * 0.75,
+                idx === 0 ? 0xfbbf24 : 0xef4444
+              );
+            }
+            mAura.update(new THREE.Vector3(curX, curY, curZ), morphT, fade);
+
+            if (morphT > 0.08) {
+              chModel.visible = true;
+              chModel.position.set(curX, curY, curZ);
+              this.faceTargetHorizontally(chModel, 0, 0);
+              chModel.scale.setScalar(1.08 * smoothstep(0.08, 0.95, morphT) * fade);
+              chModel.userData.spinWheels(dt * 18, p * 5);
+            } else {
+              chModel.visible = false;
+            }
+          } else if (p < 0.78) {
+            mAura.update(lSpot, 0, 0);
+            if (rItem?.mesh) {
+              rItem.customDriven = true;
+              rItem.mesh.visible = false;
+            }
+            const chargeT = smoothstep(0.44, 0.72, p);
+            chModel.visible = true;
+            chModel.position.lerpVectors(lSpot, cEnd, chargeT);
+            this.faceTargetHorizontally(chModel, cEnd.x, cEnd.z);
+            const distCenter = chModel.position.length();
+            const focusScale = 1.12 + Math.max(0, 1 - distCenter / 4.0) * 0.22;
+            chModel.scale.setScalar(focusScale * fade);
+            chModel.userData.spinWheels(dt * 28, p * 6);
+          } else {
+            const backT = smoothstep(0.78, 0.96, p);
+            mAura.update(cEnd, 1 - backT, fade);
+            const chScale = 1.08 * (1 - smoothstep(0.0, 0.65, backT)) * fade;
+            chModel.visible = chScale > 0.02;
+            chModel.scale.setScalar(Math.max(0.001, chScale));
+
+            if (rItem?.mesh) {
+              rItem.customDriven = true;
+              const px = THREE.MathUtils.lerp(cEnd.x, sPos.x, backT);
+              const pz = THREE.MathUtils.lerp(cEnd.z, sPos.z, backT);
+              const py = Math.sin(backT * Math.PI) * 1.15;
+              this.setPiece3DPose(
+                rItem.mesh,
+                px,
+                py,
+                pz,
+                (1 - backT) * Math.PI * 2,
+                (1 - backT) * Math.PI,
+                0,
+                THREE.MathUtils.lerp(1.28, 1.0, backT),
+                smoothstep(0.10, 0.55, backT),
+                (1 - backT) * 0.4
+              );
+            }
+          }
+        };
+
+        driveRook(rookItem0, startPos0, landSpot0, crossEnd0, chariot0, morphAura0, 0);
+        driveRook(rookItem1, startPos1, landSpot1, crossEnd1, chariot1, morphAura1, 1);
+
+        if (p >= 0.57 && p <= 0.86) {
+          const expP = (p - 0.57) / 0.29;
+          crashExplosion.update.call(this, expP, fade, centerGround);
+          slashPlanes.forEach((pl, i) => {
+            pl.material.opacity = Math.sin(Math.min(1, expP) * Math.PI) * 0.78 * fade;
+            pl.scale.setScalar(0.65 + expP * 1.55);
+            pl.rotation.z += (i === 0 ? 1 : -1) * dt * 1.5;
+          });
+        } else {
+          slashPlanes.forEach(pl => { pl.material.opacity = 0; });
+        }
+
+        if (vfxContext?.setCameraOverride) {
+          if (p < 0.44) {
+            vfxContext.setCameraOverride(new THREE.Vector3(0, 1.15, 0), 12.2, 0.88, Math.sin(p * Math.PI * 2) * 0.28);
+          } else if (p < 0.78) {
+            vfxContext.setCameraOverride(new THREE.Vector3(0, 0.45, 0), 10.4, 0.94, (p - 0.44) * 0.65);
+          }
+        }
       });
     }
 
     // =========================================================================
-    // 2. 闷宫 (Smothered Palace): 四面 3D 玄铁宫墙拔地而起 + 四方玄铁顶盖不旋转稳稳垂直扣死九宫！
+    // 2. 闷宫 (Smothered Palace): 四面 3D 玄铁宫墙拔地而起 + 四方玄铁顶盖垂直扣死九宫！
     // =========================================================================
     if (vfxType === 'smothered_palace') {
       const walls = [];
@@ -1901,31 +2979,23 @@ Object.assign(Xiangqi3DApp.prototype, {
       roofRimFrame.position.y = -0.26;
       const roofInnerPlate = new THREE.Mesh(new THREE.BoxGeometry(2.96, 0.20, 2.96), darkIronMat);
       roofInnerPlate.position.y = -0.18;
-
       const pyramid = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 2.08, 0.72, 4), goldMat);
       pyramid.rotation.y = Math.PI / 4;
       pyramid.position.y = 0.22;
-
       const topSealBox = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.42, 0.82), crimsonLacquerMat);
       topSealBox.position.y = 0.72;
       const finial = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.28, 0.46), goldMat);
       finial.position.y = 1.02;
-
       [[-1.42, -1.42], [1.42, -1.42], [-1.42, 1.42], [1.42, 1.42]].forEach(([px, pz]) => {
         const cornerLatch = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.44, 0.36), goldMat);
         cornerLatch.position.set(px, -0.32, pz);
         sealRoof.add(cornerLatch);
       });
-
       sealRoof.add(roofRimFrame, roofInnerPlate, pyramid, topSealBox, finial);
       sealRoof.position.set(kPos.x, 6.2, kPos.z);
-      sealRoof.rotation.set(0, 0, 0);
       group.add(sealRoof);
 
-      const sealLockWave = new THREE.Mesh(
-        new THREE.RingGeometry(1.4, 2.2, 4),
-        goldGlowMat.clone()
-      );
+      const sealLockWave = new THREE.Mesh(new THREE.RingGeometry(1.4, 2.2, 4), goldGlowMat.clone());
       sealLockWave.rotation.x = -Math.PI / 2;
       sealLockWave.rotation.z = Math.PI / 4;
       sealLockWave.position.set(kPos.x, 1.72, kPos.z);
@@ -1947,7 +3017,6 @@ Object.assign(Xiangqi3DApp.prototype, {
           ? (dropRaw / 0.88) * (dropRaw / 0.88)
           : 1.0 - Math.sin(((dropRaw - 0.88) / 0.12) * Math.PI) * 0.03;
         sealRoof.position.set(kPos.x, THREE.MathUtils.lerp(6.2, 1.98, dropEase), kPos.z);
-        sealRoof.rotation.set(0, 0, 0);
         sealRoof.scale.setScalar(fade);
 
         if (dropRaw >= 0.85) {
@@ -1960,230 +3029,561 @@ Object.assign(Xiangqi3DApp.prototype, {
     }
 
     // =========================================================================
-    // 3. 对面笑 (Royal Gaze): 精雕明光铠金甲神将 + 螺旋破空月牙剑气波 + 巨剑劈中将（帅）斩击反馈！
+    // 3. 对面笑 (Royal Gaze):
+    // 聚焦己方“将（帅）”向上缓慢飞起且场景逐渐转为古战场场景 -> 平滑变身成披甲将军建模 ->
+    // 挥舞着武器冲至对面（冲的途中场景平滑切回终局棋面） -> 将军建模在棋盘上斩杀对面的“帅（将）”！
     // =========================================================================
     if (vfxType === 'royal_gaze') {
-      const dirSign = kPos.z <= rPos.z ? -1 : 1;
-      const general3D = this.createArticulated3DGeneral(goldMat, crimsonLacquerMat, darkIronMat, goldGlowMat);
-      const generalPosZ = kPos.z - dirSign * 1.75;
-      general3D.position.set(kPos.x, 0.05, generalPosZ);
-      this.faceTargetHorizontally(general3D, kPos.x, kPos.z);
-      general3D.scale.setScalar(1.18);
-      group.add(general3D);
+      const cgScene = this.createCGSceneEnvironment('cg_battlefield', group);
+      const royalItem = findFriendlyGeneralItem();
+      const royalStart = royalItem?.basePos ? royalItem.basePos.clone() : new THREE.Vector3(rPos.x, 0, rPos.z);
+      const dirSign = kPos.z <= royalStart.z ? -1 : 1;
 
-      const helixMeshes = [-1, 1].map((hSign, idx) => {
-        const pts = [];
-        for (let i = 0; i <= 28; i++) {
-          const f = i / 28;
-          const ang = f * Math.PI * 4 + (hSign > 0 ? 0 : Math.PI);
-          pts.push(new THREE.Vector3(
-            THREE.MathUtils.lerp(rPos.x, kPos.x, f) + Math.cos(ang) * 0.34 * Math.sin(f * Math.PI),
-            0.52 + Math.sin(ang) * 0.24 * Math.sin(f * Math.PI),
-            THREE.MathUtils.lerp(rPos.z, kPos.z, f)
-          ));
-        }
-        const curve = new THREE.CatmullRomCurve3(pts);
-        const mesh = new THREE.Mesh(
-          new THREE.TubeGeometry(curve, 36, 0.055, 8, false),
-          (idx === 0 ? goldGlowMat : crimsonGlowMat).clone()
-        );
-        group.add(mesh);
-        return mesh;
-      });
+      const morphAura = this.createSmoothMorphAura(group, 0xfbbf24);
+      const general3D = this.createArticulated3DGeneral(goldMat, crimsonLacquerMat, darkIronMat, goldGlowMat);
+      general3D.visible = false;
+      this.faceTargetHorizontally(general3D, kPos.x, kPos.z);
+      group.add(general3D);
 
       const swordWaveGroup = new THREE.Group();
       const waveOuterArc = new THREE.Mesh(
         new THREE.TorusGeometry(1.15, 0.11, 14, 36, Math.PI * 1.15),
         goldGlowMat.clone()
       );
-      waveOuterArc.rotation.z = -Math.PI * 0.075;
       const waveInnerArc = new THREE.Mesh(
         new THREE.TorusGeometry(0.88, 0.07, 12, 32, Math.PI * 1.05),
         crimsonGlowMat.clone()
       );
-      waveInnerArc.rotation.z = -Math.PI * 0.025;
-      const waveBladePlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(2.4, 1.6),
-        new THREE.MeshBasicMaterial({
-          map: slashTex,
-          color: 0xfef08a,
-          transparent: true,
-          opacity: 0.85,
-          blending: THREE.AdditiveBlending,
-          side: THREE.DoubleSide,
-          depthWrite: false
-        })
-      );
-      waveBladePlane.rotation.x = -Math.PI / 2;
-      swordWaveGroup.add(waveOuterArc, waveInnerArc, waveBladePlane);
-      swordWaveGroup.position.set(rPos.x, 0.85, rPos.z);
+      swordWaveGroup.add(waveOuterArc, waveInnerArc);
+      swordWaveGroup.visible = false;
       this.faceTargetHorizontally(swordWaveGroup, kPos.x, kPos.z);
       group.add(swordWaveGroup);
 
-      const verticalCleaveArc = new THREE.Mesh(
-        new THREE.TorusGeometry(1.42, 0.09, 12, 32, Math.PI * 0.95),
-        goldGlowMat.clone()
-      );
-      verticalCleaveArc.rotation.y = Math.PI / 2;
-      verticalCleaveArc.position.set(kPos.x, 0.85, kPos.z);
-      verticalCleaveArc.visible = false;
-      group.add(verticalCleaveArc);
-
-      const slashImpactExplosion = create3DCannonExplosion(kPos, 1.05);
+      const slashImpactExplosion = create3DCannonExplosion(kPos, 1.22);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        const appear = Math.min(1, p / 0.22);
-        general3D.scale.setScalar(1.18 * appear * fade);
+        // 0.00 -> 0.28 切入古战场；0.50 -> 0.72 冲锋途中平滑切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.26, p) * (1 - smoothstep(0.50, 0.72, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-        let armRotX = -1.35;
-        if (p < 0.24) {
-          armRotX = THREE.MathUtils.lerp(-0.85, -1.52, p / 0.24);
+        const strikeStopZ = kPos.z - dirSign * 1.55;
+
+        if (p < 0.38) {
+          // 阶段1：聚焦己方“将（帅）”缓慢飞起并平滑变身为披甲神将
+          const riseT = smoothstep(0.0, 0.30, p);
+          const morphT = smoothstep(0.20, 0.38, p);
+          const curY = THREE.MathUtils.lerp(0, 1.95, riseT) * (1 - morphT * 0.85);
+          const pScale = 1.0 + riseT * 0.65;
+
+          if (royalItem?.mesh) {
+            royalItem.customDriven = true;
+            this.setPiece3DPose(
+              royalItem.mesh,
+              royalStart.x,
+              curY,
+              royalStart.z,
+              Math.sin(riseT * Math.PI) * 0.22,
+              riseT * Math.PI * 2,
+              0,
+              pScale,
+              1 - smoothstep(0.15, 0.88, morphT),
+              riseT * 0.75,
+              0xfbbf24
+            );
+          }
+          morphAura.update(new THREE.Vector3(royalStart.x, curY, royalStart.z), morphT, fade);
+
+          if (morphT > 0.08) {
+            general3D.visible = true;
+            general3D.position.set(royalStart.x, curY * 0.35 + 0.05, royalStart.z);
+            this.faceTargetHorizontally(general3D, kPos.x, kPos.z);
+            general3D.scale.setScalar(1.25 * smoothstep(0.08, 0.95, morphT) * fade);
+            general3D.userData.swordArmPivot.rotation.x = THREE.MathUtils.lerp(-0.4, -1.25, morphT);
+          } else {
+            general3D.visible = false;
+          }
+          swordWaveGroup.visible = false;
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(royalStart.x, 0.95 + curY * 0.5, royalStart.z),
+              8.6,
+              0.92,
+              (p - 0.15) * 0.45
+            );
+          }
         } else {
-          const slashP = Math.min(1, (p - 0.24) / 0.20);
-          armRotX = THREE.MathUtils.lerp(-1.52, 0.98, Math.pow(slashP, 2.2));
-        }
-        general3D.userData.swordArmPivot.rotation.x = armRotX;
-        general3D.userData.cape.rotation.x = 0.26 + Math.sin(p * 18) * 0.15;
+          // 阶段2 & 3：披甲神将挥舞巨剑冲向对面（冲锋途中场景切回终局棋面），并在棋盘上斩杀对面“帅（将）”
+          const chargeT = smoothstep(0.38, 0.72, p);
+          const curZ = THREE.MathUtils.lerp(royalStart.z, strikeStopZ, chargeT);
+          const curX = THREE.MathUtils.lerp(royalStart.x, kPos.x, chargeT);
+          const strideBounce = p < 0.72 ? Math.abs(Math.sin(p * 38)) * 0.24 : 0;
 
-        const waveT = Math.min(1, Math.max(0, (p - 0.12) / 0.36));
-        swordWaveGroup.position.set(
-          THREE.MathUtils.lerp(rPos.x, kPos.x, waveT),
-          0.82 + Math.sin(waveT * Math.PI) * 0.35,
-          THREE.MathUtils.lerp(rPos.z, kPos.z, waveT)
-        );
-        const waveScale = (0.65 + waveT * 0.75) * (waveT < 0.96 ? 1 : Math.max(0, 1 - (p - 0.48) * 3)) * fade;
-        swordWaveGroup.scale.setScalar(Math.max(0.001, waveScale));
+          // 己方“将（帅）”棋子在切回棋盘时已在原位稳坐终局
+          if (royalItem?.mesh) {
+            royalItem.customDriven = true;
+            const backAlpha = smoothstep(0.52, 0.74, p);
+            this.setPiece3DPose(royalItem.mesh, royalStart.x, 0, royalStart.z, 0, 0, 0, 1.0, backAlpha, 0);
+          }
+          morphAura.update(royalStart, 0, 0);
 
-        helixMeshes.forEach((hm, idx) => {
-          hm.material.opacity = Math.sin(Math.min(1, p * 1.4) * Math.PI) * 0.58 * fade;
-          hm.rotation.z = Math.sin(p * 12 + idx) * 0.05;
-        });
+          const genFadeOut = 1 - smoothstep(0.88, 0.98, p);
+          general3D.visible = genFadeOut > 0.02;
+          general3D.position.set(curX, 0.05 + strideBounce, curZ);
+          this.faceTargetHorizontally(general3D, kPos.x, kPos.z);
+          general3D.scale.setScalar(1.26 * genFadeOut * fade);
+          general3D.userData.cape.rotation.x = 0.34 + Math.sin(p * 26) * 0.18;
 
-        if (p >= 0.42) {
-          const hitP = (p - 0.42) / 0.54;
-          verticalCleaveArc.visible = hitP < 0.85;
-          verticalCleaveArc.scale.setScalar((0.75 + hitP * 1.35) * fade);
-          verticalCleaveArc.material.opacity = Math.max(0, (1 - hitP) * 0.85 * fade);
-          slashImpactExplosion.update.call(this, hitP, fade);
-          applyKingHitFeedback(hitP, 'slash', 0, dirSign);
-        } else {
-          verticalCleaveArc.visible = false;
+          if (p < 0.70) {
+            // 冲锋途中左右挥舞巨剑
+            general3D.userData.swordArmPivot.rotation.x = -0.95 + Math.sin(p * 34) * 0.68;
+            general3D.userData.swordArmPivot.rotation.z = Math.cos(p * 17) * 0.32;
+            swordWaveGroup.visible = true;
+            swordWaveGroup.position.set(curX, 1.05, curZ + dirSign * 0.95);
+            swordWaveGroup.rotation.z = Math.sin(p * 34) * 0.45;
+            swordWaveGroup.scale.setScalar(0.85 * fade);
+          } else {
+            // 抵达对面“帅（将）”身前，高举巨剑重劈斩杀！
+            const cleaveP = Math.min(1, (p - 0.70) / 0.10);
+            general3D.userData.swordArmPivot.rotation.z = 0;
+            general3D.userData.swordArmPivot.rotation.x = THREE.MathUtils.lerp(-1.58, 1.02, Math.pow(cleaveP, 2.2));
+            swordWaveGroup.visible = p < 0.88;
+            swordWaveGroup.position.set(kPos.x, 0.85, kPos.z);
+            swordWaveGroup.rotation.z = 0;
+            swordWaveGroup.scale.setScalar((1.0 + cleaveP * 0.85) * genFadeOut * fade);
+          }
+
+          if (p >= 0.75) {
+            const hitP = (p - 0.75) / 0.24;
+            slashImpactExplosion.update.call(this, hitP, fade, kPos);
+            applyKingHitFeedback(hitP, 'slash', 0, dirSign);
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(curX, 0.78, THREE.MathUtils.lerp(curZ, kPos.z, 0.38)),
+              9.6,
+              0.90,
+              0.24
+            );
+          }
         }
       });
     }
 
     // =========================================================================
-    // 4. 重炮 (Double Cannon): 3D 城墙垛口升起 + 双尊 3D 龙首巨炮先后齐射 + 炮弹命中将（帅）3D 爆炸与震飞反馈！
+    // 4. 重炮杀 (Double Cannon):
+    // 两“炮”棋子飞跃放大至屏幕一左一右（同时平滑切换至战场） -> 在空中向中间合并成重炮建模并演示装弹动画 ->
+    // 重炮建模下落（同时渐渐平滑切回终局棋面） -> 落入合适位置向“将（帅）”开炮轰击！
     // =========================================================================
     if (vfxType === 'double_cannon') {
-      const startZ = kPos.z + (kPos.z < 0 ? 3.8 : -3.8);
+      const cgScene = this.createCGSceneEnvironment('cg_battlefield', group);
+      const cannonItem0 = findAttackerItemByType('c', null);
+      const cannonItem1 = findAttackerItemByType('c', cannonItem0);
+      const cStart0 = cannonItem0?.basePos ? cannonItem0.basePos.clone() : new THREE.Vector3(kPos.x - 1.5, 0, kPos.z + 3.5);
+      const cStart1 = cannonItem1?.basePos ? cannonItem1.basePos.clone() : new THREE.Vector3(kPos.x + 1.5, 0, kPos.z + 4.5);
+
       const dirSign = kPos.z < 0 ? -1 : 1;
+      const fireGroundPos = new THREE.Vector3(kPos.x, 0.06, kPos.z - dirSign * 3.8);
+      const airMergePos = new THREE.Vector3(kPos.x, 3.25, fireGroundPos.z * 0.55);
 
-      const rampart = new THREE.Group();
-      rampart.position.set(kPos.x, 0.22, startZ);
-      const wallBody = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.58, 1.48), bronzeWoodMat);
-      rampart.add(wallBody);
-      for (let m = -3; m <= 3; m++) {
-        const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 0.24), goldMat);
-        merlon.position.set(m * 0.48, 0.40, dirSign * 0.62);
-        rampart.add(merlon);
-      }
-      group.add(rampart);
+      const morphAura = this.createSmoothMorphAura(group, 0xf97316);
 
-      const batteries = [-0.95, 0.95].map((ox, idx) => {
-        const cModel = this.createArticulated3DCannon(crimsonLacquerMat, goldMat, darkIronMat, goldGlowMat);
-        cModel.position.set(kPos.x + ox, 0.45, startZ);
-        this.faceTargetHorizontally(cModel, kPos.x + ox * 0.15, kPos.z);
-        group.add(cModel);
+      // 双管神威重炮建模（带后膛装弹舱门、两枚装填炮弹与黄金推弹杆）
+      const heavyCannon = new THREE.Group();
+      heavyCannon.position.copy(airMergePos);
+      heavyCannon.visible = false;
+      this.faceTargetHorizontally(heavyCannon, kPos.x, kPos.z);
+      group.add(heavyCannon);
 
-        const shell = new THREE.Mesh(new THREE.SphereGeometry(0.30, 16, 16), crimsonGlowMat.clone());
-        group.add(shell);
+      const carriage = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.38, 1.65), crimsonLacquerMat);
+      carriage.position.y = 0.34;
+      const armorTrim = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.16, 1.72), goldMat);
+      armorTrim.position.y = 0.52;
+      heavyCannon.add(carriage, armorTrim);
 
-        const explosion = create3DCannonExplosion(
-          new THREE.Vector3(kPos.x + ox * 0.12, 0.25, kPos.z),
-          1.15
-        );
-        return { cModel, shell, explosion, ox, delay: idx * 0.16 };
+      [[-0.82, -0.52], [0.82, -0.52], [-0.82, 0.52], [0.82, 0.52]].forEach(([wx, wz]) => {
+        const w = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.16, 20), darkIronMat);
+        w.rotation.z = Math.PI / 2;
+        w.position.set(wx, 0.36, wz);
+        const rim = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.04, 10, 24), goldMat);
+        rim.rotation.y = Math.PI / 2;
+        rim.position.set(wx + (wx > 0 ? 0.08 : -0.08), 0.36, wz);
+        heavyCannon.add(w, rim);
       });
 
-      return wrapUpdater((p, dt, fade = 1) => {
-        rampart.scale.setScalar(fade);
-        batteries.forEach(({ cModel, shell, explosion, ox, delay }) => {
-          cModel.scale.setScalar(0.95 * fade);
-          const sp = Math.max(0, Math.min(1, (p - delay) / 0.40));
-          shell.position.set(
-            THREE.MathUtils.lerp(kPos.x + ox, kPos.x + ox * 0.12, sp),
-            0.75 + Math.sin(sp * Math.PI) * 2.95,
-            THREE.MathUtils.lerp(startZ, kPos.z, sp)
-          );
-          const active = sp > 0.02 && sp < 0.96;
-          shell.scale.setScalar(active ? 1.22 * fade : 0.001);
-          const recoil = (sp > 0 && sp < 0.28) ? Math.sin(sp * 3.5 * Math.PI) * 0.36 : 0;
-          cModel.position.z = startZ - dirSign * recoil;
-          cModel.userData.barrelPivot.rotation.x = -0.28 - recoil * 0.48;
+      const barrelPivot = new THREE.Group();
+      barrelPivot.position.set(0, 0.78, 0);
+      [-0.32, 0.32].forEach(bx => {
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.30, 2.05, 24), darkIronMat);
+        tube.rotation.x = Math.PI / 2;
+        tube.position.set(bx, 0, 0.15);
+        const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.05, 12, 24), goldGlowMat.clone());
+        muzzleRing.position.set(bx, 0, 1.18);
+        const band = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.04, 10, 22), goldMat);
+        band.position.set(bx, 0, 0.25);
+        barrelPivot.add(tube, muzzleRing, band);
+      });
 
-          const expStart = delay + 0.37;
-          if (p >= expStart) {
-            const expP = (p - expStart) / 0.46;
-            explosion.update.call(this, expP, fade);
-            applyKingHitFeedback(expP, 'cannon_blast', ox * 0.25, dirSign);
+      // 装弹动画组件：后膛开合盖 (breechGate)、装填双炮弹 (loadingShells) 与黄金装弹推杆 (ramrod)
+      const breechGate = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.42, 0.18), goldMat);
+      breechGate.position.set(0, 0, -0.92);
+      const loadingShells = [-0.32, 0.32].map(bx => {
+        const s = new THREE.Mesh(new THREE.SphereGeometry(0.19, 16, 16), crimsonGlowMat.clone());
+        s.position.set(bx, 0.35, -1.65);
+        barrelPivot.add(s);
+        return { s, bx };
+      });
+      const ramrod = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.15, 12), goldMat);
+      ramrod.rotation.x = Math.PI / 2;
+      ramrod.position.set(0, 0, -1.95);
+      barrelPivot.add(breechGate, ramrod);
+      barrelPivot.rotation.x = -0.22;
+      heavyCannon.add(barrelPivot);
+
+      const firedShells = [-0.32, 0.32].map(bx => {
+        const fs = new THREE.Mesh(new THREE.SphereGeometry(0.30, 16, 16), goldGlowMat.clone());
+        fs.visible = false;
+        group.add(fs);
+        return { fs, bx };
+      });
+      const twinExplosion = create3DCannonExplosion(kPos, 1.38);
+
+      return wrapUpdater((p, dt, fade = 1) => {
+        // 0.02 -> 0.24 切入古战场；0.54 -> 0.72 重炮下落途中平滑切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.24, p) * (1 - smoothstep(0.54, 0.72, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
+
+        const leftHover = new THREE.Vector3(kPos.x - 2.65, airMergePos.y, airMergePos.z);
+        const rightHover = new THREE.Vector3(kPos.x + 2.65, airMergePos.y, airMergePos.z);
+
+        if (p < 0.38) {
+          // 阶段1 & 2前段：两“炮”飞跃放大至屏幕一左一右，随后向空中中心合并
+          const leapT = smoothstep(0.0, 0.22, p);
+          const mergeT = smoothstep(0.22, 0.38, p);
+
+          [
+            { item: cannonItem0, sPos: cStart0, sidePos: leftHover, sign: -1 },
+            { item: cannonItem1, sPos: cStart1, sidePos: rightHover, sign: 1 }
+          ].forEach(({ item, sPos, sidePos, sign }) => {
+            if (!item?.mesh) return;
+            item.customDriven = true;
+            let pos = new THREE.Vector3().lerpVectors(sPos, sidePos, leapT);
+            pos.y += Math.sin(leapT * Math.PI) * 1.15;
+            pos.lerp(airMergePos, mergeT);
+            const sc = THREE.MathUtils.lerp(1.0, 1.78, leapT) * (1 - mergeT * 0.25);
+            const alpha = 1 - smoothstep(0.55, 0.98, mergeT);
+            this.setPiece3DPose(
+              item.mesh,
+              pos.x,
+              pos.y,
+              pos.z,
+              leapT * Math.PI * 2 * sign,
+              p * Math.PI * 5,
+              mergeT * Math.PI * sign,
+              sc,
+              alpha,
+              (leapT + mergeT) * 0.55,
+              0xf97316
+            );
+          });
+
+          morphAura.update(airMergePos, mergeT, fade);
+          if (mergeT > 0.25) {
+            heavyCannon.visible = true;
+            heavyCannon.position.copy(airMergePos);
+            heavyCannon.scale.setScalar(1.15 * smoothstep(0.25, 1.0, mergeT) * fade);
+          } else {
+            heavyCannon.visible = false;
           }
-        });
+          firedShells.forEach(({ fs }) => { fs.visible = false; });
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x, airMergePos.y * 0.75, airMergePos.z),
+              11.6,
+              0.92,
+              0
+            );
+          }
+        } else if (p < 0.56) {
+          // 阶段2后段：空中重炮装弹动画（后膛打开 -> 双炮弹跃入炮膛 -> 推弹杆推进锁定）
+          morphAura.update(airMergePos, 0, 0);
+          [cannonItem0, cannonItem1].forEach(it => {
+            if (it?.mesh) { it.customDriven = true; it.mesh.visible = false; }
+          });
+
+          const reloadP = (p - 0.38) / 0.18;
+          heavyCannon.visible = true;
+          heavyCannon.position.copy(airMergePos);
+          heavyCannon.scale.setScalar((1.15 + Math.sin(reloadP * Math.PI) * 0.12) * fade);
+
+          // 后膛门掀起 -> 闭合
+          const gateOpen = Math.sin(reloadP * Math.PI);
+          breechGate.position.y = gateOpen * 0.42;
+
+          loadingShells.forEach(({ s, bx }) => {
+            s.visible = reloadP < 0.86;
+            const insertT = smoothstep(0.10, 0.76, reloadP);
+            s.position.set(
+              bx,
+              THREE.MathUtils.lerp(0.45, 0.0, smoothstep(0.0, 0.35, reloadP)),
+              THREE.MathUtils.lerp(-1.65, -0.15, insertT)
+            );
+          });
+          ramrod.visible = reloadP > 0.25 && reloadP < 0.92;
+          const pushT = Math.sin(smoothstep(0.25, 0.90, reloadP) * Math.PI);
+          ramrod.position.z = THREE.MathUtils.lerp(-1.95, -0.85, pushT);
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(airMergePos.x, airMergePos.y, airMergePos.z),
+              8.8,
+              0.98,
+              0.36
+            );
+          }
+        } else {
+          // 阶段3 & 4：重炮下落 + 平滑切回终局棋面 + 落地向“将（帅）”开炮轰击
+          loadingShells.forEach(({ s }) => { s.visible = false; });
+          ramrod.visible = false;
+          breechGate.position.y = 0;
+
+          const dropT = smoothstep(0.56, 0.72, p);
+          const curCannonPos = new THREE.Vector3().lerpVectors(airMergePos, fireGroundPos, dropT * dropT);
+          const cannonFadeOut = 1 - smoothstep(0.90, 0.99, p);
+          heavyCannon.visible = cannonFadeOut > 0.02;
+          heavyCannon.position.copy(curCannonPos);
+          heavyCannon.scale.setScalar(1.15 * cannonFadeOut * fade);
+
+          // 两枚“炮”棋子在切回终局棋面时平滑显形回到各自终局格
+          const pieceReturnAlpha = smoothstep(0.58, 0.78, p);
+          [
+            { item: cannonItem0, sPos: cStart0 },
+            { item: cannonItem1, sPos: cStart1 }
+          ].forEach(({ item, sPos }) => {
+            if (item?.mesh) {
+              item.customDriven = true;
+              this.setPiece3DPose(item.mesh, sPos.x, 0, sPos.z, 0, 0, 0, 1.0, pieceReturnAlpha, 0);
+            }
+          });
+
+          if (p >= 0.72) {
+            const fireP = (p - 0.72) / 0.28;
+            const shellT = Math.min(1, fireP / 0.44);
+            const recoil = fireP < 0.28 ? Math.sin((fireP / 0.28) * Math.PI) * 0.42 : 0;
+            heavyCannon.position.z = fireGroundPos.z - dirSign * recoil;
+            barrelPivot.rotation.x = -0.22 - recoil * 0.45;
+
+            firedShells.forEach(({ fs, bx }) => {
+              fs.visible = shellT < 0.96;
+              fs.position.set(
+                THREE.MathUtils.lerp(fireGroundPos.x + bx, kPos.x + bx * 0.2, shellT),
+                0.85 + Math.sin(shellT * Math.PI) * 2.15,
+                THREE.MathUtils.lerp(fireGroundPos.z, kPos.z, shellT)
+              );
+              fs.scale.setScalar(1.22 * fade);
+            });
+
+            if (fireP >= 0.40) {
+              const hitP = (fireP - 0.40) / 0.60;
+              twinExplosion.update.call(this, hitP, fade, kPos);
+              applyKingHitFeedback(hitP, 'cannon_blast', 0, dirSign);
+            }
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x, 0.65, THREE.MathUtils.lerp(curCannonPos.z, kPos.z, 0.55)),
+              10.5,
+              0.92,
+              0.15
+            );
+          }
+        }
       });
     }
 
     // =========================================================================
-    // 5. 马后炮 (Horse Cannon): 前方精雕 3D 明光具装战马扬蹄锁宫 + 后方 3D 巨炮轰顶 + 炮弹命中 3D 爆炸反馈！
+    // 5. 马后炮 (Horse Cannon):
+    // 聚焦同时切至古战场 -> “马”飞跃变身建模马，同时“炮”飞跃变身建模炮位于建模马前面并缓慢下落 ->
+    // 随后建模马从建模炮背后跳过建模炮踏向地面（踏的空中平滑切回终局棋面） ->
+    // 建模炮在建模马落地过后落入马身后，然后开炮轰击“将（帅）”！
     // =========================================================================
     if (vfxType === 'horse_cannon') {
-      const horseOrigin = findCheckerPosByType('n', cPos);
-      const cannonOrigin = findCheckerPosByType('c', new THREE.Vector3(kPos.x, 0.05, kPos.z + (kPos.z < 0 ? 4.2 : -4.2)));
-      const dirSign = kPos.z <= cannonOrigin.z ? -1 : 1;
+      const cgScene = this.createCGSceneEnvironment('cg_battlefield', group);
+      const horseItem = findAttackerItemByType('n', null);
+      const cannonItem = findAttackerItemByType('c', horseItem);
+      const horseOrigin = horseItem?.basePos ? horseItem.basePos.clone() : new THREE.Vector3(cPos.x, 0, cPos.z);
+      const dirSign = kPos.z <= horseOrigin.z ? -1 : 1;
+      const cannonOrigin = cannonItem?.basePos
+        ? cannonItem.basePos.clone()
+        : new THREE.Vector3(kPos.x, 0, horseOrigin.z - dirSign * 2.3);
+
+      // 空中排布：建模马在后方 (horseAirStart)，建模炮在建模马的前方 (cannonAirFront)
+      const horseAirStart = new THREE.Vector3(kPos.x, 2.35, horseOrigin.z - dirSign * 3.0);
+      const cannonAirFront = new THREE.Vector3(kPos.x, 2.65, horseOrigin.z - dirSign * 1.45);
+      const horseLandPos = new THREE.Vector3(horseOrigin.x, 0.05, horseOrigin.z);
+      const cannonLandPos = new THREE.Vector3(cannonOrigin.x, 0.08, cannonOrigin.z);
+
+      const horseMorphAura = this.createSmoothMorphAura(group, 0xfbbf24);
+      const cannonMorphAura = this.createSmoothMorphAura(group, 0xef4444);
 
       const warHorse = this.createArticulated3DWarHorse(goldMat, crimsonLacquerMat, goldGlowMat);
-      warHorse.position.set(horseOrigin.x, 0.05, horseOrigin.z);
+      warHorse.visible = false;
       this.faceTargetHorizontally(warHorse, kPos.x, kPos.z);
       group.add(warHorse);
 
       const rearCannon = this.createArticulated3DCannon(bronzeWoodMat, goldMat, darkIronMat, crimsonGlowMat);
-      rearCannon.position.set(cannonOrigin.x, 0.08, cannonOrigin.z);
+      rearCannon.visible = false;
       this.faceTargetHorizontally(rearCannon, kPos.x, kPos.z);
       group.add(rearCannon);
 
-      const lockChain = create3DChainBetween(
-        new THREE.Vector3(horseOrigin.x, 0.55, horseOrigin.z),
-        new THREE.Vector3(kPos.x, 0.45, kPos.z),
-        10
-      );
-
       const shell = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), crimsonGlowMat.clone());
+      shell.visible = false;
       group.add(shell);
 
-      const cannonExplosion = create3DCannonExplosion(kPos, 1.22);
+      const cannonExplosion = create3DCannonExplosion(kPos, 1.28);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        const rearUp = Math.sin(Math.min(1, p * 1.5) * Math.PI) * 0.88;
-        warHorse.userData.animateGallop(p * 3.4, rearUp);
-        warHorse.position.y = 0.05 + rearUp * 0.30;
-        warHorse.scale.setScalar(fade);
+        // 0.02 -> 0.24 切入古战场；0.44 -> 0.62 战马凌空踏下时平滑切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.24, p) * (1 - smoothstep(0.44, 0.62, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-        rearCannon.scale.setScalar(fade);
-        lockChain.chainGroup.scale.setScalar(fade);
+        if (p < 0.28) {
+          // 阶段1：“马”与“炮”飞跃而起，平滑变身为建模马（在后）与建模炮（在马前方）
+          const leapT = smoothstep(0.0, 0.22, p);
+          const morphT = smoothstep(0.14, 0.28, p);
 
-        const sp = Math.min(1, Math.max(0, (p - 0.12) / 0.42));
-        shell.position.set(
-          THREE.MathUtils.lerp(cannonOrigin.x, kPos.x, sp),
-          0.65 + Math.sin(sp * Math.PI) * 3.25,
-          THREE.MathUtils.lerp(cannonOrigin.z, kPos.z, sp)
-        );
-        shell.scale.setScalar((sp > 0.02 && sp < 0.96) ? 1.24 * fade : 0.001);
-        const recoil = (sp > 0 && sp < 0.25) ? Math.sin(sp * 4 * Math.PI) * 0.34 : 0;
-        rearCannon.userData.barrelPivot.rotation.x = -0.28 - recoil * 0.52;
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            const hp = new THREE.Vector3().lerpVectors(horseOrigin, horseAirStart, leapT);
+            this.setPiece3DPose(
+              horseItem.mesh,
+              hp.x,
+              hp.y,
+              hp.z,
+              leapT * Math.PI * 2,
+              leapT * Math.PI * 3,
+              0,
+              1.0 + leapT * 0.45,
+              1 - smoothstep(0.2, 0.9, morphT),
+              leapT * 0.65
+            );
+          }
+          if (cannonItem?.mesh) {
+            cannonItem.customDriven = true;
+            const cp = new THREE.Vector3().lerpVectors(cannonOrigin, cannonAirFront, leapT);
+            this.setPiece3DPose(
+              cannonItem.mesh,
+              cp.x,
+              cp.y,
+              cp.z,
+              -leapT * Math.PI * 2,
+              leapT * Math.PI * 3,
+              0,
+              1.0 + leapT * 0.45,
+              1 - smoothstep(0.2, 0.9, morphT),
+              leapT * 0.65,
+              0xef4444
+            );
+          }
 
-        if (p >= 0.51) {
-          const expP = (p - 0.51) / 0.46;
-          cannonExplosion.update.call(this, expP, fade);
-          applyKingHitFeedback(expP, 'cannon_blast', 0, dirSign);
+          horseMorphAura.update(horseAirStart, morphT, fade);
+          cannonMorphAura.update(cannonAirFront, morphT, fade);
+
+          const mScale = smoothstep(0.12, 0.95, morphT) * fade;
+          warHorse.visible = mScale > 0.02;
+          warHorse.position.copy(horseAirStart);
+          warHorse.scale.setScalar(mScale);
+          warHorse.userData.animateGallop(p * 4, 0.55);
+
+          rearCannon.visible = mScale > 0.02;
+          rearCannon.position.copy(cannonAirFront);
+          rearCannon.scale.setScalar(mScale);
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x, 1.85, (horseAirStart.z + cannonAirFront.z) * 0.5),
+              10.2,
+              0.94,
+              0.42
+            );
+          }
+        } else {
+          horseMorphAura.update(horseAirStart, 0, 0);
+          cannonMorphAura.update(cannonAirFront, 0, 0);
+
+          // 建模炮从 0.28 -> 0.68 缓慢下落至建模马身后 (cannonLandPos)，卡准在马落地 (0.60) 之后落地！
+          const cannonDropT = smoothstep(0.28, 0.68, p);
+          const curCannonPos = new THREE.Vector3().lerpVectors(cannonAirFront, cannonLandPos, cannonDropT);
+          curCannonPos.y = THREE.MathUtils.lerp(cannonAirFront.y, cannonLandPos.y, cannonDropT * cannonDropT);
+
+          // 建模马从 0.30 -> 0.60 从建模炮背后高高跃起，越过前方正在缓慢下落的建模炮头顶，踏向地面 (horseLandPos)！
+          const horseVaultT = smoothstep(0.30, 0.60, p);
+          const curHorsePos = new THREE.Vector3().lerpVectors(horseAirStart, horseLandPos, horseVaultT);
+          curHorsePos.y = THREE.MathUtils.lerp(horseAirStart.y, horseLandPos.y, horseVaultT) + Math.sin(horseVaultT * Math.PI) * 2.45;
+
+          const modelFadeOut = 1 - smoothstep(0.90, 0.99, p);
+          warHorse.visible = modelFadeOut > 0.02;
+          warHorse.position.copy(curHorsePos);
+          this.faceTargetHorizontally(warHorse, kPos.x, kPos.z);
+          const rearUp = p < 0.60 ? Math.sin(horseVaultT * Math.PI) * 0.85 : Math.max(0, Math.sin((p - 0.60) * 14) * 0.35 * (1 - p));
+          warHorse.userData.animateGallop(p * 4.5, rearUp);
+          warHorse.scale.setScalar(modelFadeOut * fade);
+
+          rearCannon.visible = modelFadeOut > 0.02;
+          rearCannon.position.copy(curCannonPos);
+          this.faceTargetHorizontally(rearCannon, kPos.x, kPos.z);
+          rearCannon.scale.setScalar(modelFadeOut * fade);
+
+          // 棋子在切回棋盘后平滑复原在原位
+          const pieceAlpha = smoothstep(0.58, 0.82, p);
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            this.setPiece3DPose(horseItem.mesh, horseOrigin.x, 0, horseOrigin.z, 0, 0, 0, 1.0, pieceAlpha, 0);
+          }
+          if (cannonItem?.mesh) {
+            cannonItem.customDriven = true;
+            this.setPiece3DPose(cannonItem.mesh, cannonOrigin.x, 0, cannonOrigin.z, 0, 0, 0, 1.0, pieceAlpha, 0);
+          }
+
+          // 0.69 建模炮落稳于马身后，立即隔马开炮轰击“将（帅）”！
+          if (p >= 0.69) {
+            const fireP = (p - 0.69) / 0.31;
+            const shellT = Math.min(1, fireP / 0.42);
+            const recoil = fireP < 0.28 ? Math.sin((fireP / 0.28) * Math.PI) * 0.38 : 0;
+            rearCannon.position.z = cannonLandPos.z - dirSign * recoil;
+            rearCannon.userData.barrelPivot.rotation.x = -0.28 - recoil * 0.52;
+
+            shell.visible = shellT < 0.96;
+            shell.position.set(
+              THREE.MathUtils.lerp(cannonLandPos.x, kPos.x, shellT),
+              0.72 + Math.sin(shellT * Math.PI) * 2.65,
+              THREE.MathUtils.lerp(cannonLandPos.z, kPos.z, shellT)
+            );
+            shell.scale.setScalar(1.24 * fade);
+
+            if (fireP >= 0.38) {
+              const hitP = (fireP - 0.38) / 0.62;
+              cannonExplosion.update.call(this, hitP, fade, kPos);
+              applyKingHitFeedback(hitP, 'cannon_blast', 0, dirSign);
+            }
+          } else {
+            shell.visible = false;
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x, 0.85, THREE.MathUtils.lerp(curHorsePos.z, kPos.z, 0.45)),
+              10.4,
+              0.90,
+              0.28
+            );
+          }
         }
       });
     }
@@ -2240,7 +3640,7 @@ Object.assign(Xiangqi3DApp.prototype, {
 
       const boltShell = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), goldGlowMat.clone());
       group.add(boltShell);
-      const boltExplosion = create3DCannonExplosion(kPos, 1.15);
+      const boltExplosion = create3DCannonExplosion(kPos, 1.18);
 
       return wrapUpdater((p, dt, fade = 1) => {
         const closeP = Math.min(1, p / 0.28);
@@ -2267,40 +3667,41 @@ Object.assign(Xiangqi3DApp.prototype, {
 
         if (p >= 0.54) {
           const expP = (p - 0.54) / 0.44;
-          boltExplosion.update.call(this, expP, fade);
+          boltExplosion.update.call(this, expP, fade, kPos);
           applyKingHitFeedback(expP, 'cannon_blast', 0, dirSign);
         }
       });
     }
 
     // =========================================================================
-    // 7. 侧面虎 (Side Tiger): 精细多关节 3D 斑斓猛虎模型从马位飞扑将门 + 扑击震退反馈！
+    // 7. 侧面虎 (Side Tiger):
+    // 两枚棋子飞到空中合适位置，同时场景平滑切到绿色草地和蓝天白云 ->
+    // 建模老虎把这两枚棋子当做踏板依次跳跃（踩到踏板棋子时有下沉震动+波纹反馈） ->
+    // 猛虎扑出去（扑出去时场景平滑切回终局棋面） -> 最后扑向“将（帅）”！
     // =========================================================================
     if (vfxType === 'side_tiger') {
-      const horseOrigin = findCheckerPosByType('n', new THREE.Vector3(kPos.x + 2.6, 0.05, kPos.z + (kPos.z < 0 ? 1.8 : -1.8)));
-      const sideSign = horseOrigin.x >= kPos.x ? 1 : -1;
-      const startPos = new THREE.Vector3(
-        horseOrigin.x + sideSign * 0.45,
-        0.55,
-        horseOrigin.z
-      );
-      const landPos = new THREE.Vector3(
-        kPos.x + sideSign * 0.38,
-        0.10,
-        kPos.z + (kPos.z < 0 ? 0.32 : -0.32)
-      );
+      const cgScene = this.createCGSceneEnvironment('cg_grassland', group);
+      const stepItem1 = findAttackerItemByType('n', null) || attackerItems[0];
+      const stepItem2 = findAttackerItemByType('r', stepItem1) || attackerItems[1] || stepItem1;
+      const orig1 = stepItem1?.basePos ? stepItem1.basePos.clone() : new THREE.Vector3(kPos.x + 2.4, 0, kPos.z + 2.2);
+      const orig2 = stepItem2?.basePos ? stepItem2.basePos.clone() : new THREE.Vector3(kPos.x + 1.8, 0, kPos.z + 1.0);
 
-      const cliffGroup = new THREE.Group();
-      cliffGroup.position.set(startPos.x, 0.02, startPos.z);
-      for (let rk = 0; rk < 4; rk++) {
-        const rock = new THREE.Mesh(
-          new THREE.ConeGeometry(0.48 - rk * 0.06, 0.95 + rk * 0.22, 6),
-          rk % 2 === 0 ? darkIronMat : bronzeWoodMat
-        );
-        rock.position.set((rk - 1.5) * 0.28, 0.42, (rk % 2 === 0 ? -0.18 : 0.18));
-        cliffGroup.add(rock);
-      }
-      group.add(cliffGroup);
+      const sideSign = orig1.x >= kPos.x ? 1 : -1;
+      const dirSign = kPos.z < 0 ? -1 : 1;
+
+      const tigerStartGround = new THREE.Vector3(kPos.x + sideSign * 4.5, 0.05, kPos.z - dirSign * 3.8);
+      const padPos1 = new THREE.Vector3(kPos.x + sideSign * 3.1, 1.35, kPos.z - dirSign * 2.55);
+      const padPos2 = new THREE.Vector3(kPos.x + sideSign * 1.75, 2.38, kPos.z - dirSign * 1.25);
+      const pounceTarget = new THREE.Vector3(kPos.x + sideSign * 0.25, 0.08, kPos.z - dirSign * 0.25);
+
+      const stepRipples = [padPos1, padPos2].map((pos) => {
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.82, 32), goldGlowMat.clone());
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.copy(pos);
+        ring.visible = false;
+        group.add(ring);
+        return ring;
+      });
 
       const tiger3D = this.createArticulated3DTiger(
         goldMat,
@@ -2309,9 +3710,9 @@ Object.assign(Xiangqi3DApp.prototype, {
         ivoryFangMat,
         goldGlowMat
       );
-      tiger3D.scale.setScalar(1.18);
-      tiger3D.position.copy(startPos);
-      this.faceTargetHorizontally(tiger3D, kPos.x, kPos.z);
+      tiger3D.scale.setScalar(1.20);
+      tiger3D.position.copy(tigerStartGround);
+      this.faceTargetHorizontally(tiger3D, padPos1.x, padPos1.z);
       group.add(tiger3D);
 
       const claws = [];
@@ -2320,541 +3721,1094 @@ Object.assign(Xiangqi3DApp.prototype, {
           new THREE.TorusGeometry(1.68, 0.065, 10, 32, Math.PI * 0.84),
           i % 2 === 0 ? goldGlowMat.clone() : crimsonGlowMat.clone()
         );
-        arc.position.set(kPos.x + i * 0.28, 0.92, kPos.z);
+        arc.position.set(kPos.x + i * 0.26, 0.88, kPos.z);
         arc.rotation.y = sideSign * 0.65;
         arc.rotation.x = 0.45;
+        arc.visible = false;
         group.add(arc);
         claws.push({ arc, i });
       }
 
-      const roarRings = [0, 1, 2].map(idx => {
-        const rr = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.58, 32), goldGlowMat.clone());
-        rr.position.set(kPos.x, 0.95, kPos.z);
-        rr.rotation.x = -Math.PI / 3;
-        group.add(rr);
-        return { rr, idx };
-      });
+      const tigerImpact = create3DCannonExplosion(kPos, 1.18);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        const pounce = Math.min(1, p / 0.44);
-        const ease = 1 - Math.pow(1 - pounce, 3);
-        const swipe = Math.max(0, (p - 0.32) / 0.68);
+        // 0.02 -> 0.22 切至绿草地蓝天白云；0.56 -> 0.74 猛虎扑出空中平滑切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.22, p) * (1 - smoothstep(0.56, 0.74, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-        tiger3D.position.x = THREE.MathUtils.lerp(startPos.x, landPos.x, ease);
-        tiger3D.position.z = THREE.MathUtils.lerp(startPos.z, landPos.z, ease);
-        tiger3D.position.y = THREE.MathUtils.lerp(startPos.y, landPos.y, ease) + Math.sin(ease * Math.PI) * 1.95;
-        this.faceTargetHorizontally(tiger3D, kPos.x, kPos.z);
-        tiger3D.userData.animatePounce(p * 3.8, ease, swipe);
-        tiger3D.scale.setScalar(1.18 * fade);
-        cliffGroup.scale.setScalar(fade);
+        // 1. 两枚踏板棋子飞至空中并响应猛虎踩踏反馈（p=0.36 踩踏板1，p=0.52 踩踏板2），随后在 0.65 -> 0.88 飞回终局原位
+        const flyInT = smoothstep(0.0, 0.22, p);
+        const flyBackT = smoothstep(0.64, 0.88, p);
 
-        if (p >= 0.38) {
-          applyKingHitFeedback((p - 0.38) / 0.55, 'collision', -sideSign, 0);
+        const updateSteppingPiece = (item, origPos, padPos, stepTime, rippleMesh, idx) => {
+          if (!item?.mesh) return;
+          item.customDriven = true;
+          let cur = new THREE.Vector3().lerpVectors(origPos, padPos, flyInT);
+          cur.lerp(origPos, flyBackT);
+
+          // 踩踏冲击反馈：当老虎踩中踏板时（|p - stepTime| < 0.09），踏板棋子猛烈下沉、倾斜震颤并发出金色波纹
+          const distStep = p - stepTime;
+          let dipY = 0;
+          let tiltX = 0;
+          let squash = 1.0;
+          let glow = 0.15 * (1 - flyBackT);
+          if (distStep >= -0.02 && distStep <= 0.14) {
+            const st = (distStep + 0.02) / 0.16;
+            const env = Math.sin(st * Math.PI);
+            dipY = -env * 0.44;
+            tiltX = Math.sin(st * Math.PI * 3) * 0.28 * (1 - st);
+            squash = 1 + env * 0.24;
+            glow = env * 0.95;
+            rippleMesh.visible = true;
+            rippleMesh.position.set(cur.x, cur.y + dipY + 0.15, cur.z);
+            rippleMesh.scale.setScalar((0.7 + st * 2.2) * fade);
+            rippleMesh.material.opacity = (1 - st) * 0.85 * fade;
+          } else {
+            rippleMesh.visible = false;
+          }
+
+          const baseSc = THREE.MathUtils.lerp(1.0, 1.48, flyInT * (1 - flyBackT));
+          this.setPiece3DPose(
+            item.mesh,
+            cur.x,
+            cur.y + dipY,
+            cur.z,
+            tiltX,
+            flyInT * (1 - flyBackT) * Math.PI * (idx === 0 ? 2 : -2),
+            -tiltX * 0.6,
+            [baseSc * squash, baseSc / squash, baseSc * squash],
+            1.0,
+            glow,
+            0xfbbf24
+          );
+        };
+
+        updateSteppingPiece(stepItem1, orig1, padPos1, 0.36, stepRipples[0], 0);
+        if (stepItem2 !== stepItem1) {
+          updateSteppingPiece(stepItem2, orig2, padPos2, 0.52, stepRipples[1], 1);
         }
 
-        claws.forEach(({ arc, i }) => {
-          const cp = Math.max(0, Math.min(1, (p - 0.22) / 0.48));
-          arc.rotation.z = -1.25 + cp * 2.6 + i * 0.08;
-          arc.scale.setScalar((0.55 + cp * 0.78) * fade);
-          arc.material.opacity = Math.sin(cp * Math.PI) * 0.68 * fade;
-        });
+        // 2. 猛虎三段跳跃轨迹：草地起点 -> 踏板1 (0.36) -> 踏板2 (0.52) -> 凌空扑杀将帅 (0.75)
+        let tigerPos = new THREE.Vector3();
+        let lookPt = kPos;
+        let jumpArc = 0;
+        if (p < 0.20) {
+          const prep = p / 0.20;
+          tigerPos.copy(tigerStartGround);
+          lookPt = padPos1;
+          tiger3D.userData.animatePounce(p * 4, prep * 0.3, 0);
+        } else if (p < 0.36) {
+          const t1 = (p - 0.20) / 0.16;
+          tigerPos.lerpVectors(tigerStartGround, new THREE.Vector3(padPos1.x, padPos1.y + 0.22, padPos1.z), t1);
+          jumpArc = Math.sin(t1 * Math.PI) * 1.15;
+          tigerPos.y += jumpArc;
+          lookPt = padPos1;
+          tiger3D.userData.animatePounce(p * 5, t1, 0);
+        } else if (p < 0.52) {
+          const t2 = (p - 0.36) / 0.16;
+          tigerPos.lerpVectors(
+            new THREE.Vector3(padPos1.x, padPos1.y + 0.15, padPos1.z),
+            new THREE.Vector3(padPos2.x, padPos2.y + 0.22, padPos2.z),
+            t2
+          );
+          jumpArc = Math.sin(t2 * Math.PI) * 1.25;
+          tigerPos.y += jumpArc;
+          lookPt = padPos2;
+          tiger3D.userData.animatePounce(p * 5, t2, 0);
+        } else {
+          const t3 = Math.min(1, (p - 0.52) / 0.24);
+          const ease3 = 1 - Math.pow(1 - t3, 2.4);
+          tigerPos.lerpVectors(
+            new THREE.Vector3(padPos2.x, padPos2.y + 0.15, padPos2.z),
+            pounceTarget,
+            ease3
+          );
+          jumpArc = Math.sin(t3 * Math.PI) * 1.85;
+          tigerPos.y += jumpArc;
+          lookPt = kPos;
+          const swipe = Math.max(0, (p - 0.70) / 0.28);
+          tiger3D.userData.animatePounce(p * 5.5, t3, swipe);
+        }
 
-        roarRings.forEach(({ rr, idx }) => {
-          const rp = Math.max(0, Math.min(1, (p - 0.28 - idx * 0.10) / 0.42));
-          rr.scale.setScalar((0.6 + rp * 3.2) * fade);
-          rr.material.opacity = Math.sin(rp * Math.PI) * 0.58 * fade;
-        });
+        const tigerFade = 1 - smoothstep(0.90, 0.99, p);
+        tiger3D.visible = tigerFade > 0.02;
+        tiger3D.position.copy(tigerPos);
+        this.faceTargetHorizontally(tiger3D, lookPt.x, lookPt.z);
+        tiger3D.scale.setScalar(1.22 * tigerFade * fade);
+
+        if (p >= 0.73) {
+          const hitP = (p - 0.73) / 0.26;
+          tigerImpact.update.call(this, hitP, fade, kPos);
+          applyKingHitFeedback(hitP, 'collision', -sideSign, dirSign);
+          claws.forEach(({ arc, i }) => {
+            arc.visible = hitP < 0.85;
+            arc.rotation.z = -1.25 + hitP * 2.6 + i * 0.08;
+            arc.scale.setScalar((0.6 + hitP * 0.85) * fade);
+            arc.material.opacity = Math.sin(Math.min(1, hitP) * Math.PI) * 0.72 * fade;
+          });
+        } else {
+          claws.forEach(({ arc }) => { arc.visible = false; });
+        }
+
+        if (vfxContext?.setCameraOverride) {
+          vfxContext.setCameraOverride(
+            new THREE.Vector3(
+              THREE.MathUtils.lerp(tigerPos.x, kPos.x, 0.38),
+              Math.max(0.65, tigerPos.y * 0.65),
+              THREE.MathUtils.lerp(tigerPos.z, kPos.z, 0.38)
+            ),
+            10.8,
+            0.90,
+            sideSign * 0.28
+          );
+        }
       });
     }
 
     // =========================================================================
-    // 8. 八角马 (Octagon Horse): 3D 明月升空 + 精雕 3D 银甲神驹驻守士角 + 八杆3D蟠龙银枪合围锁宫
+    // 8. 八角马 (Octagon Horse):
+    // “马”飞跃变身建模马，另一枚棋子变身为拿武器的建模将军（同时平滑切至绿色草地和蓝天白云） ->
+    // 建模将军骑在建模马上在草原奔跑一圈后（平滑切回终局棋面），建模马落回原点 ->
+    // 同时建模将军从马身上跃起掷出武器在空中旋转，在马落回原点的同时武器扎入“将（帅）”，且建模将军跳回终局棋面原点！
     // =========================================================================
     if (vfxType === 'octagon_horse') {
-      const horseOrigin = findCheckerPosByType('n', cPos);
-      const moonSphere = new THREE.Mesh(
-        new THREE.SphereGeometry(1.10, 24, 24),
-        new THREE.MeshBasicMaterial({ color: 0xfef3c7, transparent: true, opacity: 0.78 })
-      );
-      moonSphere.position.set(kPos.x, 3.8, kPos.z + (kPos.z < 0 ? -1.8 : 1.8));
-      group.add(moonSphere);
+      const cgScene = this.createCGSceneEnvironment('cg_grassland', group);
+      const horseItem = findAttackerItemByType('n', null) || attackerItems[0];
+      const genItem = findAttackerItemByType('r', horseItem) || attackerItems.find(it => it !== horseItem) || horseItem;
+      const horseOrigin = horseItem?.basePos ? horseItem.basePos.clone() : new THREE.Vector3(cPos.x, 0, cPos.z);
+      const genOrigin = genItem?.basePos ? genItem.basePos.clone() : new THREE.Vector3(kPos.x - 2.2, 0, kPos.z + 2.4);
+
+      const horseMorphAura = this.createSmoothMorphAura(group, 0xfbbf24);
+      const genMorphAura = this.createSmoothMorphAura(group, 0x38bdf8);
 
       const octagonHorse = this.createArticulated3DWarHorse(goldMat, darkIronMat, goldGlowMat);
-      octagonHorse.position.set(horseOrigin.x, 0.05, horseOrigin.z);
-      this.faceTargetHorizontally(octagonHorse, kPos.x, kPos.z);
+      octagonHorse.visible = false;
       group.add(octagonHorse);
 
-      const pillars = [];
-      for (let i = 0; i < 8; i++) {
-        const a = (i * Math.PI) / 4;
-        const pGroup = new THREE.Group();
-        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 2.8, 12), goldMat);
-        const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.38, 10), crimsonLacquerMat);
-        tassel.position.y = 1.25;
-        const tip = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.55, 6), goldGlowMat.clone());
-        tip.position.y = 1.65;
-        pGroup.add(shaft, tassel, tip);
-        pGroup.position.set(kPos.x + Math.cos(a) * 2.35, 1.4, kPos.z + Math.sin(a) * 2.35);
-        group.add(pGroup);
-        pillars.push({ pGroup, a });
-      }
-      const moonHalo = new THREE.Mesh(new THREE.TorusGeometry(2.15, 0.055, 12, 48), goldGlowMat.clone());
-      moonHalo.rotation.x = Math.PI / 2;
-      moonHalo.position.set(kPos.x, 2.45, kPos.z);
-      group.add(moonHalo);
+      const riderGeneral = this.createArticulated3DGeneral(goldMat, crimsonLacquerMat, darkIronMat, goldGlowMat);
+      riderGeneral.visible = false;
+      group.add(riderGeneral);
+
+      // 将军投掷的旋转神枪/战戟
+      const thrownSpear = new THREE.Group();
+      const sShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.068, 2.55, 12), goldMat);
+      const sTassel = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.42, 10), crimsonLacquerMat);
+      sTassel.position.y = 0.85;
+      const sTip = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.82, 6), goldGlowMat.clone());
+      sTip.position.y = 1.48;
+      thrownSpear.add(sShaft, sTassel, sTip);
+      thrownSpear.visible = false;
+      group.add(thrownSpear);
+
+      const pierceExplosion = create3DCannonExplosion(kPos, 1.25);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        octagonHorse.userData.animateGallop(p * 3.5, Math.sin(p * Math.PI) * 0.76);
-        octagonHorse.scale.setScalar(fade);
-        moonSphere.scale.setScalar((0.85 + Math.sin(p * Math.PI) * 0.22) * fade);
+        // 0.02 -> 0.22 切入蓝天白云绿草地；0.58 -> 0.76 奔跑一圈后切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.22, p) * (1 - smoothstep(0.58, 0.76, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-        const lock = Math.min(1, p / 0.38);
-        const rad = THREE.MathUtils.lerp(2.55, 1.38, lock);
-        pillars.forEach(({ pGroup, a }) => {
-          const curA = a + p * 1.4;
-          pGroup.position.x = kPos.x + Math.cos(curA) * rad;
-          pGroup.position.z = kPos.z + Math.sin(curA) * rad;
-          pGroup.scale.setScalar(fade);
-        });
-        moonHalo.scale.setScalar((rad / 2.15) * fade);
-        moonHalo.material.opacity = 0.65 * fade;
+        const mountMeetPos = new THREE.Vector3(0, 0.05, 2.6);
 
-        if (p >= 0.36) {
-          applyKingHitFeedback((p - 0.36) / 0.58, 'collision', 0, 0);
+        if (p < 0.24) {
+          // 阶段1：“马”与助战棋子飞跃变身为建模马与持武器建模将军，并在草原汇合骑乘
+          const leapT = smoothstep(0.0, 0.18, p);
+          const morphT = smoothstep(0.10, 0.24, p);
+          const hp = new THREE.Vector3().lerpVectors(horseOrigin, mountMeetPos, leapT);
+          hp.y += Math.sin(leapT * Math.PI) * 1.45;
+          const gp = new THREE.Vector3().lerpVectors(genOrigin, new THREE.Vector3(mountMeetPos.x, mountMeetPos.y + 0.95, mountMeetPos.z), leapT);
+          gp.y += Math.sin(leapT * Math.PI) * 1.65;
+
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            this.setPiece3DPose(
+              horseItem.mesh,
+              hp.x,
+              hp.y,
+              hp.z,
+              leapT * Math.PI * 2,
+              leapT * Math.PI * 3,
+              0,
+              1 + leapT * 0.4,
+              1 - smoothstep(0.2, 0.9, morphT),
+              leapT * 0.65
+            );
+          }
+          if (genItem?.mesh && genItem !== horseItem) {
+            genItem.customDriven = true;
+            this.setPiece3DPose(
+              genItem.mesh,
+              gp.x,
+              gp.y,
+              gp.z,
+              -leapT * Math.PI * 2,
+              leapT * Math.PI * 3,
+              0,
+              1 + leapT * 0.4,
+              1 - smoothstep(0.2, 0.9, morphT),
+              leapT * 0.65,
+              0x38bdf8
+            );
+          }
+
+          horseMorphAura.update(hp, morphT, fade);
+          genMorphAura.update(gp, morphT, fade);
+
+          const mScale = smoothstep(0.15, 0.95, morphT) * fade;
+          octagonHorse.visible = mScale > 0.02;
+          octagonHorse.position.copy(hp);
+          octagonHorse.scale.setScalar(1.12 * mScale);
+          octagonHorse.userData.animateGallop(p * 4, 0.35);
+
+          riderGeneral.visible = mScale > 0.02;
+          riderGeneral.position.set(hp.x, hp.y + 0.86, hp.z - 0.05);
+          riderGeneral.scale.setScalar(0.76 * mScale);
+          thrownSpear.visible = false;
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(new THREE.Vector3(hp.x, 1.0, hp.z), 10.2, 0.88, 0);
+          }
+        } else if (p < 0.62) {
+          // 阶段2：建模将军骑在建模马上，在绿草地上纵马奔跑一圈！
+          horseMorphAura.update(mountMeetPos, 0, 0);
+          genMorphAura.update(mountMeetPos, 0, 0);
+          if (horseItem?.mesh) { horseItem.customDriven = true; horseItem.mesh.visible = false; }
+          if (genItem?.mesh) { genItem.customDriven = true; genItem.mesh.visible = false; }
+
+          const lapT = (p - 0.24) / 0.38;
+          const lapAngle = lapT * Math.PI * 2 + Math.PI * 0.5;
+          const rx = 3.85;
+          const rz = 2.95;
+          const gx = Math.cos(lapAngle) * rx;
+          const gz = Math.sin(lapAngle) * rz;
+          const nextAngle = lapAngle + 0.12;
+          const tx = Math.cos(nextAngle) * rx;
+          const tz = Math.sin(nextAngle) * rz;
+          const gallopBounce = Math.abs(Math.sin(lapT * Math.PI * 10)) * 0.26;
+
+          octagonHorse.visible = true;
+          octagonHorse.position.set(gx, 0.05 + gallopBounce, gz);
+          this.faceTargetHorizontally(octagonHorse, tx, tz);
+          octagonHorse.userData.animateGallop(p * 5.2, 0.22);
+          octagonHorse.scale.setScalar(1.15 * fade);
+
+          riderGeneral.visible = true;
+          riderGeneral.position.set(gx, 0.92 + gallopBounce, gz);
+          this.faceTargetHorizontally(riderGeneral, tx, tz);
+          riderGeneral.scale.setScalar(0.78 * fade);
+          riderGeneral.userData.swordArmPivot.rotation.x = -0.85 + Math.sin(p * 24) * 0.35;
+          thrownSpear.visible = false;
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(gx * 0.45, 0.85, gz * 0.45),
+              11.4,
+              0.86,
+              lapT * 0.65
+            );
+          }
+        } else {
+          // 阶段3 & 4：切回终局棋面 -> 建模马跃回原点 (horseOrigin)，同时将军从马背高跃掷出旋转神兵扎入“将（帅）”，并跳回终局原点 (genOrigin)！
+          const actionT = Math.min(1, (p - 0.62) / 0.22);
+          const settleT = smoothstep(0.84, 0.98, p);
+          const launchStart = new THREE.Vector3(0, 0.05, 2.95);
+
+          // 1. 建模马跃回 horseOrigin（0.62 -> 0.84 准时落回原点）
+          const hPos = new THREE.Vector3().lerpVectors(launchStart, horseOrigin, actionT);
+          hPos.y = 0.05 + Math.sin(actionT * Math.PI) * 1.95;
+          octagonHorse.visible = settleT < 0.92;
+          octagonHorse.position.copy(hPos);
+          this.faceTargetHorizontally(octagonHorse, kPos.x, kPos.z);
+          octagonHorse.userData.animateGallop(p * 4.5, Math.sin(actionT * Math.PI) * 0.68);
+          octagonHorse.scale.setScalar(1.12 * (1 - settleT) * fade);
+
+          // 2. 建模将军从马背跃起，在空中掷出旋转武器后跳回 genOrigin（与马同时在 p=0.84 落地）
+          const gPos = new THREE.Vector3().lerpVectors(
+            new THREE.Vector3(launchStart.x, 0.95, launchStart.z),
+            genOrigin,
+            actionT
+          );
+          gPos.y += Math.sin(actionT * Math.PI) * 2.85;
+          riderGeneral.visible = settleT < 0.92;
+          riderGeneral.position.copy(gPos);
+          this.faceTargetHorizontally(riderGeneral, kPos.x, kPos.z);
+          riderGeneral.scale.setScalar(0.78 * (1 - settleT) * fade);
+          riderGeneral.userData.swordArmPivot.rotation.x = THREE.MathUtils.lerp(-1.55, 0.95, Math.min(1, actionT * 1.8));
+          if (riderGeneral.userData.swordGroup) {
+            riderGeneral.userData.swordGroup.visible = false;
+          }
+
+          // 3. 旋转武器飞扎“将（帅）”（在 actionT === 1 即建模马落回原点的同一时刻扎入“将（帅）”！）
+          thrownSpear.visible = settleT < 0.96;
+          const spearStart = new THREE.Vector3(launchStart.x, 2.65, launchStart.z);
+          const spearEnd = new THREE.Vector3(kPos.x, 0.95, kPos.z);
+          thrownSpear.position.lerpVectors(spearStart, spearEnd, actionT);
+          thrownSpear.position.y += Math.sin(actionT * Math.PI) * 1.65;
+          if (actionT < 0.98) {
+            thrownSpear.rotation.x += dt * 28;
+            thrownSpear.rotation.z += dt * 16;
+          } else {
+            thrownSpear.rotation.set(Math.PI, 0, 0.18);
+          }
+          thrownSpear.scale.setScalar(1.18 * (1 - settleT * 0.5) * fade);
+
+          // 4. 终局棋子在落回原点时平滑显形复原
+          const pieceShow = smoothstep(0.76, 0.92, p);
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            this.setPiece3DPose(horseItem.mesh, horseOrigin.x, 0, horseOrigin.z, 0, 0, 0, 1.0, pieceShow, 0);
+          }
+          if (genItem?.mesh && genItem !== horseItem) {
+            genItem.customDriven = true;
+            this.setPiece3DPose(genItem.mesh, genOrigin.x, 0, genOrigin.z, 0, 0, 0, 1.0, pieceShow, 0);
+          }
+
+          if (p >= 0.82) {
+            const hitP = (p - 0.82) / 0.18;
+            pierceExplosion.update.call(this, hitP, fade, kPos);
+            applyKingHitFeedback(hitP, 'heavy_smash', 0, 0);
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x * 0.5, 0.75, kPos.z * 0.5),
+              10.8,
+              0.88,
+              0.15
+            );
+          }
         }
       });
     }
 
     // =========================================================================
-    // 9. 钓鱼马 (Fishing Horse): 精雕多层 3D 碧波翻涌海面/浪花飞沫水珠 + 精雕 3D 龙首倒刺黄金钓钩垂钓将帅！
+    // 9. 钓鱼马 (Fishing Horse) —— 完全重做：
+    // 聚焦“马”至屏幕中心并挂上鱼钩鱼线（聚焦的同时场景平滑切换至俯视海面·没有月亮） ->
+    // 聚焦后“马”沉入水中消失（鱼钩鱼线随之一起下沉，鱼线露出一部分在海面上，沉入海面下的建模全部被遮挡看不见） ->
+    // 随后收回鱼钩鱼线时拉出建模马，建模马身上带着对面的“将（帅）”棋子 ->
+    // 随后建模马和“将（帅）”落回终局棋盘原位置！
     // =========================================================================
     if (vfxType === 'fishing_horse') {
-      const horseOrigin = findCheckerPosByType('n', cPos);
-      const fishHorse = this.createArticulated3DWarHorse(jadeIceMat, goldMat, goldGlowMat);
-      fishHorse.position.set(horseOrigin.x, 0.05, horseOrigin.z);
-      this.faceTargetHorizontally(fishHorse, kPos.x, kPos.z);
-      group.add(fishHorse);
+      const cgScene = this.createCGOceanDayScene
+        ? this.createCGSceneEnvironment('cg_ocean_day', group)
+        : this.createCGSceneEnvironment('cg_ocean_day', group);
+      const horseItem = findAttackerItemByType('n', null) || attackerItems[0];
+      const horseOrigin = horseItem?.basePos ? horseItem.basePos.clone() : new THREE.Vector3(cPos.x, 0, cPos.z);
 
-      const waterSystem = new THREE.Group();
-      waterSystem.position.set(kPos.x, 0.04, kPos.z);
-      group.add(waterSystem);
+      // 精雕金龙倒刺鱼钩（挂在马/鱼线上）
+      const hookRig = new THREE.Group();
+      group.add(hookRig);
 
-      const deepPoolDisc = new THREE.Mesh(
-        new THREE.CircleGeometry(2.85, 48),
-        new THREE.MeshStandardMaterial({
-          color: 0x0369a1,
-          emissive: 0x075985,
-          emissiveIntensity: 0.38,
-          roughness: 0.14,
-          metalness: 0.45,
-          transparent: true,
-          opacity: 0.82,
-          side: THREE.DoubleSide
-        })
-      );
-      deepPoolDisc.rotation.x = -Math.PI / 2;
-      waterSystem.add(deepPoolDisc);
-
-      const waveCrestMeshes = [0.95, 1.65, 2.35].map((baseR, layerIdx) => {
-        const pts = [];
-        const segs = 48;
-        const waveCount = 6 + layerIdx * 2;
-        for (let s = 0; s < segs; s++) {
-          const a = (s / segs) * Math.PI * 2;
-          const r = baseR + Math.sin(a * waveCount) * 0.12;
-          const y = 0.08 + layerIdx * 0.07 + Math.cos(a * waveCount) * 0.09;
-          pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
-        }
-        const waveCurve = new THREE.CatmullRomCurve3(pts, true);
-        const waveMesh = new THREE.Mesh(
-          new THREE.TubeGeometry(waveCurve, 64, 0.068 - layerIdx * 0.01, 10, true),
-          layerIdx % 2 === 0 ? jadeIceMat : cyanGlowMat.clone()
-        );
-        waterSystem.add(waveMesh);
-        return { waveMesh, layerIdx };
-      });
-
-      const waveCrownArcs = Array.from({ length: 8 }, (_, i) => {
-        const ang = (i / 8) * Math.PI * 2;
-        const arc = new THREE.Mesh(
-          new THREE.TorusGeometry(0.46, 0.042, 8, 20, Math.PI * 0.85),
-          i % 2 === 0 ? jadeIceMat : cyanGlowMat.clone()
-        );
-        arc.position.set(Math.cos(ang) * 1.45, 0.22, Math.sin(ang) * 1.45);
-        arc.rotation.y = -ang + Math.PI / 2;
-        arc.rotation.x = 0.55;
-        waterSystem.add(arc);
-        return { arc, ang, i };
-      });
-
-      const waterDroplets = Array.from({ length: 18 }, (_, i) => {
-        const ang = (i / 18) * Math.PI * 2;
-        const drop = new THREE.Mesh(
-          new THREE.SphereGeometry(0.065 + (i % 3) * 0.025, 10, 10),
-          i % 3 === 0 ? goldGlowMat.clone() : jadeIceMat
-        );
-        drop.scale.set(0.85, 1.35, 0.85);
-        waterSystem.add(drop);
-        return {
-          drop,
-          ang,
-          baseR: 0.45 + (i % 4) * 0.42,
-          spd: 2.2 + (i % 3) * 0.85,
-          phase: i * 0.65
-        };
-      });
-
-      const rodTipGroup = new THREE.Group();
-      rodTipGroup.position.set(kPos.x + 1.45, 5.2, kPos.z - 1.15);
-      const rodPoleCurve = new THREE.QuadraticBezierCurve3(
-        new THREE.Vector3(2.2, 1.2, -1.6),
-        new THREE.Vector3(0.8, 0.5, -0.5),
-        new THREE.Vector3(-1.45, -0.35, 1.15)
-      );
-      const rodPole = new THREE.Mesh(
-        new THREE.TubeGeometry(rodPoleCurve, 24, 0.055, 10, false),
-        goldMat
-      );
-      rodTipGroup.add(rodPole);
-      group.add(rodTipGroup);
-
-      const hookAssembly = new THREE.Group();
-      hookAssembly.position.set(kPos.x, 4.6, kPos.z);
-      group.add(hookAssembly);
-
-      const fishingLine = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.022, 0.022, 4.2, 8),
-        goldGlowMat.clone()
-      );
-      fishingLine.position.y = 2.65;
-      const jadeFloat = new THREE.Mesh(new THREE.OctahedronGeometry(0.16, 1), jadeIceMat);
-      jadeFloat.scale.set(0.75, 1.65, 0.75);
-      jadeFloat.position.y = 1.45;
-      const floatGoldBand = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.024, 8, 16), goldMat);
-      floatGoldBand.rotation.x = Math.PI / 2;
-      floatGoldBand.position.y = 1.45;
-      hookAssembly.add(fishingLine, jadeFloat, floatGoldBand);
-
-      const topSwivelRing = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.036, 10, 20), goldMat);
-      topSwivelRing.position.y = 0.68;
-      const dragonHeadChuck = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.34, 8), crimsonLacquerMat);
-      dragonHeadChuck.rotation.x = Math.PI;
-      dragonHeadChuck.position.y = 0.46;
-      const dragonCollar = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.032, 8, 16), goldMat);
-      dragonCollar.rotation.x = Math.PI / 2;
-      dragonCollar.position.y = 0.56;
-      hookAssembly.add(topSwivelRing, dragonHeadChuck, dragonCollar);
-
-      const hookBendPts = [
-        new THREE.Vector3(0, 0.38, 0),
-        new THREE.Vector3(0, -0.10, 0),
-        new THREE.Vector3(0.12, -0.52, 0),
-        new THREE.Vector3(0.44, -0.62, 0),
-        new THREE.Vector3(0.68, -0.34, 0),
-        new THREE.Vector3(0.64, 0.05, 0)
+      const swivelRing = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.038, 10, 20), goldMat);
+      swivelRing.position.y = 0.52;
+      const dragonChuck = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.34, 8), crimsonLacquerMat);
+      dragonChuck.rotation.x = Math.PI;
+      dragonChuck.position.y = 0.32;
+      const hookPts = [
+        new THREE.Vector3(0, 0.26, 0),
+        new THREE.Vector3(0, -0.15, 0),
+        new THREE.Vector3(0.12, -0.48, 0),
+        new THREE.Vector3(0.42, -0.54, 0),
+        new THREE.Vector3(0.62, -0.26, 0),
+        new THREE.Vector3(0.58, 0.08, 0)
       ];
-      const hookBendCurve = new THREE.CatmullRomCurve3(hookBendPts);
-      const hookBodyMesh = new THREE.Mesh(
-        new THREE.TubeGeometry(hookBendCurve, 36, 0.075, 12, false),
+      const hookTube = new THREE.Mesh(
+        new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hookPts), 32, 0.068, 12, false),
         goldMat
       );
-      const hookSpineGlow = new THREE.Mesh(
-        new THREE.TubeGeometry(hookBendCurve, 28, 0.035, 8, false),
+      const hookBarb = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.24, 8), crimsonLacquerMat);
+      hookBarb.position.set(0.48, 0.06, 0);
+      hookBarb.rotation.z = 2.38;
+      hookRig.add(swivelRing, dragonChuck, hookTube, hookBarb);
+
+      // 露出海面之上的动态鱼线（始终只渲染 max(0, hookTopY) 到高空竿梢 y=10.5 的水上部分，确保水下部分绝不露出）
+      const upperFishingLine = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.026, 0.026, 1.0, 10),
         goldGlowMat.clone()
       );
-      const hookPoint = new THREE.Mesh(new THREE.ConeGeometry(0.088, 0.32, 10), goldMat);
-      hookPoint.position.set(0.60, 0.18, 0);
-      hookPoint.rotation.z = 0.22;
-      const hookBarb = new THREE.Mesh(new THREE.ConeGeometry(0.058, 0.24, 8), crimsonLacquerMat);
-      hookBarb.position.set(0.49, 0.04, 0);
-      hookBarb.rotation.z = 2.38;
-      hookAssembly.add(hookBodyMesh, hookSpineGlow, hookPoint, hookBarb);
+      group.add(upperFishingLine);
+
+      // 鱼线入水点浮漂与水花涟漪环
+      const waterEntryRing = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.68, 36), cyanGlowMat.clone());
+      waterEntryRing.rotation.x = -Math.PI / 2;
+      waterEntryRing.position.set(0, 0.035, 0);
+      group.add(waterEntryRing);
+
+      const splashDrops = Array.from({ length: 18 }, (_, i) => {
+        const ang = (i / 18) * Math.PI * 2;
+        const drop = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), i % 2 === 0 ? jadeIceMat : goldGlowMat.clone());
+        drop.visible = false;
+        group.add(drop);
+        return { drop, ang, spd: 1.5 + (i % 4) * 0.45, lift: 1.4 + (i % 3) * 0.5 };
+      });
+
+      const emergedWarHorse = this.createArticulated3DWarHorse(jadeIceMat, goldMat, goldGlowMat);
+      emergedWarHorse.visible = false;
+      group.add(emergedWarHorse);
+
+      const landExplosion = create3DCannonExplosion(kPos, 1.12);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        fishHorse.userData.animateGallop(p * 3.4, Math.sin(p * Math.PI) * 0.68);
-        fishHorse.scale.setScalar(fade);
+        // 0.02 -> 0.24 切至俯视蔚蓝大海（无月亮）；0.76 -> 0.94 平滑切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.24, p) * (1 - smoothstep(0.76, 0.94, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-        waterSystem.scale.setScalar(fade);
-        waveCrestMeshes.forEach(({ waveMesh, layerIdx }) => {
-          waveMesh.rotation.y += dt * (layerIdx % 2 === 0 ? 3.2 : -2.6);
-          const sc = 0.92 + Math.sin(p * 14 + layerIdx) * 0.10;
-          waveMesh.scale.set(sc, 1 + Math.cos(p * 16 + layerIdx) * 0.25, sc);
-        });
-        waveCrownArcs.forEach(({ arc, ang, i }) => {
-          const curA = ang - p * 3.8;
-          const r = 1.25 + Math.sin(p * 10 + i) * 0.35;
-          arc.position.set(Math.cos(curA) * r, 0.18 + Math.abs(Math.sin(p * 12 + i)) * 0.22, Math.sin(curA) * r);
-          arc.rotation.y = -curA + Math.PI / 2;
-        });
+        const rodTopY = 10.2;
 
-        let hookY = 4.6;
-        if (p < 0.38) {
-          const dEase = 1 - Math.pow(1 - p / 0.38, 2.6);
-          hookY = THREE.MathUtils.lerp(4.6, 0.68, dEase);
-        } else if (p < 0.48) {
-          hookY = 0.68 + Math.sin((p - 0.38) * 60) * 0.06;
+        if (p < 0.28) {
+          // 阶段1：聚焦“马”棋子至屏幕中心 (0, 1.45, 0) 并挂上鱼钩鱼线，同时镜头切换至俯视海面
+          const focusT = smoothstep(0.0, 0.22, p);
+          const hx = THREE.MathUtils.lerp(horseOrigin.x, 0, focusT);
+          const hz = THREE.MathUtils.lerp(horseOrigin.z, 0, focusT);
+          const hy = THREE.MathUtils.lerp(0, 1.45, focusT) + Math.sin(p * 18) * 0.08;
+          const hScale = THREE.MathUtils.lerp(1.0, 1.58, focusT);
+
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            this.setPiece3DPose(
+              horseItem.mesh,
+              hx,
+              hy,
+              hz,
+              Math.sin(focusT * Math.PI) * 0.22,
+              focusT * Math.PI * 2,
+              0,
+              hScale,
+              1.0,
+              focusT * 0.55,
+              0x38bdf8
+            );
+          }
+          // 对面“将（帅）”在海面浮现时随原棋盘淡出（等待稍后被建模马从海底带出！）
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            this.setPiece3DPose(kingItem.mesh, kPos.x, 0, kPos.z, 0, 0, 0, 1.0, 1 - cgWeight, 0);
+          }
+
+          hookRig.visible = true;
+          hookRig.position.set(hx, hy + 0.55, hz);
+          hookRig.rotation.y = p * 4;
+          hookRig.scale.setScalar(fade);
+
+          const lineBottomY = Math.max(0.02, hy + 0.95);
+          const lineLen = Math.max(0.1, rodTopY - lineBottomY);
+          upperFishingLine.visible = true;
+          upperFishingLine.scale.set(1, lineLen, 1);
+          upperFishingLine.position.set(hx, lineBottomY + lineLen * 0.5, hz);
+
+          waterEntryRing.scale.setScalar((0.8 + focusT * 0.6) * fade);
+          waterEntryRing.material.opacity = focusT * 0.55 * fade;
+          emergedWarHorse.visible = false;
+          splashDrops.forEach(({ drop }) => { drop.visible = false; });
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(hx * 0.5, 0.65, hz * 0.5),
+              11.2,
+              THREE.MathUtils.lerp(0.82, 0.44, focusT),
+              0
+            );
+          }
+        } else if (p < 0.54) {
+          // 阶段2：“马”连同鱼钩鱼线沉入海水中消失（沉入海面 y<=0 下的建模全部被遮挡看不见，仅鱼线露出一部分在海面上）
+          const sinkT = smoothstep(0.28, 0.42, p);
+          const hy = THREE.MathUtils.lerp(1.45, -2.2, sinkT);
+
+          // 严格遮挡：一旦沉入海面 (hy < 0.02)，立即隐藏水下部分！
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            if (hy > 0.02) {
+              const aboveRatio = Math.min(1, hy / 0.55);
+              this.setPiece3DPose(
+                horseItem.mesh,
+                0,
+                hy,
+                0,
+                sinkT * 0.45,
+                p * Math.PI * 3,
+                0,
+                1.58 * (0.75 + 0.25 * aboveRatio),
+                aboveRatio,
+                0.35,
+                0x38bdf8
+              );
+            } else {
+              horseItem.mesh.visible = false;
+            }
+          }
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            kingItem.mesh.visible = false;
+          }
+
+          const hookY = hy + 0.55;
+          if (hookY > 0.12) {
+            hookRig.visible = true;
+            hookRig.position.set(0, hookY, 0);
+          } else {
+            hookRig.visible = false; // 鱼钩沉入海面下被海水完全遮挡
+          }
+
+          // 鱼线露出一部分在海面上（从海面 y=0.02 延伸至上方 y=rodTopY，并随水下咬钩微微颤动）
+          const lineTwitchX = p > 0.42 ? Math.sin(p * 85) * 0.12 : 0;
+          const lineTwitchZ = p > 0.42 ? Math.cos(p * 78) * 0.12 : 0;
+          const visibleTopY = 4.8; // 露在海面上的鱼线高度
+          upperFishingLine.visible = true;
+          upperFishingLine.scale.set(1, visibleTopY, 1);
+          upperFishingLine.position.set(lineTwitchX, visibleTopY * 0.5, lineTwitchZ);
+
+          // 入水涟漪与水花飞溅
+          const ripplePulse = 1.0 + ((p - 0.28) / 0.26) * 2.8;
+          waterEntryRing.scale.setScalar(ripplePulse * fade);
+          waterEntryRing.material.opacity = (0.75 - ((p - 0.28) / 0.26) * 0.35) * fade;
+
+          const splashP = Math.min(1, (p - 0.31) / 0.18);
+          splashDrops.forEach(({ drop, ang, spd, lift }) => {
+            if (splashP > 0 && splashP < 1) {
+              drop.visible = true;
+              const r = 0.3 + splashP * spd;
+              drop.position.set(Math.cos(ang) * r, Math.sin(splashP * Math.PI) * lift, Math.sin(ang) * r);
+              drop.scale.setScalar((1 - splashP * 0.6) * fade);
+            } else {
+              drop.visible = false;
+            }
+          });
+          emergedWarHorse.visible = false;
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(new THREE.Vector3(0, 0.2, 0), 10.6, 0.38, (p - 0.28) * 0.4);
+          }
+        } else if (p < 0.78) {
+          // 阶段3：收回鱼钩鱼线，从海水中猛然拉出 3D 建模马，且建模马身上带着对面的“将（帅）”棋子！
+          const pullT = smoothstep(0.54, 0.70, p);
+          const emergeY = THREE.MathUtils.lerp(-1.2, 2.35, pullT);
+
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            horseItem.mesh.visible = false;
+          }
+
+          if (emergeY > 0.0) {
+            emergedWarHorse.visible = true;
+            emergedWarHorse.position.set(0, emergeY, 0);
+            this.faceTargetHorizontally(emergedWarHorse, kPos.x, kPos.z);
+            emergedWarHorse.userData.animateGallop(p * 4.8, Math.sin(pullT * Math.PI) * 0.82);
+            emergedWarHorse.scale.setScalar(1.18 * Math.min(1, emergeY / 0.6 + 0.3) * fade);
+          } else {
+            emergedWarHorse.visible = false;
+          }
+
+          // 建模马身上带着对面的“将（帅）”棋子一同破水而出！
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            if (emergeY > 0.02) {
+              this.setPiece3DPose(
+                kingItem.mesh,
+                0,
+                emergeY + 0.36,
+                -0.38,
+                Math.sin(p * 42) * 0.35,
+                p * Math.PI * 3,
+                Math.cos(p * 38) * 0.35,
+                1.35,
+                1.0,
+                0.72,
+                0xef4444
+              );
+            } else {
+              kingItem.mesh.visible = false;
+            }
+          }
+
+          const hookCurrentY = Math.max(0.05, emergeY + 1.25);
+          hookRig.visible = emergeY > -0.2;
+          hookRig.position.set(0, hookCurrentY, 0);
+          hookRig.rotation.y = p * 5;
+
+          const lineLen = Math.max(0.2, rodTopY - hookCurrentY);
+          upperFishingLine.visible = true;
+          upperFishingLine.scale.set(1, lineLen, 1);
+          upperFishingLine.position.set(0, hookCurrentY + lineLen * 0.5, 0);
+
+          // 破水巨浪水花
+          const burstP = Math.min(1, (p - 0.55) / 0.20);
+          splashDrops.forEach(({ drop, ang, spd, lift }) => {
+            if (burstP > 0 && burstP < 1) {
+              drop.visible = true;
+              const r = 0.4 + burstP * spd * 1.45;
+              drop.position.set(Math.cos(ang) * r, Math.sin(burstP * Math.PI) * lift * 1.55, Math.sin(ang) * r);
+              drop.scale.setScalar((1.2 - burstP * 0.6) * fade);
+            } else {
+              drop.visible = false;
+            }
+          });
+          waterEntryRing.scale.setScalar((1.0 + burstP * 3.4) * fade);
+          waterEntryRing.material.opacity = (1 - burstP * 0.7) * 0.78 * fade;
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(0, Math.max(0.5, emergeY * 0.7), 0),
+              10.8,
+              THREE.MathUtils.lerp(0.38, 0.78, pullT),
+              0.25
+            );
+          }
         } else {
-          const yankEase = 1 - Math.pow(1 - Math.min(1, (p - 0.48) / 0.44), 2.4);
-          hookY = THREE.MathUtils.lerp(0.68, 2.35, yankEase);
-        }
-        hookAssembly.position.y = hookY;
-        hookAssembly.rotation.y += dt * 3.2;
-        hookAssembly.scale.setScalar(fade);
-        rodTipGroup.scale.setScalar(fade);
+          // 阶段4：海面平滑隐去切回终局棋面，建模马和“将（帅）”双双落回终局棋盘原位置！
+          const landT = smoothstep(0.78, 0.94, p);
+          hookRig.visible = false;
+          upperFishingLine.visible = false;
+          waterEntryRing.material.opacity = 0;
+          splashDrops.forEach(({ drop }) => { drop.visible = false; });
 
-        waterDroplets.forEach(({ drop, ang, baseR, spd, phase }) => {
-          const splashCycle = (p * spd + phase) % 1.0;
-          const rad = baseR + splashCycle * 0.95;
-          const liftBoost = p > 0.36 ? 1.65 : 0.85;
-          drop.position.set(
-            Math.cos(ang + p * 2.5) * rad,
-            Math.sin(splashCycle * Math.PI) * 1.45 * liftBoost,
-            Math.sin(ang + p * 2.5) * rad
-          );
-        });
+          const hCur = new THREE.Vector3().lerpVectors(new THREE.Vector3(0, 2.35, 0), horseOrigin, landT);
+          hCur.y += Math.sin(landT * Math.PI) * 0.85;
+          const morphBack = smoothstep(0.55, 0.95, landT);
 
-        if (p >= 0.38 && kingItem && kingItem.mesh) {
-          kingItem.customDriven = true;
-          const yankP = Math.min(1, (p - 0.38) / 0.54);
-          const liftH = Math.max(0, hookY - 0.65) * 0.62 * (1 - Math.max(0, (p - 0.84) / 0.16));
-          const struggle = Math.sin(p * 75) * 0.10;
-          kingItem.mesh.position.set(kingItem.basePos.x + struggle, liftH, kingItem.basePos.z - struggle);
-          kingItem.mesh.rotation.set(Math.sin(p * 32) * 0.38, yankP * Math.PI * 2, Math.cos(p * 28) * 0.35);
+          emergedWarHorse.visible = morphBack < 0.95;
+          emergedWarHorse.position.copy(hCur);
+          this.faceTargetHorizontally(emergedWarHorse, kPos.x, kPos.z);
+          emergedWarHorse.userData.animateGallop(p * 4, 0.25);
+          emergedWarHorse.scale.setScalar(1.15 * (1 - morphBack) * fade);
+
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            this.setPiece3DPose(
+              horseItem.mesh,
+              hCur.x,
+              hCur.y,
+              hCur.z,
+              0,
+              (1 - landT) * Math.PI * 2,
+              0,
+              THREE.MathUtils.lerp(1.3, 1.0, landT),
+              smoothstep(0.35, 0.85, landT),
+              (1 - landT) * 0.4
+            );
+          }
+
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            const kCur = new THREE.Vector3().lerpVectors(new THREE.Vector3(0, 2.71, -0.38), kPos, landT);
+            kCur.y += Math.sin(landT * Math.PI) * 0.95;
+            if (landT < 0.92) {
+              this.setPiece3DPose(
+                kingItem.mesh,
+                kCur.x,
+                kCur.y,
+                kCur.z,
+                (1 - landT) * Math.PI * 3,
+                (1 - landT) * Math.PI * 2,
+                0,
+                THREE.MathUtils.lerp(1.35, 1.0, landT),
+                1.0,
+                0.45
+              );
+            } else {
+              const hitP = (p - 0.90) / 0.10;
+              landExplosion.update.call(this, hitP, fade, kPos);
+              applyKingHitFeedback(hitP, 'heavy_smash', 0, 0);
+            }
+          }
         }
       });
     }
 
     // =========================================================================
-    // 10. 列马车 (Standing Horse Chariot): 3D 断崖赤日 + 精雕 3D 战马与 3D 战车并列冲锋斩将 + 撞击反馈
+    // 10. 列马车 (Standing Horse Chariot) —— 完全重做：
+    // “马”从屏幕下方升空变身建模马站在场景远端的山上，其背景有一个红色的太阳 ->
+    // 同时“车”在场景太阳的位置缓缓浮现在建模马后面（同时苍山残阳场景切换，场景的太阳和浮现的“车”一样大，要比建模马大一些） ->
+    // 在“车”浮现完成后，“车”变身成为建模车，建模车绕过马冲向“将（帅）”，建模马随后也直冲过去！
     // =========================================================================
     if (vfxType === 'standing_horse_chariot') {
-      const sunSphere = new THREE.Mesh(
-        new THREE.SphereGeometry(1.18, 24, 24),
-        crimsonGlowMat.clone()
-      );
-      sunSphere.position.set(kPos.x, 3.4, kPos.z + (kPos.z < 0 ? -1.8 : 1.8));
-      group.add(sunSphere);
+      const cgScene = this.createCGSceneEnvironment('cg_sunset_mountain', group);
+      const horseItem = findAttackerItemByType('n', null) || attackerItems[0];
+      const rookItem = findAttackerItemByType('r', horseItem) || attackerItems.find(it => it !== horseItem) || horseItem;
+      const horseOrigin = horseItem?.basePos ? horseItem.basePos.clone() : new THREE.Vector3(cPos.x, 0, cPos.z);
+      const rookOrigin = rookItem?.basePos ? rookItem.basePos.clone() : new THREE.Vector3(rPos.x, 0, rPos.z);
 
-      const dirSign = kPos.z < 0 ? -1 : 1;
-      const startZ = kPos.z - dirSign * 3.2;
-      const endZ = kPos.z - dirSign * 0.85;
+      const mountainPeakPos = new THREE.Vector3(0, 2.32, -5.8);
+      const sunCenterPos = new THREE.Vector3(0, 4.15, -8.5);
+      const targetKingStagePos = new THREE.Vector3(0, 0.04, 3.2);
+
+      const horseMorphAura = this.createSmoothMorphAura(group, 0xfbbf24);
+      const rookMorphAura = this.createSmoothMorphAura(group, 0xef4444);
 
       const horse3D = this.createArticulated3DWarHorse(crimsonLacquerMat, goldMat, goldGlowMat);
-      horse3D.position.set(kPos.x - 1.05, 0.05, startZ);
-      this.faceTargetHorizontally(horse3D, kPos.x - 0.45, kPos.z);
+      horse3D.visible = false;
+      this.faceTargetHorizontally(horse3D, targetKingStagePos.x, targetKingStagePos.z);
       group.add(horse3D);
 
       const chariot3D = this.createArticulated3DWarChariot(bronzeWoodMat, goldMat, darkIronMat, crimsonGlowMat);
-      chariot3D.position.set(kPos.x + 1.05, 0.05, startZ);
-      this.faceTargetHorizontally(chariot3D, kPos.x + 0.45, kPos.z);
+      chariot3D.visible = false;
+      this.faceTargetHorizontally(chariot3D, targetKingStagePos.x, targetKingStagePos.z);
       group.add(chariot3D);
 
-      const strikeExplosion = create3DCannonExplosion(kPos, 1.1);
+      // 建模车绕过建模马冲向“将（帅）”的绕行冲锋曲线
+      const chariotBypassCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 3.35, -7.8),
+        new THREE.Vector3(1.85, 2.30, -5.6), // 向侧翼绕过山顶建模马
+        new THREE.Vector3(1.25, 1.15, -2.2),
+        new THREE.Vector3(0.35, 0.05, 2.45)
+      ]);
+
+      // 建模马随后直冲过去的直线冲锋曲线
+      const horseDirectCurve = new THREE.CatmullRomCurve3([
+        mountainPeakPos.clone(),
+        new THREE.Vector3(0, 1.45, -2.8),
+        new THREE.Vector3(-0.35, 0.05, 2.35)
+      ]);
+
+      const strikeExplosion = create3DCannonExplosion(targetKingStagePos, 1.32);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        const strike = Math.min(1, p / 0.42);
-        const ease = 1 - Math.pow(1 - strike, 3);
+        // 0.02 -> 0.24 切入苍山残阳场景；0.78 -> 0.95 冲杀完成后切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.24, p) * (1 - smoothstep(0.78, 0.95, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-        horse3D.position.z = THREE.MathUtils.lerp(startZ, endZ, ease);
-        horse3D.userData.animateGallop(p * 4, strike > 0.65 ? Math.sin((strike - 0.65) / 0.35 * Math.PI) * 0.82 : 0.24);
-        horse3D.scale.setScalar(fade);
+        // 对面“将（帅）”位于山谷前方 targetKingStagePos，尾声平滑归位 kPos
+        if (kingItem?.mesh) {
+          kingItem.customDriven = true;
+          const kToStage = smoothstep(0.0, 0.22, p);
+          const kToBoard = smoothstep(0.78, 0.95, p);
+          const curK = new THREE.Vector3().lerpVectors(kPos, targetKingStagePos, kToStage * (1 - kToBoard));
+          if (p >= 0.72 && p < 0.88) {
+            applyKingHitFeedback((p - 0.72) / 0.16, 'collision', 0, 1, curK, 1.32);
+          } else {
+            this.setPiece3DPose(
+              kingItem.mesh,
+              curK.x,
+              curK.y,
+              curK.z,
+              0,
+              0,
+              0,
+              THREE.MathUtils.lerp(1.0, 1.32, kToStage * (1 - kToBoard)),
+              1.0,
+              0
+            );
+          }
+        }
 
-        chariot3D.position.z = THREE.MathUtils.lerp(startZ, endZ, ease);
-        chariot3D.userData.spinWheels(dt * 18, p * 4);
-        chariot3D.scale.setScalar(0.88 * fade);
+        if (p < 0.26) {
+          // 阶段1：“马”棋子从屏幕下方 (0, -0.6, 5.2) 升空飞向远端山顶，变身为建模马屹立山巅，背景一轮红日
+          const riseT = smoothstep(0.0, 0.22, p);
+          const morphT = smoothstep(0.14, 0.26, p);
+          const screenBottomStart = new THREE.Vector3(0, -0.4, 5.2);
+          const hp = new THREE.Vector3().lerpVectors(screenBottomStart, mountainPeakPos, riseT);
+          hp.y += Math.sin(riseT * Math.PI) * 1.65;
 
-        sunSphere.scale.setScalar((0.88 + Math.sin(p * Math.PI) * 0.22) * fade);
+          if (horseItem?.mesh) {
+            horseItem.customDriven = true;
+            this.setPiece3DPose(
+              horseItem.mesh,
+              hp.x,
+              hp.y,
+              hp.z,
+              riseT * Math.PI * 2,
+              riseT * Math.PI * 3,
+              0,
+              1.15,
+              1 - smoothstep(0.2, 0.9, morphT),
+              riseT * 0.75
+            );
+          }
+          if (rookItem?.mesh && rookItem !== horseItem) {
+            rookItem.customDriven = true;
+            rookItem.mesh.visible = false;
+          }
 
-        if (p >= 0.38) {
-          const hitP = (p - 0.38) / 0.56;
-          strikeExplosion.update.call(this, hitP, fade);
-          applyKingHitFeedback(hitP, 'collision', 0, dirSign);
+          horseMorphAura.update(hp, morphT, fade);
+          const hScale = 1.05 * smoothstep(0.15, 0.95, morphT) * fade;
+          horse3D.visible = hScale > 0.02;
+          horse3D.position.copy(mountainPeakPos);
+          this.faceTargetHorizontally(horse3D, targetKingStagePos.x, targetKingStagePos.z);
+          horse3D.userData.animateGallop(p * 3.5, 0.48);
+          horse3D.scale.setScalar(hScale);
+          chariot3D.visible = false;
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(0, 2.25, -2.5),
+              12.8,
+              1.08,
+              0
+            );
+          }
+        } else if (p < 0.48) {
+          // 阶段2：建模马傲立山巅，背景红日位置处，“车”棋子缓缓浮现（与红日一样大 scale=3.75，比建模马更大）！
+          horseMorphAura.update(mountainPeakPos, 0, 0);
+          if (horseItem?.mesh) { horseItem.customDriven = true; horseItem.mesh.visible = false; }
+
+          horse3D.visible = true;
+          horse3D.position.copy(mountainPeakPos);
+          horse3D.userData.animateGallop(p * 3.2, 0.35 + Math.sin(p * 12) * 0.15);
+          horse3D.scale.setScalar(1.05 * fade);
+
+          const emergeT = smoothstep(0.26, 0.45, p);
+          if (rookItem?.mesh) {
+            rookItem.customDriven = true;
+            // 竖立在红日位置 (sunCenterPos)，正面朝向镜头，直径与红日(r=1.68)完全一致(scale=3.75)！
+            this.setPiece3DPose(
+              rookItem.mesh,
+              sunCenterPos.x,
+              sunCenterPos.y - 0.45 * (1 - emergeT),
+              sunCenterPos.z + 0.25,
+              Math.PI / 2,
+              0,
+              (1 - emergeT) * Math.PI * 0.5,
+              3.75 * (0.82 + 0.18 * emergeT),
+              emergeT,
+              emergeT * 0.65,
+              0xef4444
+            );
+          }
+          chariot3D.visible = false;
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(0, 2.65, -4.2),
+              12.4,
+              1.10,
+              0
+            );
+          }
+        } else if (p < 0.84) {
+          // 阶段3：“车”浮现完成后平滑变身为建模车，从山顶绕过建模马冲向“将（帅）”；建模马随后也直冲过去！
+          const morphRookT = smoothstep(0.48, 0.56, p);
+          rookMorphAura.update(new THREE.Vector3(0, 3.35, -7.8), morphRookT, fade);
+
+          if (rookItem?.mesh) {
+            rookItem.customDriven = true;
+            this.setPiece3DPose(
+              rookItem.mesh,
+              sunCenterPos.x,
+              sunCenterPos.y,
+              sunCenterPos.z + 0.25,
+              Math.PI / 2,
+              0,
+              0,
+              3.75 * (1 - morphRookT * 0.4),
+              1 - smoothstep(0.0, 0.85, morphRookT),
+              0.8,
+              0xef4444
+            );
+          }
+
+          // 建模车在 0.52 -> 0.74 绕过建模马全速冲向“将（帅）”
+          const chariotRushT = smoothstep(0.52, 0.74, p);
+          const chPt = chariotBypassCurve.getPoint(chariotRushT);
+          const chTan = chariotBypassCurve.getTangent(Math.min(0.99, chariotRushT));
+          chariot3D.visible = true;
+          chariot3D.position.copy(chPt);
+          this.faceTargetHorizontally(chariot3D, chPt.x + chTan.x, chPt.z + chTan.z);
+          chariot3D.userData.spinWheels(dt * 28, p * 6);
+          chariot3D.scale.setScalar(1.18 * smoothstep(0.48, 0.55, p) * fade);
+
+          // 建模马在建模车绕过它之后（0.60 -> 0.78）随后直冲过去！
+          const horseRushT = smoothstep(0.60, 0.78, p);
+          const hPt = horseDirectCurve.getPoint(horseRushT);
+          const hTan = horseDirectCurve.getTangent(Math.min(0.99, horseRushT));
+          horse3D.visible = true;
+          horse3D.position.copy(hPt);
+          this.faceTargetHorizontally(horse3D, hPt.x + hTan.x, hPt.z + hTan.z);
+          horse3D.userData.animateGallop(p * 5.5, horseRushT > 0.05 ? 0.28 : 0.55);
+          horse3D.scale.setScalar(1.12 * fade);
+
+          if (p >= 0.72) {
+            const hitP = (p - 0.72) / 0.16;
+            strikeExplosion.update.call(this, hitP, fade, targetKingStagePos);
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(0, THREE.MathUtils.lerp(2.2, 0.75, chariotRushT), THREE.MathUtils.lerp(-3.5, 1.5, chariotRushT)),
+              11.6,
+              THREE.MathUtils.lerp(1.06, 0.90, chariotRushT),
+              0.18
+            );
+          }
+        } else {
+          // 阶段4：平滑切回终局棋面，车马回归原位
+          const backT = smoothstep(0.84, 0.97, p);
+          chariot3D.visible = backT < 0.75;
+          chariot3D.scale.setScalar(1.18 * (1 - backT) * fade);
+          horse3D.visible = backT < 0.75;
+          horse3D.scale.setScalar(1.12 * (1 - backT) * fade);
+
+          if (rookItem?.mesh) {
+            rookItem.customDriven = true;
+            this.setPiece3DPose(rookItem.mesh, rookOrigin.x, 0, rookOrigin.z, 0, 0, 0, 1.0, backT, 0);
+          }
+          if (horseItem?.mesh && horseItem !== rookItem) {
+            horseItem.customDriven = true;
+            this.setPiece3DPose(horseItem.mesh, horseOrigin.x, 0, horseOrigin.z, 0, 0, 0, 1.0, backT, 0);
+          }
         }
       });
     }
 
     // =========================================================================
-    // 11. 双将 (Double Check): 增强张力 —— 双将棋子蓄力掷出两柄神兵，在空中高速旋转合体为超巨型「龙凤乾坤破天合体巨兵」，雷霆轰击将（帅）并触发强烈受击反馈！
+    // 11. 双将 (Double Check):
+    // 美化精细化武器建模 -> 两枚棋子丢出的武器在空中高速旋转，同时平滑进入古战场场景 ->
+    // 在战场场景空中两个武器合体变成精细的大剑落下 -> 落下的同时渐渐平滑切回终局棋面，插在对面“将（帅）”身上！
     // =========================================================================
     if (vfxType === 'double_check') {
-      const origin0 = checkersList[0]
-        ? gridToWorld(checkersList[0].r, checkersList[0].c)
-        : new THREE.Vector3(kPos.x - 3.2, 0.05, kPos.z + 2.2);
-      const origin1 = checkersList[1]
-        ? gridToWorld(checkersList[1].r, checkersList[1].c)
-        : new THREE.Vector3(kPos.x + 3.2, 0.05, kPos.z + 2.2);
+      const cgScene = this.createCGSceneEnvironment('cg_battlefield', group);
+      const checkerItem0 = attackerItems[0] || null;
+      const checkerItem1 = attackerItems[1] || attackerItems[0] || null;
+      const origin0 = checkerItem0?.basePos ? checkerItem0.basePos.clone() : new THREE.Vector3(kPos.x - 3.0, 0, kPos.z + 2.2);
+      const origin1 = checkerItem1?.basePos && checkerItem1 !== checkerItem0
+        ? checkerItem1.basePos.clone()
+        : new THREE.Vector3(kPos.x + 3.0, 0, kPos.z + 2.2);
 
-      const mergeApex = new THREE.Vector3(kPos.x, 4.4, kPos.z);
-
-      const thrownWeapons = [origin0, origin1].map((orig, idx) => {
-        const chargeRing = new THREE.Mesh(
-          new THREE.RingGeometry(0.35, 0.82, 32),
-          idx === 0 ? goldGlowMat.clone() : crimsonGlowMat.clone()
-        );
-        chargeRing.rotation.x = -Math.PI / 2;
-        chargeRing.position.set(orig.x, 0.05, orig.z);
-        group.add(chargeRing);
-
-        const wGroup = new THREE.Group();
-        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.068, 2.4, 12), idx === 0 ? goldMat : darkIronMat);
-        const tip = new THREE.Mesh(
-          new THREE.ConeGeometry(0.18, 0.85, 4),
-          idx === 0 ? goldGlowMat.clone() : crimsonGlowMat.clone()
-        );
-        tip.position.y = 1.45;
-        if (idx === 0) {
-          [-1, 1].forEach(side => {
-            const crescent = new THREE.Mesh(
-              new THREE.TorusGeometry(0.36, 0.052, 8, 20, Math.PI * 0.88),
-              goldMat
-            );
-            crescent.rotation.z = side === 1 ? -Math.PI * 0.42 : Math.PI * 0.58;
-            crescent.position.set(side * 0.14, 0.95, 0);
-            wGroup.add(crescent);
-          });
-        } else {
-          const phoenixGuard = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.16, 0.22), crimsonLacquerMat);
-          phoenixGuard.position.y = 0.85;
-          wGroup.add(phoenixGuard);
-        }
-        wGroup.add(shaft, tip);
-        wGroup.position.set(orig.x, 0.85, orig.z);
-        group.add(wGroup);
-
-        const throwCurve = new THREE.QuadraticBezierCurve3(
-          new THREE.Vector3(orig.x, 0.85, orig.z),
-          new THREE.Vector3(
-            THREE.MathUtils.lerp(orig.x, mergeApex.x, 0.5) + (idx === 0 ? -1.2 : 1.2),
-            5.2,
-            THREE.MathUtils.lerp(orig.z, mergeApex.z, 0.5)
-          ),
-          mergeApex.clone()
-        );
-
-        return { wGroup, chargeRing, throwCurve, orig, idx };
-      });
-
-      const fusionSphere = new THREE.Mesh(
-        new THREE.SphereGeometry(0.75, 24, 24),
-        goldGlowMat.clone()
+      const mergeApex = new THREE.Vector3(kPos.x, 4.85, kPos.z);
+      const { weapon1, weapon2, greatsword } = this.createRefinedDivineWeaponPairAndGreatsword(
+        goldMat,
+        crimsonLacquerMat,
+        darkIronMat,
+        goldGlowMat,
+        crimsonGlowMat
       );
-      fusionSphere.position.copy(mergeApex);
-      fusionSphere.visible = false;
-      const fusionRing = new THREE.Mesh(
-        new THREE.TorusGeometry(1.35, 0.08, 12, 36),
-        crimsonGlowMat.clone()
+      group.add(weapon1, weapon2, greatsword);
+      greatsword.visible = false;
+
+      const throwCurve0 = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(origin0.x, 0.9, origin0.z),
+        new THREE.Vector3(kPos.x - 2.2, 5.6, (origin0.z + kPos.z) * 0.5),
+        mergeApex.clone()
       );
-      fusionRing.rotation.x = Math.PI / 2;
-      fusionRing.position.copy(mergeApex);
-      fusionRing.visible = false;
-      group.add(fusionSphere, fusionRing);
+      const throwCurve1 = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(origin1.x, 0.9, origin1.z),
+        new THREE.Vector3(kPos.x + 2.2, 5.6, (origin1.z + kPos.z) * 0.5),
+        mergeApex.clone()
+      );
 
-      const megaWeapon = new THREE.Group();
-      megaWeapon.position.copy(mergeApex);
-      megaWeapon.visible = false;
-
-      const megaCoreBlade = new THREE.Mesh(new THREE.ConeGeometry(0.48, 4.2, 4), goldMat);
-      megaCoreBlade.rotation.x = Math.PI;
-      megaCoreBlade.scale.set(1.42, 1, 0.42);
-      const megaInnerGlow = new THREE.Mesh(new THREE.ConeGeometry(0.28, 3.9, 4), goldGlowMat.clone());
-      megaInnerGlow.rotation.x = Math.PI;
-      megaInnerGlow.position.y = -0.06;
-
-      [-1, 1].forEach(side => {
-        const megaCrescent = new THREE.Mesh(
-          new THREE.TorusGeometry(0.88, 0.11, 12, 28, Math.PI * 0.92),
-          side === -1 ? goldMat : crimsonLacquerMat
-        );
-        megaCrescent.rotation.z = side === 1 ? -Math.PI * 0.46 : Math.PI * 0.54;
-        megaCrescent.position.set(side * 0.34, 0.45, 0);
-        const wingSpike = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.95, 6), goldGlowMat.clone());
-        wingSpike.position.set(side * 1.15, 1.95, 0);
-        wingSpike.rotation.z = -side * 0.78;
-        megaWeapon.add(megaCrescent, wingSpike);
-      });
-
-      const megaCrossGuard = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.32, 0.52), crimsonLacquerMat);
-      megaCrossGuard.position.y = 1.88;
-      const megaHaloWheel = new THREE.Mesh(new THREE.TorusGeometry(1.12, 0.065, 10, 32), goldGlowMat.clone());
-      megaHaloWheel.position.y = 1.88;
-      const megaGrip = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 1.25, 14), darkIronMat);
-      megaGrip.position.y = 2.65;
-      const megaPommel = new THREE.Mesh(new THREE.OctahedronGeometry(0.36, 1), goldMat);
-      megaPommel.position.y = 3.42;
-      megaWeapon.add(megaCoreBlade, megaInnerGlow, megaCrossGuard, megaHaloWheel, megaGrip, megaPommel);
-      group.add(megaWeapon);
-
-      const megaExplosion = create3DCannonExplosion(kPos, 1.38);
+      const fusionAura = this.createSmoothMorphAura(group, 0xfacc15);
+      const megaExplosion = create3DCannonExplosion(kPos, 1.42);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        if (p < 0.32) {
-          const throwP = Math.min(1, p / 0.30);
-          const throwEase = throwP * throwP * (3 - 2 * throwP);
-          thrownWeapons.forEach(({ wGroup, chargeRing, throwCurve, idx }) => {
-            wGroup.visible = true;
-            const pt = throwCurve.getPoint(throwEase);
-            wGroup.position.copy(pt);
-            wGroup.rotation.x += dt * 18;
-            wGroup.rotation.z += dt * (idx === 0 ? 14 : -14);
-            wGroup.scale.setScalar((0.85 + throwEase * 0.35) * fade);
+        // 0.02 -> 0.24 平滑进入古战场场景；0.54 -> 0.74 大剑落下途中渐渐平滑切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.24, p) * (1 - smoothstep(0.54, 0.74, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-            chargeRing.scale.setScalar((1 + throwEase * 1.45) * fade);
-            chargeRing.material.opacity = (1 - throwEase * 0.5) * 0.72 * fade;
-          });
-          fusionSphere.visible = p > 0.24;
-          fusionRing.visible = p > 0.24;
-          if (p > 0.24) {
-            const fp = (p - 0.24) / 0.08;
-            fusionSphere.scale.setScalar(fp * 1.5 * fade);
-            fusionRing.scale.setScalar(fp * 1.4 * fade);
-          }
-          megaWeapon.visible = false;
-        } else if (p < 0.50) {
-          const fuseP = (p - 0.32) / 0.18;
-          thrownWeapons.forEach(({ wGroup, chargeRing }) => {
-            wGroup.visible = false;
-            chargeRing.material.opacity = Math.max(0, (1 - fuseP) * 0.35 * fade);
-          });
-
-          fusionSphere.visible = true;
-          fusionRing.visible = true;
-          fusionSphere.scale.setScalar((1.65 - fuseP * 0.85) * fade);
-          fusionSphere.material.opacity = (1 - fuseP * 0.6) * 0.78 * fade;
-          fusionRing.scale.setScalar((1.2 + fuseP * 1.8) * fade);
-          fusionRing.material.opacity = (1 - fuseP) * 0.75 * fade;
-
-          megaWeapon.visible = true;
-          const popScale = fuseP < 0.45
-            ? THREE.MathUtils.lerp(0.35, 1.32, fuseP / 0.45)
-            : THREE.MathUtils.lerp(1.32, 1.18, (fuseP - 0.45) / 0.55);
-          megaWeapon.scale.setScalar(popScale * fade);
-          megaWeapon.position.set(
-            mergeApex.x + Math.sin(p * 90) * 0.05,
-            mergeApex.y + fuseP * 0.65,
-            mergeApex.z + Math.cos(p * 90) * 0.05
+        // 两枚将军棋子蓄力腾空翻转投掷武器，随后回归终局原位
+        [
+          { item: checkerItem0, orig: origin0, sign: 1 },
+          { item: checkerItem1, orig: origin1, sign: -1 }
+        ].forEach(({ item, orig, sign }, idx) => {
+          if (!item?.mesh || (idx === 1 && checkerItem1 === checkerItem0)) return;
+          item.customDriven = true;
+          const jumpArc = p < 0.36 ? Math.sin((p / 0.36) * Math.PI) * 1.45 : 0;
+          const sc = p < 0.36 ? 1.0 + Math.sin((p / 0.36) * Math.PI) * 0.38 : 1.0;
+          this.setPiece3DPose(
+            item.mesh,
+            orig.x,
+            jumpArc,
+            orig.z,
+            jumpArc * 0.35 * sign,
+            p < 0.36 ? (p / 0.36) * Math.PI * 2 * sign : 0,
+            0,
+            sc,
+            1.0,
+            jumpArc * 0.45
           );
-          megaWeapon.rotation.y = fuseP * Math.PI * 2;
-          megaHaloWheel.rotation.z += dt * 8;
-        } else {
-          thrownWeapons.forEach(({ wGroup }) => { wGroup.visible = false; });
-          fusionSphere.visible = false;
-          fusionRing.visible = false;
-          megaWeapon.visible = true;
+        });
 
-          const plungeP = Math.min(1, (p - 0.50) / 0.12);
-          const plungeEase = plungeP * plungeP;
-          megaWeapon.position.set(
+        if (p < 0.36) {
+          // 阶段1：两柄精细神兵被掷出，在古战场高空高速旋转交汇
+          const throwT = smoothstep(0.02, 0.36, p);
+          weapon1.visible = true;
+          weapon2.visible = true;
+          greatsword.visible = false;
+
+          weapon1.position.copy(throwCurve0.getPoint(throwT));
+          weapon1.rotation.x += dt * 20;
+          weapon1.rotation.z += dt * 15;
+          weapon1.scale.setScalar((0.88 + throwT * 0.32) * fade);
+
+          weapon2.position.copy(throwCurve1.getPoint(throwT));
+          weapon2.rotation.x += dt * 20;
+          weapon2.rotation.z -= dt * 15;
+          weapon2.scale.setScalar((0.88 + throwT * 0.32) * fade);
+
+          fusionAura.update(mergeApex, smoothstep(0.24, 0.36, p) * 0.5, fade);
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x, THREE.MathUtils.lerp(1.2, 4.2, throwT), kPos.z),
+              11.8,
+              0.92,
+              throwT * 0.25
+            );
+          }
+        } else if (p < 0.54) {
+          // 阶段2：在战场高空双武器旋转合体，化作精细的龙凤轩辕大剑
+          const fuseT = (p - 0.36) / 0.18;
+          weapon1.visible = fuseT < 0.35;
+          weapon2.visible = fuseT < 0.35;
+          const shrink = Math.max(0.01, 1 - fuseT * 2.8);
+          weapon1.scale.setScalar(shrink * fade);
+          weapon2.scale.setScalar(shrink * fade);
+
+          fusionAura.update(mergeApex, 0.2 + fuseT * 0.78, fade);
+
+          greatsword.visible = true;
+          const popScale = fuseT < 0.45
+            ? THREE.MathUtils.lerp(0.35, 1.36, fuseT / 0.45)
+            : THREE.MathUtils.lerp(1.36, 1.22, (fuseT - 0.45) / 0.55);
+          greatsword.scale.setScalar(popScale * fade);
+          greatsword.position.set(mergeApex.x, mergeApex.y + fuseT * 0.55, mergeApex.z);
+          greatsword.rotation.y = (1 - fuseT) * Math.PI * 2;
+          if (greatsword.userData.swordHaloRing) {
+            greatsword.userData.swordHaloRing.rotation.z += dt * 9;
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(mergeApex.x, mergeApex.y, mergeApex.z),
+              10.2,
+              0.98,
+              0.25 + fuseT * 0.3
+            );
+          }
+        } else {
+          // 阶段3：精细大剑轰然落下（同时平滑切回终局棋面），直插在对面“将（帅）”身上！
+          weapon1.visible = false;
+          weapon2.visible = false;
+          fusionAura.update(mergeApex, 0, 0);
+
+          const plungeT = smoothstep(0.54, 0.72, p);
+          const swordFadeOut = 1 - smoothstep(0.92, 0.99, p);
+          greatsword.visible = swordFadeOut > 0.02;
+          greatsword.position.set(
             kPos.x,
-            THREE.MathUtils.lerp(mergeApex.y + 0.65, 1.95, plungeEase),
+            THREE.MathUtils.lerp(mergeApex.y + 0.55, 1.88, plungeT * plungeT),
             kPos.z
           );
-          megaWeapon.scale.setScalar(1.18 * fade);
-          megaHaloWheel.rotation.z += dt * 10;
+          greatsword.rotation.y = 0;
+          greatsword.scale.setScalar(1.22 * swordFadeOut * fade);
+          if (greatsword.userData.swordHaloRing) {
+            greatsword.userData.swordHaloRing.rotation.z += dt * 10;
+          }
 
-          if (p >= 0.59) {
-            const hitP = (p - 0.59) / 0.41;
-            megaExplosion.update.call(this, hitP, fade);
+          if (p >= 0.70) {
+            const hitP = (p - 0.70) / 0.30;
+            megaExplosion.update.call(this, hitP, fade, kPos);
             applyKingHitFeedback(hitP, 'heavy_smash', 0, 0);
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x, THREE.MathUtils.lerp(4.2, 0.95, plungeT), kPos.z),
+              10.6,
+              0.90,
+              0.18
+            );
           }
         }
       });
@@ -2862,25 +4816,33 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     // =========================================================================
     // 12. 夹车炮 (Chariot Cannon Clamp):
-    // 阶段一：镜头聚焦战车向火炮疾驰冲撞 -> 阶段二：车炮碰撞合体为「神威重甲合体车炮」 -> 阶段三：聚焦合体车炮开炮轰击将（帅）并触发爆炸反馈！
+    // “车”和“炮”绕着某一点公转并升空（同时场景平滑切换为战场） ->
+    // 变成建模车和建模炮之后合体拼装成合体炮下落 ->
+    // 然后平滑切回终局棋面落到合适地点向“将（帅）”开炮！
     // =========================================================================
     if (vfxType === 'chariot_cannon_clamp') {
+      const cgScene = this.createCGSceneEnvironment('cg_battlefield', group);
+      const rookItem = findAttackerItemByType('r', null) || attackerItems[0];
+      const cannonItem = findAttackerItemByType('c', rookItem) || attackerItems.find(it => it !== rookItem) || rookItem;
+      const rookOrigin = rookItem?.basePos ? rookItem.basePos.clone() : new THREE.Vector3(kPos.x + 1.2, 0, kPos.z + 2.2);
+      const cannonOrigin = cannonItem?.basePos ? cannonItem.basePos.clone() : new THREE.Vector3(kPos.x - 2.4, 0, kPos.z + 1.2);
+
       const dirSign = kPos.z < 0 ? -1 : 1;
-      const mergePos = new THREE.Vector3(kPos.x, 0.05, kPos.z - dirSign * 3.4);
-      const chariotStart = new THREE.Vector3(kPos.x - 3.6, 0.05, mergePos.z - dirSign * 0.8);
+      const fireGroundPos = new THREE.Vector3(kPos.x, 0.05, kPos.z - dirSign * 3.6);
+      const orbitCenterXZ = new THREE.Vector3(kPos.x, 0, fireGroundPos.z * 0.65);
+      const airAssemblyApex = new THREE.Vector3(orbitCenterXZ.x, 3.35, orbitCenterXZ.z);
+
+      const rookMorphAura = this.createSmoothMorphAura(group, 0xfbbf24);
+      const cannonMorphAura = this.createSmoothMorphAura(group, 0xef4444);
 
       const chariot = this.createArticulated3DWarChariot(bronzeWoodMat, goldMat, darkIronMat, goldGlowMat);
-      chariot.position.copy(chariotStart);
-      this.faceTargetHorizontally(chariot, mergePos.x, mergePos.z);
-      group.add(chariot);
-
       const cannon = this.createArticulated3DCannon(crimsonLacquerMat, goldMat, darkIronMat, crimsonGlowMat);
-      cannon.position.copy(mergePos);
-      this.faceTargetHorizontally(cannon, kPos.x, kPos.z);
-      group.add(cannon);
+      chariot.visible = false;
+      cannon.visible = false;
+      group.add(chariot, cannon);
 
       const combinedUnit = new THREE.Group();
-      combinedUnit.position.copy(mergePos);
+      combinedUnit.position.copy(airAssemblyApex);
       this.faceTargetHorizontally(combinedUnit, kPos.x, kPos.z);
       combinedUnit.visible = false;
       group.add(combinedUnit);
@@ -2925,11 +4887,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       turretPivot.rotation.x = -0.24;
       combinedUnit.add(turretPivot);
 
-      const fusionFlash = new THREE.Mesh(new THREE.SphereGeometry(1.15, 20, 20), goldGlowMat.clone());
-      fusionFlash.position.set(mergePos.x, 0.8, mergePos.z);
-      fusionFlash.visible = false;
-      group.add(fusionFlash);
-
       const superShell = new THREE.Group();
       const sCore = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 16), goldGlowMat.clone());
       const sWake = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.95, 12), crimsonGlowMat.clone());
@@ -2939,113 +4896,191 @@ Object.assign(Xiangqi3DApp.prototype, {
       superShell.visible = false;
       group.add(superShell);
 
-      const clampExplosion = create3DCannonExplosion(kPos, 1.35);
+      const clampExplosion = create3DCannonExplosion(kPos, 1.38);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        if (p < 0.32) {
-          const ramP = p / 0.32;
-          const ramEase = ramP * ramP;
-          chariot.visible = true;
-          cannon.visible = true;
-          combinedUnit.visible = false;
-          fusionFlash.visible = false;
-          superShell.visible = false;
+        // 0.02 -> 0.24 切入古战场；0.56 -> 0.74 合体炮下落途中平滑切回终局棋面
+        const cgWeight = smoothstep(0.02, 0.24, p) * (1 - smoothstep(0.56, 0.74, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-          chariot.position.lerpVectors(chariotStart, mergePos, ramEase);
-          this.faceTargetHorizontally(chariot, mergePos.x, mergePos.z);
-          chariot.userData.spinWheels(dt * 24, p * 5);
-          chariot.scale.setScalar(0.95 * fade);
-          cannon.scale.setScalar(0.95 * fade);
+        if (p < 0.36) {
+          // 阶段1：“车”和“炮”棋子绕中心点螺旋公转升空（伴随自转与远近缩放），并在升空尾声平滑变身为建模车与建模炮
+          const orbT = p / 0.36;
+          const morphT = smoothstep(0.68, 1.0, orbT);
+          const curY = THREE.MathUtils.lerp(0.15, airAssemblyApex.y, smoothstep(0.0, 0.92, orbT));
+          const rad = THREE.MathUtils.lerp(2.45, 1.25, orbT);
+          const ang = orbT * Math.PI * 3.5;
 
-          if (vfxContext?.setCameraOverride) {
-            vfxContext.setCameraOverride(
-              new THREE.Vector3(
-                THREE.MathUtils.lerp(chariot.position.x, mergePos.x, 0.35),
-                0.55,
-                THREE.MathUtils.lerp(chariot.position.z, mergePos.z, 0.35)
-              ),
-              8.8,
-              0.92,
-              0.28
+          const rPt = new THREE.Vector3(
+            orbitCenterXZ.x + Math.cos(ang) * rad,
+            curY + Math.sin(ang * 2) * 0.28,
+            orbitCenterXZ.z + Math.sin(ang) * rad
+          );
+          const cPt = new THREE.Vector3(
+            orbitCenterXZ.x + Math.cos(ang + Math.PI) * rad,
+            curY - Math.sin(ang * 2) * 0.28,
+            orbitCenterXZ.z + Math.sin(ang + Math.PI) * rad
+          );
+
+          const pAlpha = 1 - smoothstep(0.20, 0.90, morphT);
+          if (rookItem?.mesh) {
+            rookItem.customDriven = true;
+            this.setPiece3DPose(
+              rookItem.mesh,
+              rPt.x,
+              rPt.y,
+              rPt.z,
+              orbT * Math.PI * 4,
+              orbT * Math.PI * 6,
+              orbT * Math.PI * 2,
+              1.18 + (rPt.z / 6.0) * 0.22,
+              pAlpha,
+              morphT * 0.75
             );
           }
-        } else if (p < 0.54) {
-          const fuseP = (p - 0.32) / 0.22;
-          chariot.visible = false;
-          cannon.visible = false;
-          combinedUnit.visible = true;
+          if (cannonItem?.mesh && cannonItem !== rookItem) {
+            cannonItem.customDriven = true;
+            this.setPiece3DPose(
+              cannonItem.mesh,
+              cPt.x,
+              cPt.y,
+              cPt.z,
+              -orbT * Math.PI * 4,
+              orbT * Math.PI * 6,
+              -orbT * Math.PI * 2,
+              1.18 + (cPt.z / 6.0) * 0.22,
+              pAlpha,
+              morphT * 0.75,
+              0xef4444
+            );
+          }
+
+          rookMorphAura.update(rPt, morphT, fade);
+          cannonMorphAura.update(cPt, morphT, fade);
+
+          const mScale = smoothstep(0.15, 0.98, morphT) * 0.92 * fade;
+          chariot.visible = mScale > 0.02;
+          chariot.position.copy(rPt);
+          this.faceTargetHorizontally(chariot, airAssemblyApex.x, airAssemblyApex.z);
+          chariot.scale.setScalar(mScale);
+          chariot.userData.spinWheels(dt * 20, p * 4);
+
+          cannon.visible = mScale > 0.02;
+          cannon.position.copy(cPt);
+          this.faceTargetHorizontally(cannon, airAssemblyApex.x, airAssemblyApex.z);
+          cannon.scale.setScalar(mScale);
+
+          combinedUnit.visible = false;
           superShell.visible = false;
-
-          fusionFlash.visible = fuseP < 0.75;
-          fusionFlash.scale.setScalar((0.6 + fuseP * 1.8) * fade);
-          fusionFlash.material.opacity = Math.max(0, (1 - fuseP * 1.3) * 0.82 * fade);
-
-          const pop = fuseP < 0.45
-            ? THREE.MathUtils.lerp(0.55, 1.22, fuseP / 0.45)
-            : THREE.MathUtils.lerp(1.22, 1.08, (fuseP - 0.45) / 0.55);
-          combinedUnit.scale.setScalar(pop * fade);
-          combinedWheels.forEach(w => { w.rotation.x += dt * 12; });
-          turretPivot.rotation.x = THREE.MathUtils.lerp(-0.10, -0.32, fuseP);
 
           if (vfxContext?.setCameraOverride) {
             vfxContext.setCameraOverride(
-              new THREE.Vector3(
-                THREE.MathUtils.lerp(mergePos.x, kPos.x, 0.28),
-                0.68,
-                THREE.MathUtils.lerp(mergePos.z, kPos.z, 0.28)
-              ),
-              9.0,
-              0.94,
-              -0.18
+              new THREE.Vector3(orbitCenterXZ.x, curY * 0.75, orbitCenterXZ.z),
+              10.8,
+              0.92,
+              orbT * 0.35
             );
+          }
+        } else if (p < 0.56) {
+          // 阶段2：空中建模车（底座）与建模炮（炮塔）上下对接合体拼装为“神威重甲合体炮”！
+          if (rookItem?.mesh) { rookItem.customDriven = true; rookItem.mesh.visible = false; }
+          if (cannonItem?.mesh) { cannonItem.customDriven = true; cannonItem.mesh.visible = false; }
+
+          const dockT = smoothstep(0.36, 0.48, p);
+          const fuseDoneT = smoothstep(0.45, 0.56, p);
+
+          chariot.visible = fuseDoneT < 0.55;
+          chariot.position.set(
+            THREE.MathUtils.lerp(airAssemblyApex.x - 1.1, airAssemblyApex.x, dockT),
+            airAssemblyApex.y - 0.35 * (1 - dockT),
+            airAssemblyApex.z
+          );
+          chariot.scale.setScalar(0.95 * (1 - fuseDoneT) * fade);
+
+          cannon.visible = fuseDoneT < 0.55;
+          cannon.position.set(
+            THREE.MathUtils.lerp(airAssemblyApex.x + 1.1, airAssemblyApex.x, dockT),
+            airAssemblyApex.y + 0.55 * (1 - dockT),
+            airAssemblyApex.z
+          );
+          cannon.scale.setScalar(0.95 * (1 - fuseDoneT) * fade);
+
+          rookMorphAura.update(airAssemblyApex, Math.sin(fuseDoneT * Math.PI), fade);
+          cannonMorphAura.update(airAssemblyApex, 0, 0);
+
+          combinedUnit.visible = fuseDoneT > 0.15;
+          combinedUnit.position.copy(airAssemblyApex);
+          const pop = fuseDoneT < 0.5
+            ? THREE.MathUtils.lerp(0.45, 1.24, fuseDoneT / 0.5)
+            : THREE.MathUtils.lerp(1.24, 1.10, (fuseDoneT - 0.5) / 0.5);
+          combinedUnit.scale.setScalar(pop * fade);
+          combinedWheels.forEach(w => { w.rotation.x += dt * 14; });
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(airAssemblyApex.clone(), 9.4, 0.96, 0.25);
           }
         } else {
+          // 阶段3 & 4：合体炮从空中下落（同时平滑切回终局棋面），落入合适位置向“将（帅）”开炮轰击！
           chariot.visible = false;
           cannon.visible = false;
-          combinedUnit.visible = true;
-          fusionFlash.visible = false;
+          rookMorphAura.update(airAssemblyApex, 0, 0);
 
-          const fireP = (p - 0.54) / 0.46;
-          const shellFlight = Math.min(1, fireP / 0.42);
-          const recoil = fireP < 0.28 ? Math.sin((fireP / 0.28) * Math.PI) * 0.45 : 0;
-          combinedUnit.position.z = mergePos.z - dirSign * recoil;
-          turretPivot.rotation.x = -0.32 - recoil * 0.45;
-          combinedUnit.scale.setScalar(1.08 * fade);
+          const dropT = smoothstep(0.56, 0.72, p);
+          const curUnitPos = new THREE.Vector3().lerpVectors(airAssemblyApex, fireGroundPos, dropT * dropT);
+          const unitFadeOut = 1 - smoothstep(0.90, 0.99, p);
+          combinedUnit.visible = unitFadeOut > 0.02;
+          combinedUnit.position.copy(curUnitPos);
+          combinedUnit.scale.setScalar(1.10 * unitFadeOut * fade);
 
-          superShell.visible = shellFlight < 0.96;
-          superShell.position.set(
-            THREE.MathUtils.lerp(mergePos.x, kPos.x, shellFlight),
-            0.95 + Math.sin(shellFlight * Math.PI) * 2.15,
-            THREE.MathUtils.lerp(mergePos.z, kPos.z, shellFlight)
-          );
-          this.faceTargetHorizontally(superShell, kPos.x, kPos.z);
-          superShell.scale.setScalar(1.25 * fade);
-
-          if (vfxContext?.setCameraOverride) {
-            const lookMix = Math.min(1, fireP * 1.8);
-            vfxContext.setCameraOverride(
-              new THREE.Vector3(
-                THREE.MathUtils.lerp(mergePos.x, kPos.x, 0.35 + lookMix * 0.55),
-                0.62,
-                THREE.MathUtils.lerp(mergePos.z, kPos.z, 0.35 + lookMix * 0.55)
-              ),
-              9.4,
-              0.96,
-              0.15
-            );
+          // 终局棋面上的“车”与“炮”棋子平滑复原
+          const pieceShow = smoothstep(0.58, 0.78, p);
+          if (rookItem?.mesh) {
+            rookItem.customDriven = true;
+            this.setPiece3DPose(rookItem.mesh, rookOrigin.x, 0, rookOrigin.z, 0, 0, 0, 1.0, pieceShow, 0);
+          }
+          if (cannonItem?.mesh && cannonItem !== rookItem) {
+            cannonItem.customDriven = true;
+            this.setPiece3DPose(cannonItem.mesh, cannonOrigin.x, 0, cannonOrigin.z, 0, 0, 0, 1.0, pieceShow, 0);
           }
 
-          if (fireP >= 0.38) {
-            const hitP = (fireP - 0.38) / 0.62;
-            clampExplosion.update.call(this, hitP, fade);
-            applyKingHitFeedback(hitP, 'cannon_blast', 0, dirSign);
+          if (p >= 0.72) {
+            const fireP = (p - 0.72) / 0.28;
+            const shellFlight = Math.min(1, fireP / 0.42);
+            const recoil = fireP < 0.28 ? Math.sin((fireP / 0.28) * Math.PI) * 0.45 : 0;
+            combinedUnit.position.z = fireGroundPos.z - dirSign * recoil;
+            turretPivot.rotation.x = -0.28 - recoil * 0.45;
+
+            superShell.visible = shellFlight < 0.96;
+            superShell.position.set(
+              THREE.MathUtils.lerp(fireGroundPos.x, kPos.x, shellFlight),
+              0.92 + Math.sin(shellFlight * Math.PI) * 2.15,
+              THREE.MathUtils.lerp(fireGroundPos.z, kPos.z, shellFlight)
+            );
+            this.faceTargetHorizontally(superShell, kPos.x, kPos.z);
+            superShell.scale.setScalar(1.25 * fade);
+
+            if (fireP >= 0.38) {
+              const hitP = (fireP - 0.38) / 0.62;
+              clampExplosion.update.call(this, hitP, fade, kPos);
+              applyKingHitFeedback(hitP, 'cannon_blast', 0, dirSign);
+            }
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kPos.x, 0.68, THREE.MathUtils.lerp(curUnitPos.z, kPos.z, 0.5)),
+              10.2,
+              0.92,
+              0.15
+            );
           }
         }
       });
     }
 
     // =========================================================================
-    // 13. 卧槽马 (Trough Horse): 3D 雕梁金门马槽 + 精雕 3D 赤兔神驹从马位腾空跃槽踏碎木栅 + 镇国金印轰落与受击反馈
+    // 13. 卧槽马 (Trough Horse): 3D 雕梁金门马槽 + 精雕 3D 赤兔神驹从马位腾空跃槽踏碎木栅 + 镇国金印轰落
     // =========================================================================
     if (vfxType === 'trough_horse') {
       const horseOrigin = findCheckerPosByType('n', cPos);
@@ -3205,250 +5240,356 @@ Object.assign(Xiangqi3DApp.prototype, {
 
         if (p >= 0.33) {
           const hitP = (p - 0.33) / 0.65;
-          smashExplosion.update.call(this, hitP, fade);
+          smashExplosion.update.call(this, hitP, fade, kPos);
           applyKingHitFeedback(hitP, 'heavy_smash', 0, 0);
         }
       });
     }
 
     // =========================================================================
-    // 15. 天地炮 (Heaven Earth Cannon): 中路天门与底线地户双尊 3D 巨炮齐射 + 命中将帅 3D 爆炸反馈 + 乾坤十字激光
+    // 15. 天地炮 (Heaven Earth Cannon):
+    // “将（帅）”飞跃至屏幕中心，落入浮现的场景地面上（场景为绿色草地和蓝天白云和一个巨大的太阳） ->
+    // 落入后视角往上转对着太阳，同时太阳开始向地面（对准“将（帅）”）砸去（视角逐渐拉远，为了看清楚太阳砸棋子的过程） ->
+    // 太阳砸下时“将（帅）”周围的草地开始变成熔岩焦土 -> 最后砸下去时产生巨大的爆炸，然后平滑切回终局场地！
     // =========================================================================
     if (vfxType === 'heaven_earth_cannon') {
-      const cannonCheckers = checkersList.filter(ch => ch && ch.type === 'c' && typeof ch.r === 'number');
-      const centralC = cannonCheckers.find(ch => ch.c === 4) || cannonCheckers[0];
-      const bottomC = cannonCheckers.find(ch => ch !== centralC) || cannonCheckers[1];
+      const cgScene = this.createCGSceneEnvironment('cg_grassland', group, { withScorchEarth: true });
+      const centerStage = new THREE.Vector3(0, 0.02, 0);
 
-      const skyCannonPos = centralC
-        ? gridToWorld(centralC.r, centralC.c)
-        : new THREE.Vector3(kPos.x, 0.05, kPos.z + (kPos.z < 0 ? 3.8 : -3.8));
-      const earthCannonPos = bottomC
-        ? gridToWorld(bottomC.r, bottomC.c)
-        : new THREE.Vector3(kPos.x + 3.2, 0.05, kPos.z);
+      // 天空中的巨大烈日建模（多层火核+日冕光环+12道日珥烈焰）
+      const giantSunGroup = new THREE.Group();
+      const sunStartApex = new THREE.Vector3(0, 13.8, 0);
+      giantSunGroup.position.copy(sunStartApex);
+      group.add(giantSunGroup);
 
-      const cannonSetups = [
-        { pos: skyCannonPos, mat: crimsonLacquerMat, glow: goldGlowMat, delay: 0.0 },
-        { pos: earthCannonPos, mat: bronzeWoodMat, glow: crimsonGlowMat, delay: 0.10 }
-      ].map(({ pos, mat, glow, delay }) => {
-        const bastion = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 1.05, 0.24, 8), darkIronMat);
-        bastion.position.set(pos.x, 0.12, pos.z);
-        const bastionRim = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.05, 8, 24), goldMat);
-        bastionRim.rotation.x = Math.PI / 2;
-        bastionRim.position.set(pos.x, 0.24, pos.z);
-        group.add(bastion, bastionRim);
+      const sunCore = new THREE.Mesh(
+        new THREE.SphereGeometry(2.15, 32, 32),
+        new THREE.MeshBasicMaterial({ color: 0xfffbeb, transparent: true, opacity: 0.96 })
+      );
+      const sunPhotosphere = new THREE.Mesh(
+        new THREE.SphereGeometry(2.48, 32, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0xf97316,
+          transparent: true,
+          opacity: 0.78,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
+      const sunCoronaOuter = new THREE.Mesh(
+        new THREE.SphereGeometry(2.95, 24, 24),
+        new THREE.MeshBasicMaterial({
+          color: 0xef4444,
+          transparent: true,
+          opacity: 0.45,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
+      const coronaRing1 = new THREE.Mesh(new THREE.TorusGeometry(2.85, 0.14, 12, 48), goldGlowMat.clone());
+      const coronaRing2 = new THREE.Mesh(new THREE.TorusGeometry(3.25, 0.10, 12, 48), crimsonGlowMat.clone());
+      coronaRing2.rotation.x = Math.PI / 2;
+      giantSunGroup.add(sunCore, sunPhotosphere, sunCoronaOuter, coronaRing1, coronaRing2);
 
-        const cModel = this.createArticulated3DCannon(mat, goldMat, darkIronMat, glow);
-        cModel.position.set(pos.x, 0.22, pos.z);
-        this.faceTargetHorizontally(cModel, kPos.x, kPos.z);
-        group.add(cModel);
-
-        const shellGroup = new THREE.Group();
-        const shellCore = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), goldGlowMat.clone());
-        const shellHalo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 14), crimsonGlowMat.clone());
-        shellGroup.add(shellCore, shellHalo);
-        group.add(shellGroup);
-
-        return { cModel, bastion, bastionRim, shellGroup, pos, delay };
-      });
-
-      const volcanoPeaks = Array.from({ length: 8 }, (_, i) => {
-        const ang = (i / 8) * Math.PI * 2 + 0.2;
-        const rad = 5.2 + (i % 2) * 0.6;
-        const vGroup = new THREE.Group();
-        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.95, 2.2 + (i % 3) * 0.45, 7), darkIronMat);
-        const lavaRim = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.06, 8, 16), crimsonGlowMat);
-        lavaRim.rotation.x = Math.PI / 2;
-        lavaRim.position.y = 0.85;
-        vGroup.add(cone, lavaRim);
-        vGroup.position.set(kPos.x + Math.cos(ang) * rad, -1.2, kPos.z + Math.sin(ang) * rad);
-        group.add(vGroup);
-        return { vGroup, targetY: 0.85 + (i % 3) * 0.15 };
-      });
-
-      const astrolabe = new THREE.Group();
-      astrolabe.position.set(kPos.x, 4.4, kPos.z);
-      const outerWheel = new THREE.Mesh(new THREE.TorusGeometry(2.15, 0.08, 12, 48), goldMat);
-      outerWheel.rotation.x = Math.PI / 2;
-      const midWheel = new THREE.Mesh(new THREE.TorusGeometry(1.45, 0.065, 12, 36), crimsonLacquerMat);
-      midWheel.rotation.x = Math.PI / 2;
-      const innerWheel = new THREE.Mesh(new THREE.TorusGeometry(0.82, 0.06, 10, 24), goldGlowMat.clone());
-      innerWheel.rotation.x = Math.PI / 2;
-      astrolabe.add(outerWheel, midWheel, innerWheel);
-      for (let i = 0; i < 8; i++) {
-        const a = (i * Math.PI) / 4;
-        const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 4.2), goldMat);
-        spoke.rotation.y = a;
-        const node = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), goldGlowMat);
-        node.position.set(Math.cos(a) * 2.15, 0, Math.sin(a) * 2.15);
-        astrolabe.add(spoke, node);
-      }
-      group.add(astrolabe);
-
-      const magmaSpikes = Array.from({ length: 12 }, (_, i) => {
+      for (let i = 0; i < 12; i++) {
         const a = (i / 12) * Math.PI * 2;
-        const spike = new THREE.Mesh(
-          new THREE.ConeGeometry(0.18, 1.55 + (i % 2) * 0.45, 5),
-          i % 2 === 0 ? goldMat : crimsonLacquerMat
+        const flare = new THREE.Mesh(
+          new THREE.ConeGeometry(0.45, 1.65, 6),
+          i % 2 === 0 ? goldGlowMat.clone() : crimsonGlowMat.clone()
         );
-        spike.position.set(kPos.x + Math.cos(a) * 1.25, -0.8, kPos.z + Math.sin(a) * 1.25);
-        spike.rotation.z = -Math.cos(a) * 0.32;
-        spike.rotation.x = Math.sin(a) * 0.32;
-        group.add(spike);
-        return spike;
-      });
+        flare.position.set(Math.cos(a) * 2.55, Math.sin(a) * 2.55, 0);
+        flare.rotation.z = a - Math.PI / 2;
+        giantSunGroup.add(flare);
+      }
 
-      const innerCorePillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.36, 0.48, 7.2, 24, 1, true),
-        goldGlowMat.clone()
-      );
-      innerCorePillar.position.set(kPos.x, 3.6, kPos.z);
-      const outerFirePillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.72, 1.05, 7.2, 24, 1, true),
-        crimsonGlowMat.clone()
-      );
-      outerFirePillar.position.set(kPos.x, 3.6, kPos.z);
-
-      const crossX = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.20, 0.36), crimsonGlowMat.clone());
-      crossX.position.set(kPos.x, 0.26, kPos.z);
-      const crossZ = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.20, 10.0), goldGlowMat.clone());
-      crossZ.position.set(kPos.x, 0.28, 0);
-      group.add(innerCorePillar, outerFirePillar, crossX, crossZ);
-
-      const heavenEarthExplosion = create3DCannonExplosion(kPos, 1.35);
+      const solarSupernovaExplosion = create3DCannonExplosion(centerStage, 2.25);
 
       return wrapUpdater((p, dt, fade = 1) => {
-        cannonSetups.forEach(({ cModel, bastion, bastionRim, shellGroup, pos, delay }) => {
-          cModel.scale.setScalar(0.92 * fade);
-          bastion.scale.setScalar(fade);
-          bastionRim.scale.setScalar(fade);
+        // 0.02 -> 0.22 切入蓝天白云绿草地+巨日场景；0.82 -> 0.97 爆炸消散后平滑切回终局场地
+        const cgWeight = smoothstep(0.02, 0.22, p) * (1 - smoothstep(0.82, 0.97, p)) * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+        cgScene.setFade(cgWeight, dt, p);
 
-          const sp = Math.max(0, Math.min(1, (p - delay) / 0.36));
-          shellGroup.position.set(
-            THREE.MathUtils.lerp(pos.x, kPos.x, sp),
-            0.65 + Math.sin(sp * Math.PI) * 3.4,
-            THREE.MathUtils.lerp(pos.z, kPos.z, sp)
-          );
-          const active = sp > 0.01 && sp < 0.96;
-          shellGroup.scale.setScalar(active ? 1.18 * fade : 0.001);
+        coronaRing1.rotation.z += dt * 2.4;
+        coronaRing2.rotation.y += dt * 3.0;
+        sunPhotosphere.rotation.y += dt * 1.5;
 
-          const recoil = (sp > 0 && sp < 0.30) ? Math.sin(sp * 3.3 * Math.PI) * 0.36 : 0;
-          cModel.userData.barrelPivot.rotation.x = -0.32 - recoil * 0.48;
-        });
+        if (p < 0.24) {
+          // 阶段1：“将（帅）”飞跃至屏幕中心，落入浮现的绿草地地面上
+          const leapT = smoothstep(0.0, 0.22, p);
+          const kx = THREE.MathUtils.lerp(kPos.x, 0, leapT);
+          const kz = THREE.MathUtils.lerp(kPos.z, 0, leapT);
+          const ky = Math.sin(leapT * Math.PI) * 2.15;
+          const kSc = THREE.MathUtils.lerp(1.0, 1.48, leapT);
 
-        if (p >= 0.34) {
-          const hitP = (p - 0.34) / 0.62;
-          heavenEarthExplosion.update.call(this, hitP, fade);
-          applyKingHitFeedback(hitP, 'cannon_blast', 0, kPos.z < 0 ? -1 : 1);
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            this.setPiece3DPose(
+              kingItem.mesh,
+              kx,
+              ky,
+              kz,
+              Math.sin(leapT * Math.PI) * 0.35,
+              leapT * Math.PI * 2,
+              0,
+              kSc,
+              1.0,
+              0.2
+            );
+          }
+
+          giantSunGroup.visible = true;
+          giantSunGroup.position.copy(sunStartApex);
+          giantSunGroup.scale.setScalar(cgWeight);
+          cgScene.sceneGroup.userData.setScorchProgress?.(0, fade);
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(kx * 0.5, 0.65, kz * 0.5),
+              10.6,
+              0.84,
+              0
+            );
+          }
+        } else if (p < 0.40) {
+          // 阶段2：“将（帅）”落定草地中心后，镜头视角往上转对着天空中的巨大太阳，太阳开始蓄势向地面砸落
+          const lookUpT = smoothstep(0.24, 0.38, p);
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            this.setPiece3DPose(kingItem.mesh, 0, 0.02, 0, 0, 0, 0, 1.48, 1.0, 0.25);
+          }
+
+          const initialDrop = smoothstep(0.32, 0.40, p);
+          const sunY = THREE.MathUtils.lerp(13.8, 11.8, initialDrop);
+          giantSunGroup.visible = true;
+          giantSunGroup.position.set(0, sunY, 0);
+          giantSunGroup.scale.setScalar((1.0 + initialDrop * 0.15) * fade);
+          cgScene.sceneGroup.userData.setScorchProgress?.(initialDrop * 0.15, fade);
+
+          if (vfxContext?.setCameraOverride) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(0, THREE.MathUtils.lerp(0.65, 10.5, lookUpT), 0),
+              THREE.MathUtils.lerp(10.6, 13.8, lookUpT),
+              THREE.MathUtils.lerp(0.84, 1.18, lookUpT),
+              0
+            );
+          }
+        } else if (p < 0.72) {
+          // 阶段3：太阳对准“将（帅）”向地面轰然砸去！视角逐渐拉远看清太阳砸棋子全过程，同时“将（帅）”周围草地变成熔岩焦土！
+          const fallT = (p - 0.40) / 0.32;
+          const fallEase = fallT * fallT;
+          const sunY = THREE.MathUtils.lerp(11.8, 1.45, fallEase);
+          giantSunGroup.visible = true;
+          giantSunGroup.position.set(0, sunY, 0);
+          giantSunGroup.scale.setScalar((1.15 + fallEase * 0.25) * fade);
+
+          // 草地焦化裂开变成熔岩焦土
+          const scorchP = smoothstep(0.05, 0.95, fallT);
+          cgScene.sceneGroup.userData.setScorchProgress?.(scorchP, fade);
+
+          // 天色随烈日压顶由湛蓝渐变为赤红炽热
+          if (this.scene && this.scene.background) {
+            this.scene.background.lerp(new THREE.Color(0x450a0a), scorchP * 0.65);
+          }
+
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            const tremble = Math.sin(p * 95) * 0.09 * fallT;
+            this.setPiece3DPose(
+              kingItem.mesh,
+              tremble,
+              0.02,
+              -tremble,
+              0,
+              0,
+              0,
+              1.48,
+              1.0,
+              fallT * 0.85,
+              0xef4444
+            );
+          }
+
+          if (vfxContext?.setCameraOverride) {
+            // 视角逐渐拉远，清晰呈现太阳从高空砸向地面“将（帅）”的壮观全貌
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(0, THREE.MathUtils.lerp(8.5, 2.4, fallEase), 0),
+              THREE.MathUtils.lerp(14.0, 20.8, smoothstep(0.0, 0.85, fallT)),
+              THREE.MathUtils.lerp(1.16, 0.92, fallEase),
+              fallT * 0.22
+            );
+          }
+        } else {
+          // 阶段4：太阳砸中地面“将（帅）”产生惊天动地的巨大爆炸，随后平滑切回终局场地！
+          const postP = (p - 0.72) / 0.28;
+          const expP = Math.min(1, postP / 0.75);
+
+          const sunShrink = Math.max(0, 1 - postP * 2.5);
+          giantSunGroup.visible = sunShrink > 0.02;
+          giantSunGroup.position.set(0, 1.15, 0);
+          giantSunGroup.scale.setScalar((1.4 + postP * 1.2) * sunShrink * fade);
+
+          cgScene.sceneGroup.userData.setScorchProgress?.(1.0, cgWeight);
+          solarSupernovaExplosion.update.call(this, expP, fade, centerStage);
+
+          if (kingItem?.mesh) {
+            kingItem.customDriven = true;
+            if (p < 0.86) {
+              applyKingHitFeedback((p - 0.72) / 0.14, 'heavy_smash', 0, 1, centerStage, 1.48);
+            } else {
+              const backT = smoothstep(0.86, 0.98, p);
+              const kx = THREE.MathUtils.lerp(0, kPos.x, backT);
+              const kz = THREE.MathUtils.lerp(0, kPos.z, backT);
+              const ky = Math.sin(backT * Math.PI) * 0.75;
+              this.setPiece3DPose(
+                kingItem.mesh,
+                kx,
+                ky,
+                kz,
+                0,
+                0,
+                0,
+                THREE.MathUtils.lerp(1.48, 1.0, backT),
+                1.0,
+                (1 - backT) * 0.5
+              );
+            }
+          }
+
+          if (vfxContext?.setCameraOverride && p < 0.88) {
+            vfxContext.setCameraOverride(
+              new THREE.Vector3(0, 1.25, 0),
+              THREE.MathUtils.lerp(19.5, 12.5, postP),
+              0.88,
+              0.22 + postP * 0.18
+            );
+          }
         }
-
-        const mountRise = Math.min(1, p / 0.32);
-        volcanoPeaks.forEach(({ vGroup, targetY }) => {
-          vGroup.position.y = THREE.MathUtils.lerp(-1.2, targetY, mountRise);
-          vGroup.scale.setScalar(fade);
-        });
-
-        astrolabe.rotation.y += dt * 3.2;
-        midWheel.rotation.z -= dt * 4.5;
-        astrolabe.position.y = THREE.MathUtils.lerp(4.8, 2.25, Math.min(1, p * 1.45));
-        astrolabe.scale.setScalar((0.85 + Math.sin(p * 12) * 0.12) * fade);
-
-        const eruptP = Math.max(0, Math.min(1, (p - 0.26) / 0.26));
-        magmaSpikes.forEach(spike => {
-          spike.position.y = THREE.MathUtils.lerp(-0.8, 0.68, eruptP);
-          spike.scale.setScalar(fade);
-        });
-
-        const pulse = eruptP * (0.76 + Math.sin(p * 28) * 0.18) * fade;
-        innerCorePillar.scale.set(pulse, eruptP, pulse);
-        outerFirePillar.scale.set(pulse * 1.12, eruptP, pulse * 1.12);
-        innerCorePillar.material.opacity = 0.58 * eruptP * fade;
-        outerFirePillar.material.opacity = 0.46 * eruptP * fade;
-
-        crossX.scale.set(eruptP, pulse, pulse);
-        crossZ.scale.set(pulse, pulse, eruptP);
-        crossX.material.opacity = 0.62 * eruptP * fade;
-        crossZ.material.opacity = 0.62 * eruptP * fade;
       });
     }
 
     // =========================================================================
     // 16. 困毙 (Stalemate Trap):
-    // 特写将（帅）被八座 3D 八卦石碑与光壁围住，将（帅）左突右冲撞击八卦阵墙壁，
-    // 在八卦阵壁之间连续碰撞反弹（每次撞壁激起金色结界涟漪与火花），最终弹回落入阵中心！
+    // 聚焦放大“将（帅）”至屏幕中心，八卦阵此时浮现在其周围 ->
+    // 降低八卦阵墙壁高度，将上方旋转物优化为精致立体「太极阴阳乾坤罗盘法轮」 ->
+    // “将（帅）”左冲右突碰撞八卦阵墙壁弹来弹去 -> 最后在阵中心翻滚成反面（背面朝上）表示被绝杀 -> 平滑切回终局！
     // =========================================================================
     if (vfxType === 'stalemate_trap') {
-      const wallRadius = 1.42;
+      const centerStage = new THREE.Vector3(0, 0.02, 0);
+      const wallRadius = 2.05;
+      const wallHeight = 0.88; // 显著降低八卦阵墙壁高度，绝不遮挡中心放大的将（帅）棋子！
       const monoliths = [];
+
       for (let i = 0; i < 8; i++) {
         const a = (i * Math.PI) / 4;
         const slab = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.BoxGeometry(0.88, 2.25, 0.26), darkIronMat);
-        const trim = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.22, 0.32), goldMat);
-        trim.position.y = 1.08;
-        const trigramBar1 = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.08, 0.30), goldGlowMat.clone());
-        trigramBar1.position.y = 0.42;
-        const trigramBar2 = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.08, 0.30), goldGlowMat.clone());
-        trigramBar2.position.y = 0.14;
-        const trigramBar3 = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.08, 0.30), goldGlowMat.clone());
-        trigramBar3.position.y = -0.14;
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.96, wallHeight, 0.22), darkIronMat);
+        body.position.y = wallHeight * 0.5;
+        const trim = new THREE.Mesh(new THREE.BoxGeometry(1.04, 0.14, 0.28), goldMat);
+        trim.position.y = wallHeight + 0.04;
+        const baseTrim = new THREE.Mesh(new THREE.BoxGeometry(1.06, 0.12, 0.28), goldMat);
+        baseTrim.position.y = 0.06;
+
+        [0.64, 0.44, 0.24].forEach((ty) => {
+          const bar = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.065, 0.25), goldGlowMat.clone());
+          bar.position.y = ty;
+          slab.add(bar);
+        });
+
         const barrierPane = new THREE.Mesh(
-          new THREE.PlaneGeometry(1.12, 2.05),
+          new THREE.PlaneGeometry(1.38, wallHeight * 0.92),
           new THREE.MeshBasicMaterial({
             color: 0xfbbf24,
             transparent: true,
-            opacity: 0.22,
+            opacity: 0.20,
             blending: THREE.AdditiveBlending,
             side: THREE.DoubleSide,
             depthWrite: false
           })
         );
+        barrierPane.position.y = wallHeight * 0.5;
+
         const impactRipple = new THREE.Mesh(
-          new THREE.RingGeometry(0.18, 0.38, 24),
+          new THREE.RingGeometry(0.18, 0.42, 24),
           crimsonGlowMat.clone()
         );
-        impactRipple.position.set(0, -0.35, -0.16);
+        impactRipple.position.set(0, wallHeight * 0.5, -0.14);
         impactRipple.material.opacity = 0;
 
-        slab.add(body, trim, trigramBar1, trigramBar2, trigramBar3, barrierPane, impactRipple);
-        slab.position.set(kPos.x + Math.cos(a) * 2.45, 1.12, kPos.z + Math.sin(a) * 2.45);
+        slab.add(body, trim, baseTrim, barrierPane, impactRipple);
+        slab.position.set(Math.cos(a) * 3.1, 0, Math.sin(a) * 3.1);
         slab.rotation.y = -a + Math.PI / 2;
         group.add(slab);
         monoliths.push({ slab, a, barrierPane, impactRipple });
       }
 
-      const topOctagon = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.58, 8), goldMat);
-      topOctagon.rotation.x = -Math.PI / 2;
-      topOctagon.position.set(kPos.x, 2.35, kPos.z);
-      group.add(topOctagon);
+      // 优化原八卦阵顶部那个未知的旋转物：替换为精雕立体「阴阳太极乾坤星轨天盘」
+      const celestialCompass = new THREE.Group();
+      celestialCompass.position.set(0, 1.38, 0);
+      group.add(celestialCompass);
 
-      const centerSealRing = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.78, 8), goldGlowMat.clone());
-      centerSealRing.rotation.x = -Math.PI / 2;
-      centerSealRing.position.set(kPos.x, 0.045, kPos.z);
-      centerSealRing.material.opacity = 0;
-      group.add(centerSealRing);
+      const outerCompassRing = new THREE.Mesh(new THREE.TorusGeometry(2.05, 0.055, 12, 64), goldMat);
+      outerCompassRing.rotation.x = Math.PI / 2;
+      const innerCompassRing = new THREE.Mesh(new THREE.TorusGeometry(1.35, 0.04, 10, 48), goldGlowMat.clone());
+      innerCompassRing.rotation.x = Math.PI / 2;
+      celestialCompass.add(outerCompassRing, innerCompassRing);
+
+      // 8 枚悬浮乾坤天罡符印连接内外环
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.035, 0.70), goldMat);
+        spoke.position.set(Math.cos(a) * 1.70, 0, Math.sin(a) * 1.70);
+        spoke.rotation.y = -a;
+        const runeGem = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), i % 2 === 0 ? goldGlowMat.clone() : crimsonLacquerMat);
+        runeGem.position.set(Math.cos(a) * 2.05, 0.06, Math.sin(a) * 2.05);
+        celestialCompass.add(spoke, runeGem);
+      }
+
+      // 地面巨型发光八卦底盘
+      const baguaTex = typeof getBaguaMagicTexture === 'function' ? getBaguaMagicTexture() : null;
+      const groundBaguaDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(2.65, 64),
+        new THREE.MeshBasicMaterial({
+          map: baguaTex,
+          color: 0xfbbf24,
+          transparent: true,
+          opacity: 0.65,
+          blending: THREE.AdditiveBlending,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        })
+      );
+      groundBaguaDisc.rotation.x = -Math.PI / 2;
+      groundBaguaDisc.position.set(0, 0.025, 0);
+      group.add(groundBaguaDisc);
 
       const bounceWaypoints = [
-        { t: 0.12, ox: 0, oz: 0, wallIdx: -1 },
-        { t: 0.25, ox: Math.cos(0) * 1.04, oz: Math.sin(0) * 1.04, wallIdx: 0 },
-        { t: 0.40, ox: Math.cos(Math.PI * 0.75) * 1.04, oz: Math.sin(Math.PI * 0.75) * 1.04, wallIdx: 3 },
-        { t: 0.55, ox: Math.cos(Math.PI * 1.75) * 1.04, oz: Math.sin(Math.PI * 1.75) * 1.04, wallIdx: 7 },
-        { t: 0.70, ox: Math.cos(Math.PI * 1.25) * 1.04, oz: Math.sin(Math.PI * 1.25) * 1.04, wallIdx: 5 },
-        { t: 0.82, ox: Math.cos(Math.PI * 0.25) * 1.04, oz: Math.sin(Math.PI * 0.25) * 1.04, wallIdx: 1 },
-        { t: 0.95, ox: 0, oz: 0, wallIdx: -1 }
+        { t: 0.16, ox: 0, oz: 0, wallIdx: -1 },
+        { t: 0.27, ox: Math.cos(0) * 1.42, oz: Math.sin(0) * 1.42, wallIdx: 0 },
+        { t: 0.39, ox: Math.cos(Math.PI * 0.75) * 1.42, oz: Math.sin(Math.PI * 0.75) * 1.42, wallIdx: 3 },
+        { t: 0.51, ox: Math.cos(Math.PI * 1.75) * 1.42, oz: Math.sin(Math.PI * 1.75) * 1.42, wallIdx: 7 },
+        { t: 0.62, ox: Math.cos(Math.PI * 1.25) * 1.42, oz: Math.sin(Math.PI * 1.25) * 1.42, wallIdx: 5 },
+        { t: 0.72, ox: Math.cos(Math.PI * 0.25) * 1.42, oz: Math.sin(Math.PI * 0.25) * 1.42, wallIdx: 1 },
+        { t: 0.80, ox: 0, oz: 0, wallIdx: -1 }
       ];
 
       return wrapUpdater((p, dt, fade = 1) => {
+        // 原棋盘轻柔压暗消隐，凸显中心放大的八卦阵与“将（帅）”
+        const cgWeight = smoothstep(0.02, 0.18, p) * (1 - smoothstep(0.88, 0.98, p)) * 0.88 * fade;
+        vfxContext?.setSceneTransition?.(cgWeight);
+
         if (vfxContext?.setCameraOverride) {
           vfxContext.setCameraOverride(
-            new THREE.Vector3(kPos.x, 0.45, kPos.z),
+            new THREE.Vector3(0, 0.42, 0),
             8.2,
-            0.82,
-            p * 0.45
+            0.66,
+            p * 0.42
           );
         }
 
-        const closeIn = Math.min(1, p / 0.16);
-        const rad = THREE.MathUtils.lerp(2.45, wallRadius, 1 - Math.pow(1 - closeIn, 3));
+        const closeIn = smoothstep(0.0, 0.18, p);
+        const fadeOut = 1 - smoothstep(0.88, 0.98, p);
+        const rad = THREE.MathUtils.lerp(3.1, wallRadius, closeIn);
 
         monoliths.forEach(({ slab, a, barrierPane, impactRipple }, idx) => {
           let pushOut = 0;
@@ -3457,35 +5598,43 @@ Object.assign(Xiangqi3DApp.prototype, {
           for (const wp of bounceWaypoints) {
             if (wp.wallIdx === idx) {
               const distT = Math.abs(p - wp.t);
-              if (distT < 0.09) {
-                const hitFactor = 1 - distT / 0.09;
-                pushOut = Math.sin(hitFactor * Math.PI) * 0.18;
-                rippleAlpha = hitFactor * 0.92;
+              if (distT < 0.075) {
+                const hitFactor = 1 - distT / 0.075;
+                pushOut = Math.sin(hitFactor * Math.PI) * 0.22;
+                rippleAlpha = hitFactor * 0.95;
                 rippleScale = 0.6 + (1 - hitFactor) * 2.2;
               }
             }
           }
           const curR = rad + pushOut;
-          slab.position.x = kPos.x + Math.cos(a) * curR;
-          slab.position.z = kPos.z + Math.sin(a) * curR;
-          slab.scale.setScalar(fade);
-          barrierPane.material.opacity = (0.18 + rippleAlpha * 0.45) * fade;
-          impactRipple.material.opacity = rippleAlpha * fade;
+          slab.position.set(Math.cos(a) * curR, 0, Math.sin(a) * curR);
+          slab.scale.setScalar(closeIn * fadeOut * fade);
+          barrierPane.material.opacity = (0.16 + rippleAlpha * 0.48) * fadeOut * fade;
+          impactRipple.material.opacity = rippleAlpha * fadeOut * fade;
           impactRipple.scale.setScalar(rippleScale);
         });
 
-        topOctagon.rotation.z += dt * 1.8;
-        topOctagon.scale.setScalar((rad / 1.58) * fade);
+        celestialCompass.rotation.y += dt * 1.4;
+        innerCompassRing.rotation.z -= dt * 2.2;
+        celestialCompass.scale.setScalar(closeIn * fadeOut * fade);
+        groundBaguaDisc.rotation.z -= dt * 0.85;
+        groundBaguaDisc.material.opacity = 0.58 * closeIn * fadeOut * fade;
 
         if (kingItem && kingItem.mesh) {
           kingItem.customDriven = true;
           const m = kingItem.mesh;
-          const bp = kingItem.basePos;
+          const enlargedScale = 2.05; // 放大“将（帅）”使碰撞与翻转清晰可见
 
           if (p < bounceWaypoints[0].t) {
-            const prep = p / bounceWaypoints[0].t;
-            m.position.set(bp.x, prep * 0.15, bp.z);
+            // 阶段1：聚焦放大“将（帅）”飞至屏幕中心 (0, 0, 0)
+            const toCenterT = smoothstep(0.0, bounceWaypoints[0].t, p);
+            const kx = THREE.MathUtils.lerp(kPos.x, 0, toCenterT);
+            const kz = THREE.MathUtils.lerp(kPos.z, 0, toCenterT);
+            const ky = Math.sin(toCenterT * Math.PI) * 0.85;
+            const sc = THREE.MathUtils.lerp(1.0, enlargedScale, toCenterT);
+            this.setPiece3DPose(m, kx, ky, kz, 0, toCenterT * Math.PI, 0, sc, 1.0, 0.25);
           } else if (p <= bounceWaypoints[bounceWaypoints.length - 1].t) {
+            // 阶段2：“将（帅）”在八卦阵中左冲右突弹来弹去
             let segIdx = 0;
             for (let i = 0; i < bounceWaypoints.length - 1; i++) {
               if (p >= bounceWaypoints[i].t && p <= bounceWaypoints[i + 1].t) {
@@ -3496,76 +5645,224 @@ Object.assign(Xiangqi3DApp.prototype, {
             const wA = bounceWaypoints[segIdx];
             const wB = bounceWaypoints[segIdx + 1];
             const segT = (p - wA.t) / Math.max(0.001, wB.t - wA.t);
-            const isFinalDrop = segIdx === bounceWaypoints.length - 2;
             const curOx = THREE.MathUtils.lerp(wA.ox, wB.ox, segT);
             const curOz = THREE.MathUtils.lerp(wA.oz, wB.oz, segT);
-            const arcY = isFinalDrop
-              ? Math.sin(segT * Math.PI) * 1.05
-              : 0.16 + Math.sin(segT * Math.PI) * 0.34;
+            const arcY = 0.08 + Math.sin(segT * Math.PI) * 0.36;
 
-            m.position.set(bp.x + curOx, arcY, bp.z + curOz);
             const moveDx = wB.ox - wA.ox;
             const moveDz = wB.oz - wA.oz;
-            m.rotation.set(
-              moveDz * 0.35 * Math.sin(segT * Math.PI),
-              p * Math.PI * 6,
-              -moveDx * 0.35 * Math.sin(segT * Math.PI)
-            );
             const nearWall = Math.min(segT, 1 - segT) < 0.18 ? (1 - Math.min(segT, 1 - segT) / 0.18) : 0;
-            if (nearWall > 0.6) {
+            if (nearWall > 0.65) {
               this.cameraShake = Math.max(this.cameraShake || 0, 0.24);
             }
-            m.scale.set(1 + nearWall * 0.18, 1 - nearWall * 0.16, 1 + nearWall * 0.18);
+            const sx = enlargedScale * (1 + nearWall * 0.18);
+            const sy = enlargedScale * (1 - nearWall * 0.16);
+            this.setPiece3DPose(
+              m,
+              curOx,
+              arcY,
+              curOz,
+              moveDz * 0.28 * Math.sin(segT * Math.PI),
+              p * Math.PI * 5,
+              -moveDx * 0.28 * Math.sin(segT * Math.PI),
+              [sx, sy, sx],
+              1.0,
+              nearWall * 0.75,
+              0xef4444
+            );
+          } else if (p < 0.90) {
+            // 阶段3：弹回阵中心后，高高弹起并翻滚成反面（rx = Math.PI，背面朝上）重重砸落阵心，表示其被绝杀！
+            const flipT = smoothstep(0.80, 0.88, p);
+            const arcY = Math.sin(flipT * Math.PI) * 1.55;
+            const rx = flipT * Math.PI * 3; // 旋转 1.5 圈 (3*PI ≡ PI)，稳稳落在反面（背面朝上）！
+            if (flipT > 0.88 && flipT < 0.95) {
+              this.cameraShake = Math.max(this.cameraShake || 0, 0.36);
+            }
+            this.setPiece3DPose(
+              m,
+              0,
+              arcY,
+              0,
+              rx,
+              0,
+              0,
+              enlargedScale,
+              1.0,
+              (1 - flipT) * 0.55,
+              0xfbbf24
+            );
           } else {
-            const settleP = (p - 0.95) / 0.05;
-            const wobble = Math.sin(settleP * Math.PI * 3) * 0.12 * (1 - settleP);
-            m.position.set(bp.x, 0, bp.z);
-            m.rotation.set(wobble, 0, -wobble);
-            m.scale.set(1, 1, 1);
-            centerSealRing.material.opacity = Math.sin(settleP * Math.PI) * 0.85 * fade;
-            centerSealRing.scale.setScalar((1 + settleP * 1.4) * fade);
+            // 阶段4：平滑切回终局棋面原位
+            const backT = smoothstep(0.90, 0.99, p);
+            const kx = THREE.MathUtils.lerp(0, kPos.x, backT);
+            const kz = THREE.MathUtils.lerp(0, kPos.z, backT);
+            const sc = THREE.MathUtils.lerp(enlargedScale, 1.0, backT);
+            const rx = THREE.MathUtils.lerp(Math.PI, 0, smoothstep(0.45, 1.0, backT));
+            this.setPiece3DPose(m, kx, 0, kz, rx, 0, 0, sc, 1.0, 0);
           }
         }
       });
     }
 
     // =========================================================================
-    // 17. 海底捞月 (Frost Lotus Strike): 多层 3D 冰晶莲花花瓣绽放 + 3D 沧海明月自海底升起
+    // 17. 海底捞月 (Frost Lotus Strike / Sea Bottom Moon):
+    // 场景平滑变成一片夜晚的海洋，海中有圆月的倒影，镜头俯视海洋，圆月的倒影在镜头中心且比较大 ->
+    // 在一阵阵波纹后圆月的倒影逐渐变成对面的“将（帅）” ->
+    // 弹出海面后翻转几圈至背面（反面朝上） -> 然后平滑切回终局棋面！
     // =========================================================================
-    const lotusGroup = new THREE.Group();
-    lotusGroup.position.set(kPos.x, 0.12, kPos.z);
-    group.add(lotusGroup);
+    const cgScene = this.createCGSceneEnvironment('cg_ocean_night', group);
+    const moonReflectGroup = cgScene.sceneGroup.userData.moonReflectGroup;
+    const moonCoreMat = cgScene.sceneGroup.userData.moonCoreMat;
+    const moonInnerMat = cgScene.sceneGroup.userData.moonInnerMat;
+    const rippleRings = cgScene.sceneGroup.userData.rippleRings || [];
 
-    for (let i = 0; i < 12; i++) {
-      const a = (i * Math.PI) / 6;
-      const pInner = new THREE.Mesh(new THREE.ConeGeometry(0.24, 1.85, 6), jadeIceMat);
-      pInner.position.set(Math.cos(a) * 0.95, 0.65, Math.sin(a) * 0.95);
-      pInner.rotation.z = -Math.cos(a) * 0.42;
-      pInner.rotation.x = Math.sin(a) * 0.42;
-      lotusGroup.add(pInner);
-
-      const pOuter = new THREE.Mesh(new THREE.ConeGeometry(0.30, 2.35, 6), i % 2 === 0 ? jadeIceMat : goldMat);
-      pOuter.position.set(Math.cos(a + Math.PI / 12) * 1.55, 0.55, Math.sin(a + Math.PI / 12) * 1.55);
-      pOuter.rotation.z = -Math.cos(a + Math.PI / 12) * 0.72;
-      pOuter.rotation.x = Math.sin(a + Math.PI / 12) * 0.72;
-      lotusGroup.add(pOuter);
-    }
-
-    const risingMoon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.65, 24, 24),
-      goldGlowMat.clone()
-    );
-    risingMoon.position.set(kPos.x, 0.2, kPos.z);
-    group.add(risingMoon);
+    const waterBurstDrops = Array.from({ length: 20 }, (_, i) => {
+      const ang = (i / 20) * Math.PI * 2;
+      const drop = new THREE.Mesh(
+        new THREE.SphereGeometry(0.085, 10, 10),
+        i % 2 === 0 ? jadeIceMat : goldGlowMat.clone()
+      );
+      drop.visible = false;
+      group.add(drop);
+      return { drop, ang, spd: 1.8 + (i % 4) * 0.55, lift: 1.8 + (i % 3) * 0.65 };
+    });
 
     return wrapUpdater((p, dt, fade = 1) => {
-      const bloom = Math.min(1, p / 0.38);
-      lotusGroup.rotation.y += dt * 1.2;
-      lotusGroup.scale.setScalar(bloom * fade);
-      risingMoon.position.y = THREE.MathUtils.lerp(0.2, 2.35, bloom);
-      risingMoon.scale.setScalar((0.85 + Math.sin(p * 14) * 0.12) * fade);
-      if (p >= 0.32) {
-        applyKingHitFeedback((p - 0.32) / 0.62, 'collision', 0, 0);
+      // 0.02 -> 0.22 平滑变为夜晚海洋；0.84 -> 0.97 平滑切回终局棋面
+      const cgWeight = smoothstep(0.02, 0.22, p) * (1 - smoothstep(0.84, 0.97, p)) * fade;
+      vfxContext?.setSceneTransition?.(cgWeight);
+      cgScene.setFade(cgWeight, dt, p);
+
+      // 海面阵阵波纹持续扩散荡漾
+      rippleRings.forEach(({ rMesh, rMat, i }) => {
+        const waveCycle = (p * 3.2 + i * 0.18) % 1.0;
+        const sc = 0.35 + waveCycle * 2.25;
+        rMesh.scale.setScalar(sc);
+        rMat.opacity = Math.sin(waveCycle * Math.PI) * 0.72 * cgWeight;
+      });
+
+      const enlargedKingScale = 2.18;
+
+      if (p < 0.30) {
+        // 阶段1：镜头俯视夜晚海洋，海面中心映出巨大的圆月倒影，波纹阵阵荡漾
+        if (kingItem?.mesh) {
+          kingItem.customDriven = true;
+          this.setPiece3DPose(kingItem.mesh, kPos.x, 0, kPos.z, 0, 0, 0, 1.0, 1 - cgWeight, 0);
+        }
+        if (moonReflectGroup) {
+          moonReflectGroup.visible = true;
+          const shimmer = 1.0 + Math.sin(p * 24) * 0.05;
+          moonReflectGroup.scale.set(shimmer, 1, shimmer / (1 + Math.cos(p * 20) * 0.04));
+        }
+        waterBurstDrops.forEach(({ drop }) => { drop.visible = false; });
+
+        if (vfxContext?.setCameraOverride) {
+          vfxContext.setCameraOverride(
+            new THREE.Vector3(0, 0.0, 0),
+            11.4,
+            THREE.MathUtils.lerp(0.76, 0.24, smoothstep(0.0, 0.24, p)),
+            0
+          );
+        }
+      } else if (p < 0.54) {
+        // 阶段2：在一阵阵波纹后，圆月的倒影逐渐幻化变成对面的“将（帅）”棋子！
+        const morphT = smoothstep(0.30, 0.52, p);
+        const rippleWobble = Math.sin(p * 42) * 0.08 * (1 - morphT);
+
+        if (moonReflectGroup) {
+          moonReflectGroup.visible = morphT < 0.96;
+          const mScale = THREE.MathUtils.lerp(1.0, 0.48, morphT) + rippleWobble;
+          moonReflectGroup.scale.setScalar(Math.max(0.01, mScale));
+          if (moonCoreMat) moonCoreMat.opacity = (1 - morphT * 0.88) * 0.92 * cgWeight;
+          if (moonInnerMat) moonInnerMat.opacity = (1 - morphT * 0.75) * 0.68 * cgWeight;
+        }
+
+        if (kingItem?.mesh) {
+          kingItem.customDriven = true;
+          this.setPiece3DPose(
+            kingItem.mesh,
+            rippleWobble,
+            0.02,
+            -rippleWobble,
+            0,
+            (1 - morphT) * Math.PI * 0.5,
+            0,
+            enlargedKingScale * (0.75 + 0.25 * morphT),
+            smoothstep(0.08, 0.85, morphT),
+            (1 - morphT * 0.4) * 0.75,
+            0xfef08a
+          );
+        }
+        waterBurstDrops.forEach(({ drop }) => { drop.visible = false; });
+
+        if (vfxContext?.setCameraOverride) {
+          vfxContext.setCameraOverride(new THREE.Vector3(0, 0.05, 0), 10.2, 0.26, (p - 0.30) * 0.35);
+        }
+      } else if (p < 0.84) {
+        // 阶段3：“将（帅）”猛然弹出海面，在空中翻转几圈（3.5圈 = 7*PI ≡ PI）至背面（反面朝上）落下！
+        if (moonReflectGroup) moonReflectGroup.visible = false;
+
+        const popT = (p - 0.54) / 0.30;
+        const arcY = Math.sin(Math.min(1, popT / 0.82) * Math.PI) * 3.85;
+        const curY = Math.max(0.04, arcY);
+        const flipRotX = smoothstep(0.0, 0.82, popT) * Math.PI * 5; // 5 * Math.PI ≡ Math.PI（翻转两圈半后背面朝上！）
+        const spinRotZ = smoothstep(0.0, 0.82, popT) * Math.PI * 2;
+
+        if (popT > 0.80 && popT < 0.88) {
+          this.cameraShake = Math.max(this.cameraShake || 0, 0.42);
+        }
+
+        if (kingItem?.mesh) {
+          kingItem.customDriven = true;
+          this.setPiece3DPose(
+            kingItem.mesh,
+            0,
+            curY,
+            0,
+            flipRotX,
+            0,
+            spinRotZ,
+            enlargedKingScale,
+            1.0,
+            Math.sin(popT * Math.PI) * 0.65,
+            0x38bdf8
+          );
+        }
+
+        const splashP = Math.min(1, popT / 0.55);
+        waterBurstDrops.forEach(({ drop, ang, spd, lift }) => {
+          if (splashP > 0 && splashP < 1) {
+            drop.visible = true;
+            const r = 0.45 + splashP * spd;
+            drop.position.set(Math.cos(ang) * r, Math.sin(splashP * Math.PI) * lift, Math.sin(ang) * r);
+            drop.scale.setScalar((1.15 - splashP * 0.65) * fade);
+          } else {
+            drop.visible = false;
+          }
+        });
+
+        if (vfxContext?.setCameraOverride) {
+          vfxContext.setCameraOverride(
+            new THREE.Vector3(0, curY * 0.6, 0),
+            10.8,
+            THREE.MathUtils.lerp(0.26, 0.68, smoothstep(0.0, 0.65, popT)),
+            0.08 + popT * 0.35
+          );
+        }
+      } else {
+        // 阶段4：平滑切回终局棋面，“将（帅）”归位
+        if (moonReflectGroup) moonReflectGroup.visible = false;
+        waterBurstDrops.forEach(({ drop }) => { drop.visible = false; });
+
+        const backT = smoothstep(0.84, 0.98, p);
+        if (kingItem?.mesh) {
+          kingItem.customDriven = true;
+          const kx = THREE.MathUtils.lerp(0, kPos.x, backT);
+          const kz = THREE.MathUtils.lerp(0, kPos.z, backT);
+          const sc = THREE.MathUtils.lerp(enlargedKingScale, 1.0, backT);
+          const rx = THREE.MathUtils.lerp(Math.PI, 0, smoothstep(0.45, 1.0, backT));
+          this.setPiece3DPose(kingItem.mesh, kx, 0, kz, rx, 0, 0, sc, 1.0, 0);
+        }
       }
     });
   },
@@ -3585,7 +5882,10 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     this.sfx.playCheckmateVFXSound(vfxType);
 
-    const TOTAL_DURATION = 4.10;
+    // 延长全屏 CG 动画总时长至 6.80 秒，充分展现场景渐隐/浮现、棋子公转自转、精细变身与终局切回
+    const TOTAL_DURATION = 6.80;
+    const STAGE1_END = 0.48;
+    const STAGE2_END = 5.65;
     this.vfxAtmosphereDuration = TOTAL_DURATION;
     this.vfxAtmosphereTimer = TOTAL_DURATION;
     this._vfxCustomColorGrading = true;
@@ -3629,6 +5929,9 @@ Object.assign(Xiangqi3DApp.prototype, {
       pattern.checkers.forEach(ch => addInteractivePieceByCoord(ch));
     }
     highlightList.forEach(coord => addInteractivePieceByCoord(coord));
+    if (vfxType === 'royal_gaze') {
+      addInteractivePieceByCoord(rCoord);
+    }
 
     const kingItem = this._activeCheckerMeshes.find(x => x.isKing) || null;
 
@@ -3642,7 +5945,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       const vh = Math.max(320, window.innerHeight || 768);
       const aspect = vw / vh;
       if (aspect < 0.92) {
-        return THREE.MathUtils.clamp(0.96 / Math.max(0.42, aspect), 1.32, 1.98);
+        return THREE.MathUtils.clamp(0.96 / Math.max(0.42, aspect), 1.32, 1.96);
       }
       return 1.0;
     };
@@ -3651,9 +5954,10 @@ Object.assign(Xiangqi3DApp.prototype, {
     const focusZ = (cPos.z * 0.28 + kPos.z * 0.72);
     const baseTheta = this._savedCamBeforeVFX.spherical.theta;
 
-    const vfxLight = new THREE.PointLight(atmos.pointHex, 1.55, 22, 1.6);
+    // 1. 显著降低绝杀刚开始时的光效亮度（初始强度设为 0，柔和渐入，峰值降至原先的 38%）
+    const vfxLight = new THREE.PointLight(atmos.pointHex, 0.0, 22, 1.7);
     vfxLight.position.set(kPos.x, 3.8, kPos.z);
-    const vfxRimLight = new THREE.PointLight(atmos.rimHex, 1.05, 20, 1.7);
+    const vfxRimLight = new THREE.PointLight(atmos.rimHex, 0.0, 20, 1.8);
     vfxRimLight.position.set(cPos.x, 2.8, cPos.z);
     this.checkmateVFXGroup.add(vfxLight, vfxRimLight);
 
@@ -3661,11 +5965,11 @@ Object.assign(Xiangqi3DApp.prototype, {
     const crackTex = getMagmaCrackTexture();
     const glowTex = getGlowParticleTexture();
 
-    const horizonPillars = Array.from({ length: 10 }, (_, i) => {
-      const ang = (i / 10) * Math.PI * 2;
-      const dist = 8.2;
+    const horizonPillars = Array.from({ length: 8 }, (_, i) => {
+      const ang = (i / 8) * Math.PI * 2;
+      const dist = 8.8;
       const beam = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.14, 0.34, 8.8, 10, 1, true),
+        new THREE.CylinderGeometry(0.12, 0.28, 7.8, 10, 1, true),
         new THREE.MeshBasicMaterial({
           color: i % 2 === 0 ? atmos.pointHex : atmos.rimHex,
           transparent: true,
@@ -3675,7 +5979,7 @@ Object.assign(Xiangqi3DApp.prototype, {
           depthWrite: false
         })
       );
-      beam.position.set(kPos.x + Math.cos(ang) * dist, 4.0, kPos.z + Math.sin(ang) * dist);
+      beam.position.set(kPos.x + Math.cos(ang) * dist, 3.8, kPos.z + Math.sin(ang) * dist);
       this.checkmateVFXGroup.add(beam);
       return { beam, i };
     });
@@ -3684,7 +5988,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this._activeCheckerMeshes.forEach((item, idx) => {
       if (item.isKing || !item.isAttacker) return;
       const haloRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.42, 0.74, 32),
+        new THREE.RingGeometry(0.42, 0.68, 32),
         new THREE.MeshBasicMaterial({
           color: idx % 2 === 0 ? atmos.rimHex : atmos.pointHex,
           transparent: true,
@@ -3704,7 +6008,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         new THREE.Vector3(kPos.x, 0.38, kPos.z)
       );
       const linkTube = new THREE.Mesh(
-        new THREE.TubeGeometry(linkCurve, 24, 0.040, 8, false),
+        new THREE.TubeGeometry(linkCurve, 24, 0.036, 8, false),
         new THREE.MeshBasicMaterial({
           color: atmos.rimHex,
           transparent: true,
@@ -3717,32 +6021,8 @@ Object.assign(Xiangqi3DApp.prototype, {
       attackerPieceHalos.push({ item, haloRing, linkTube, idx });
     });
 
-    const kingBurstRaysGroup = new THREE.Group();
-    kingBurstRaysGroup.position.set(kPos.x, 0.28, kPos.z);
-    kingBurstRaysGroup.visible = false;
-    this.checkmateVFXGroup.add(kingBurstRaysGroup);
-    const kingBurstRays = Array.from({ length: 10 }, (_, i) => {
-      const ang = (i / 10) * Math.PI * 2;
-      const ray = new THREE.Mesh(
-        new THREE.ConeGeometry(0.11, 2.2, 6, 1, true),
-        new THREE.MeshBasicMaterial({
-          color: i % 2 === 0 ? 0xfde047 : atmos.pointHex,
-          transparent: true,
-          opacity: 0,
-          blending: THREE.AdditiveBlending,
-          side: THREE.DoubleSide,
-          depthWrite: false
-        })
-      );
-      ray.position.set(Math.cos(ang) * 0.42, 0.85, Math.sin(ang) * 0.42);
-      ray.rotation.z = -Math.cos(ang) * 0.62;
-      ray.rotation.x = Math.sin(ang) * 0.62;
-      kingBurstRaysGroup.add(ray);
-      return ray;
-    });
-
     const groundShockRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.35, 0.78, 64),
+      new THREE.RingGeometry(0.35, 0.72, 64),
       new THREE.MeshBasicMaterial({
         color: atmos.rimHex,
         side: THREE.DoubleSide,
@@ -3772,7 +6052,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.checkmateVFXGroup.add(crackDisc);
 
     const baguaOuter = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.8, 5.8),
+      new THREE.PlaneGeometry(5.6, 5.6),
       new THREE.MeshBasicMaterial({
         map: baguaTex,
         color: atmos.rimHex,
@@ -3790,8 +6070,13 @@ Object.assign(Xiangqi3DApp.prototype, {
     const vfxContext = {
       cameraOverride: null,
       onStage1Update: null,
+      cgSceneWeight: 0,
       setCameraOverride(targetVec, radius, phi, thetaOffset = 0) {
         this.cameraOverride = { targetVec, radius, phi, thetaOffset };
+      },
+      setSceneTransition: (cgWeight) => {
+        vfxContext.cgSceneWeight = Math.max(0, Math.min(1, cgWeight));
+        this.setOriginalWorldVisibilityWeight(1 - vfxContext.cgSceneWeight);
       }
     };
 
@@ -3809,48 +6094,51 @@ Object.assign(Xiangqi3DApp.prototype, {
       updateCustom3D.spectacleGroup.visible = false;
     }
 
-    const spawn3DBurst = (wx, wy, wz, primaryHex = 0xff5500, secondaryHex = 0xfef08a, count = 38) => {
+    // 在 build3DSpectacleForType 收集齐所有参演棋子后，抓取原场景与棋盘快照
+    this.captureOriginalWorldSnapshot(this._activeCheckerMeshes.map(it => it.mesh));
+
+    const spawn3DBurst = (wx, wy, wz, primaryHex = 0xff5500, secondaryHex = 0xfef08a, count = 28) => {
       for (let i = 0; i < count; i++) {
         const sprite = new THREE.Sprite(
           new THREE.SpriteMaterial({
             map: glowTex,
             color: i % 2 === 0 ? primaryHex : secondaryHex,
             transparent: true,
-            opacity: 0.72,
+            opacity: 0.55,
             blending: THREE.AdditiveBlending,
             depthWrite: false
           })
         );
-        const initScale = 0.30 + Math.random() * 0.36;
+        const initScale = 0.26 + Math.random() * 0.30;
         sprite.scale.set(initScale, initScale, 1);
         sprite.position.set(wx + (Math.random() - 0.5) * 0.35, wy + Math.random() * 0.25, wz + (Math.random() - 0.5) * 0.35);
         this.checkmateVFXGroup.add(sprite);
 
         const angle = Math.random() * Math.PI * 2;
-        const speedXZ = 2.2 + Math.random() * 6.5;
-        const speedY = 3.0 + Math.random() * 6.8;
+        const speedXZ = 2.0 + Math.random() * 5.8;
+        const speedY = 2.6 + Math.random() * 5.8;
         this.checkmateVFXAnimations.push({
           elapsed: 0,
-          duration: 1.0 + Math.random() * 0.5,
+          duration: 0.9 + Math.random() * 0.45,
           update: (t, dt) => {
             sprite.position.x += Math.cos(angle) * speedXZ * dt;
             sprite.position.z += Math.sin(angle) * speedXZ * dt;
             sprite.position.y += (speedY - t * 10.5) * dt;
             if (sprite.position.y < 0.08) sprite.position.y = 0.08;
-            sprite.material.opacity = Math.max(0, 0.72 * (1 - Math.pow(t, 1.35)));
+            sprite.material.opacity = Math.max(0, 0.55 * (1 - Math.pow(t, 1.35)));
           }
         });
       }
     };
 
-    const sparks2D = Array.from({ length: 52 }, (_, i) => {
-      const ang = (i / 52) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-      const spd = 120 + Math.random() * 400;
+    const sparks2D = Array.from({ length: 48 }, (_, i) => {
+      const ang = (i / 48) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+      const spd = 120 + Math.random() * 380;
       return {
         ang,
         vx: Math.cos(ang) * spd,
         vy: Math.sin(ang) * spd - 50,
-        size: 3.0 + Math.random() * 7.2,
+        size: 3.0 + Math.random() * 6.8,
         rot: Math.random() * Math.PI * 2,
         vRot: (Math.random() - 0.5) * 9,
         color: i % 4 === 0 ? '#fffbeb' : (i % 2 === 0 ? '#fde68a' : atmos.accent)
@@ -3894,14 +6182,14 @@ Object.assign(Xiangqi3DApp.prototype, {
         ctx.clearRect(0, 0, w, h);
 
         let gradeFactor = 0;
-        if (normT < 0.14) gradeFactor = normT / 0.14;
-        else if (normT < 0.82) gradeFactor = 1.0;
-        else gradeFactor = Math.max(0, 1 - (normT - 0.82) / 0.18);
+        if (normT < 0.12) gradeFactor = normT / 0.12;
+        else if (normT < 0.84) gradeFactor = 1.0;
+        else gradeFactor = Math.max(0, 1 - (normT - 0.84) / 0.16);
 
         if (this.scene) {
-          this.scene.background.copy(dayBgColor).lerp(vfxBgColor, gradeFactor * 0.88);
+          this.scene.background.copy(dayBgColor).lerp(vfxBgColor, gradeFactor * 0.92);
           if (this.scene.fog) {
-            this.scene.fog.color.copy(dayBgColor).lerp(vfxFogColor, gradeFactor * 0.88);
+            this.scene.fog.color.copy(dayBgColor).lerp(vfxFogColor, gradeFactor * 0.92);
           }
         }
         if (this.sunLight) {
@@ -3917,165 +6205,160 @@ Object.assign(Xiangqi3DApp.prototype, {
           this.container.style.filter = gradeFactor > 0.05 ? atmos.cssFilter : '';
         }
 
+        const boardVisWeight = 1 - (vfxContext.cgSceneWeight || 0);
         horizonPillars.forEach(({ beam, i }) => {
-          beam.material.opacity = gradeFactor * (0.11 + Math.sin(normT * 16 + i) * 0.04);
-          beam.rotation.y += dt * 0.7;
+          beam.material.opacity = gradeFactor * boardVisWeight * (0.05 + Math.sin(normT * 14 + i) * 0.02);
+          beam.rotation.y += dt * 0.6;
         });
 
-        if (sec < 0.62) {
-          const p1 = sec / 0.62;
+        if (sec < STAGE1_END) {
+          // 阶段 1 (0 ~ 0.48s)：柔和起势聚焦（大幅降低初始光效与光环亮度，绝不刺眼）
+          const p1 = sec / STAGE1_END;
           const ease1 = 1 - Math.pow(1 - p1, 3);
 
           if (updateCustom3D && updateCustom3D.spectacleGroup) {
             updateCustom3D.spectacleGroup.visible = false;
           }
-          kingBurstRaysGroup.visible = false;
-
           if (typeof vfxContext.onStage1Update === 'function') {
             vfxContext.onStage1Update(p1, ease1);
           }
 
-          const targetFocusFactor = isMobileView ? 0.68 : 0.92;
+          const targetFocusFactor = isMobileView ? 0.68 : 0.90;
           this.camTarget.set(
             THREE.MathUtils.lerp(0, focusX, ease1 * targetFocusFactor),
-            THREE.MathUtils.lerp(0, 0.55, ease1),
+            THREE.MathUtils.lerp(0, 0.45, ease1),
             THREE.MathUtils.lerp(0.3, focusZ, ease1 * targetFocusFactor)
           );
-          const stage1Radius = 10.6 * mobileScale;
-          const stage1Phi = isMobileView ? 0.88 : 1.00;
+          const stage1Radius = 11.2 * mobileScale;
+          const stage1Phi = isMobileView ? 0.86 : 0.96;
           this.desiredSpherical.radius = THREE.MathUtils.lerp(this._savedCamBeforeVFX.spherical.radius, stage1Radius, ease1);
           this.desiredSpherical.phi = THREE.MathUtils.lerp(this._savedCamBeforeVFX.spherical.phi, stage1Phi, ease1);
-          this.desiredSpherical.theta = baseTheta + ease1 * 0.22;
+          this.desiredSpherical.theta = baseTheta + ease1 * 0.16;
 
           this._activeCheckerMeshes.forEach((item, idx) => {
             if (!item.mesh) return;
             if (item.isKing) {
-              const tremor = Math.sin(p1 * 44) * 0.035 * ease1;
-              item.mesh.position.set(item.basePos.x + tremor, ease1 * 0.10, item.basePos.z + tremor);
+              const tremor = Math.sin(p1 * 36) * 0.025 * ease1;
+              item.mesh.position.set(item.basePos.x + tremor, ease1 * 0.08, item.basePos.z + tremor);
             } else {
-              const lift = Math.sin(ease1 * Math.PI * 0.5) * 0.92;
+              const lift = Math.sin(ease1 * Math.PI * 0.5) * 0.55;
               item.mesh.position.set(item.basePos.x, lift, item.basePos.z);
-              item.mesh.rotation.y = ease1 * Math.PI * (idx % 2 === 0 ? 2 : -2);
-              const sc = 1 + ease1 * 0.14;
+              item.mesh.rotation.y = ease1 * Math.PI * (idx % 2 === 0 ? 1 : -1);
+              const sc = 1 + ease1 * 0.12;
               item.mesh.scale.set(sc, sc, sc);
             }
           });
 
           attackerPieceHalos.forEach(({ item, haloRing, linkTube, idx }) => {
-            haloRing.position.y = item.mesh ? item.mesh.position.y + 0.04 : 0.04;
-            haloRing.scale.setScalar(1 + ease1 * 0.55);
-            haloRing.rotation.z += dt * (idx % 2 === 0 ? 4 : -4);
-            haloRing.material.opacity = ease1 * 0.65;
-            linkTube.material.opacity = ease1 * 0.58;
+            haloRing.position.y = item.mesh ? item.mesh.position.y + 0.03 : 0.04;
+            haloRing.scale.setScalar(1 + ease1 * 0.35);
+            haloRing.rotation.z += dt * (idx % 2 === 0 ? 3.5 : -3.5);
+            haloRing.material.opacity = ease1 * 0.24;
+            linkTube.material.opacity = ease1 * 0.22;
           });
 
-          const shockScale = 1 + ease1 * 8.2;
+          const shockScale = 1 + ease1 * 5.8;
           groundShockRing.visible = true;
           groundShockRing.scale.set(shockScale, shockScale, 1);
-          groundShockRing.material.opacity = Math.sin(p1 * Math.PI) * 0.55;
-          baguaOuter.material.opacity = ease1 * 0.52;
-          baguaOuter.rotation.z += dt * 2.0;
-
-          this.drawImperialTopCinematicBar(ctx, w * 0.5, h * 0.11, subBannerText, ease1, atmos.accent);
-        } else if (sec < 2.78) {
-          const p2 = (sec - 0.62) / 2.16;
+          groundShockRing.material.opacity = Math.sin(p1 * Math.PI) * 0.20;
+          baguaOuter.material.opacity = ease1 * 0.18;
+          baguaOuter.rotation.z += dt * 1.5;
+        } else if (sec < STAGE2_END) {
+          // 阶段 2 (0.48s ~ 5.65s)：全屏 CG 场景平滑浮现、棋子公转自转与平滑变身、切回终局棋面绝杀演出
+          const p2 = (sec - STAGE1_END) / (STAGE2_END - STAGE1_END);
           if (!stage2Triggered) {
             stage2Triggered = true;
-            this.triggerScreenFlash();
-            this.cameraShake = 0.68;
-            spawn3DBurst(kPos.x, 0.35, kPos.z, atmos.pointHex, atmos.rimHex, 42);
+            this.cameraShake = 0.28;
             if (updateCustom3D && updateCustom3D.spectacleGroup) {
               updateCustom3D.spectacleGroup.visible = true;
             }
-            kingBurstRaysGroup.visible = true;
           }
 
           groundShockRing.material.opacity = 0;
           groundShockRing.visible = false;
 
           vfxContext.cameraOverride = null;
-          if (kingItem) kingItem.customDriven = false;
+          this._activeCheckerMeshes.forEach(it => { it.customDriven = false; });
 
-          const enterT = Math.min(1, p2 / 0.16);
+          const enterT = Math.min(1, p2 / 0.08);
           const enterFade = 1 - Math.pow(1 - enterT, 3);
           if (updateCustom3D) updateCustom3D(p2, dt, enterFade);
 
           if (vfxContext.cameraOverride) {
             const ov = vfxContext.cameraOverride;
-            this.camTarget.lerp(ov.targetVec, 0.25);
+            this.camTarget.lerp(ov.targetVec, 0.28);
             this.desiredSpherical.radius = ov.radius * mobileScale;
-            this.desiredSpherical.phi = isMobileView ? Math.min(0.88, ov.phi) : ov.phi;
+            this.desiredSpherical.phi = isMobileView ? Math.min(0.96, ov.phi * 0.94) : ov.phi;
             this.desiredSpherical.theta = baseTheta + (ov.thetaOffset || 0);
           } else {
-            const targetFocusFactor = isMobileView ? 0.68 : 0.92;
+            const targetFocusFactor = isMobileView ? 0.68 : 0.90;
             this.camTarget.set(focusX * targetFocusFactor, 0.55, focusZ * targetFocusFactor);
-            this.desiredSpherical.radius = (10.2 + Math.sin(p2 * Math.PI) * 0.85) * mobileScale;
+            this.desiredSpherical.radius = (10.4 + Math.sin(p2 * Math.PI) * 0.85) * mobileScale;
             this.desiredSpherical.phi = (isMobileView ? 0.86 : 0.96) + Math.cos(p2 * Math.PI) * 0.06;
-            this.desiredSpherical.theta = baseTheta + 0.22 + Math.sin(p2 * Math.PI * 1.5) * 0.26;
+            this.desiredSpherical.theta = baseTheta + 0.18 + Math.sin(p2 * Math.PI * 1.5) * 0.24;
           }
 
-          crackDisc.material.opacity = Math.min(0.58, p2 * 1.8) * (1 - p2 * 0.18);
-          baguaOuter.material.opacity = 0.52 * (1 - p2 * 0.15);
-          baguaOuter.rotation.z += dt * 1.6;
+          const bw = 1 - (vfxContext.cgSceneWeight || 0);
+          crackDisc.material.opacity = Math.min(0.38, p2 * 1.4) * (1 - p2 * 0.2) * bw;
+          baguaOuter.material.opacity = 0.22 * (1 - p2 * 0.15) * bw;
+          baguaOuter.rotation.z += dt * 1.4;
 
-          const impactHit = Math.max(0, Math.min(1, (p2 - 0.22) / 0.55));
+          const impactHit = Math.max(0, Math.min(1, (p2 - 0.35) / 0.50));
           this._activeCheckerMeshes.forEach((item, idx) => {
-            if (!item.mesh) return;
+            if (!item.mesh || item.customDriven) return;
             if (item.isKing) {
-              if (!item.customDriven) {
-                const shakeAmp = (0.05 + impactHit * 0.10) * (1 - p2 * 0.25);
-                const jx = Math.sin(p2 * 90) * shakeAmp;
-                const jz = Math.cos(p2 * 84) * shakeAmp;
-                const knockUp = Math.sin(impactHit * Math.PI) * 0.32;
-                item.mesh.position.set(item.basePos.x + jx, 0.08 + knockUp, item.basePos.z + jz);
-                item.mesh.rotation.set(
-                  Math.sin(p2 * 40) * 0.20 + impactHit * 0.24,
-                  Math.sin(p2 * 22) * 0.15,
-                  Math.cos(p2 * 36) * 0.20
-                );
-              }
+              const shakeAmp = (0.04 + impactHit * 0.08) * (1 - p2 * 0.25);
+              const jx = Math.sin(p2 * 90) * shakeAmp;
+              const jz = Math.cos(p2 * 84) * shakeAmp;
+              const knockUp = Math.sin(impactHit * Math.PI) * 0.28;
+              item.mesh.position.set(item.basePos.x + jx, 0.06 + knockUp, item.basePos.z + jz);
+              item.mesh.rotation.set(
+                Math.sin(p2 * 40) * 0.18 + impactHit * 0.22,
+                Math.sin(p2 * 22) * 0.14,
+                Math.cos(p2 * 36) * 0.18
+              );
             } else {
-              const hoverY = 0.30 + Math.sin(p2 * 14 + idx) * 0.12;
+              const hoverY = (0.28 + Math.sin(p2 * 14 + idx) * 0.10) * bw;
               item.mesh.position.set(item.basePos.x, hoverY, item.basePos.z);
-              item.mesh.rotation.set(Math.sin(p2 * 10 + idx) * 0.10, p2 * Math.PI * 2, 0);
-              const pulseSc = 1.10 + Math.sin(p2 * 16 + idx) * 0.05;
+              item.mesh.rotation.set(Math.sin(p2 * 10 + idx) * 0.08 * bw, p2 * Math.PI * 2 * bw, 0);
+              const pulseSc = 1.0 + (0.08 + Math.sin(p2 * 16 + idx) * 0.04) * bw;
               item.mesh.scale.set(pulseSc, pulseSc, pulseSc);
             }
           });
 
           attackerPieceHalos.forEach(({ item, haloRing, linkTube, idx }) => {
-            haloRing.position.y = item.mesh ? item.mesh.position.y - 0.05 : 0.05;
-            haloRing.rotation.z += dt * (idx % 2 === 0 ? 4.5 : -4.5);
-            haloRing.scale.setScalar(1.18 + Math.sin(p2 * 14 + idx) * 0.18);
-            haloRing.material.opacity = 0.58;
-            linkTube.material.opacity = 0.38 + Math.sin(p2 * 22 + idx) * 0.18;
+            haloRing.position.y = item.mesh ? item.mesh.position.y - 0.04 : 0.04;
+            haloRing.rotation.z += dt * (idx % 2 === 0 ? 4.0 : -4.0);
+            haloRing.scale.setScalar(1.12 + Math.sin(p2 * 14 + idx) * 0.14);
+            haloRing.material.opacity = 0.28 * bw;
+            linkTube.material.opacity = (0.20 + Math.sin(p2 * 20 + idx) * 0.10) * bw;
           });
-
-          kingBurstRaysGroup.rotation.y += dt * 2.2;
-          kingBurstRays.forEach((ray, i) => {
-            const rayShow = Math.sin(impactHit * Math.PI);
-            ray.scale.set(1, 0.35 + rayShow * (1.05 + (i % 3) * 0.28), 1);
-            ray.material.opacity = rayShow * 0.48;
-          });
-
-          this.renderImperialHUD2D(ctx, w, h, p2, vfxType, stampTitle, subBannerText, atmos);
         } else {
-          const p3 = (sec - 2.78) / Math.max(0.01, TOTAL_DURATION - 2.78);
+          // 阶段 3 (5.65s ~ 6.80s)：终局棋面 100% 复原 + 「绝杀」大印落款定格
+          const p3 = (sec - STAGE2_END) / Math.max(0.01, TOTAL_DURATION - STAGE2_END);
           const ease3 = 1 - Math.pow(1 - p3, 3);
           if (!stage3Triggered) {
             stage3Triggered = true;
             this.triggerScreenFlash();
-            this.cameraShake = 0.62;
-            spawn3DBurst(kPos.x, 0.45, kPos.z, atmos.rimHex, atmos.pointHex, 36);
+            this.cameraShake = 0.42;
+            spawn3DBurst(kPos.x, 0.35, kPos.z, atmos.rimHex, atmos.pointHex, 26);
             this.spawnShatterFragments?.(kPos.x, kPos.z, winnerColor === RED ? BLACK : RED);
           }
 
+          vfxContext.setSceneTransition(Math.max(0, (vfxContext.cgSceneWeight || 0) * (1 - p3 * 2.5)));
           groundShockRing.material.opacity = 0;
           groundShockRing.visible = false;
 
           this._activeCheckerMeshes.forEach((item) => {
             if (!item.mesh || !item.basePos) return;
-            const settle = Math.min(1, p3 * 1.8);
+            const settle = Math.min(1, p3 * 2.2);
+            item.mesh.visible = true;
+            item.mesh.children.forEach(ch => {
+              if (ch.material) {
+                ch.material.transparent = false;
+                ch.material.opacity = 1.0;
+              }
+            });
             item.mesh.position.lerpVectors(item.mesh.position, item.basePos, settle);
             item.mesh.rotation.set(
               item.mesh.rotation.x * (1 - settle),
@@ -4084,18 +6367,16 @@ Object.assign(Xiangqi3DApp.prototype, {
             );
             const sc = THREE.MathUtils.lerp(item.mesh.scale.x, 1, settle);
             item.mesh.scale.set(sc, sc, sc);
-            if (item.mesh.userData?.bodyMat) {
-              item.mesh.userData.bodyMat.emissiveIntensity *= (1 - settle);
+            const bodyChild = item.mesh.children[0];
+            if (bodyChild?.material?.emissive) {
+              bodyChild.material.emissiveIntensity *= (1 - settle);
             }
           });
 
-          const fade3D = Math.max(0, 1 - p3 * 1.45);
+          const fade3D = Math.max(0, 1 - p3 * 1.65);
           attackerPieceHalos.forEach(({ haloRing, linkTube }) => {
-            haloRing.material.opacity = fade3D * 0.45;
-            linkTube.material.opacity = fade3D * 0.38;
-          });
-          kingBurstRays.forEach(ray => {
-            ray.material.opacity = fade3D * 0.35;
+            haloRing.material.opacity = fade3D * 0.25;
+            linkTube.material.opacity = fade3D * 0.20;
           });
           if (this.checkmateHighlightRings && this.checkmateHighlightRings.length > 0) {
             this.checkmateHighlightRings.forEach(ring => {
@@ -4103,13 +6384,13 @@ Object.assign(Xiangqi3DApp.prototype, {
             });
           }
 
-          this.camTarget.lerpVectors(new THREE.Vector3(focusX * 0.7, 0.55, focusZ * 0.7), this._savedCamBeforeVFX.target, ease3);
-          this.desiredSpherical.radius = THREE.MathUtils.lerp(10.4 * mobileScale, this._savedCamBeforeVFX.spherical.radius, ease3);
-          this.desiredSpherical.phi = THREE.MathUtils.lerp(isMobileView ? 0.86 : 0.98, this._savedCamBeforeVFX.spherical.phi, ease3);
-          this.desiredSpherical.theta = THREE.MathUtils.lerp(baseTheta + 0.22, this._savedCamBeforeVFX.spherical.theta, ease3);
+          this.camTarget.lerpVectors(this.camTarget, this._savedCamBeforeVFX.target, ease3 * 0.45);
+          this.desiredSpherical.radius = THREE.MathUtils.lerp(11.0 * mobileScale, this._savedCamBeforeVFX.spherical.radius, ease3);
+          this.desiredSpherical.phi = THREE.MathUtils.lerp(isMobileView ? 0.84 : 0.92, this._savedCamBeforeVFX.spherical.phi, ease3);
+          this.desiredSpherical.theta = THREE.MathUtils.lerp(this.desiredSpherical.theta, this._savedCamBeforeVFX.spherical.theta, ease3);
 
-          crackDisc.material.opacity = fade3D * 0.48;
-          baguaOuter.material.opacity = fade3D * 0.48;
+          crackDisc.material.opacity = fade3D * 0.32;
+          baguaOuter.material.opacity = fade3D * 0.24;
           if (updateCustom3D) {
             if (fade3D <= 0.01 && updateCustom3D.spectacleGroup) {
               updateCustom3D.spectacleGroup.visible = false;
@@ -4121,40 +6402,30 @@ Object.assign(Xiangqi3DApp.prototype, {
           this.renderImperialFinalJueshaSeal2D(ctx, w, h, p3, stampTitle, subBannerText, sparks2D, vfxType, atmos);
         }
 
-        vfxLight.intensity = (1 - normT * 0.45) * (1.55 + Math.sin(normT * 32) * 0.28);
-        vfxRimLight.intensity = (1 - normT * 0.45) * (1.05 + Math.cos(normT * 26) * 0.20);
+        // 柔和控制动态点光源强度（前 0.6s 从 0 缓入，峰值不超 0.65，彻底消除刺眼亮光）
+        const lightRampIn = Math.min(1, sec / 0.65);
+        const lightRampOut = 1 - normT * 0.42;
+        vfxLight.intensity = lightRampIn * lightRampOut * (0.62 + Math.sin(normT * 24) * 0.10);
+        vfxRimLight.intensity = lightRampIn * lightRampOut * (0.42 + Math.cos(normT * 20) * 0.08);
         ctx.restore();
       }
     });
   },
 
   renderImperialHUD2D(ctx, w, h, p, vfxType, stampTitle, subBannerText, atmos = null) {
+    // 场景切换与全屏 CG 演出期间不绘制任何描述文本，仅保留极轻柔的电影级边缘暗角
     const cx = w * 0.5;
     const cy = h * 0.5;
     const minDim = Math.min(w, h);
     const prof = atmos || this.getVFXAtmosphereProfile(vfxType);
 
     ctx.save();
-    const vig = ctx.createRadialGradient(cx, cy, minDim * 0.30, cx, cy, Math.max(w, h) * 0.78);
+    const vig = ctx.createRadialGradient(cx, cy, minDim * 0.36, cx, cy, Math.max(w, h) * 0.80);
     vig.addColorStop(0.0, 'rgba(0, 0, 0, 0)');
-    vig.addColorStop(0.60, prof.tintInner);
+    vig.addColorStop(0.65, prof.tintInner);
     vig.addColorStop(1.0, prof.tintOuter);
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, w, h);
-
-    const accent = prof.accent || '#f59e0b';
-    const topBarAlpha = p > 0.86 ? Math.max(0, (1 - p) / 0.14) : Math.min(1, p / 0.14);
-    this.drawImperialTopCinematicBar(ctx, cx, h * 0.10, subBannerText, topBarAlpha, accent);
-
-    const slamT = Math.min(1, p / 0.16);
-    const slamScale = slamT < 1
-      ? THREE.MathUtils.lerp(2.25, 0.98, slamT * slamT)
-      : 1.0 + Math.sin((p - 0.16) * 14) * 0.02;
-    const titleAlpha = p > 0.86 ? Math.max(0, (1 - p) / 0.14) : 1.0;
-    const fontSize = Math.round(Math.min(w * 0.12, h * 0.095, 82));
-    const colorPhase = (vfxType === 'fishing_horse' || vfxType === 'frost_lotus_strike') ? 0.2 : 1.0;
-    this.drawImperialBrushTitle(ctx, cx, h * 0.78, stampTitle, fontSize, slamScale, titleAlpha, '', accent, colorPhase);
-
     ctx.restore();
   },
 
@@ -4172,9 +6443,9 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     const ringR = Math.min(w, h) * (0.14 + p3 * 0.42);
     ctx.strokeStyle = isIceOrWater
-      ? `rgba(186, 230, 253, ${(1 - p3) * 0.68})`
-      : `rgba(254, 240, 138, ${(1 - p3) * 0.68})`;
-    ctx.lineWidth = 4.5 * (1 - p3 * 0.55);
+      ? `rgba(186, 230, 253, ${(1 - p3) * 0.58})`
+      : `rgba(254, 240, 138, ${(1 - p3) * 0.58})`;
+    ctx.lineWidth = 4.0 * (1 - p3 * 0.55);
     ctx.beginPath();
     ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
     ctx.stroke();
@@ -4193,7 +6464,7 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     const slamT = Math.min(1, p3 / 0.16);
     const slamScale = slamT < 1
-      ? THREE.MathUtils.lerp(2.65, 0.96, slamT * slamT)
+      ? THREE.MathUtils.lerp(2.45, 0.96, slamT * slamT)
       : 1.0 + Math.sin((p3 - 0.16) * 18) * 0.018;
     const bigFontSize = Math.round(Math.min(w * 0.19, h * 0.14, 118));
     const finalText = '绝杀';

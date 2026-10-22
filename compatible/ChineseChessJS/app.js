@@ -2087,6 +2087,14 @@ class Xiangqi3DApp {
     topDisc.position.y = height + 0.002;
     group.add(topDisc);
 
+    const backMat = typeof getPieceTopMaterial === 'function'
+      ? getPieceTopMaterial(pieceData.color, pieceData.char, true)
+      : topMat;
+    const bottomDisc = new THREE.Mesh(assets.topDiscGeo, backMat);
+    bottomDisc.rotation.x = Math.PI / 2;
+    bottomDisc.position.y = -0.002;
+    group.add(bottomDisc);
+
     const pos = gridToWorld(r, c);
     group.position.set(pos.x, 0, pos.z);
     group.userData = {
@@ -2098,6 +2106,7 @@ class Xiangqi3DApp {
       r,
       c,
       topDisc,
+      bottomDisc,
       bodyMat,
       rimMat,
       tacticalState: null
@@ -2820,7 +2829,8 @@ class Xiangqi3DApp {
       this.updateUI(inCheck);
       this.showCheckmateHighlights(pattern.highlightCoords);
       this.triggerCheckmateVFX(pattern, winner);
-      setTimeout(() => { if (this.gameOver) this.showGameOverModal(winner, pattern); }, 4150);
+      const vfxWaitMs = Math.round((this.vfxAtmosphereDuration || 6.80) * 1000) + 80;
+      setTimeout(() => { if (this.gameOver) this.showGameOverModal(winner, pattern); }, vfxWaitMs);
       return;
     }
 
@@ -3096,7 +3106,7 @@ class Xiangqi3DApp {
     const dt = Math.min(this.clock.getDelta(), 0.1);
     const elapsed = this.clock.getElapsedTime();
 
-    const camLerp = this.vfxAtmosphereTimer > 0 ? 0.18 : 0.1;
+    const camLerp = this.vfxAtmosphereTimer > 0 ? 0.25 : 0.1;
     this.camSpherical.radius = THREE.MathUtils.lerp(this.camSpherical.radius, this.desiredSpherical.radius, camLerp);
     this.camSpherical.phi = THREE.MathUtils.lerp(this.camSpherical.phi, this.desiredSpherical.phi, camLerp);
     this.camSpherical.theta = THREE.MathUtils.lerp(this.camSpherical.theta, this.desiredSpherical.theta, camLerp);
