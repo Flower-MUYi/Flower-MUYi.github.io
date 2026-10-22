@@ -78,6 +78,7 @@ p,
 #replay-panel,
 #online-modal,
 #share-endgame-modal,
+#wechat-share-modal,
 #qr-scanner-modal,
 #vfx-drawer,
 #variant-select-modal,
@@ -177,79 +178,122 @@ p,
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-width: 230px;
-  max-width: 90vw;
-  padding: 12px 28px;
-  border-radius: 16px;
+  min-width: 248px;
+  max-width: 92vw;
+  padding: 14px 34px;
+  border-radius: 18px;
   background:
-    radial-gradient(circle at 50% 0%, rgba(254, 240, 138, 0.28) 0%, transparent 68%),
-    repeating-linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0px, rgba(251, 191, 36, 0.05) 2px, transparent 2px, transparent 7px),
-    linear-gradient(135deg, rgba(69, 10, 10, 0.96) 0%, rgba(28, 12, 10, 0.97) 52%, rgba(56, 18, 10, 0.96) 100%);
-  border: 2px solid #f59e0b;
+    radial-gradient(circle at 50% 0%, rgba(254, 240, 138, 0.34) 0%, transparent 66%),
+    radial-gradient(circle at 50% 100%, rgba(220, 38, 38, 0.25) 0%, transparent 62%),
+    repeating-linear-gradient(135deg, rgba(251, 191, 36, 0.055) 0px, rgba(251, 191, 36, 0.055) 2px, transparent 2px, transparent 8px),
+    linear-gradient(135deg, rgba(78, 12, 12, 0.97) 0%, rgba(28, 10, 10, 0.98) 50%, rgba(64, 16, 12, 0.97) 100%);
+  border: 2px solid #fbbf24;
   box-shadow:
-    0 18px 42px rgba(0, 0, 0, 0.62),
-    0 0 24px rgba(245, 158, 11, 0.35),
-    0 0 0 3px rgba(254, 240, 138, 0.16) inset;
+    0 20px 48px rgba(0, 0, 0, 0.72),
+    0 0 28px rgba(245, 158, 11, 0.36),
+    0 0 0 1px rgba(254, 240, 138, 0.35) inset,
+    0 0 18px rgba(220, 38, 38, 0.28) inset;
+  backdrop-filter: blur(14px);
+}
+
+.imperial-scroll-plaque::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 13px;
+  border: 1px dashed rgba(254, 240, 138, 0.34);
+  pointer-events: none;
 }
 
 .imperial-scroll-plaque[data-theme="black"] {
   background:
-    radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.24) 0%, transparent 68%),
-    repeating-linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0px, rgba(251, 191, 36, 0.05) 2px, transparent 2px, transparent 7px),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(7, 10, 18, 0.99) 55%, rgba(23, 31, 48, 0.98) 100%);
-  border-color: #eab308;
+    radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.26) 0%, transparent 66%),
+    radial-gradient(circle at 50% 100%, rgba(56, 189, 248, 0.14) 0%, transparent 62%),
+    repeating-linear-gradient(135deg, rgba(251, 191, 36, 0.045) 0px, rgba(251, 191, 36, 0.045) 2px, transparent 2px, transparent 8px),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 10, 20, 0.99) 52%, rgba(24, 33, 54, 0.98) 100%);
+  border-color: #f59e0b;
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.78),
+    0 0 28px rgba(245, 158, 11, 0.32),
+    0 0 0 1px rgba(254, 240, 138, 0.28) inset;
 }
 
 .scroll-roller {
   position: absolute;
-  top: -6px;
-  bottom: -6px;
-  width: 11px;
+  top: -8px;
+  bottom: -8px;
+  width: 13px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #fef08a 0%, #d97706 30%, #78350f 50%, #d97706 70%, #fef08a 100%);
-  border: 1px solid #fef9c3;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+  background: linear-gradient(180deg, #fef9c3 0%, #f59e0b 24%, #78350f 50%, #f59e0b 76%, #fef9c3 100%);
+  border: 1.5px solid #fef08a;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.65), 0 0 8px rgba(251, 191, 36, 0.45);
 }
 
-.scroll-roller-left { left: -6px; }
-.scroll-roller-right { right: -6px; }
+.scroll-roller::before,
+.scroll-roller::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fde047, #b45309, #fde047);
+  border: 1px solid #fef9c3;
+}
+.scroll-roller::before { top: -3px; }
+.scroll-roller::after { bottom: -3px; }
+
+.scroll-roller-left { left: -7px; }
+.scroll-roller-right { right: -7px; }
 
 .scroll-plaque-body {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   width: 100%;
 }
 
 .scroll-plaque-seal {
-  display: inline-block;
-  padding: 1px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1.5px 12px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   color: #450a0a;
-  background: linear-gradient(90deg, #fde68a, #f59e0b, #fde68a);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(90deg, #fef08a 0%, #f59e0b 50%, #fef08a 100%);
+  border: 1px solid #fffbeb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.scroll-plaque-seal::before,
+.scroll-plaque-seal::after {
+  content: "✦";
+  font-size: 9px;
+  color: #7c2d12;
 }
 
 .scroll-plaque-title {
-  font-size: clamp(18px, 4vw, 28px);
+  font-size: clamp(19px, 4.2vw, 29px);
   font-weight: 900;
-  letter-spacing: 0.08em;
-  background: linear-gradient(180deg, #ffffff 0%, #fef08a 52%, #f59e0b 100%);
+  letter-spacing: 0.09em;
+  background: linear-gradient(180deg, #ffffff 0%, #fef9c3 44%, #fbbf24 85%, #d97706 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.75));
+  filter: drop-shadow(0 2px 0 rgba(69, 10, 10, 0.9)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
 }
 
 @keyframes calloutPop {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.62); }
-  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
-  32% { transform: translate(-50%, -50%) scale(1.0); }
-  80% { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
-  100% { opacity: 0; transform: translate(-50%, -58%) scale(0.92); }
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.58) rotate(-2deg); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(0.5deg); }
+  32% { transform: translate(-50%, -50%) scale(1.0) rotate(0deg); }
+  82% { opacity: 1; transform: translate(-50%, -50%) scale(1.0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -58%) scale(0.92) rotate(0deg); }
 }
 
 .callout-animate {
@@ -257,8 +301,8 @@ p,
 }
 
 .action-burst-stage {
-  width: min(350px, 88vw);
-  height: 185px;
+  width: min(390px, 92vw);
+  height: 215px;
 }
 
 .action-burst-wings {
@@ -266,96 +310,145 @@ p,
   inset: 0;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.68));
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 22px rgba(245, 158, 11, 0.32));
+}
+
+@keyframes burstRingSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.action-burst-ring-spin {
+  transform-origin: 200px 105px;
+  animation: burstRingSpin 8s linear infinite;
 }
 
 .action-burst-seal {
-  padding: 2px 11px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-  border: 1.5px solid #fef08a;
-  color: #fef08a;
-  font-size: 11px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2.5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 52%, #450a0a 100%);
+  border: 1.5px solid #fde047;
+  color: #fef9c3;
+  font-size: 11.5px;
   font-weight: 900;
-  letter-spacing: 0.22em;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.24em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65), 0 0 10px rgba(245, 158, 11, 0.35), 0 0 0 1px rgba(254, 240, 138, 0.25) inset;
   margin-bottom: -2px;
 }
 
+.action-burst-seal::before,
+.action-burst-seal::after {
+  content: "◆";
+  font-size: 8px;
+  color: #fde047;
+}
+
 .action-burst-char {
-  font-size: clamp(54px, 12vw, 78px);
-  line-height: 1.05;
+  font-size: clamp(60px, 13.5vw, 88px);
+  line-height: 1.04;
   font-weight: 900;
-  letter-spacing: 0.06em;
-  background: linear-gradient(180deg, #ffffff 0%, #fef08a 42%, #f59e0b 78%, #ea580c 100%);
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #ffffff 0%, #fef9c3 32%, #fbbf24 68%, #ea580c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 5px 0 #450a0a) drop-shadow(0 10px 22px rgba(239, 68, 68, 0.85));
+  filter:
+    drop-shadow(0 3px 0 #450a0a)
+    drop-shadow(0 6px 0 #1c0908)
+    drop-shadow(0 12px 26px rgba(239, 68, 68, 0.85))
+    drop-shadow(0 0 18px rgba(251, 191, 36, 0.55));
   transform: rotate(-3deg);
+  padding: 2px 10px;
+}
+
+#action-burst-popup[data-kind="check"] .action-burst-char,
+#action-burst-popup[data-kind="capture_check"] .action-burst-char {
+  font-size: clamp(54px, 12vw, 80px);
+  background: linear-gradient(180deg, #ffffff 0%, #fef08a 30%, #f59e0b 64%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0 3px 0 #450a0a)
+    drop-shadow(0 6px 0 #1f0606)
+    drop-shadow(0 12px 28px rgba(220, 38, 38, 0.92))
+    drop-shadow(0 0 22px rgba(253, 224, 71, 0.72));
 }
 
 #action-burst-popup[data-theme="black"] .action-burst-seal {
-  background: linear-gradient(135deg, #1e293b 0%, #090d16 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 55%, #020617 100%);
   border-color: #fbbf24;
   color: #fef08a;
 }
 
 #action-burst-popup[data-theme="black"] .action-burst-char {
-  background: linear-gradient(180deg, #ffffff 0%, #fef08a 45%, #f59e0b 82%, #d97706 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fef9c3 36%, #fbbf24 74%, #d97706 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 5px 0 #090d16) drop-shadow(0 10px 22px rgba(245, 158, 11, 0.88));
+  filter:
+    drop-shadow(0 3px 0 #0f172a)
+    drop-shadow(0 6px 0 #020617)
+    drop-shadow(0 12px 26px rgba(245, 158, 11, 0.88))
+    drop-shadow(0 0 18px rgba(254, 240, 138, 0.55));
 }
 
 .action-burst-sub {
-  margin-top: 2px;
-  padding: 3px 14px;
+  margin-top: 3px;
+  padding: 4px 18px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(15, 23, 42, 0.0), rgba(20, 14, 12, 0.92) 20%, rgba(20, 14, 12, 0.92) 80%, rgba(15, 23, 42, 0.0));
-  border-top: 1px solid rgba(254, 240, 138, 0.65);
-  border-bottom: 1px solid rgba(254, 240, 138, 0.65);
-  color: #fef3c7;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.0) 0%, rgba(28, 12, 10, 0.94) 18%, rgba(48, 16, 12, 0.96) 50%, rgba(28, 12, 10, 0.94) 82%, rgba(15, 23, 42, 0.0) 100%);
+  border-top: 1.2px solid rgba(254, 240, 138, 0.78);
+  border-bottom: 1.2px solid rgba(254, 240, 138, 0.78);
+  color: #fef9c3;
+  font-size: 13.5px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.92);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .burst-spark {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 2px;
-  background: #fef08a;
-  box-shadow: 0 0 12px #f59e0b;
+  background: linear-gradient(135deg, #ffffff, #fef08a, #f59e0b);
+  box-shadow: 0 0 14px #f59e0b, 0 0 6px #ffffff;
   opacity: 0;
+  transform: rotate(45deg);
 }
 
-.burst-spark.s1 { top: 22%; left: 18%; }
-.burst-spark.s2 { top: 20%; right: 18%; }
-.burst-spark.s3 { bottom: 22%; left: 22%; }
-.burst-spark.s4 { bottom: 20%; right: 22%; }
+.burst-spark.s1 { top: 20%; left: 16%; --tx: -36px; --ty: -28px; }
+.burst-spark.s2 { top: 18%; right: 16%; --tx: 36px; --ty: -28px; }
+.burst-spark.s3 { bottom: 20%; left: 18%; --tx: -34px; --ty: 26px; }
+.burst-spark.s4 { bottom: 18%; right: 18%; --tx: 34px; --ty: 26px; }
+.burst-spark.s5 { top: 48%; left: 8%; --tx: -44px; --ty: 0px; }
+.burst-spark.s6 { top: 48%; right: 8%; --tx: 44px; --ty: 0px; }
+.burst-spark.s7 { top: 10%; left: 49%; --tx: 0px; --ty: -36px; }
+.burst-spark.s8 { bottom: 10%; left: 49%; --tx: 0px; --ty: 34px; }
 
 @keyframes actionBurstAnim {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(2.35) rotate(-10deg); }
-  16% { opacity: 1; transform: translate(-50%, -50%) scale(0.93) rotate(2deg); }
-  26% { opacity: 1; transform: translate(-50%, -50%) scale(1.04) rotate(-1deg); }
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(2.25) rotate(-9deg); filter: brightness(1.25); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(0.92) rotate(2deg); filter: brightness(1.05); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(-1deg); filter: brightness(1.0); }
   36% { opacity: 1; transform: translate(-50%, -50%) scale(1.0) rotate(0deg); }
   78% { opacity: 1; transform: translate(-50%, -50%) scale(1.0) rotate(0deg); }
-  100% { opacity: 0; transform: translate(-50%, -58%) scale(0.86) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -58%) scale(0.88) rotate(0deg); }
 }
 
 @keyframes sparkFly {
-  0% { opacity: 1; transform: scale(1.4); }
-  100% { opacity: 0; transform: scale(0.2) translateY(-28px); }
+  0% { opacity: 1; transform: translate(0, 0) scale(1.45) rotate(45deg); }
+  100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, -32px)) scale(0.15) rotate(135deg); }
 }
 
 .action-burst-active {
-  animation: actionBurstAnim 1.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: actionBurstAnim 1.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .action-burst-active .burst-spark {
-  animation: sparkFly 0.65s ease-out forwards;
+  animation: sparkFly 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes sealStamp {
@@ -371,9 +464,9 @@ p,
 
 @keyframes impactFlashAnim {
   0% { opacity: 0; }
-  10% { opacity: 0.92; }
-  26% { opacity: 0.28; }
-  42% { opacity: 0.62; }
+  12% { opacity: 0.34; }
+  28% { opacity: 0.12; }
+  45% { opacity: 0.20; }
   100% { opacity: 0; }
 }
 
@@ -829,6 +922,38 @@ footer > div > button.hidden,
   pointer-events: none !important;
 }
 
+.imperial-settlement-card {
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.58),
+    0 0 36px rgba(217, 119, 6, 0.25),
+    0 0 0 2px rgba(254, 240, 138, 0.55) inset !important;
+}
+
+.imperial-settlement-card::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 19px;
+  border: 1px dashed rgba(180, 83, 9, 0.32);
+  pointer-events: none;
+}
+
+#wechat-share-qr-box canvas,
+#wechat-share-qr-box img {
+  display: block;
+  width: 148px !important;
+  height: 148px !important;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+
+#center-callout {
+  z-index: 95 !important;
+}
+
+#illegal-move-toast {
+  z-index: 95 !important;
+}
 </style>
 </head>
 
@@ -837,31 +962,47 @@ footer > div > button.hidden,
   <div id="canvas-container"></div>
 
   <div id="vfx-screen-flash" class="pointer-events-none fixed inset-0 z-10 opacity-0"
-    style="background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.92) 0%, rgba(254, 240, 138, 0.65) 32%, rgba(220, 38, 38, 0.42) 65%, rgba(10, 10, 18, 0.88) 100%); mix-blend-mode: screen;">
+    style="background: radial-gradient(circle at 50% 45%, rgba(254, 243, 199, 0.42) 0%, rgba(254, 240, 138, 0.26) 35%, rgba(220, 38, 38, 0.16) 68%, rgba(10, 10, 18, 0.35) 100%); mix-blend-mode: screen;">
   </div>
 
   <canvas id="checkmate-fx-canvas" style="z-index: 28;" class="pointer-events-none fixed inset-0 z-30 hidden"></canvas>
 
   <div id="action-burst-popup" data-theme="red" data-kind="capture"
-    class="pointer-events-none fixed left-1/2 top-[34%] -translate-x-1/2 -translate-y-1/2 z-30 hidden">
+    class="pointer-events-none fixed left-1/2 top-[34%] -translate-x-1/2 -translate-y-1/2 z-40 hidden">
     <div class="action-burst-stage relative flex flex-col items-center justify-center">
-      <svg class="action-burst-wings" viewBox="0 0 360 190" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 96 C68 42, 135 28, 180 34 C225 28, 292 42, 342 96 C288 144, 225 156, 180 150 C135 156, 72 144, 18 96 Z"
-          fill="url(#inkGrad)" stroke="url(#goldStroke)" stroke-width="2.5" />
-        <path d="M8 76 L64 92 L24 116 Z" fill="url(#goldStroke)" opacity="0.85" />
-        <path d="M352 76 L296 92 L336 116 Z" fill="url(#goldStroke)" opacity="0.85" />
-        <circle cx="180" cy="92" r="64" stroke="url(#goldStroke)" stroke-width="2.2" stroke-dasharray="8 6" opacity="0.85" />
-        <circle cx="180" cy="92" r="52" stroke="url(#goldStroke)" stroke-width="1.4" opacity="0.65" />
+      <svg class="action-burst-wings" viewBox="0 0 400 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 105 C72 42, 145 26, 200 32 C255 26, 328 42, 384 105 C328 164, 255 180, 200 174 C145 180, 72 164, 16 105 Z"
+          fill="url(#inkGrad)" stroke="url(#goldStroke)" stroke-width="2.6" />
+        <path d="M34 105 C82 54, 148 40, 200 45 C252 40, 318 54, 366 105 C318 152, 252 166, 200 161 C148 166, 82 152, 34 105 Z"
+          stroke="url(#goldStroke)" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.72" />
+        <path d="M4 82 L68 98 L22 126 Z" fill="url(#goldStroke)" opacity="0.92" />
+        <path d="M396 82 L332 98 L378 126 Z" fill="url(#goldStroke)" opacity="0.92" />
+        <path d="M24 62 L78 84 L42 98 Z" fill="url(#crimsonWing)" opacity="0.82" />
+        <path d="M376 62 L322 84 L358 98 Z" fill="url(#crimsonWing)" opacity="0.82" />
+        <g class="action-burst-ring-spin">
+          <circle cx="200" cy="105" r="74" stroke="url(#goldStroke)" stroke-width="2.4" stroke-dasharray="10 6 3 6" opacity="0.88" />
+          <circle cx="200" cy="105" r="61" stroke="url(#goldStroke)" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.68" />
+          <polygon points="200,25 205,35 195,35" fill="#fef08a" opacity="0.9" />
+          <polygon points="200,185 205,175 195,175" fill="#fef08a" opacity="0.9" />
+          <polygon points="120,105 130,100 130,110" fill="#fef08a" opacity="0.9" />
+          <polygon points="280,105 270,100 270,110" fill="#fef08a" opacity="0.9" />
+        </g>
+        <circle cx="200" cy="105" r="48" stroke="url(#goldStroke)" stroke-width="1.3" opacity="0.55" />
         <defs>
-          <radialGradient id="inkGrad" cx="50%" cy="50%" r="55%">
-            <stop offset="0%" stop-color="#450a0a" stop-opacity="0.96" />
-            <stop offset="62%" stop-color="#1c1917" stop-opacity="0.92" />
+          <radialGradient id="inkGrad" cx="50%" cy="50%" r="56%">
+            <stop offset="0%" stop-color="#5c0c0c" stop-opacity="0.96" />
+            <stop offset="58%" stop-color="#1c1412" stop-opacity="0.93" />
             <stop offset="100%" stop-color="#090707" stop-opacity="0" />
           </radialGradient>
           <linearGradient id="goldStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#fef08a" />
-            <stop offset="50%" stop-color="#f59e0b" />
+            <stop offset="0%" stop-color="#fffbeb" />
+            <stop offset="45%" stop-color="#fde047" />
+            <stop offset="80%" stop-color="#f59e0b" />
             <stop offset="100%" stop-color="#b45309" />
+          </linearGradient>
+          <linearGradient id="crimsonWing" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ef4444" />
+            <stop offset="100%" stop-color="#f59e0b" />
           </linearGradient>
         </defs>
       </svg>
@@ -869,6 +1010,10 @@ footer > div > button.hidden,
       <span class="burst-spark s2"></span>
       <span class="burst-spark s3"></span>
       <span class="burst-spark s4"></span>
+      <span class="burst-spark s5"></span>
+      <span class="burst-spark s6"></span>
+      <span class="burst-spark s7"></span>
+      <span class="burst-spark s8"></span>
       <div class="relative z-10 flex flex-col items-center">
         <span id="action-burst-seal" class="action-burst-seal serif-cn">锋芒夺子</span>
         <div id="action-burst-char" class="action-burst-char serif-cn">吃</div>
@@ -878,7 +1023,7 @@ footer > div > button.hidden,
   </div>
 
   <div id="center-callout"
-    class="pointer-events-none fixed left-1/2 top-[30%] -translate-x-1/2 -translate-y-1/2 z-30 hidden">
+    class="pointer-events-none fixed left-1/2 top-[30%] -translate-x-1/2 -translate-y-1/2 z-[95] hidden">
     <div id="center-callout-inner" data-theme="red" class="imperial-scroll-plaque serif-cn text-center">
       <span class="scroll-roller scroll-roller-left"></span>
       <span class="scroll-roller scroll-roller-right"></span>
@@ -890,7 +1035,7 @@ footer > div > button.hidden,
   </div>
 
   <div id="illegal-move-toast" onclick="window.gameApp.hideIllegalMovePrompt()" title="点击关闭"
-    class="auto-dismiss-toast toast-hidden fixed left-1/2 top-16 md:top-20 -translate-x-1/2 z-50 w-[92vw] max-w-sm cursor-pointer">
+    class="auto-dismiss-toast toast-hidden fixed left-1/2 top-16 md:top-20 -translate-x-1/2 z-[95] w-[92vw] max-w-sm cursor-pointer">
     <div class="toast-surface relative overflow-hidden rounded-2xl px-4 py-3 flex items-center gap-3">
       <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-md ring-1 ring-amber-300/50">
         <span id="illegal-toast-icon" class="material-symbols-rounded text-[20px]">gpp_maybe</span>
@@ -1387,8 +1532,8 @@ footer > div > button.hidden,
 
       <div class="pt-1 border-t border-amber-900/10">
         <div class="grid grid-cols-4 gap-1.5">
-          <button onclick="window.gameApp.shareToSocialPlatform('wechat')" class="md-btn serif-cn rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 py-1.5 text-[11px] font-bold text-amber-950 flex items-center justify-center gap-1">
-            <span class="material-symbols-rounded text-[15px] text-amber-700">forum</span><span>微信</span>
+          <button onclick="window.gameApp.shareToSocialPlatform('wechat')" class="md-btn serif-cn rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 py-1.5 text-[11px] font-bold text-emerald-950 flex items-center justify-center gap-1 shadow-sm">
+            <span class="material-symbols-rounded text-[15px] text-emerald-600">forum</span><span>微信</span>
           </button>
           <button onclick="window.gameApp.shareToSocialPlatform('qq')" class="md-btn serif-cn rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 py-1.5 text-[11px] font-bold text-sky-900 flex items-center justify-center gap-1">
             <span class="material-symbols-rounded text-[15px] text-sky-600">chat</span><span>QQ</span>
@@ -1400,6 +1545,68 @@ footer > div > button.hidden,
             <span class="material-symbols-rounded text-[15px] text-amber-700">content_copy</span><span>复制图</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="wechat-share-modal" class="fixed inset-0 z-[85] hidden flex items-center justify-center overflow-y-auto bg-slate-950/75 backdrop-blur-md p-3 sm:p-5"
+    onclick="if(event.target===this) window.gameApp.closeWeChatShareModal()">
+    <div class="md-card brocade-panel relative my-auto w-full max-w-md rounded-3xl border-2 border-emerald-500/70 p-4 sm:p-5 shadow-2xl space-y-3">
+      <div id="wechat-inapp-guide" class="hidden rounded-2xl bg-gradient-to-r from-emerald-900 to-teal-900 text-emerald-50 px-3.5 py-2 text-xs font-bold flex items-center justify-between gap-2 border border-emerald-400/50 shadow-md">
+        <span>✦ 您正在微信内打开：请点击右上角「···」直接发送给朋友或分享至朋友圈</span>
+        <span class="text-base leading-none">↗</span>
+      </div>
+
+      <div class="flex items-center justify-between border-b border-amber-900/10 pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shadow-sm">
+            <span class="material-symbols-rounded text-[18px]">forum</span>
+          </span>
+          <div>
+            <h3 class="serif-cn font-black text-slate-900 text-sm sm:text-base leading-tight">微信战帖 · 扫码或一键转发</h3>
+            <p class="serif-cn text-[11px] text-slate-600">支持手机微信扫一扫、复制战帖图片或口令直发</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.gameApp.closeWeChatShareModal()" aria-label="关闭"
+          class="md-btn w-7 h-7 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-700 flex items-center justify-center font-bold">×</button>
+      </div>
+
+      <div id="wechat-copy-badge" class="rounded-xl bg-emerald-50 border border-emerald-300/90 px-3 py-2 text-[11px] font-bold text-emerald-900 text-center shadow-sm">
+        ✓ 已自动复制高清战帖图片与挑战链接，去微信可直接粘贴发送
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 items-center bg-white/80 rounded-2xl p-3 border border-amber-200/80 shadow-inner">
+        <div class="flex flex-col items-center text-center space-y-1">
+          <div id="wechat-share-qr-box" class="p-2 bg-white rounded-xl border border-emerald-200 shadow-sm flex items-center justify-center min-h-[160px] min-w-[160px]"></div>
+          <span class="serif-cn text-[11px] font-extrabold text-emerald-900">手机微信「扫一扫」</span>
+          <span class="serif-cn text-[10px] text-slate-500">扫码立即进入棋局应战</span>
+        </div>
+        <div class="flex flex-col items-center text-center space-y-1">
+          <img id="wechat-share-poster-preview" alt="微信战帖预览" class="max-h-[160px] w-auto rounded-xl border border-amber-300 shadow-md object-contain bg-slate-900/5" />
+          <span class="serif-cn text-[11px] font-extrabold text-amber-950">长按或粘贴海报</span>
+          <span class="serif-cn text-[10px] text-slate-500">高清战帖含完整盘面</span>
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <label for="wechat-share-command-text" class="serif-cn text-[11px] font-bold text-slate-700 block">微信挑战口令（可直接粘贴至微信聊天框）：</label>
+        <input id="wechat-share-command-text" type="text" readonly
+          class="serif-cn w-full rounded-xl bg-white/90 border border-amber-300/80 px-3 py-1.5 text-[11px] text-slate-700 focus:outline-none" />
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 pt-1">
+        <button type="button" onclick="window.gameApp.launchWeChatApp()"
+          class="md-btn serif-cn rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-2 py-2.5 text-xs font-extrabold text-white shadow-md flex items-center justify-center gap-1">
+          <span class="material-symbols-rounded text-[16px]">open_in_new</span><span>打开微信粘贴</span>
+        </button>
+        <button type="button" onclick="window.gameApp.copyWeChatShareCommand()"
+          class="md-btn serif-cn rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-2.5 text-xs font-bold text-emerald-950 shadow-sm flex items-center justify-center gap-1">
+          <span class="material-symbols-rounded text-[16px] text-emerald-700">content_copy</span><span>复制口令</span>
+        </button>
+        <button type="button" onclick="window.gameApp.downloadEndgamePoster()"
+          class="md-btn serif-cn rounded-xl bg-slate-900 hover:bg-slate-800 px-2 py-2.5 text-xs font-bold text-amber-200 shadow-sm flex items-center justify-center gap-1">
+          <span class="material-symbols-rounded text-[16px]">download</span><span>保存海报</span>
+        </button>
       </div>
     </div>
   </div>
@@ -7635,18 +7842,18 @@ class Xiangqi3DApp {
       },
       {
         id: 'imperial_study',
-        name: '紫宸御弈',
-        badge: '宫灯夜宴',
-        desc: '紫檀雕案、朱漆蟠龙金柱、暖玉宫灯与金粟瑞气',
-        icon: 'temple_buddhist',
-        bgHex: 0x231c30,
-        bodyCss: '#231c30',
-        fogDensity: 0.009,
-        sunColor: 0xffebc2,
-        sunIntensity: 0.85,
-        hemiSky: 0xfff0c4,
-        hemiGround: 0x382940,
-        hemiIntensity: 0.64
+        name: '瑶台揽月',
+        badge: '云海星宫',
+        desc: '白玉莲台、九天皎月、重檐星阁、流云仙雾与临水河灯',
+        icon: 'nights_stay',
+        bgHex: 0x0d182e,
+        bodyCss: '#0d182e',
+        fogDensity: 0.0082,
+        sunColor: 0xfff4d6,
+        sunIntensity: 0.88,
+        hemiSky: 0xdbeafe,
+        hemiGround: 0x1e293b,
+        hemiIntensity: 0.66
       }
     ];
     this.isBusy = false;
@@ -8907,203 +9114,472 @@ class Xiangqi3DApp {
     this.studyGroup.visible = this.currentSceneId === 'imperial_study';
     this.scene.add(this.studyGroup);
 
-    const rosewoodFloorMat = new THREE.MeshStandardMaterial({
-      color: 0x38221e,
-      roughness: 0.30,
-      metalness: 0.20
-    });
-    const gildedMat = new THREE.MeshStandardMaterial({
-      color: 0xeab308,
-      emissive: 0x78350f,
-      emissiveIntensity: 0.28,
-      roughness: 0.22,
-      metalness: 0.90
-    });
-    const vermilionMat = new THREE.MeshStandardMaterial({
-      color: 0x7f1d1d,
-      roughness: 0.30,
-      metalness: 0.20
-    });
-    const sandalwoodMat = new THREE.MeshStandardMaterial({
-      color: 0x3b1f14,
-      roughness: 0.28,
-      metalness: 0.24
+    const mirrorPoolMat = new THREE.MeshStandardMaterial({
+      color: 0x0a192f,
+      roughness: 0.14,
+      metalness: 0.55
     });
     const whiteJadeMat = new THREE.MeshStandardMaterial({
       color: 0xf8fafc,
+      emissive: 0xe2e8f0,
+      emissiveIntensity: 0.08,
       roughness: 0.18,
-      metalness: 0.10
+      metalness: 0.12
+    });
+    const celadonJadeMat = new THREE.MeshStandardMaterial({
+      color: 0xcffafe,
+      emissive: 0x0891b2,
+      emissiveIntensity: 0.12,
+      roughness: 0.20,
+      metalness: 0.15
+    });
+    const gildedMat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24,
+      emissive: 0x92400e,
+      emissiveIntensity: 0.24,
+      roughness: 0.20,
+      metalness: 0.88
+    });
+    const vermilionMat = new THREE.MeshStandardMaterial({
+      color: 0x881313,
+      roughness: 0.32,
+      metalness: 0.18
+    });
+    const sandalwoodMat = new THREE.MeshStandardMaterial({
+      color: 0x361c12,
+      roughness: 0.26,
+      metalness: 0.22
+    });
+    const darkRoofMat = new THREE.MeshStandardMaterial({
+      color: 0x172554,
+      roughness: 0.35,
+      metalness: 0.35
     });
 
-    const floor = new THREE.Mesh(new THREE.CylinderGeometry(58, 58, 1, 64), rosewoodFloorMat);
-    floor.position.y = -4.8;
-    floor.receiveShadow = true;
-    this.studyGroup.add(floor);
+    // 1. 星河镜池底座与双层太极星轨法阵
+    const poolFloor = new THREE.Mesh(new THREE.CylinderGeometry(62, 62, 1, 64), mirrorPoolMat);
+    poolFloor.position.y = -4.85;
+    poolFloor.receiveShadow = true;
+    this.studyGroup.add(poolFloor);
 
     const carpetTex = typeof getBaguaMagicTexture === 'function' ? getBaguaMagicTexture() : null;
-    const carpetDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(11.4, 64),
+    const starlightAstrolabe = new THREE.Mesh(
+      new THREE.CircleGeometry(12.2, 64),
       new THREE.MeshBasicMaterial({
         map: carpetTex,
-        color: 0xfde047,
+        color: 0x7dd3fc,
         transparent: true,
-        opacity: 0.36,
+        opacity: 0.32,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       })
     );
-    carpetDisc.rotation.x = -Math.PI / 2;
-    carpetDisc.position.y = -4.24;
-    this.studyGroup.add(carpetDisc);
+    starlightAstrolabe.rotation.x = -Math.PI / 2;
+    starlightAstrolabe.position.y = -3.76;
+    this.studyGroup.add(starlightAstrolabe);
+    this.studyAstrolabe = starlightAstrolabe;
 
-    // 1. 汉白玉须弥御阶与紫檀雕龙御案
-    const dais = new THREE.Mesh(new THREE.CylinderGeometry(9.8, 10.4, 0.36, 32), sandalwoodMat);
-    dais.position.y = -4.15;
-    dais.receiveShadow = true;
-    this.studyGroup.add(dais);
+    // 2. 三层汉白玉莲花须弥座、16根雕云望柱栏杆与四方丹陛玉阶
+    const daisTier1 = new THREE.Mesh(new THREE.CylinderGeometry(11.4, 12.2, 0.38, 32), whiteJadeMat);
+    daisTier1.position.y = -4.18;
+    daisTier1.receiveShadow = true;
+    const daisTier2 = new THREE.Mesh(new THREE.CylinderGeometry(9.8, 10.4, 0.34, 32), whiteJadeMat);
+    daisTier2.position.y = -3.86;
+    daisTier2.receiveShadow = true;
+    const daisGoldRing = new THREE.Mesh(new THREE.TorusGeometry(9.86, 0.09, 12, 64), gildedMat);
+    daisGoldRing.rotation.x = Math.PI / 2;
+    daisGoldRing.position.y = -3.72;
+    this.studyGroup.add(daisTier1, daisTier2, daisGoldRing);
 
-    const jadeBalustradeRing = new THREE.Mesh(new THREE.TorusGeometry(9.85, 0.12, 12, 64), whiteJadeMat);
-    jadeBalustradeRing.rotation.x = Math.PI / 2;
-    jadeBalustradeRing.position.y = -3.96;
-    this.studyGroup.add(jadeBalustradeRing);
+    // 四方汉白玉丹陛踏步台阶
+    [0, Math.PI / 2, Math.PI, -Math.PI / 2].forEach(ang => {
+      const stairGroup = new THREE.Group();
+      stairGroup.rotation.y = ang;
+      for (let s = 0; s < 3; s++) {
+        const step = new THREE.Mesh(
+          new THREE.BoxGeometry(2.6, 0.18, 0.65),
+          s === 1 ? celadonJadeMat : whiteJadeMat
+        );
+        step.position.set(0, -4.25 + s * 0.16, 10.2 + (2 - s) * 0.55);
+        stairGroup.add(step);
+      }
+      this.studyGroup.add(stairGroup);
+    });
 
+    // 16根汉白玉雕花望柱与双层玉栏（留出四方踏步通道）
+    const balustradeRadius = 9.65;
+    for (let i = 0; i < 16; i++) {
+      const a = (i * Math.PI * 2) / 16;
+      const postGroup = new THREE.Group();
+      postGroup.position.set(Math.cos(a) * balustradeRadius, -3.70, Math.sin(a) * balustradeRadius);
+      const postShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 1.05, 12), whiteJadeMat);
+      postShaft.position.y = 0.52;
+      const postCap = new THREE.Mesh(new THREE.SphereGeometry(0.20, 12, 12), gildedMat);
+      postCap.position.y = 1.12;
+      postGroup.add(postShaft, postCap);
+      this.studyGroup.add(postGroup);
+
+      // 相邻望柱之间的玉石栏板（跳过四个正方向入口）
+      if (i % 4 !== 3 && i % 4 !== 0) {
+        const nextA = ((i + 1) * Math.PI * 2) / 16;
+        const mx = (Math.cos(a) + Math.cos(nextA)) * 0.5 * balustradeRadius;
+        const mz = (Math.sin(a) + Math.sin(nextA)) * 0.5 * balustradeRadius;
+        const segLen = 2 * balustradeRadius * Math.sin(Math.PI / 16);
+        const railGroup = new THREE.Group();
+        railGroup.position.set(mx, -3.70, mz);
+        railGroup.rotation.y = -((a + nextA) * 0.5) + Math.PI / 2;
+        const topRail = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, segLen, 8), whiteJadeMat);
+        topRail.rotation.z = Math.PI / 2;
+        topRail.position.y = 0.86;
+        const midPanel = new THREE.Mesh(new THREE.BoxGeometry(segLen * 0.88, 0.42, 0.08), celadonJadeMat);
+        midPanel.position.y = 0.44;
+        railGroup.add(topRail, midPanel);
+        this.studyGroup.add(railGroup);
+      }
+    }
+
+    // 3. 紫檀嵌金御案、仙鹤博山香炉（带动态青烟环）、白玉酒壶对杯与传国玉玺
     const tableSlab = new THREE.Mesh(new THREE.CylinderGeometry(8.12, 7.82, 0.82, 48), sandalwoodMat);
     tableSlab.position.y = -0.62;
     tableSlab.castShadow = true;
     tableSlab.receiveShadow = true;
-    this.studyGroup.add(tableSlab);
-
-    const goldRim = new THREE.Mesh(new THREE.TorusGeometry(7.98, 0.16, 14, 64), gildedMat);
+    const goldRim = new THREE.Mesh(new THREE.TorusGeometry(7.98, 0.15, 14, 64), gildedMat);
     goldRim.rotation.x = Math.PI / 2;
     goldRim.position.y = -0.42;
-    this.studyGroup.add(goldRim);
-
-    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 3.25, 3.5, 24), vermilionMat);
-    pedestal.position.y = -2.55;
+    const jadeInlayRim = new THREE.Mesh(new THREE.TorusGeometry(7.55, 0.06, 10, 64), whiteJadeMat);
+    jadeInlayRim.rotation.x = Math.PI / 2;
+    jadeInlayRim.position.y = -0.20;
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 3.35, 3.25, 24), sandalwoodMat);
+    pedestal.position.y = -2.42;
     pedestal.castShadow = true;
-    this.studyGroup.add(pedestal);
+    const pedestalGoldBand = new THREE.Mesh(new THREE.TorusGeometry(2.85, 0.10, 10, 36), gildedMat);
+    pedestalGoldBand.rotation.x = Math.PI / 2;
+    pedestalGoldBand.position.y = -1.65;
+    this.studyGroup.add(tableSlab, goldRim, jadeInlayRim, pedestal, pedestalGoldBand);
 
-    // 御案仙鹤金香炉与传国玉玺建模
+    // 仙鹤博山金香炉与袅袅动态青烟环
     const craneCenser = new THREE.Group();
     craneCenser.position.set(-6.35, -0.22, -4.55);
-    const craneBase = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.22, 16), gildedMat);
+    const craneBase = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.46, 0.22, 16), gildedMat);
     craneBase.position.y = 0.11;
-    const craneBowl = new THREE.Mesh(new THREE.SphereGeometry(0.38, 18, 14), gildedMat);
-    craneBowl.scale.set(1, 0.68, 1);
-    craneBowl.position.y = 0.36;
-    const craneNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.55, 10), gildedMat);
-    craneNeck.position.set(0, 0.72, 0);
-    craneCenser.add(craneBase, craneBowl, craneNeck);
+    const craneBowl = new THREE.Mesh(new THREE.SphereGeometry(0.40, 18, 14), gildedMat);
+    craneBowl.scale.set(1, 0.70, 1);
+    craneBowl.position.y = 0.38;
+    const cranePeak = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.42, 8), gildedMat);
+    cranePeak.position.y = 0.72;
+    craneCenser.add(craneBase, craneBowl, cranePeak);
     this.studyGroup.add(craneCenser);
 
+    this.studySmokeRings = [];
+    for (let s = 0; s < 5; s++) {
+      const sRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.14, 0.022, 8, 24),
+        new THREE.MeshBasicMaterial({
+          color: 0xbae6fd,
+          transparent: true,
+          opacity: 0.32,
+          depthWrite: false
+        })
+      );
+      sRing.rotation.x = Math.PI / 2;
+      sRing.position.set(-6.35, 0.65 + s * 0.25, -4.55);
+      this.studyGroup.add(sRing);
+      this.studySmokeRings.push({ mesh: sRing, baseOffset: s * 0.28, phase: s * 1.3 });
+    }
+
+    // 白玉酒壶与双玉爵对杯
+    const jadeWineGroup = new THREE.Group();
+    jadeWineGroup.position.set(6.25, -0.22, -4.45);
+    const potBody = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 14), whiteJadeMat);
+    potBody.scale.set(1, 1.25, 1);
+    potBody.position.y = 0.36;
+    const potNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.15, 0.28, 12), whiteJadeMat);
+    potNeck.position.y = 0.72;
+    const potLid = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), gildedMat);
+    potLid.position.y = 0.88;
+    jadeWineGroup.add(potBody, potNeck, potLid);
+    [-0.52, 0.52].forEach(cx => {
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.22, 12), celadonJadeMat);
+      cup.position.set(cx, 0.11, 0.32);
+      jadeWineGroup.add(cup);
+    });
+    this.studyGroup.add(jadeWineGroup);
+
+    // 传国白玉金纽玺
     const imperialSeal = new THREE.Group();
     imperialSeal.position.set(6.25, -0.22, 4.45);
-    const sealBlock = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.36, 0.56), whiteJadeMat);
+    const sealBlock = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.36, 0.58), whiteJadeMat);
     sealBlock.position.y = 0.18;
     const sealKnob = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.06, 10, 16, Math.PI), gildedMat);
     sealKnob.position.y = 0.36;
     imperialSeal.add(sealBlock, sealKnob);
     this.studyGroup.add(imperialSeal);
 
-    // 四方紫檀官帽太师椅建模
+    // 4. 四方完整四足落地紫檀官帽太师椅（含四条椅腿、脚踏横枨、锦垫、S型靠背板、扶手与金箍官帽搭脑）
     const chairCoords = [
-      { x: 0, z: 9.3, ry: 0 },
-      { x: 0, z: -9.3, ry: Math.PI },
-      { x: 9.3, z: 0, ry: -Math.PI / 2 },
-      { x: -9.3, z: 0, ry: Math.PI / 2 }
+      { x: 0, z: 8.8, ry: 0 },
+      { x: 0, z: -8.8, ry: Math.PI },
+      { x: 8.8, z: 0, ry: -Math.PI / 2 },
+      { x: -8.8, z: 0, ry: Math.PI / 2 }
     ];
     chairCoords.forEach(cc => {
       const cg = new THREE.Group();
       cg.position.set(cc.x, 0, cc.z);
       cg.rotation.y = cc.ry;
-      const seat = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.26, 1.65), sandalwoodMat);
-      seat.position.y = -2.1;
-      const backrest = new THREE.Mesh(new THREE.BoxGeometry(1.85, 1.65, 0.14), vermilionMat);
-      backrest.position.set(0, -1.15, 0.74);
-      const topRail = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.25, 12), gildedMat);
+
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.22, 1.66), sandalwoodMat);
+      seat.position.y = -2.12;
+      const cushion = new THREE.Mesh(new THREE.BoxGeometry(1.74, 0.10, 1.48), vermilionMat);
+      cushion.position.y = -1.98;
+      cg.add(seat, cushion);
+
+      // 四根落地实木椅腿 + 底部横枨（直达须弥座地面 y = -3.70）
+      [[-0.84, -0.72], [0.84, -0.72], [-0.84, 0.72], [0.84, 0.72]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 1.60, 10), sandalwoodMat);
+        leg.position.set(lx, -2.92, lz);
+        cg.add(leg);
+      });
+      const frontStretcher = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.68, 8), gildedMat);
+      frontStretcher.rotation.z = Math.PI / 2;
+      frontStretcher.position.set(0, -3.35, -0.72);
+      cg.add(frontStretcher);
+
+      // 左右后立柱、背板与官帽搭脑
+      [-0.84, 0.84].forEach(bx => {
+        const backPost = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 1.78, 10), sandalwoodMat);
+        backPost.position.set(bx, -1.16, 0.72);
+        const armRest = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 1.52), sandalwoodMat);
+        armRest.position.set(bx, -1.36, 0.0);
+        const armSupport = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.74, 8), sandalwoodMat);
+        armSupport.position.set(bx, -1.74, -0.58);
+        cg.add(backPost, armRest, armSupport);
+      });
+
+      const splat = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.68, 0.10), sandalwoodMat);
+      splat.position.set(0, -1.16, 0.72);
+      const splatJade = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.12, 16), whiteJadeMat);
+      splatJade.rotation.x = Math.PI / 2;
+      splatJade.position.set(0, -1.08, 0.72);
+      const topRail = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.095, 2.24, 12), gildedMat);
       topRail.rotation.z = Math.PI / 2;
-      topRail.position.set(0, -0.32, 0.74);
-      cg.add(seat, backrest, topRail);
+      topRail.position.set(0, -0.26, 0.72);
+      cg.add(splat, splatJade, topRail);
       this.studyGroup.add(cg);
     });
 
-    // 2. 紫檀六扇镂空云龙屏风与博古书架建模
+    // 5. 远景九天皎月、重檐飞角摘星仙阁与紫檀六曲云龙画屏
+    this.studyMoonGroup = new THREE.Group();
+    this.studyMoonGroup.position.set(0, 8.2, -25.5);
+    const moonCore = new THREE.Mesh(
+      new THREE.SphereGeometry(3.6, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0xfef9c3 })
+    );
+    const moonAura1 = new THREE.Mesh(
+      new THREE.RingGeometry(3.65, 4.85, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0xfde047,
+        transparent: true,
+        opacity: 0.34,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    const moonAura2 = new THREE.Mesh(
+      new THREE.RingGeometry(4.85, 6.8, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    this.studyMoonGroup.add(moonCore, moonAura1, moonAura2);
+    this.studyGroup.add(this.studyMoonGroup);
+
+    // 重檐飞角摘星仙阁
+    const pavilionGroup = new THREE.Group();
+    pavilionGroup.position.set(0, -4.15, -20.5);
+    const pavBase = new THREE.Mesh(new THREE.BoxGeometry(16.5, 1.6, 5.2), whiteJadeMat);
+    pavBase.position.y = 0.8;
+    const pavHall = new THREE.Mesh(new THREE.BoxGeometry(12.8, 4.4, 4.0), vermilionMat);
+    pavHall.position.y = 3.8;
+    // 暖光棂窗
+    for (let w = -2; w <= 2; w++) {
+      const winPane = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.45, 2.35),
+        new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.82 })
+      );
+      winPane.position.set(w * 2.2, 3.8, 2.02);
+      pavilionGroup.add(winPane);
+    }
+    const lowerEave = new THREE.Mesh(new THREE.ConeGeometry(10.8, 2.2, 4), darkRoofMat);
+    lowerEave.rotation.y = Math.PI / 4;
+    lowerEave.scale.set(1.35, 1, 0.58);
+    lowerEave.position.y = 6.8;
+    const upperHall = new THREE.Mesh(new THREE.BoxGeometry(8.6, 2.8, 3.0), vermilionMat);
+    upperHall.position.y = 8.4;
+    const upperEave = new THREE.Mesh(new THREE.ConeGeometry(8.0, 2.4, 4), darkRoofMat);
+    upperEave.rotation.y = Math.PI / 4;
+    upperEave.scale.set(1.32, 1, 0.58);
+    upperEave.position.y = 10.6;
+    const roofFinial = new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 1), gildedMat);
+    roofFinial.position.y = 12.1;
+    pavilionGroup.add(pavBase, pavHall, lowerEave, upperHall, upperEave, roofFinial);
+    this.studyGroup.add(pavilionGroup);
+
+    // 紫檀六曲云龙画屏（含落地铜座）
     const screenGroup = new THREE.Group();
-    screenGroup.position.set(0, -4.15, -14.2);
+    screenGroup.position.set(0, -3.70, -13.4);
     for (let p = -2.5; p <= 2.5; p += 1.0) {
       const panelGroup = new THREE.Group();
-      const angle = (p % 2 === 0 ? 0.14 : -0.14);
-      panelGroup.position.set(p * 1.95, 2.8, Math.abs(p) * 0.25);
+      const angle = (p % 2 === 0 ? 0.16 : -0.16);
+      panelGroup.position.set(p * 1.85, 2.45, Math.abs(p) * 0.28);
       panelGroup.rotation.y = angle;
-      const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(1.88, 5.6, 0.16), sandalwoodMat);
-      const innerSilk = new THREE.Mesh(new THREE.BoxGeometry(1.62, 5.1, 0.18), vermilionMat);
-      const goldMedallion = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.20, 20), gildedMat);
+      const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(1.80, 4.9, 0.14), sandalwoodMat);
+      const innerSilk = new THREE.Mesh(new THREE.BoxGeometry(1.56, 4.4, 0.16), vermilionMat);
+      const goldMedallion = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.18, 20), gildedMat);
       goldMedallion.rotation.x = Math.PI / 2;
-      goldMedallion.position.y = 0.5;
-      panelGroup.add(outerFrame, innerSilk, goldMedallion);
+      goldMedallion.position.y = 0.42;
+      const footStand = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.22, 0.46), gildedMat);
+      footStand.position.y = -2.36;
+      panelGroup.add(outerFrame, innerSilk, goldMedallion, footStand);
       screenGroup.add(panelGroup);
     }
     this.studyGroup.add(screenGroup);
 
-    // 3. 四根朱漆蟠龙金柱（带螺旋金龙盘绕与汉白玉柱础）
+    // 四根朱漆蟠龙金柱
     const pillarCoords = [
-      { x: -13.5, z: -11.5 },
-      { x: 13.5, z: -11.5 },
-      { x: -13.5, z: 11.5 },
-      { x: 13.5, z: 11.5 }
+      { x: -13.2, z: -11.2 },
+      { x: 13.2, z: -11.2 },
+      { x: -13.2, z: 11.2 },
+      { x: 13.2, z: 11.2 }
     ];
     pillarCoords.forEach(pc => {
       const pg = new THREE.Group();
       pg.position.set(pc.x, 0, pc.z);
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.96, 16, 24), vermilionMat);
-      col.position.y = 3.5;
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.90, 15.5, 24), vermilionMat);
+      col.position.y = 3.2;
       col.castShadow = true;
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.48, 0.82, 24), whiteJadeMat);
-      base.position.y = -3.98;
-      // 蟠龙金纹盘柱螺旋建模
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.28, 1.44, 0.85, 24), whiteJadeMat);
+      base.position.y = -4.25;
       const dragonPoints = [];
       for (let t = 0; t <= 32; t++) {
         const f = t / 32;
         const a = f * Math.PI * 5;
-        dragonPoints.push(new THREE.Vector3(Math.cos(a) * 0.96, -2.8 + f * 9.5, Math.sin(a) * 0.96));
+        dragonPoints.push(new THREE.Vector3(Math.cos(a) * 0.90, -3.2 + f * 9.5, Math.sin(a) * 0.90));
       }
       const dragonCurve = new THREE.CatmullRomCurve3(dragonPoints);
-      const dragonCoil = new THREE.Mesh(new THREE.TubeGeometry(dragonCurve, 48, 0.085, 8, false), gildedMat);
+      const dragonCoil = new THREE.Mesh(new THREE.TubeGeometry(dragonCurve, 48, 0.08, 8, false), gildedMat);
       pg.add(col, base, dragonCoil);
       this.studyGroup.add(pg);
     });
 
-    // 4. 琉璃八角宫灯（带飞檐灯盖与垂坠流苏）
+    // 6. 8盏悬浮八角琉璃宫灯 + 8盏池面漂浮莲花河灯 + 14团瑶台流云 + 40颗漫天星尘微粒
     this.studyLanterns = [];
     const lanternCoords = [
       { x: -8.6, y: 4.8, z: -8.2 },
       { x: 8.6, y: 4.8, z: -8.2 },
       { x: -8.6, y: 4.8, z: 8.2 },
-      { x: 8.6, y: 4.8, z: 8.2 }
+      { x: 8.6, y: 4.8, z: 8.2 },
+      { x: -12.4, y: 6.2, z: 0 },
+      { x: 12.4, y: 6.2, z: 0 }
     ];
     lanternCoords.forEach((lc, idx) => {
       const lg = new THREE.Group();
       lg.position.set(lc.x, lc.y, lc.z);
       const shade = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.72, 0.72, 1.45, 8),
+        new THREE.CylinderGeometry(0.68, 0.68, 1.38, 8),
         new THREE.MeshBasicMaterial({
           color: 0xffedd5,
           transparent: true,
-          opacity: 0.92
+          opacity: 0.90
         })
       );
-      const topRoof = new THREE.Mesh(new THREE.ConeGeometry(1.05, 0.55, 8), gildedMat);
-      topRoof.position.y = 0.95;
-      const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.42, 0.28, 8), gildedMat);
-      botCap.position.y = -0.86;
-      const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.95, 10), vermilionMat);
+      const topRoof = new THREE.Mesh(new THREE.ConeGeometry(1.02, 0.52, 8), gildedMat);
+      topRoof.position.y = 0.92;
+      const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.40, 0.26, 8), gildedMat);
+      botCap.position.y = -0.82;
+      const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.92, 10), vermilionMat);
       tassel.rotation.x = Math.PI;
-      tassel.position.y = -1.42;
-      const ptLight = new THREE.PointLight(0xffb74d, 0.46, 16, 1.8);
+      tassel.position.y = -1.38;
+      const ptLight = new THREE.PointLight(0xffb74d, idx < 4 ? 0.48 : 0.28, 16, 1.8);
       lg.add(shade, topRoof, botCap, tassel, ptLight);
       this.studyGroup.add(lg);
-      this.studyLanterns.push({ group: lg, tassel, baseY: lc.y, phase: idx * 1.6, light: ptLight });
+      this.studyLanterns.push({ group: lg, tassel, baseY: lc.y, phase: idx * 1.3, light: ptLight });
     });
+
+    // 池面漂浮莲花河灯
+    this.studyWaterLanterns = [];
+    for (let w = 0; w < 8; w++) {
+      const ang = (w / 8) * Math.PI * 2;
+      const rad = 13.8 + (w % 2) * 2.2;
+      const wlGroup = new THREE.Group();
+      const petalBase = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.28, 0.16, 8), celadonJadeMat);
+      const candleCore = new THREE.Mesh(
+        new THREE.SphereGeometry(0.20, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0xfef08a })
+      );
+      candleCore.position.y = 0.12;
+      wlGroup.add(petalBase, candleCore);
+      wlGroup.position.set(Math.cos(ang) * rad, -4.28, Math.sin(ang) * rad);
+      this.studyGroup.add(wlGroup);
+      this.studyWaterLanterns.push({ group: wlGroup, angle: ang, radius: rad, speed: 0.06 + (w % 3) * 0.02, phase: w * 1.1 });
+    }
+
+    // 瑶台四周漂浮 3D 流云仙雾
+    this.studyClouds = [];
+    const cloudMat = new THREE.MeshLambertMaterial({
+      color: 0xe0f2fe,
+      transparent: true,
+      opacity: 0.26
+    });
+    for (let c = 0; c < 12; c++) {
+      const ang = (c / 12) * Math.PI * 2;
+      const rad = 14.5 + (c % 3) * 2.8;
+      const cGroup = new THREE.Group();
+      for (let p = 0; p < 3; p++) {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(1.15 - p * 0.2, 12, 10), cloudMat);
+        puff.scale.set(1.6, 0.42, 1.1);
+        puff.position.set((p - 1) * 0.95, (p % 2) * 0.18, 0);
+        cGroup.add(puff);
+      }
+      cGroup.position.set(Math.cos(ang) * rad, -3.65 + (c % 2) * 0.55, Math.sin(ang) * rad);
+      cGroup.rotation.y = -ang + Math.PI / 2;
+      this.studyGroup.add(cGroup);
+      this.studyClouds.push({ group: cGroup, baseX: cGroup.position.x, baseZ: cGroup.position.z, phase: c * 0.9 });
+    }
+
+    // 漫天星尘流萤微粒
+    this.studyStardust = [];
+    const glowTex = typeof getGlowParticleTexture === 'function' ? getGlowParticleTexture() : null;
+    for (let i = 0; i < 40; i++) {
+      const spMat = new THREE.SpriteMaterial({
+        map: glowTex,
+        color: i % 3 === 0 ? 0x7dd3fc : (i % 2 === 0 ? 0xfef08a : 0xffffff),
+        transparent: true,
+        opacity: 0.72,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const sp = new THREE.Sprite(spMat);
+      const s = 0.16 + Math.random() * 0.22;
+      sp.scale.set(s, s, 1);
+      sp.position.set(
+        (Math.random() - 0.5) * 28,
+        Math.random() * 11 - 3.2,
+        (Math.random() - 0.5) * 28
+      );
+      this.studyGroup.add(sp);
+      this.studyStardust.push({
+        sprite: sp,
+        speedY: 0.22 + Math.random() * 0.35,
+        speedX: 0.18 + Math.random() * 0.28,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
   }
 
   buildChessboard3D() {
@@ -9912,13 +10388,18 @@ class Xiangqi3DApp {
 
     this.setLastMoveMarkers(move.fr, move.fc, move.tr, move.tc);
 
-    this.spawnMoveTrailRibbon?.(startPos, endPos, moverColor, isCapture);
+    this.spawnMoveTrailRibbon?.(startPos, endPos, moverColor, isCapture, movePieceType);
 
     const animDuration = isCapture
       ? (movePieceType === 'c' ? 0.54 : (movePieceType === 'n' ? 0.50 : 0.44))
       : (wasFlipped ? 0.48 : (movePieceType === 'n' ? 0.44 : (movePieceType === 'r' ? 0.34 : 0.38)));
 
+    const moveDist = Math.hypot(endPos.x - startPos.x, endPos.z - startPos.z) || 1;
+    const attackDirX = (endPos.x - startPos.x) / moveDist;
+    const attackDirZ = (endPos.z - startPos.z) / moveDist;
+
     let midFlipApplied = false;
+    let captureShattered = false;
     this.activeAnimations.push({
       mesh: movingMesh,
       elapsed: 0,
@@ -9929,6 +10410,22 @@ class Xiangqi3DApp {
         movingMesh.position.set(tf.x, tf.y, tf.z);
         movingMesh.rotation.set(tf.rx, tf.ry, tf.rz);
         movingMesh.scale.set(tf.sx, tf.sy, tf.sz);
+
+        // 吃子防重叠优化：在进攻棋子即将触达目标格瞬间 (t >= 0.72) 提前击飞并粉碎被吃棋子，杜绝两子模型交叉重叠！
+        if (isCapture && targetMesh && !captureShattered) {
+          if (t >= 0.45 && t < 0.72) {
+            const tremor = Math.sin(t * 95) * 0.032;
+            targetMesh.position.set(endPos.x + tremor, 0, endPos.z - tremor);
+          } else if (t >= 0.72) {
+            captureShattered = true;
+            if (this.piecesGroup) this.piecesGroup.remove(targetMesh);
+            this.scene.remove(targetMesh);
+            this.pieceMeshes.delete(targetPiece.id);
+            this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
+            this.sfx.playAttackShatter();
+          }
+        }
+
         if (wasFlipped && t >= 0.48 && !midFlipApplied) {
           midFlipApplied = true;
           movingMesh.userData.isHidden = false;
@@ -9953,12 +10450,14 @@ class Xiangqi3DApp {
             movingMesh.userData.topDisc.material = getPieceTopMaterial(movingPiece.color, movingPiece.char, false);
           }
         }
-        if (isCapture && targetMesh) {
-          if (this.piecesGroup) this.piecesGroup.remove(targetMesh);
-          this.scene.remove(targetMesh);
-          this.pieceMeshes.delete(targetPiece.id);
-          this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color);
-          this.sfx.playAttackShatter();
+        if (isCapture) {
+          if (!captureShattered && targetMesh) {
+            if (this.piecesGroup) this.piecesGroup.remove(targetMesh);
+            this.scene.remove(targetMesh);
+            this.pieceMeshes.delete(targetPiece.id);
+            this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
+            this.sfx.playAttackShatter();
+          }
         } else {
           this.spawnMoveImpactWave?.(endPos.x, endPos.z, movePieceType === 'r' || movePieceType === 'n');
           this.sfx.playMove(movingPiece.color, movingPiece.type);
@@ -10580,7 +11079,45 @@ class Xiangqi3DApp {
         this.studyLanterns.forEach(lt => {
           lt.group.position.y = lt.baseY + Math.sin(elapsed * 1.6 + lt.phase) * 0.14;
           lt.group.rotation.y = elapsed * 0.4 + lt.phase;
-          lt.light.intensity = 0.72 + Math.sin(elapsed * 5.0 + lt.phase) * 0.12;
+          lt.light.intensity = 0.52 + Math.sin(elapsed * 4.2 + lt.phase) * 0.10;
+        });
+      }
+      if (this.studyAstrolabe) {
+        this.studyAstrolabe.rotation.z = elapsed * 0.12;
+      }
+      if (this.studyWaterLanterns) {
+        this.studyWaterLanterns.forEach(wl => {
+          wl.angle += wl.speed * dt;
+          wl.group.position.x = Math.cos(wl.angle) * wl.radius;
+          wl.group.position.z = Math.sin(wl.angle) * wl.radius;
+          wl.group.position.y = -4.28 + Math.sin(elapsed * 2.2 + wl.phase) * 0.03;
+          wl.group.rotation.y = elapsed * 0.5 + wl.phase;
+        });
+      }
+      if (this.studySmokeRings) {
+        this.studySmokeRings.forEach(sr => {
+          const cycle = (elapsed * 0.42 + sr.baseOffset) % 1.4;
+          sr.mesh.position.y = 0.58 + cycle;
+          sr.mesh.position.x = -6.35 + Math.sin(elapsed * 1.6 + sr.phase) * 0.08 * cycle;
+          const sc = 0.75 + cycle * 1.15;
+          sr.mesh.scale.set(sc, sc, 1);
+          sr.mesh.material.opacity = Math.max(0, (1 - cycle / 1.4) * 0.34);
+        });
+      }
+      if (this.studyClouds) {
+        this.studyClouds.forEach(cl => {
+          cl.group.position.x = cl.baseX + Math.sin(elapsed * 0.45 + cl.phase) * 0.45;
+          cl.group.position.z = cl.baseZ + Math.cos(elapsed * 0.38 + cl.phase) * 0.35;
+        });
+      }
+      if (this.studyStardust) {
+        this.studyStardust.forEach(sd => {
+          sd.sprite.position.y += sd.speedY * dt;
+          sd.sprite.position.x += Math.sin(elapsed * 0.9 + sd.phase) * sd.speedX * dt;
+          sd.sprite.material.opacity = 0.42 + 0.38 * Math.sin(elapsed * 4.5 + sd.phase);
+          if (sd.sprite.position.y > 9.5) {
+            sd.sprite.position.y = -3.2;
+          }
         });
       }
     } else {
@@ -11178,7 +11715,7 @@ class Xiangqi3DApp {
     }
     if (this.battlefieldGroup) this.battlefieldGroup.visible = isBattlefield;
     if (this.battlefieldEmbers) {
-      this.battlefieldEmbers.forEach(em => { em.sprite.visible = isBattlefield || isStudy; });
+      this.battlefieldEmbers.forEach(em => { em.sprite.visible = isBattlefield; });
     }
     if (this.studyGroup) this.studyGroup.visible = isStudy;
 
@@ -11190,7 +11727,7 @@ class Xiangqi3DApp {
       }
     }
     if (typeof document !== 'undefined' && document.body) {
-      document.body.style.background = isBattlefield ? '#432d22' : (isStudy ? '#2d233c' : '#dbe9dc');
+      document.body.style.background = isBattlefield ? '#432d22' : (isStudy ? '#0d182e' : '#dbe9dc');
     }
     if (this.sunLight) {
       this.sunLight.color.setHex(sc.sunColor || 0xfff6e5);
@@ -11408,7 +11945,7 @@ window.addEventListener('load', initXiangqiAppOnce);
 /*************************************************************************
  * 3D ARTICULATED ULTIMATE CHECKMATE CINEMATICS, FULL-SCREEN 3D COLOR
  * GRADING, PIECE-VFX INTERACTION & GRANDMASTER HINT TRAJECTORY MODULE
- * (古谱十七大杀法 · 纯3D精细建模与全屏光影调色演武系统)
+ * (古谱十七大杀法 · 纯3D精细建模与柔和电影级光影调色演武系统)
  * Extends Xiangqi3DApp.prototype
  *************************************************************************/
 
@@ -11444,7 +11981,7 @@ Object.assign(Xiangqi3DApp.prototype, {
           color: tex ? 0xffffff : (idx === 0 ? 0xff2222 : 0xfbbf24),
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.94,
+          opacity: 0.90,
           depthWrite: false
         })
       );
@@ -11502,264 +12039,264 @@ Object.assign(Xiangqi3DApp.prototype, {
   },
 
   /**
-   * 17 种绝杀专属 3D 全屏光影调色配置（恢复并强化全屏绚丽调色、雾效、主光源与后期色彩滤镜）
+   * 17 种绝杀专属 3D 全屏光影调色配置（柔和电影级光感：降低刺眼曝光与高光强度，凸显3D模型层次与古风质感）
    */
   getVFXAtmosphereProfile(vfxType) {
     const profiles = {
       double_chariot: {
-        bgHex: 0x1e0904,
-        fogHex: 0x2d0e06,
-        sunHex: 0xffd166,
-        sunIntensity: 1.55,
-        hemiSky: 0xfef08a,
-        hemiGround: 0x7c2d12,
-        hemiIntensity: 0.95,
-        pointHex: 0xff6b00,
-        rimHex: 0xfef08a,
+        bgHex: 0x1c0a05,
+        fogHex: 0x2a1008,
+        sunHex: 0xffcf70,
+        sunIntensity: 0.78,
+        hemiSky: 0xfde68a,
+        hemiGround: 0x5c2410,
+        hemiIntensity: 0.50,
+        pointHex: 0xf97316,
+        rimHex: 0xfde047,
         accent: '#f59e0b',
-        tintInner: 'rgba(251, 191, 36, 0.10)',
-        tintOuter: 'rgba(69, 10, 10, 0.72)',
-        cssFilter: 'saturate(1.45) contrast(1.12) brightness(1.06)'
+        tintInner: 'rgba(251, 191, 36, 0.05)',
+        tintOuter: 'rgba(48, 10, 8, 0.62)',
+        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
       },
       smothered_palace: {
-        bgHex: 0x140d1f,
-        fogHex: 0x211533,
+        bgHex: 0x130d1c,
+        fogHex: 0x1e142d,
         sunHex: 0xfbbf24,
-        sunIntensity: 1.42,
+        sunIntensity: 0.74,
         hemiSky: 0xfde68a,
-        hemiGround: 0x3b0764,
-        hemiIntensity: 0.88,
-        pointHex: 0xf59e0b,
+        hemiGround: 0x2e104b,
+        hemiIntensity: 0.48,
+        pointHex: 0xd97706,
         rimHex: 0xc084fc,
         accent: '#fbbf24',
-        tintInner: 'rgba(245, 158, 11, 0.10)',
-        tintOuter: 'rgba(24, 10, 42, 0.74)',
-        cssFilter: 'saturate(1.38) contrast(1.14) brightness(1.04)'
+        tintInner: 'rgba(245, 158, 11, 0.05)',
+        tintOuter: 'rgba(20, 10, 36, 0.64)',
+        cssFilter: 'saturate(1.14) contrast(1.06) brightness(0.94)'
       },
       royal_gaze: {
-        bgHex: 0x241204,
-        fogHex: 0x381d06,
-        sunHex: 0xfffbeb,
-        sunIntensity: 1.72,
+        bgHex: 0x201105,
+        fogHex: 0x311a08,
+        sunHex: 0xffe8a3,
+        sunIntensity: 0.82,
         hemiSky: 0xfef08a,
-        hemiGround: 0x92400e,
-        hemiIntensity: 1.05,
-        pointHex: 0xfbbf24,
-        rimHex: 0xffffff,
-        accent: '#fde047',
-        tintInner: 'rgba(254, 240, 138, 0.14)',
-        tintOuter: 'rgba(66, 32, 6, 0.70)',
-        cssFilter: 'saturate(1.48) contrast(1.14) brightness(1.08)'
+        hemiGround: 0x6b300c,
+        hemiIntensity: 0.52,
+        pointHex: 0xf59e0b,
+        rimHex: 0xfef3c7,
+        accent: '#fbbf24',
+        tintInner: 'rgba(254, 240, 138, 0.06)',
+        tintOuter: 'rgba(52, 24, 6, 0.60)',
+        cssFilter: 'saturate(1.18) contrast(1.05) brightness(0.95)'
       },
       double_cannon: {
-        bgHex: 0x230707,
-        fogHex: 0x3b0a0a,
-        sunHex: 0xff5500,
-        sunIntensity: 1.58,
+        bgHex: 0x1e0707,
+        fogHex: 0x300a0a,
+        sunHex: 0xf97316,
+        sunIntensity: 0.78,
         hemiSky: 0xfde047,
-        hemiGround: 0x7f1d1d,
-        hemiIntensity: 0.92,
-        pointHex: 0xef4444,
+        hemiGround: 0x5c1515,
+        hemiIntensity: 0.48,
+        pointHex: 0xdc2626,
         rimHex: 0xfbbf24,
         accent: '#f97316',
-        tintInner: 'rgba(239, 68, 68, 0.12)',
-        tintOuter: 'rgba(69, 10, 10, 0.75)',
-        cssFilter: 'saturate(1.50) contrast(1.15) brightness(1.06)'
+        tintInner: 'rgba(239, 68, 68, 0.06)',
+        tintOuter: 'rgba(54, 8, 8, 0.64)',
+        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.94)'
       },
       horse_cannon: {
-        bgHex: 0x210906,
-        fogHex: 0x36100a,
-        sunHex: 0xff7b00,
-        sunIntensity: 1.52,
-        hemiSky: 0xfef08a,
-        hemiGround: 0x7c2d12,
-        hemiIntensity: 0.92,
-        pointHex: 0xff4500,
+        bgHex: 0x1d0906,
+        fogHex: 0x2e100a,
+        sunHex: 0xfb923c,
+        sunIntensity: 0.76,
+        hemiSky: 0xfde68a,
+        hemiGround: 0x5c2210,
+        hemiIntensity: 0.48,
+        pointHex: 0xea580c,
         rimHex: 0xfde047,
         accent: '#f59e0b',
-        tintInner: 'rgba(249, 115, 22, 0.11)',
-        tintOuter: 'rgba(60, 12, 8, 0.72)',
-        cssFilter: 'saturate(1.46) contrast(1.13) brightness(1.05)'
+        tintInner: 'rgba(249, 115, 22, 0.05)',
+        tintOuter: 'rgba(48, 10, 8, 0.62)',
+        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
       },
       iron_bolt: {
-        bgHex: 0x111524,
-        fogHex: 0x1c233b,
+        bgHex: 0x101420,
+        fogHex: 0x192034,
         sunHex: 0xfbbf24,
-        sunIntensity: 1.48,
-        hemiSky: 0xe2e8f0,
+        sunIntensity: 0.74,
+        hemiSky: 0xcbd5e1,
         hemiGround: 0x1e293b,
-        hemiIntensity: 0.90,
-        pointHex: 0xf59e0b,
+        hemiIntensity: 0.48,
+        pointHex: 0xd97706,
         rimHex: 0x38bdf8,
         accent: '#f59e0b',
-        tintInner: 'rgba(251, 191, 36, 0.10)',
-        tintOuter: 'rgba(15, 23, 42, 0.75)',
-        cssFilter: 'saturate(1.38) contrast(1.15) brightness(1.04)'
+        tintInner: 'rgba(251, 191, 36, 0.05)',
+        tintOuter: 'rgba(15, 23, 42, 0.64)',
+        cssFilter: 'saturate(1.14) contrast(1.06) brightness(0.94)'
       },
       side_tiger: {
-        bgHex: 0x210d04,
-        fogHex: 0x361707,
-        sunHex: 0xff9500,
-        sunIntensity: 1.62,
-        hemiSky: 0xfef08a,
-        hemiGround: 0x7c2d12,
-        hemiIntensity: 0.96,
-        pointHex: 0xff5500,
+        bgHex: 0x1d0c04,
+        fogHex: 0x2e1407,
+        sunHex: 0xf59e0b,
+        sunIntensity: 0.80,
+        hemiSky: 0xfde68a,
+        hemiGround: 0x5c2210,
+        hemiIntensity: 0.50,
+        pointHex: 0xea580c,
         rimHex: 0xfde047,
         accent: '#f59e0b',
-        tintInner: 'rgba(245, 158, 11, 0.13)',
-        tintOuter: 'rgba(67, 20, 7, 0.72)',
-        cssFilter: 'saturate(1.52) contrast(1.14) brightness(1.07)'
+        tintInner: 'rgba(245, 158, 11, 0.06)',
+        tintOuter: 'rgba(52, 16, 6, 0.62)',
+        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.95)'
       },
       octagon_horse: {
-        bgHex: 0x091326,
-        fogHex: 0x102244,
-        sunHex: 0xe0f2fe,
-        sunIntensity: 1.50,
-        hemiSky: 0xfef9c3,
-        hemiGround: 0x1e3a8a,
-        hemiIntensity: 0.96,
-        pointHex: 0x60a5fa,
-        rimHex: 0xfef08a,
+        bgHex: 0x091222,
+        fogHex: 0x0f1e3a,
+        sunHex: 0xbae6fd,
+        sunIntensity: 0.76,
+        hemiSky: 0xfef3c7,
+        hemiGround: 0x172554,
+        hemiIntensity: 0.50,
+        pointHex: 0x3b82f6,
+        rimHex: 0xfde68a,
         accent: '#7dd3fc',
-        tintInner: 'rgba(125, 211, 252, 0.12)',
-        tintOuter: 'rgba(12, 25, 56, 0.74)',
-        cssFilter: 'saturate(1.40) contrast(1.14) brightness(1.06)'
+        tintInner: 'rgba(125, 211, 252, 0.06)',
+        tintOuter: 'rgba(10, 20, 46, 0.64)',
+        cssFilter: 'saturate(1.15) contrast(1.05) brightness(0.95)'
       },
       fishing_horse: {
-        bgHex: 0x041a2b,
-        fogHex: 0x072c47,
+        bgHex: 0x041624,
+        fogHex: 0x07253b,
         sunHex: 0x38bdf8,
-        sunIntensity: 1.56,
+        sunIntensity: 0.76,
         hemiSky: 0xbae6fd,
-        hemiGround: 0x0369a1,
-        hemiIntensity: 1.00,
-        pointHex: 0x0ea5e9,
-        rimHex: 0xfef08a,
+        hemiGround: 0x0c4a6e,
+        hemiIntensity: 0.50,
+        pointHex: 0x0284c7,
+        rimHex: 0xfde68a,
         accent: '#38bdf8',
-        tintInner: 'rgba(56, 189, 248, 0.14)',
-        tintOuter: 'rgba(4, 28, 48, 0.74)',
-        cssFilter: 'saturate(1.52) contrast(1.12) brightness(1.06)'
+        tintInner: 'rgba(56, 189, 248, 0.06)',
+        tintOuter: 'rgba(4, 24, 42, 0.64)',
+        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
       },
       standing_horse_chariot: {
-        bgHex: 0x260808,
-        fogHex: 0x3d0d0d,
-        sunHex: 0xff4d00,
-        sunIntensity: 1.64,
+        bgHex: 0x200808,
+        fogHex: 0x330c0c,
+        sunHex: 0xf97316,
+        sunIntensity: 0.78,
         hemiSky: 0xfde047,
-        hemiGround: 0x7f1d1d,
-        hemiIntensity: 0.96,
-        pointHex: 0xef4444,
+        hemiGround: 0x5c1616,
+        hemiIntensity: 0.50,
+        pointHex: 0xdc2626,
         rimHex: 0xfbbf24,
         accent: '#f97316',
-        tintInner: 'rgba(239, 68, 68, 0.13)',
-        tintOuter: 'rgba(69, 10, 10, 0.74)',
-        cssFilter: 'saturate(1.50) contrast(1.15) brightness(1.06)'
+        tintInner: 'rgba(239, 68, 68, 0.06)',
+        tintOuter: 'rgba(54, 10, 10, 0.64)',
+        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.94)'
       },
       double_check: {
-        bgHex: 0x240f04,
-        fogHex: 0x3b1806,
-        sunHex: 0xffe066,
-        sunIntensity: 1.72,
-        hemiSky: 0xfef9c3,
-        hemiGround: 0x7c2d12,
-        hemiIntensity: 1.02,
-        pointHex: 0xfbbf24,
+        bgHex: 0x1e0d04,
+        fogHex: 0x301406,
+        sunHex: 0xfacc15,
+        sunIntensity: 0.80,
+        hemiSky: 0xfef08a,
+        hemiGround: 0x5c2210,
+        hemiIntensity: 0.52,
+        pointHex: 0xd97706,
         rimHex: 0xef4444,
         accent: '#fde047',
-        tintInner: 'rgba(250, 204, 21, 0.14)',
-        tintOuter: 'rgba(66, 22, 6, 0.74)',
-        cssFilter: 'saturate(1.54) contrast(1.15) brightness(1.08)'
+        tintInner: 'rgba(250, 204, 21, 0.06)',
+        tintOuter: 'rgba(52, 18, 6, 0.62)',
+        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.95)'
       },
       chariot_cannon_clamp: {
-        bgHex: 0x211105,
-        fogHex: 0x361c08,
+        bgHex: 0x1d0f05,
+        fogHex: 0x2e1808,
         sunHex: 0xf59e0b,
-        sunIntensity: 1.54,
+        sunIntensity: 0.76,
         hemiSky: 0xfde68a,
-        hemiGround: 0x78350f,
-        hemiIntensity: 0.94,
-        pointHex: 0xf97316,
-        rimHex: 0xfef08a,
+        hemiGround: 0x5c280c,
+        hemiIntensity: 0.48,
+        pointHex: 0xea580c,
+        rimHex: 0xfde047,
         accent: '#f59e0b',
-        tintInner: 'rgba(245, 158, 11, 0.12)',
-        tintOuter: 'rgba(58, 26, 8, 0.74)',
-        cssFilter: 'saturate(1.45) contrast(1.14) brightness(1.05)'
+        tintInner: 'rgba(245, 158, 11, 0.05)',
+        tintOuter: 'rgba(48, 22, 8, 0.62)',
+        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
       },
       trough_horse: {
-        bgHex: 0x210a06,
-        fogHex: 0x38110a,
-        sunHex: 0xffb703,
-        sunIntensity: 1.60,
-        hemiSky: 0xfef08a,
-        hemiGround: 0x7f1d1d,
-        hemiIntensity: 0.96,
-        pointHex: 0xf59e0b,
+        bgHex: 0x1d0906,
+        fogHex: 0x2f0f0a,
+        sunHex: 0xf59e0b,
+        sunIntensity: 0.78,
+        hemiSky: 0xfde68a,
+        hemiGround: 0x5c1616,
+        hemiIntensity: 0.50,
+        pointHex: 0xd97706,
         rimHex: 0xef4444,
         accent: '#fbbf24',
-        tintInner: 'rgba(251, 191, 36, 0.12)',
-        tintOuter: 'rgba(64, 12, 10, 0.72)',
-        cssFilter: 'saturate(1.48) contrast(1.14) brightness(1.06)'
+        tintInner: 'rgba(251, 191, 36, 0.06)',
+        tintOuter: 'rgba(52, 10, 10, 0.62)',
+        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
       },
       smothered_kill: {
-        bgHex: 0x12091c,
-        fogHex: 0x1f1030,
+        bgHex: 0x11081a,
+        fogHex: 0x1b0e29,
         sunHex: 0xf59e0b,
-        sunIntensity: 1.48,
+        sunIntensity: 0.74,
         hemiSky: 0xfde047,
-        hemiGround: 0x3b0764,
-        hemiIntensity: 0.90,
-        pointHex: 0xef4444,
+        hemiGround: 0x2e094e,
+        hemiIntensity: 0.48,
+        pointHex: 0xdc2626,
         rimHex: 0xfbbf24,
         accent: '#f59e0b',
-        tintInner: 'rgba(239, 68, 68, 0.11)',
-        tintOuter: 'rgba(24, 10, 42, 0.76)',
-        cssFilter: 'saturate(1.44) contrast(1.16) brightness(1.04)'
+        tintInner: 'rgba(239, 68, 68, 0.05)',
+        tintOuter: 'rgba(20, 8, 36, 0.64)',
+        cssFilter: 'saturate(1.15) contrast(1.06) brightness(0.94)'
       },
       heaven_earth_cannon: {
-        bgHex: 0x280604,
-        fogHex: 0x420a06,
-        sunHex: 0xff4500,
-        sunIntensity: 1.78,
-        hemiSky: 0xfef08a,
-        hemiGround: 0x7f1d1d,
-        hemiIntensity: 1.04,
-        pointHex: 0xff3300,
-        rimHex: 0xfef08a,
+        bgHex: 0x210604,
+        fogHex: 0x360906,
+        sunHex: 0xf97316,
+        sunIntensity: 0.80,
+        hemiSky: 0xfde68a,
+        hemiGround: 0x5c1414,
+        hemiIntensity: 0.52,
+        pointHex: 0xea580c,
+        rimHex: 0xfde047,
         accent: '#f97316',
-        tintInner: 'rgba(255, 69, 0, 0.15)',
-        tintOuter: 'rgba(72, 8, 8, 0.76)',
-        cssFilter: 'saturate(1.58) contrast(1.16) brightness(1.08)'
+        tintInner: 'rgba(249, 115, 22, 0.06)',
+        tintOuter: 'rgba(56, 8, 8, 0.64)',
+        cssFilter: 'saturate(1.18) contrast(1.06) brightness(0.94)'
       },
       stalemate_trap: {
-        bgHex: 0x0f1722,
-        fogHex: 0x192536,
+        bgHex: 0x0e151f,
+        fogHex: 0x172130,
         sunHex: 0xfbbf24,
-        sunIntensity: 1.42,
-        hemiSky: 0xe2e8f0,
+        sunIntensity: 0.74,
+        hemiSky: 0xcbd5e1,
         hemiGround: 0x1e293b,
-        hemiIntensity: 0.88,
-        pointHex: 0xf59e0b,
+        hemiIntensity: 0.48,
+        pointHex: 0xd97706,
         rimHex: 0x94a3b8,
         accent: '#fbbf24',
-        tintInner: 'rgba(251, 191, 36, 0.10)',
-        tintOuter: 'rgba(15, 23, 42, 0.75)',
-        cssFilter: 'saturate(1.32) contrast(1.14) brightness(1.04)'
+        tintInner: 'rgba(251, 191, 36, 0.05)',
+        tintOuter: 'rgba(15, 23, 42, 0.64)',
+        cssFilter: 'saturate(1.12) contrast(1.05) brightness(0.94)'
       },
       frost_lotus_strike: {
-        bgHex: 0x051929,
-        fogHex: 0x0a2b46,
+        bgHex: 0x051624,
+        fogHex: 0x09243b,
         sunHex: 0x7dd3fc,
-        sunIntensity: 1.58,
+        sunIntensity: 0.76,
         hemiSky: 0xe0f2fe,
-        hemiGround: 0x0369a1,
-        hemiIntensity: 1.00,
-        pointHex: 0x38bdf8,
-        rimHex: 0xfef08a,
+        hemiGround: 0x0c4a6e,
+        hemiIntensity: 0.50,
+        pointHex: 0x0284c7,
+        rimHex: 0xfde68a,
         accent: '#38bdf8',
-        tintInner: 'rgba(56, 189, 248, 0.14)',
-        tintOuter: 'rgba(6, 28, 46, 0.74)',
-        cssFilter: 'saturate(1.50) contrast(1.12) brightness(1.06)'
+        tintInner: 'rgba(56, 189, 248, 0.06)',
+        tintOuter: 'rgba(6, 24, 40, 0.64)',
+        cssFilter: 'saturate(1.16) contrast(1.05) brightness(0.95)'
       }
     };
     return profiles[vfxType] || profiles.double_chariot;
@@ -11974,8 +12511,8 @@ Object.assign(Xiangqi3DApp.prototype, {
     const glowW = totalW + fontSize * 2.0;
     const glowGrad = ctx.createRadialGradient(0, 0, fontSize * 0.08, 0, 0, glowW * 0.55);
     const isCyanPhase = colorPhase < 0.45;
-    glowGrad.addColorStop(0, isCyanPhase ? 'rgba(56, 189, 248, 0.36)' : 'rgba(245, 158, 11, 0.34)');
-    glowGrad.addColorStop(0.55, isCyanPhase ? 'rgba(14, 116, 144, 0.14)' : 'rgba(180, 83, 9, 0.14)');
+    glowGrad.addColorStop(0, isCyanPhase ? 'rgba(56, 189, 248, 0.24)' : 'rgba(245, 158, 11, 0.22)');
+    glowGrad.addColorStop(0.55, isCyanPhase ? 'rgba(14, 116, 144, 0.10)' : 'rgba(180, 83, 9, 0.10)');
     glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = glowGrad;
     ctx.beginPath();
@@ -11985,7 +12522,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.save();
     ctx.strokeStyle = isCyanPhase ? '#7dd3fc' : '#fef08a';
     ctx.shadowColor = isCyanPhase ? '#0284c7' : accentColor;
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 12;
     ctx.lineWidth = Math.max(2.5, fontSize * 0.04);
     ctx.beginPath();
     ctx.moveTo(-glowW * 0.44, fontSize * 0.34);
@@ -12011,15 +12548,15 @@ Object.assign(Xiangqi3DApp.prototype, {
         ctx.fillText(ch, d * 1.3, d * 1.8);
       }
 
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
-      ctx.shadowBlur = 18;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.90)';
+      ctx.shadowBlur = 14;
       ctx.shadowOffsetY = 5;
       ctx.lineWidth = Math.max(5, fontSize * 0.09);
       ctx.strokeStyle = isCyanPhase ? '#082f49' : '#3b1106';
       ctx.strokeText(ch, 0, 0);
 
       ctx.shadowColor = isCyanPhase ? '#38bdf8' : accentColor;
-      ctx.shadowBlur = 22;
+      ctx.shadowBlur = 14;
       const g = ctx.createLinearGradient(0, -fontSize * 0.50, 0, fontSize * 0.50);
       if (isCyanPhase) {
         g.addColorStop(0, '#ffffff');
@@ -12056,17 +12593,11 @@ Object.assign(Xiangqi3DApp.prototype, {
    * REUSABLE MULTI-PART ARTICULATED 3D MODELS FOR CHECKMATE CUTSCENES
    *************************************************************************/
 
-  /**
-   * 精细可动 3D 战马模型
-   * 修复重点：所有躯干与四肢均挂在内部子层级 bodyPivot 上，外层 horse 仅负责水平朝向 (rotation.y)，
-   * 彻底杜绝 lookAt 引起 Euler X/Z 分解 180° 翻转导致战马跳起后上下颠倒/反过来的问题！
-   */
   createArticulated3DWarHorse(bodyMat, armorMat, glowMat) {
     const horse = new THREE.Group();
     const bodyPivot = new THREE.Group();
     horse.add(bodyPivot);
 
-    // 1. 肌肉感马身、饱满胸廓与臀部
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.28, 1.15, 16), bodyMat);
     torso.rotation.x = Math.PI / 2;
     torso.position.set(0, 0.72, 0);
@@ -12076,7 +12607,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     hip.position.set(0, 0.74, -0.50);
     bodyPivot.add(torso, chest, hip);
 
-    // 2. 金甲雕花马鞍、马镫与护胸甲
     const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.16, 0.54), armorMat);
     saddle.position.set(0, 0.96, 0.02);
     const saddleCloth = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.28, 0.62), glowMat);
@@ -12085,7 +12615,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     bardingFront.position.set(0, 0.74, 0.42);
     bodyPivot.add(saddle, saddleCloth, bardingFront);
 
-    // 3. 可动脖颈与昂首马头关节 (neckPivot)
     const neckPivot = new THREE.Group();
     neckPivot.position.set(0, 0.86, 0.46);
     const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.23, 0.68, 14), bodyMat);
@@ -12093,7 +12622,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     neck.rotation.x = 0.48;
     neckPivot.add(neck);
 
-    // 火焰鬃毛
     for (let m = 0; m < 6; m++) {
       const maneFin = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.26, 6), glowMat);
       maneFin.position.set(0, 0.10 + m * 0.10, 0.01 + m * 0.04);
@@ -12124,7 +12652,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     neckPivot.add(headGroup);
     bodyPivot.add(neckPivot);
 
-    // 4. 四条可动关节马腿 (大腿 + 小腿 + 金铁马蹄)
     const createLeg = (lx, lz, isFront) => {
       const hipJoint = new THREE.Group();
       hipJoint.position.set(lx, 0.64, lz);
@@ -12149,7 +12676,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     const blLeg = createLeg(-0.19, -0.44, false);
     const brLeg = createLeg(0.19, -0.44, false);
 
-    // 5. 飘扬马尾关节
     const tailPivot = new THREE.Group();
     tailPivot.position.set(0, 0.78, -0.62);
     const tailMain = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.72, 10), glowMat);
@@ -12165,7 +12691,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       tailPivot,
       legs: [flLeg, frLeg, blLeg, brLeg],
       animateGallop(time, rearUp = 0) {
-        // 昂首跃起仅旋转内部 bodyPivot.rotation.x，保持外层 horse 水平方向恒定不翻转
         const clampedRear = Math.max(-0.35, Math.min(1.1, rearUp));
         bodyPivot.rotation.set(-clampedRear * 0.56, 0, 0);
         bodyPivot.position.set(0, Math.max(0, clampedRear) * 0.24, 0);
@@ -12185,16 +12710,11 @@ Object.assign(Xiangqi3DApp.prototype, {
     return horse;
   },
 
-  /**
-   * 精细多关节 3D 斑斓猛虎模型（专用于【侧面虎】等演武，含咆哮虎首、额头“王”字纹、立耳、胡须、上下獠牙、
-   * 肌肉躯干与黑虎斑纹、四肢可动利爪、多节铁鞭虎尾）
-   */
   createArticulated3DTiger(goldMat, stripeMat, crimsonMat, fangMat, glowMat) {
     const tiger = new THREE.Group();
     const bodyPivot = new THREE.Group();
     tiger.add(bodyPivot);
 
-    // 1. 强健虎躯：肩胸、腰腹、臀胯与立体黑纹虎斑
     const chest = new THREE.Mesh(new THREE.SphereGeometry(0.38, 18, 16), goldMat);
     chest.scale.set(1.05, 1.08, 1.22);
     chest.position.set(0, 0.78, 0.48);
@@ -12207,7 +12727,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     pelvis.scale.set(1.0, 1.04, 1.15);
     pelvis.position.set(0, 0.78, -0.56);
 
-    // 肩背脊骨金甲凸起
     for (let s = 0; s < 5; s++) {
       const spine = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.18, 6), glowMat);
       spine.position.set(0, 1.12 - s * 0.015, 0.45 - s * 0.22);
@@ -12215,7 +12734,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       bodyPivot.add(spine);
     }
 
-    // 躯干交错玄铁黑虎斑纹 (7道立体环抱虎纹)
     [-0.46, -0.30, -0.14, 0.02, 0.18, 0.34, 0.50].forEach((bz, idx) => {
       const r = bz > 0.2 ? 0.37 : (bz < -0.25 ? 0.32 : 0.34);
       const stripe = new THREE.Mesh(
@@ -12228,7 +12746,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     });
     bodyPivot.add(chest, torso, pelvis);
 
-    // 2. 威猛虎首 (neckPivot + headGroup)
     const neckPivot = new THREE.Group();
     neckPivot.position.set(0, 0.88, 0.76);
     bodyPivot.add(neckPivot);
@@ -12242,13 +12759,11 @@ Object.assign(Xiangqi3DApp.prototype, {
     headGroup.position.set(0, 0.10, 0.26);
     neckPivot.add(headGroup);
 
-    // 虎头颅骨与双颊鬓毛
     const cranium = new THREE.Mesh(new THREE.SphereGeometry(0.34, 18, 16), goldMat);
     cranium.scale.set(1.14, 0.98, 1.05);
     headGroup.add(cranium);
 
     [-1, 1].forEach(side => {
-      // 饱满腮帮与鬓毛簇
       const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.20, 12, 12), goldMat);
       cheek.scale.set(1.15, 0.88, 0.85);
       cheek.position.set(side * 0.22, -0.06, 0.12);
@@ -12261,7 +12776,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         headGroup.add(tuft);
       }
 
-      // 虎耳（外耳廓 + 绯红内耳）
       const earOuter = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.07, 14), goldMat);
       earOuter.rotation.x = Math.PI / 2;
       earOuter.rotation.z = -side * 0.35;
@@ -12272,7 +12786,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       earInner.position.set(side * 0.25, 0.28, -0.05);
       headGroup.add(earOuter, earInner);
 
-      // 怒目剑眉与赤金虎目
       const brow = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.048, 0.08), stripeMat);
       brow.position.set(side * 0.15, 0.14, 0.28);
       brow.rotation.z = -side * 0.32;
@@ -12282,7 +12795,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       pupil.position.set(side * 0.15, 0.07, 0.33);
       headGroup.add(brow, eye, pupil);
 
-      // 3根刚劲虎须
       for (let w = 0; w < 3; w++) {
         const whisker = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.004, 0.34, 6), fangMat);
         whisker.rotation.z = side * (Math.PI / 2 - 0.15 - w * 0.12);
@@ -12292,7 +12804,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       }
     });
 
-    // 虎吻鼻梁与鼻尖
     const snoutBridge = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.18, 0.30), goldMat);
     snoutBridge.position.set(0, -0.02, 0.26);
     snoutBridge.rotation.x = 0.18;
@@ -12302,7 +12813,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     noseTip.position.set(0, 0.03, 0.42);
     headGroup.add(snoutBridge, noseTip);
 
-    // 额头立体“王”字纹（三横一竖百兽之王印记）
     [0.24, 0.19, 0.14].forEach((wy, idx) => {
       const wLen = idx === 1 ? 0.18 : 0.24;
       const hBar = new THREE.Mesh(new THREE.BoxGeometry(wLen, 0.026, 0.04), stripeMat);
@@ -12315,7 +12825,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     vBar.rotation.x = -0.35;
     headGroup.add(vBar);
 
-    // 上颚两颗巨型剑齿虎獠牙 + 门齿
     [-0.10, 0.10].forEach(fx => {
       const upperFang = new THREE.Mesh(new THREE.ConeGeometry(0.038, 0.20, 8), fangMat);
       upperFang.rotation.x = Math.PI - 0.12;
@@ -12323,7 +12832,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       headGroup.add(upperFang);
     });
 
-    // 可张合咆哮下颚 (jawPivot)
     const jawPivot = new THREE.Group();
     jawPivot.position.set(0, -0.12, 0.14);
     const lowerJaw = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.10, 0.28), goldMat);
@@ -12339,7 +12847,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     jawPivot.rotation.x = 0.48;
     headGroup.add(jawPivot);
 
-    // 3. 四条多关节猛虎巨足与四趾利爪
     const createTigerLeg = (lx, lz, isFront) => {
       const shoulderJoint = new THREE.Group();
       shoulderJoint.position.set(lx, 0.68, lz);
@@ -12348,7 +12855,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       upperLimb.position.y = -0.18;
       shoulderJoint.add(upperLimb);
 
-      // 腿部黑虎纹
       const legStripe = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.022, 6, 16), stripeMat);
       legStripe.rotation.x = Math.PI / 2;
       legStripe.position.y = -0.16;
@@ -12366,7 +12872,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       pawPad.scale.set(1.15, 0.55, 1.30);
       pawGroup.add(pawPad);
 
-      // 四根弯曲寒光虎爪
       [-0.075, -0.025, 0.025, 0.075].forEach(cx => {
         const claw = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.14, 6), fangMat);
         claw.rotation.x = Math.PI * 0.42;
@@ -12384,7 +12889,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     const blLeg = createTigerLeg(-0.24, -0.50, false);
     const brLeg = createTigerLeg(0.24, -0.50, false);
 
-    // 4. 多节斑斓铁鞭虎尾 (tailPivot)
     const tailPivot = new THREE.Group();
     tailPivot.position.set(0, 0.84, -0.78);
     const tailSeg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.052, 0.55, 10), goldMat);
@@ -12404,7 +12908,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       tailPivot,
       legs: [flLeg, frLeg, blLeg, brLeg],
       animatePounce(time, pouncePhase = 0, swipePhase = 0) {
-        // 猛虎飞扑俯仰仅作用于内部 bodyPivot，确保猛虎绝不翻转倒立
         const pitch = Math.sin(pouncePhase * Math.PI) * -0.46 + (pouncePhase > 0.65 ? 0.24 : 0);
         bodyPivot.rotation.set(pitch, 0, 0);
         jawPivot.rotation.x = 0.38 + Math.abs(Math.sin(time * 12)) * 0.36;
@@ -12412,13 +12915,11 @@ Object.assign(Xiangqi3DApp.prototype, {
         tailPivot.rotation.y = Math.sin(time * 16) * 0.38;
         tailPivot.rotation.x = Math.cos(time * 14) * 0.22;
 
-        // 前爪扑击挥爪动作
         flLeg.shoulderJoint.rotation.x = -0.75 - Math.sin(swipePhase * Math.PI) * 0.55;
         flLeg.elbowJoint.rotation.x = 0.45 + Math.cos(swipePhase * Math.PI * 2) * 0.35;
         frLeg.shoulderJoint.rotation.x = -0.65 - Math.cos(swipePhase * Math.PI) * 0.55;
         frLeg.elbowJoint.rotation.x = 0.40 + Math.sin(swipePhase * Math.PI * 2) * 0.35;
 
-        // 后腿蹬踏伸展
         blLeg.shoulderJoint.rotation.x = 0.58 + Math.sin(pouncePhase * Math.PI) * 0.35;
         blLeg.elbowJoint.rotation.x = -0.35;
         brLeg.shoulderJoint.rotation.x = 0.52 + Math.sin(pouncePhase * Math.PI) * 0.35;
@@ -12428,13 +12929,9 @@ Object.assign(Xiangqi3DApp.prototype, {
     return tiger;
   },
 
-  /**
-   * 精细可动 3D 古代重甲战车模型（带双辐条旋转战轮、车舆护栏、华盖/战旗、双车辕与飞转轮刃）
-   */
   createArticulated3DWarChariot(woodMat, goldMat, ironMat, glowMat) {
     const chariot = new THREE.Group();
 
-    // 车舆底盘与雕花护栏
     const base = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.16, 1.24), woodMat);
     base.position.y = 0.46;
     const frontWall = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.52, 0.12), woodMat);
@@ -12451,7 +12948,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       chariot.add(sideWall, topRail);
     });
 
-    // 双车辕与前冲战戟锋刃
     [-0.36, 0.36].forEach(px => {
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.45, 10), goldMat);
       pole.rotation.x = Math.PI / 2;
@@ -12462,7 +12958,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       chariot.add(pole, spearTip);
     });
 
-    // 战车后置迎风双战旗
     const banners = [-0.42, 0.42].map(bx => {
       const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 1.65, 8), goldMat);
       mast.position.set(bx, 1.25, -0.52);
@@ -12473,7 +12968,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       return flag;
     });
 
-    // 8辐条双大轮 + 轮毂黄金撞针
     const wheels = [-0.68, 0.68].map(wx => {
       const wGroup = new THREE.Group();
       wGroup.position.set(wx, 0.48, 0);
@@ -12506,13 +13000,9 @@ Object.assign(Xiangqi3DApp.prototype, {
     return chariot;
   },
 
-  /**
-   * 精细可动 3D 龙首重炮模型（带四轮炮架、俯仰炮管、龙角浮雕与后坐力动画）
-   */
   createArticulated3DCannon(woodMat, goldMat, ironMat, glowMat) {
     const cannon = new THREE.Group();
 
-    // 炮车底座与四轮
     const carriage = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.28, 1.28), woodMat);
     carriage.position.y = 0.28;
     cannon.add(carriage);
@@ -12529,7 +13019,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       wheels.push(w);
     });
 
-    // 可俯仰与后坐力的多节箍环炮管 (barrelPivot)
     const barrelPivot = new THREE.Group();
     barrelPivot.position.set(0, 0.50, 0);
     const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.27, 1.65, 24), ironMat);
@@ -12542,7 +13031,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       barrelPivot.add(band);
     });
 
-    // 炮口火焰光环与炮尾金球
     const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.045, 12, 24), glowMat);
     muzzleRing.position.z = 0.84;
     const Knob = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), goldMat);
@@ -12555,9 +13043,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     return cannon;
   },
 
-  /**
-   * 精细可动 3D 金甲帝王神将模型（对面笑 / 双将 / 列马车）
-   */
   createArticulated3DGeneral(goldMat, crimsonMat, ironMat, glowMat) {
     const general = new THREE.Group();
 
@@ -12621,68 +13106,80 @@ Object.assign(Xiangqi3DApp.prototype, {
 
   /**
    * 构建 17 种古谱杀法的全 3D 精细建模动态演出
+   * 优化重点：创建时默认设置 group.visible = false，杜绝在第一阶段镜头推近期间提前将3D模型暴露在棋盘上；
+   * 仅在进入第二阶段演武时才由主控函数激活 visible = true 并配合入场缓动展开！
    */
   build3DSpectacleForType(vfxType, kPos, cPos, rPos, winnerColor, pattern = null) {
     const group = new THREE.Group();
+    group.visible = false;
     this.checkmateVFXGroup.add(group);
     const slashTex = typeof getSlashArcTexture === 'function' ? getSlashArcTexture() : null;
 
+    const wrapUpdater = (fn) => {
+      const wrapped = (p, dt, fade = 1) => {
+        if (!group.visible && fade > 0.001) group.visible = true;
+        fn(p, dt, fade);
+      };
+      wrapped.spectacleGroup = group;
+      return wrapped;
+    };
+
     const goldMat = new THREE.MeshStandardMaterial({
       color: 0xfbbf24,
-      emissive: 0xb45309,
-      emissiveIntensity: 0.52,
-      metalness: 0.88,
-      roughness: 0.18
+      emissive: 0x92400e,
+      emissiveIntensity: 0.26,
+      metalness: 0.86,
+      roughness: 0.22
     });
     const darkIronMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
       emissive: 0x0f172a,
-      emissiveIntensity: 0.28,
-      metalness: 0.84,
-      roughness: 0.26
+      emissiveIntensity: 0.18,
+      metalness: 0.82,
+      roughness: 0.28
     });
     const crimsonLacquerMat = new THREE.MeshStandardMaterial({
       color: 0x991b1b,
       emissive: 0x450a0a,
-      emissiveIntensity: 0.40,
-      metalness: 0.38,
-      roughness: 0.30
+      emissiveIntensity: 0.24,
+      metalness: 0.36,
+      roughness: 0.32
     });
     const bronzeWoodMat = new THREE.MeshStandardMaterial({
       color: 0x78350f,
       emissive: 0x270e04,
-      emissiveIntensity: 0.25,
-      metalness: 0.45,
-      roughness: 0.36
+      emissiveIntensity: 0.18,
+      metalness: 0.42,
+      roughness: 0.38
     });
     const ivoryFangMat = new THREE.MeshStandardMaterial({
       color: 0xfffbeb,
       emissive: 0xfef3c7,
-      emissiveIntensity: 0.38,
-      metalness: 0.25,
-      roughness: 0.15
+      emissiveIntensity: 0.20,
+      metalness: 0.22,
+      roughness: 0.18
     });
     const jadeIceMat = new THREE.MeshStandardMaterial({
       color: 0x38bdf8,
-      emissive: 0x0284c7,
-      emissiveIntensity: 0.58,
-      metalness: 0.35,
-      roughness: 0.15,
+      emissive: 0x0369a1,
+      emissiveIntensity: 0.32,
+      metalness: 0.32,
+      roughness: 0.18,
       transparent: true,
-      opacity: 0.92
+      opacity: 0.88
     });
     const crimsonGlowMat = new THREE.MeshBasicMaterial({
       color: 0xef4444,
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
     });
     const goldGlowMat = new THREE.MeshBasicMaterial({
-      color: 0xfef08a,
+      color: 0xfde047,
       transparent: true,
-      opacity: 0.90,
+      opacity: 0.68,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
@@ -12705,7 +13202,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       return fallbackPos;
     };
 
-    // 辅助函数：构建 3D 立体环环相扣铁链
     const create3DChainBetween = (p1, p2, linkCount = 14) => {
       const chainGroup = new THREE.Group();
       const dir = new THREE.Vector3().subVectors(p2, p1);
@@ -12752,7 +13248,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       const chariotUnits = [startWorld0, startWorld1].map((sWorld, idx) => {
         const sign = idx === 0 ? -1 : 1;
         const startV = new THREE.Vector3(sWorld.x, 0.05, sWorld.z);
-        // 若起点与将位过于接近，向外微扩助跑段以确保从该“车”棋子位置爆发冲刺并交错穿过敌将
         const toKing = new THREE.Vector3(kPos.x - startV.x, 0, kPos.z - startV.z);
         if (toKing.length() < 0.8) toKing.set(sign * 2.4, 0, 0.8);
         const dirNorm = toKing.clone().normalize();
@@ -12771,7 +13266,6 @@ Object.assign(Xiangqi3DApp.prototype, {
 
         const pathCurve = new THREE.QuadraticBezierCurve3(startV, midV, endV);
 
-        // 起点“车”棋子脚下的发车金光法阵与流光车辙轨迹
         const originPad = new THREE.Mesh(
           new THREE.RingGeometry(0.32, 0.72, 32),
           idx === 0 ? goldGlowMat.clone() : crimsonGlowMat.clone()
@@ -12781,7 +13275,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         group.add(originPad);
 
         const trackMesh = new THREE.Mesh(
-          new THREE.TubeGeometry(pathCurve, 36, 0.085, 8, false),
+          new THREE.TubeGeometry(pathCurve, 36, 0.075, 8, false),
           (idx === 0 ? goldGlowMat : crimsonGlowMat).clone()
         );
         group.add(trackMesh);
@@ -12803,7 +13297,7 @@ Object.assign(Xiangqi3DApp.prototype, {
 
       const slashPlanes = [-1, 1].map((dir, idx) => {
         const plane = new THREE.Mesh(
-          new THREE.PlaneGeometry(5.8, 1.45),
+          new THREE.PlaneGeometry(5.6, 1.35),
           new THREE.MeshBasicMaterial({
             map: slashTex,
             color: idx === 0 ? 0xfef08a : 0xef4444,
@@ -12821,7 +13315,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         return plane;
       });
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const rush = Math.min(1, p / 0.54);
         const ease = 1 - Math.pow(1 - rush, 3);
         chariotUnits.forEach(({ ch, pathCurve, originPad, trackMesh, idx }) => {
@@ -12833,15 +13327,15 @@ Object.assign(Xiangqi3DApp.prototype, {
           ch.scale.setScalar(0.90 * fade);
 
           originPad.scale.setScalar((1 + Math.sin(p * 14 + idx) * 0.22) * fade);
-          originPad.material.opacity = 0.85 * fade;
-          trackMesh.material.opacity = Math.sin(Math.min(1, p * 1.35) * Math.PI) * 0.85 * fade;
+          originPad.material.opacity = 0.65 * fade;
+          trackMesh.material.opacity = Math.sin(Math.min(1, p * 1.35) * Math.PI) * 0.62 * fade;
         });
         slashPlanes.forEach((pl, i) => {
-          pl.material.opacity = Math.sin(Math.min(1, Math.max(0, (p - 0.18) * 1.4)) * Math.PI) * 0.92 * fade;
+          pl.material.opacity = Math.sin(Math.min(1, Math.max(0, (p - 0.18) * 1.4)) * Math.PI) * 0.68 * fade;
           pl.scale.set(0.55 + ease * 1.35, 0.75 + ease * 0.55, 1);
           pl.rotation.z += (i === 0 ? 1 : -1) * dt * 1.2;
         });
-      };
+      });
     }
 
     // =========================================================================
@@ -12880,7 +13374,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         )
       );
 
-      // 镇宫重盖：方正四棱宫顶，严格对齐四面城墙，垂直稳稳盖下，绝不旋转！
       const sealRoof = new THREE.Group();
       const roofRimFrame = new THREE.Mesh(new THREE.BoxGeometry(3.18, 0.24, 3.18), goldMat);
       roofRimFrame.position.y = -0.26;
@@ -12888,7 +13381,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       roofInnerPlate.position.y = -0.18;
 
       const pyramid = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 2.08, 0.72, 4), goldMat);
-      pyramid.rotation.y = Math.PI / 4; // 令四棱台四边与四面城墙严格平行
+      pyramid.rotation.y = Math.PI / 4;
       pyramid.position.y = 0.22;
 
       const topSealBox = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.42, 0.82), crimsonLacquerMat);
@@ -12896,7 +13389,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       const finial = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.28, 0.46), goldMat);
       finial.position.y = 1.02;
 
-      // 四角稳固卡榫柱
       [[-1.42, -1.42], [1.42, -1.42], [-1.42, 1.42], [1.42, 1.42]].forEach(([px, pz]) => {
         const cornerLatch = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.44, 0.36), goldMat);
         cornerLatch.position.set(px, -0.32, pz);
@@ -12908,7 +13400,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       sealRoof.rotation.set(0, 0, 0);
       group.add(sealRoof);
 
-      // 扣合瞬间的方形冲击金环
       const sealLockWave = new THREE.Mesh(
         new THREE.RingGeometry(1.4, 2.2, 4),
         goldGlowMat.clone()
@@ -12919,7 +13410,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       sealLockWave.material.opacity = 0;
       group.add(sealLockWave);
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const rise = Math.min(1, p / 0.30);
         const easeRise = 1 - Math.pow(1 - rise, 3);
         walls.forEach(w => {
@@ -12929,7 +13420,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         chains.forEach(({ chainGroup }) => {
           chainGroup.scale.setScalar(Math.min(1, p * 2.5) * fade);
         });
-        // 盖子从上方稳稳垂直落下并严丝合缝扣在四墙顶端 (y = 1.98)，保持 rotation (0,0,0) 不旋转
         const dropRaw = Math.min(1, Math.max(0, (p - 0.24) / 0.32));
         const dropEase = dropRaw < 0.88
           ? (dropRaw / 0.88) * (dropRaw / 0.88)
@@ -12941,9 +13431,9 @@ Object.assign(Xiangqi3DApp.prototype, {
         if (dropRaw >= 0.85) {
           const waveP = Math.min(1, (p - 0.50) / 0.35);
           sealLockWave.scale.setScalar((1 + waveP * 1.45) * fade);
-          sealLockWave.material.opacity = (1 - waveP) * 0.90 * fade;
+          sealLockWave.material.opacity = (1 - waveP) * 0.65 * fade;
         }
-      };
+      });
     }
 
     // =========================================================================
@@ -12961,7 +13451,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       group.add(general3D);
 
       const bridgeBeam = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.24, 0.24, dist, 16, 1, true),
+        new THREE.CylinderGeometry(0.20, 0.20, dist, 16, 1, true),
         goldGlowMat.clone()
       );
       bridgeBeam.rotation.x = Math.PI / 2;
@@ -12979,7 +13469,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         return gRing;
       });
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const appear = Math.min(1, p / 0.26);
         general3D.scale.setScalar(1.18 * appear * fade);
         const slashP = Math.min(1, Math.max(0, (p - 0.18) / 0.34));
@@ -12987,14 +13477,14 @@ Object.assign(Xiangqi3DApp.prototype, {
         general3D.userData.cape.rotation.x = 0.25 + Math.sin(p * 18) * 0.14;
 
         const beamP = Math.min(1, p / 0.30);
-        bridgeBeam.scale.set(beamP * (0.85 + Math.sin(p * 28) * 0.2), 1, beamP);
-        bridgeBeam.material.opacity = 0.88 * fade;
+        bridgeBeam.scale.set(beamP * (0.85 + Math.sin(p * 28) * 0.16), 1, beamP);
+        bridgeBeam.material.opacity = 0.62 * fade;
         gates.forEach((g, idx) => {
           const gp = Math.min(1, Math.max(0, (p - idx * 0.08) / 0.25));
           g.scale.setScalar(gp * fade);
           g.rotation.z += dt * (idx % 2 === 0 ? 2.5 : -2.5);
         });
-      };
+      });
     }
 
     // =========================================================================
@@ -13021,12 +13511,12 @@ Object.assign(Xiangqi3DApp.prototype, {
         this.faceTargetHorizontally(cModel, kPos.x + ox * 0.15, kPos.z);
         group.add(cModel);
 
-        const shell = new THREE.Mesh(new THREE.SphereGeometry(0.30, 16, 16), crimsonGlowMat.clone());
+        const shell = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), crimsonGlowMat.clone());
         group.add(shell);
         return { cModel, shell, ox, delay: idx * 0.16 };
       });
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         rampart.scale.setScalar(fade);
         batteries.forEach(({ cModel, shell, ox, delay }) => {
           cModel.scale.setScalar(0.95 * fade);
@@ -13037,12 +13527,12 @@ Object.assign(Xiangqi3DApp.prototype, {
             THREE.MathUtils.lerp(startZ, kPos.z, sp)
           );
           const active = sp > 0.02 && sp < 0.98;
-          shell.scale.setScalar(active ? 1.25 * fade : 0.001);
+          shell.scale.setScalar(active ? 1.18 * fade : 0.001);
           const recoil = (sp > 0 && sp < 0.28) ? Math.sin(sp * 3.5 * Math.PI) * 0.34 : 0;
           cModel.position.z = startZ - dirSign * recoil;
           cModel.userData.barrelPivot.rotation.x = -0.28 - recoil * 0.45;
         });
-      };
+      });
     }
 
     // =========================================================================
@@ -13068,10 +13558,10 @@ Object.assign(Xiangqi3DApp.prototype, {
         10
       );
 
-      const shell = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), crimsonGlowMat.clone());
+      const shell = new THREE.Mesh(new THREE.SphereGeometry(0.30, 16, 16), crimsonGlowMat.clone());
       group.add(shell);
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const rearUp = Math.sin(Math.min(1, p * 1.5) * Math.PI) * 0.85;
         warHorse.userData.animateGallop(p * 3.2, rearUp);
         warHorse.position.y = 0.05 + rearUp * 0.30;
@@ -13086,10 +13576,10 @@ Object.assign(Xiangqi3DApp.prototype, {
           0.65 + Math.sin(sp * Math.PI) * 3.25,
           THREE.MathUtils.lerp(cannonOrigin.z, kPos.z, sp)
         );
-        shell.scale.setScalar((sp > 0 && sp < 0.98) ? 1.28 * fade : 0.001);
+        shell.scale.setScalar((sp > 0 && sp < 0.98) ? 1.20 * fade : 0.001);
         const recoil = (sp > 0 && sp < 0.25) ? Math.sin(sp * 4 * Math.PI) * 0.32 : 0;
         rearCannon.userData.barrelPivot.rotation.x = -0.28 - recoil * 0.5;
-      };
+      });
     }
 
     // =========================================================================
@@ -13135,7 +13625,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         12
       );
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const closeP = Math.min(1, p / 0.28);
         const easeC = 1 - Math.pow(1 - closeP, 3);
         leftDoor.position.x = THREE.MathUtils.lerp(kPos.x - 2.35, kPos.x - 0.72, easeC);
@@ -13148,11 +13638,11 @@ Object.assign(Xiangqi3DApp.prototype, {
         leftDoor.scale.setScalar(fade);
         rightDoor.scale.setScalar(fade);
         ironBolt.scale.setScalar(fade);
-      };
+      });
     }
 
     // =========================================================================
-    // 7. 侧面虎 (Side Tiger): 精细多关节 3D 斑斓猛虎（含咆哮虎头、“王”字纹、獠牙、四肢利爪与黑虎斑）从马位飞扑将门！
+    // 7. 侧面虎 (Side Tiger): 精细多关节 3D 斑斓猛虎模型从马位飞扑将门！
     // =========================================================================
     if (vfxType === 'side_tiger') {
       const horseOrigin = findCheckerPosByType('n', new THREE.Vector3(kPos.x + 2.6, 0.05, kPos.z + (kPos.z < 0 ? 1.8 : -1.8)));
@@ -13168,7 +13658,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         kPos.z + (kPos.z < 0 ? 0.32 : -0.32)
       );
 
-      // 侧翼虎山奇峰石台
       const cliffGroup = new THREE.Group();
       cliffGroup.position.set(startPos.x, 0.02, startPos.z);
       for (let rk = 0; rk < 4; rk++) {
@@ -13181,7 +13670,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       }
       group.add(cliffGroup);
 
-      // 精细多关节 3D 斑斓猛虎
       const tiger3D = this.createArticulated3DTiger(
         goldMat,
         darkIronMat,
@@ -13194,11 +13682,10 @@ Object.assign(Xiangqi3DApp.prototype, {
       this.faceTargetHorizontally(tiger3D, kPos.x, kPos.z);
       group.add(tiger3D);
 
-      // 五道立体撕裂虎爪金红刀芒
       const claws = [];
       for (let i = -2; i <= 2; i++) {
         const arc = new THREE.Mesh(
-          new THREE.TorusGeometry(1.68, 0.072, 10, 32, Math.PI * 0.84),
+          new THREE.TorusGeometry(1.68, 0.065, 10, 32, Math.PI * 0.84),
           i % 2 === 0 ? goldGlowMat.clone() : crimsonGlowMat.clone()
         );
         arc.position.set(kPos.x + i * 0.28, 0.92, kPos.z);
@@ -13208,16 +13695,15 @@ Object.assign(Xiangqi3DApp.prototype, {
         claws.push({ arc, i });
       }
 
-      // 猛虎咆哮音波金环
       const roarRings = [0, 1, 2].map(idx => {
-        const rr = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.62, 32), goldGlowMat.clone());
+        const rr = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.58, 32), goldGlowMat.clone());
         rr.position.set(kPos.x, 0.95, kPos.z);
         rr.rotation.x = -Math.PI / 3;
         group.add(rr);
         return { rr, idx };
       });
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const pounce = Math.min(1, p / 0.44);
         const ease = 1 - Math.pow(1 - pounce, 3);
         const swipe = Math.max(0, (p - 0.32) / 0.68);
@@ -13234,15 +13720,15 @@ Object.assign(Xiangqi3DApp.prototype, {
           const cp = Math.max(0, Math.min(1, (p - 0.22) / 0.48));
           arc.rotation.z = -1.25 + cp * 2.6 + i * 0.08;
           arc.scale.setScalar((0.55 + cp * 0.78) * fade);
-          arc.material.opacity = Math.sin(cp * Math.PI) * 0.94 * fade;
+          arc.material.opacity = Math.sin(cp * Math.PI) * 0.68 * fade;
         });
 
         roarRings.forEach(({ rr, idx }) => {
           const rp = Math.max(0, Math.min(1, (p - 0.28 - idx * 0.10) / 0.42));
           rr.scale.setScalar((0.6 + rp * 3.2) * fade);
-          rr.material.opacity = Math.sin(rp * Math.PI) * 0.82 * fade;
+          rr.material.opacity = Math.sin(rp * Math.PI) * 0.58 * fade;
         });
-      };
+      });
     }
 
     // =========================================================================
@@ -13251,8 +13737,8 @@ Object.assign(Xiangqi3DApp.prototype, {
     if (vfxType === 'octagon_horse') {
       const horseOrigin = findCheckerPosByType('n', cPos);
       const moonSphere = new THREE.Mesh(
-        new THREE.SphereGeometry(1.15, 24, 24),
-        new THREE.MeshBasicMaterial({ color: 0xfef9c3, transparent: true, opacity: 0.92 })
+        new THREE.SphereGeometry(1.10, 24, 24),
+        new THREE.MeshBasicMaterial({ color: 0xfef3c7, transparent: true, opacity: 0.78 })
       );
       moonSphere.position.set(kPos.x, 3.8, kPos.z + (kPos.z < 0 ? -1.8 : 1.8));
       group.add(moonSphere);
@@ -13276,15 +13762,15 @@ Object.assign(Xiangqi3DApp.prototype, {
         group.add(pGroup);
         pillars.push({ pGroup, a });
       }
-      const moonHalo = new THREE.Mesh(new THREE.TorusGeometry(2.15, 0.06, 12, 48), goldGlowMat.clone());
+      const moonHalo = new THREE.Mesh(new THREE.TorusGeometry(2.15, 0.055, 12, 48), goldGlowMat.clone());
       moonHalo.rotation.x = Math.PI / 2;
       moonHalo.position.set(kPos.x, 2.45, kPos.z);
       group.add(moonHalo);
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         octagonHorse.userData.animateGallop(p * 3.5, Math.sin(p * Math.PI) * 0.72);
         octagonHorse.scale.setScalar(fade);
-        moonSphere.scale.setScalar((0.85 + Math.sin(p * Math.PI) * 0.25) * fade);
+        moonSphere.scale.setScalar((0.85 + Math.sin(p * Math.PI) * 0.22) * fade);
 
         const lock = Math.min(1, p / 0.38);
         const rad = THREE.MathUtils.lerp(2.55, 1.55, lock);
@@ -13295,8 +13781,8 @@ Object.assign(Xiangqi3DApp.prototype, {
           pGroup.scale.setScalar(fade);
         });
         moonHalo.scale.setScalar((rad / 2.15) * fade);
-        moonHalo.material.opacity = 0.88 * fade;
-      };
+        moonHalo.material.opacity = 0.65 * fade;
+      });
     }
 
     // =========================================================================
@@ -13312,7 +13798,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       const waterRings = [];
       for (let i = 0; i < 6; i++) {
         const wr = new THREE.Mesh(
-          new THREE.TorusGeometry(0.55 + i * 0.42, 0.058, 12, 42),
+          new THREE.TorusGeometry(0.55 + i * 0.42, 0.055, 12, 42),
           jadeIceMat
         );
         wr.rotation.x = Math.PI / 2;
@@ -13332,7 +13818,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       rodGroup.position.set(kPos.x, 4.8, kPos.z);
       group.add(rodGroup);
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         fishHorse.userData.animateGallop(p * 3.2, Math.sin(p * Math.PI) * 0.62);
         fishHorse.scale.setScalar(fade);
         waterRings.forEach(({ wr, i }) => {
@@ -13344,7 +13830,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         rodGroup.position.y = THREE.MathUtils.lerp(4.8, 0.85, Math.min(1, Math.max(0, drop)));
         rodGroup.rotation.y += dt * 2.5;
         rodGroup.scale.setScalar(fade);
-      };
+      });
     }
 
     // =========================================================================
@@ -13352,7 +13838,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     // =========================================================================
     if (vfxType === 'standing_horse_chariot') {
       const sunSphere = new THREE.Mesh(
-        new THREE.SphereGeometry(1.25, 24, 24),
+        new THREE.SphereGeometry(1.18, 24, 24),
         crimsonGlowMat.clone()
       );
       sunSphere.position.set(kPos.x, 3.4, kPos.z + (kPos.z < 0 ? -1.8 : 1.8));
@@ -13371,7 +13857,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       this.faceTargetHorizontally(chariot3D, kPos.x + 0.65, kPos.z);
       group.add(chariot3D);
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const strike = Math.min(1, p / 0.42);
         const ease = 1 - Math.pow(1 - strike, 3);
 
@@ -13383,14 +13869,12 @@ Object.assign(Xiangqi3DApp.prototype, {
         chariot3D.userData.spinWheels(dt * 18, p * 4);
         chariot3D.scale.setScalar(0.88 * fade);
 
-        sunSphere.scale.setScalar((0.88 + Math.sin(p * Math.PI) * 0.28) * fade);
-      };
+        sunSphere.scale.setScalar((0.88 + Math.sin(p * Math.PI) * 0.22) * fade);
+      });
     }
 
     // =========================================================================
-    // 11. 双将 (Double Check): 全面强化版！
-    // 从两个将军棋子位置同时激射两柄 3D 蟠龙方天画戟与双月牙刀罡直贯将门 +
-    // 九天之上八剑齐飞护持巨型 3D 帝王轩辕破城巨剑轰然贯顶 + 16块 3D 黑曜金岩崩裂飞溅！
+    // 11. 双将 (Double Check): 从两个将军棋子位置同时激射两柄 3D 蟠龙方天画戟 + 九天轩辕巨剑与八柄飞剑贯顶 + 黑曜金岩崩裂
     // =========================================================================
     if (vfxType === 'double_check') {
       const origin0 = checkersList[0]
@@ -13400,7 +13884,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         ? gridToWorld(checkersList[1].r, checkersList[1].c)
         : new THREE.Vector3(kPos.x + 3.2, 0.05, kPos.z + 2.2);
 
-      // 1. 两路将军棋子激射而出的 3D 方天画戟与弯月剑气
       const dualHalberds = [origin0, origin1].map((orig, idx) => {
         const hGroup = new THREE.Group();
         const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 2.8, 12), goldMat);
@@ -13408,7 +13891,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         const spearTip = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.68, 4), goldGlowMat);
         spearTip.rotation.x = Math.PI / 2;
         spearTip.position.z = 1.65;
-        // 方天画戟双月牙刃
         [-1, 1].forEach(side => {
           const crescent = new THREE.Mesh(
             new THREE.TorusGeometry(0.34, 0.05, 8, 20, Math.PI * 0.85),
@@ -13424,13 +13906,12 @@ Object.assign(Xiangqi3DApp.prototype, {
         this.faceTargetHorizontally(hGroup, kPos.x, kPos.z);
         group.add(hGroup);
 
-        // 地面双路冲击光轨
         const beamCurve = new THREE.LineCurve3(
           new THREE.Vector3(orig.x, 0.22, orig.z),
           new THREE.Vector3(kPos.x, 0.22, kPos.z)
         );
         const beamMesh = new THREE.Mesh(
-          new THREE.TubeGeometry(beamCurve, 16, 0.09, 8, false),
+          new THREE.TubeGeometry(beamCurve, 16, 0.075, 8, false),
           (idx === 0 ? goldGlowMat : crimsonGlowMat).clone()
         );
         group.add(beamMesh);
@@ -13438,12 +13919,11 @@ Object.assign(Xiangqi3DApp.prototype, {
         return { hGroup, orig, beamMesh, idx };
       });
 
-      // 2. 九天轩辕破城巨剑（复合精雕剑格、血槽、剑柄龙珠与八柄环绕御剑）
       const sovereignSword = new THREE.Group();
       const mainBlade = new THREE.Mesh(new THREE.ConeGeometry(0.42, 3.85, 4), goldMat);
       mainBlade.rotation.x = Math.PI;
       mainBlade.scale.set(1.35, 1, 0.38);
-      const bladeCoreGlow = new THREE.Mesh(new THREE.ConeGeometry(0.24, 3.65, 4), goldGlowMat.clone());
+      const bladeCoreGlow = new THREE.Mesh(new THREE.ConeGeometry(0.22, 3.65, 4), goldGlowMat.clone());
       bladeCoreGlow.rotation.x = Math.PI;
       bladeCoreGlow.position.y = -0.05;
 
@@ -13463,7 +13943,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       sovereignSword.position.set(kPos.x, 7.2, kPos.z);
       group.add(sovereignSword);
 
-      // 八柄环绕飞剑剑阵
       const spiritSwords = Array.from({ length: 8 }, (_, i) => {
         const sGroup = new THREE.Group();
         const sBlade = new THREE.Mesh(new THREE.ConeGeometry(0.11, 1.55, 4), i % 2 === 0 ? goldGlowMat : crimsonGlowMat);
@@ -13475,7 +13954,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         return { sGroup, baseAngle: (i * Math.PI) / 4 };
       });
 
-      // 3. 16块 3D 黑曜金岩受巨剑轰击崩裂飞溅
       const boulders = Array.from({ length: 16 }, (_, i) => {
         const ang = (i / 16) * Math.PI * 2;
         const rock = new THREE.Mesh(
@@ -13492,8 +13970,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         };
       });
 
-      return (p, dt, fade = 1) => {
-        // 第一波：两路方天画戟从两个将军棋子疾刺将位
+      return wrapUpdater((p, dt, fade = 1) => {
         const lungeP = Math.min(1, p / 0.34);
         const lungeEase = 1 - Math.pow(1 - lungeP, 3);
         dualHalberds.forEach(({ hGroup, orig, beamMesh }) => {
@@ -13501,10 +13978,9 @@ Object.assign(Xiangqi3DApp.prototype, {
           hGroup.position.z = THREE.MathUtils.lerp(orig.z, kPos.z, lungeEase * 0.78);
           this.faceTargetHorizontally(hGroup, kPos.x, kPos.z);
           hGroup.scale.setScalar(fade);
-          beamMesh.material.opacity = Math.sin(Math.min(1, p * 1.6) * Math.PI) * 0.88 * fade;
+          beamMesh.material.opacity = Math.sin(Math.min(1, p * 1.6) * Math.PI) * 0.62 * fade;
         });
 
-        // 第二波：轩辕巨剑与八柄飞剑从天而降轰碎黑曜巨石
         const slamP = Math.min(1, Math.max(0, (p - 0.16) / 0.28));
         const slamEase = slamP * slamP;
         sovereignSword.position.y = THREE.MathUtils.lerp(7.2, 1.85, slamEase);
@@ -13521,7 +13997,6 @@ Object.assign(Xiangqi3DApp.prototype, {
           sGroup.scale.setScalar(fade);
         });
 
-        // 巨石崩裂飞溅
         const burstP = Math.max(0, (p - 0.36) / 0.64);
         boulders.forEach(({ rock, ang, spd, lift }) => {
           if (burstP <= 0) {
@@ -13536,7 +14011,7 @@ Object.assign(Xiangqi3DApp.prototype, {
             rock.scale.setScalar((1 - burstP * 0.35) * fade);
           }
         });
-      };
+      });
     }
 
     // =========================================================================
@@ -13563,7 +14038,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         group.add(jGroup);
         return { jGroup, dir };
       });
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const clamp = Math.min(1, p / 0.38);
         const ease = 1 - Math.pow(1 - clamp, 3);
         chariot.position.x = THREE.MathUtils.lerp(kPos.x - 3.6, kPos.x - 1.45, ease);
@@ -13577,7 +14052,7 @@ Object.assign(Xiangqi3DApp.prototype, {
           jGroup.position.x = THREE.MathUtils.lerp(kPos.x + dir * 2.6, kPos.x + dir * 0.42, ease);
           jGroup.scale.setScalar(fade);
         });
-      };
+      });
     }
 
     // =========================================================================
@@ -13607,7 +14082,7 @@ Object.assign(Xiangqi3DApp.prototype, {
 
       const targetHorsePos = new THREE.Vector3(kPos.x, 0.05, kPos.z + (kPos.z < 0 ? 0.95 : -0.95));
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const leap = Math.min(1, p / 0.45);
         troughHorse.position.lerpVectors(
           new THREE.Vector3(horseOrigin.x, 0.05, horseOrigin.z),
@@ -13632,7 +14107,7 @@ Object.assign(Xiangqi3DApp.prototype, {
           }
           bar.scale.setScalar(fade);
         });
-      };
+      });
     }
 
     // =========================================================================
@@ -13643,7 +14118,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       const core = new THREE.Mesh(new THREE.OctahedronGeometry(1.22, 1), darkIronMat);
       const wire = new THREE.Mesh(
         new THREE.OctahedronGeometry(1.28, 1),
-        new THREE.MeshBasicMaterial({ color: 0xfbbf24, wireframe: true, transparent: true, opacity: 0.92 })
+        new THREE.MeshBasicMaterial({ color: 0xfbbf24, wireframe: true, transparent: true, opacity: 0.72 })
       );
       cageGroup.add(core, wire);
       cageGroup.position.set(kPos.x, 7.6, kPos.z);
@@ -13655,21 +14130,18 @@ Object.assign(Xiangqi3DApp.prototype, {
         14
       );
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const fall = Math.min(1, p / 0.34);
         cageGroup.position.y = THREE.MathUtils.lerp(7.6, 1.55, fall * fall);
         cageGroup.rotation.y += dt * 3.2;
         cageGroup.rotation.x += dt * 2.1;
         cageGroup.scale.setScalar(fade);
         topChain.chainGroup.scale.setScalar(fall * fade);
-      };
+      });
     }
 
     // =========================================================================
-    // 15. 天地炮 (Heaven Earth Cannon): 全面史诗级强化版！
-    // 中路天门与底线地户两尊 3D 龙首巨炮坐落于实际“炮”位（带立体火炮堡垒）齐射陨星火弹 +
-    // 远景 8 座 3D 赤焰火山群峰喷薄 + 九天三层立体乾坤八卦星盘旋转镇压 +
-    // 12根 3D 熔岩火柱破土而出 + 贯通天地的螺旋天火巨柱与十字乾坤激光！
+    // 15. 天地炮 (Heaven Earth Cannon): 中路天门与底线地户双尊 3D 巨炮齐射 + 火山群峰 + 九天星盘 + 乾坤十字激光
     // =========================================================================
     if (vfxType === 'heaven_earth_cannon') {
       const cannonCheckers = checkersList.filter(ch => ch && ch.type === 'c' && typeof ch.r === 'number');
@@ -13683,7 +14155,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         ? gridToWorld(bottomC.r, bottomC.c)
         : new THREE.Vector3(kPos.x + 3.2, 0.05, kPos.z);
 
-      // 1. 天门巨炮与地户巨炮 + 3D 炮台基座 + 抛物线陨星炮弹
       const cannonSetups = [
         { pos: skyCannonPos, mat: crimsonLacquerMat, glow: goldGlowMat, delay: 0.0 },
         { pos: earthCannonPos, mat: bronzeWoodMat, glow: crimsonGlowMat, delay: 0.10 }
@@ -13701,15 +14172,14 @@ Object.assign(Xiangqi3DApp.prototype, {
         group.add(cModel);
 
         const shellGroup = new THREE.Group();
-        const shellCore = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), goldGlowMat.clone());
-        const shellHalo = new THREE.Mesh(new THREE.SphereGeometry(0.48, 14, 14), crimsonGlowMat.clone());
+        const shellCore = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), goldGlowMat.clone());
+        const shellHalo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 14), crimsonGlowMat.clone());
         shellGroup.add(shellCore, shellHalo);
         group.add(shellGroup);
 
         return { cModel, bastion, bastionRim, shellGroup, pos, delay };
       });
 
-      // 2. 远景 8 座 3D 赤焰火山岩峰环伺四周
       const volcanoPeaks = Array.from({ length: 8 }, (_, i) => {
         const ang = (i / 8) * Math.PI * 2 + 0.2;
         const rad = 5.2 + (i % 2) * 0.6;
@@ -13724,7 +14194,6 @@ Object.assign(Xiangqi3DApp.prototype, {
         return { vGroup, targetY: 0.85 + (i % 3) * 0.15 };
       });
 
-      // 3. 九天三层立体乾坤八卦火轮星盘 (celestialAstrolabe)
       const astrolabe = new THREE.Group();
       astrolabe.position.set(kPos.x, 4.4, kPos.z);
       const outerWheel = new THREE.Mesh(new THREE.TorusGeometry(2.15, 0.08, 12, 48), goldMat);
@@ -13744,7 +14213,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       }
       group.add(astrolabe);
 
-      // 4. 将门脚下 12 根破土熔岩晶簇尖刺 + 贯通天地双层天火光柱 + 乾坤十字激光
       const magmaSpikes = Array.from({ length: 12 }, (_, i) => {
         const a = (i / 12) * Math.PI * 2;
         const spike = new THREE.Mesh(
@@ -13759,24 +14227,23 @@ Object.assign(Xiangqi3DApp.prototype, {
       });
 
       const innerCorePillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.42, 0.58, 7.8, 24, 1, true),
+        new THREE.CylinderGeometry(0.36, 0.48, 7.2, 24, 1, true),
         goldGlowMat.clone()
       );
-      innerCorePillar.position.set(kPos.x, 3.9, kPos.z);
+      innerCorePillar.position.set(kPos.x, 3.6, kPos.z);
       const outerFirePillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.88, 1.25, 7.8, 24, 1, true),
+        new THREE.CylinderGeometry(0.72, 1.05, 7.2, 24, 1, true),
         crimsonGlowMat.clone()
       );
-      outerFirePillar.position.set(kPos.x, 3.9, kPos.z);
+      outerFirePillar.position.set(kPos.x, 3.6, kPos.z);
 
-      const crossX = new THREE.Mesh(new THREE.BoxGeometry(9.2, 0.24, 0.44), crimsonGlowMat.clone());
+      const crossX = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.20, 0.36), crimsonGlowMat.clone());
       crossX.position.set(kPos.x, 0.26, kPos.z);
-      const crossZ = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.24, 10.2), goldGlowMat.clone());
+      const crossZ = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.20, 10.0), goldGlowMat.clone());
       crossZ.position.set(kPos.x, 0.28, 0);
       group.add(innerCorePillar, outerFirePillar, crossX, crossZ);
 
-      return (p, dt, fade = 1) => {
-        // 1. 双炮齐射与后坐力
+      return wrapUpdater((p, dt, fade = 1) => {
         cannonSetups.forEach(({ cModel, bastion, bastionRim, shellGroup, pos, delay }) => {
           cModel.scale.setScalar(0.92 * fade);
           bastion.scale.setScalar(fade);
@@ -13789,43 +14256,40 @@ Object.assign(Xiangqi3DApp.prototype, {
             THREE.MathUtils.lerp(pos.z, kPos.z, sp)
           );
           const active = sp > 0.01 && sp < 0.98;
-          shellGroup.scale.setScalar(active ? 1.25 * fade : 0.001);
+          shellGroup.scale.setScalar(active ? 1.18 * fade : 0.001);
 
           const recoil = (sp > 0 && sp < 0.30) ? Math.sin(sp * 3.3 * Math.PI) * 0.36 : 0;
           cModel.userData.barrelPivot.rotation.x = -0.32 - recoil * 0.48;
         });
 
-        // 2. 远景火山升起
         const mountRise = Math.min(1, p / 0.32);
         volcanoPeaks.forEach(({ vGroup, targetY }) => {
           vGroup.position.y = THREE.MathUtils.lerp(-1.2, targetY, mountRise);
           vGroup.scale.setScalar(fade);
         });
 
-        // 3. 九天八卦火轮旋转压下
         astrolabe.rotation.y += dt * 3.2;
         midWheel.rotation.z -= dt * 4.5;
         astrolabe.position.y = THREE.MathUtils.lerp(4.8, 2.25, Math.min(1, p * 1.45));
         astrolabe.scale.setScalar((0.85 + Math.sin(p * 12) * 0.12) * fade);
 
-        // 4. 炮弹命中后（p > 0.28）天火巨柱、熔岩尖刺与乾坤十字激光全面爆发
         const eruptP = Math.max(0, Math.min(1, (p - 0.26) / 0.26));
         magmaSpikes.forEach(spike => {
           spike.position.y = THREE.MathUtils.lerp(-0.8, 0.68, eruptP);
           spike.scale.setScalar(fade);
         });
 
-        const pulse = eruptP * (0.78 + Math.sin(p * 28) * 0.22) * fade;
+        const pulse = eruptP * (0.76 + Math.sin(p * 28) * 0.18) * fade;
         innerCorePillar.scale.set(pulse, eruptP, pulse);
-        outerFirePillar.scale.set(pulse * 1.15, eruptP, pulse * 1.15);
-        innerCorePillar.material.opacity = 0.92 * eruptP * fade;
-        outerFirePillar.material.opacity = 0.76 * eruptP * fade;
+        outerFirePillar.scale.set(pulse * 1.12, eruptP, pulse * 1.12);
+        innerCorePillar.material.opacity = 0.58 * eruptP * fade;
+        outerFirePillar.material.opacity = 0.46 * eruptP * fade;
 
         crossX.scale.set(eruptP, pulse, pulse);
         crossZ.scale.set(pulse, pulse, eruptP);
-        crossX.material.opacity = 0.90 * eruptP * fade;
-        crossZ.material.opacity = 0.90 * eruptP * fade;
-      };
+        crossX.material.opacity = 0.62 * eruptP * fade;
+        crossZ.material.opacity = 0.62 * eruptP * fade;
+      });
     }
 
     // =========================================================================
@@ -13852,7 +14316,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       topOctagon.position.set(kPos.x, 2.45, kPos.z);
       group.add(topOctagon);
 
-      return (p, dt, fade = 1) => {
+      return wrapUpdater((p, dt, fade = 1) => {
         const closeIn = Math.min(1, p / 0.46);
         const rad = THREE.MathUtils.lerp(2.65, 1.36, closeIn);
         monoliths.forEach(({ slab, a }) => {
@@ -13862,7 +14326,7 @@ Object.assign(Xiangqi3DApp.prototype, {
         });
         topOctagon.rotation.z += dt * 1.8;
         topOctagon.scale.setScalar((rad / 1.55) * fade);
-      };
+      });
     }
 
     // =========================================================================
@@ -13872,8 +14336,6 @@ Object.assign(Xiangqi3DApp.prototype, {
     lotusGroup.position.set(kPos.x, 0.12, kPos.z);
     group.add(lotusGroup);
 
-    const innerPetals = [];
-    const outerPetals = [];
     for (let i = 0; i < 12; i++) {
       const a = (i * Math.PI) / 6;
       const pInner = new THREE.Mesh(new THREE.ConeGeometry(0.24, 1.85, 6), jadeIceMat);
@@ -13881,30 +14343,28 @@ Object.assign(Xiangqi3DApp.prototype, {
       pInner.rotation.z = -Math.cos(a) * 0.42;
       pInner.rotation.x = Math.sin(a) * 0.42;
       lotusGroup.add(pInner);
-      innerPetals.push({ mesh: pInner, a });
 
       const pOuter = new THREE.Mesh(new THREE.ConeGeometry(0.30, 2.35, 6), i % 2 === 0 ? jadeIceMat : goldMat);
       pOuter.position.set(Math.cos(a + Math.PI / 12) * 1.55, 0.55, Math.sin(a + Math.PI / 12) * 1.55);
       pOuter.rotation.z = -Math.cos(a + Math.PI / 12) * 0.72;
       pOuter.rotation.x = Math.sin(a + Math.PI / 12) * 0.72;
       lotusGroup.add(pOuter);
-      outerPetals.push({ mesh: pOuter, a: a + Math.PI / 12 });
     }
 
     const risingMoon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.68, 24, 24),
+      new THREE.SphereGeometry(0.65, 24, 24),
       goldGlowMat.clone()
     );
     risingMoon.position.set(kPos.x, 0.2, kPos.z);
     group.add(risingMoon);
 
-    return (p, dt, fade = 1) => {
+    return wrapUpdater((p, dt, fade = 1) => {
       const bloom = Math.min(1, p / 0.38);
       lotusGroup.rotation.y += dt * 1.2;
       lotusGroup.scale.setScalar(bloom * fade);
       risingMoon.position.y = THREE.MathUtils.lerp(0.2, 2.35, bloom);
-      risingMoon.scale.setScalar((0.85 + Math.sin(p * 14) * 0.15) * fade);
-    };
+      risingMoon.scale.setScalar((0.85 + Math.sin(p * 14) * 0.12) * fade);
+    });
   },
 
   triggerCheckmateVFX(pattern, winnerColor) {
@@ -13934,7 +14394,6 @@ Object.assign(Xiangqi3DApp.prototype, {
       : (lastRec?.move ? { r: lastRec.move.tr, c: lastRec.move.tc, char: lastRec.piece?.char || '俥' } : { r: Math.min(9, kCoord.r + 2), c: kCoord.c, char: '俥' });
     const cPos = gridToWorld(checker.r, checker.c);
 
-    // 收集所有参与绝杀的棋子与受击敌将 3D 实体，构建全流程 3D 棋子-特效深度互动
     this._activeCheckerMeshes = [];
     const highlightList = Array.isArray(pattern.highlightCoords) && pattern.highlightCoords.length > 0
       ? pattern.highlightCoords
@@ -13973,10 +14432,10 @@ Object.assign(Xiangqi3DApp.prototype, {
     const focusZ = (cPos.z * 0.26 + kPos.z * 0.74);
     const baseTheta = this._savedCamBeforeVFX.spherical.theta;
 
-    // 3D 全屏氛围灯光系统（主爆发点光源 + 边缘轮廓背光）
-    const vfxLight = new THREE.PointLight(atmos.pointHex, 4.8, 28, 1.35);
-    vfxLight.position.set(kPos.x, 4.0, kPos.z);
-    const vfxRimLight = new THREE.PointLight(atmos.rimHex, 3.2, 24, 1.5);
+    // 柔和戏剧光效（调低点光源强度，避免棋盘及模型过曝刺眼）
+    const vfxLight = new THREE.PointLight(atmos.pointHex, 1.55, 22, 1.6);
+    vfxLight.position.set(kPos.x, 3.8, kPos.z);
+    const vfxRimLight = new THREE.PointLight(atmos.rimHex, 1.05, 20, 1.7);
     vfxRimLight.position.set(cPos.x, 2.8, cPos.z);
     this.checkmateVFXGroup.add(vfxLight, vfxRimLight);
 
@@ -13984,12 +14443,11 @@ Object.assign(Xiangqi3DApp.prototype, {
     const crackTex = getMagmaCrackTexture();
     const glowTex = getGlowParticleTexture();
 
-    // 3D 棋盘四周环绕神光天幕柱（12 道 3D 远景流光神柱强化全屏 3D 耀眼氛围）
-    const horizonPillars = Array.from({ length: 12 }, (_, i) => {
-      const ang = (i / 12) * Math.PI * 2;
-      const dist = 7.8;
+    const horizonPillars = Array.from({ length: 10 }, (_, i) => {
+      const ang = (i / 10) * Math.PI * 2;
+      const dist = 8.2;
       const beam = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.42, 9.5, 12, 1, true),
+        new THREE.CylinderGeometry(0.14, 0.34, 8.8, 10, 1, true),
         new THREE.MeshBasicMaterial({
           color: i % 2 === 0 ? atmos.pointHex : atmos.rimHex,
           transparent: true,
@@ -13999,17 +14457,16 @@ Object.assign(Xiangqi3DApp.prototype, {
           depthWrite: false
         })
       );
-      beam.position.set(kPos.x + Math.cos(ang) * dist, 4.2, kPos.z + Math.sin(ang) * dist);
+      beam.position.set(kPos.x + Math.cos(ang) * dist, 4.0, kPos.z + Math.sin(ang) * dist);
       this.checkmateVFXGroup.add(beam);
       return { beam, i };
     });
 
-    // 每个进攻棋子专属的 3D 脚下聚能光环与连携锁定光束（强化棋子与动画的立体互动）
     const attackerPieceHalos = [];
     this._activeCheckerMeshes.forEach((item, idx) => {
       if (item.isKing || !item.isAttacker) return;
       const haloRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.42, 0.76, 32),
+        new THREE.RingGeometry(0.42, 0.74, 32),
         new THREE.MeshBasicMaterial({
           color: idx % 2 === 0 ? atmos.rimHex : atmos.pointHex,
           transparent: true,
@@ -14023,14 +14480,13 @@ Object.assign(Xiangqi3DApp.prototype, {
       haloRing.position.set(item.basePos.x, 0.04, item.basePos.z);
       this.checkmateVFXGroup.add(haloRing);
 
-      // 进攻棋子向敌方将帅发射的 3D 能量虹吸锁链光束
       const linkCurve = new THREE.QuadraticBezierCurve3(
         new THREE.Vector3(item.basePos.x, 0.45, item.basePos.z),
         new THREE.Vector3((item.basePos.x + kPos.x) * 0.5, 1.55 + idx * 0.35, (item.basePos.z + kPos.z) * 0.5),
         new THREE.Vector3(kPos.x, 0.38, kPos.z)
       );
       const linkTube = new THREE.Mesh(
-        new THREE.TubeGeometry(linkCurve, 24, 0.045, 8, false),
+        new THREE.TubeGeometry(linkCurve, 24, 0.040, 8, false),
         new THREE.MeshBasicMaterial({
           color: atmos.rimHex,
           transparent: true,
@@ -14043,16 +14499,16 @@ Object.assign(Xiangqi3DApp.prototype, {
       attackerPieceHalos.push({ item, haloRing, linkTube, idx });
     });
 
-    // 受击敌将棋子内部迸发的 12 道 3D 破灭金芒光束（还原视频中敌将震颤迸射耀眼光芒的经典互动）
     const kingBurstRaysGroup = new THREE.Group();
     kingBurstRaysGroup.position.set(kPos.x, 0.28, kPos.z);
+    kingBurstRaysGroup.visible = false;
     this.checkmateVFXGroup.add(kingBurstRaysGroup);
-    const kingBurstRays = Array.from({ length: 12 }, (_, i) => {
-      const ang = (i / 12) * Math.PI * 2;
+    const kingBurstRays = Array.from({ length: 10 }, (_, i) => {
+      const ang = (i / 10) * Math.PI * 2;
       const ray = new THREE.Mesh(
-        new THREE.ConeGeometry(0.14, 2.8, 6, 1, true),
+        new THREE.ConeGeometry(0.11, 2.2, 6, 1, true),
         new THREE.MeshBasicMaterial({
-          color: i % 2 === 0 ? 0xfef08a : atmos.pointHex,
+          color: i % 2 === 0 ? 0xfde047 : atmos.pointHex,
           transparent: true,
           opacity: 0,
           blending: THREE.AdditiveBlending,
@@ -14060,15 +14516,15 @@ Object.assign(Xiangqi3DApp.prototype, {
           depthWrite: false
         })
       );
-      ray.position.set(Math.cos(ang) * 0.45, 0.95, Math.sin(ang) * 0.45);
-      ray.rotation.z = -Math.cos(ang) * 0.65;
-      ray.rotation.x = Math.sin(ang) * 0.65;
+      ray.position.set(Math.cos(ang) * 0.42, 0.85, Math.sin(ang) * 0.42);
+      ray.rotation.z = -Math.cos(ang) * 0.62;
+      ray.rotation.x = Math.sin(ang) * 0.62;
       kingBurstRaysGroup.add(ray);
       return ray;
     });
 
     const groundShockRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.35, 0.82, 64),
+      new THREE.RingGeometry(0.35, 0.78, 64),
       new THREE.MeshBasicMaterial({
         color: atmos.rimHex,
         side: THREE.DoubleSide,
@@ -14083,7 +14539,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.checkmateVFXGroup.add(groundShockRing);
 
     const crackDisc = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.6, 5.6),
+      new THREE.PlaneGeometry(5.2, 5.2),
       new THREE.MeshBasicMaterial({
         map: crackTex,
         color: atmos.pointHex,
@@ -14098,7 +14554,7 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.checkmateVFXGroup.add(crackDisc);
 
     const baguaOuter = new THREE.Mesh(
-      new THREE.PlaneGeometry(6.2, 6.2),
+      new THREE.PlaneGeometry(5.8, 5.8),
       new THREE.MeshBasicMaterial({
         map: baguaTex,
         color: atmos.rimHex,
@@ -14114,52 +14570,56 @@ Object.assign(Xiangqi3DApp.prototype, {
     this.checkmateVFXGroup.add(baguaOuter);
 
     const updateCustom3D = this.build3DSpectacleForType(vfxType, kPos, cPos, rPos, winnerColor, pattern);
+    // 确保第一阶段期间 3D 演武模型隐藏，不提前出现在棋盘上
+    if (updateCustom3D && updateCustom3D.spectacleGroup) {
+      updateCustom3D.spectacleGroup.visible = false;
+    }
 
-    const spawn3DBurst = (wx, wy, wz, primaryHex = 0xff5500, secondaryHex = 0xfef08a, count = 64) => {
+    const spawn3DBurst = (wx, wy, wz, primaryHex = 0xff5500, secondaryHex = 0xfef08a, count = 38) => {
       for (let i = 0; i < count; i++) {
         const sprite = new THREE.Sprite(
           new THREE.SpriteMaterial({
             map: glowTex,
             color: i % 2 === 0 ? primaryHex : secondaryHex,
             transparent: true,
-            opacity: 1,
+            opacity: 0.72,
             blending: THREE.AdditiveBlending,
             depthWrite: false
           })
         );
-        const initScale = 0.38 + Math.random() * 0.48;
+        const initScale = 0.30 + Math.random() * 0.36;
         sprite.scale.set(initScale, initScale, 1);
         sprite.position.set(wx + (Math.random() - 0.5) * 0.35, wy + Math.random() * 0.25, wz + (Math.random() - 0.5) * 0.35);
         this.checkmateVFXGroup.add(sprite);
 
         const angle = Math.random() * Math.PI * 2;
-        const speedXZ = 2.4 + Math.random() * 7.2;
-        const speedY = 3.4 + Math.random() * 7.5;
+        const speedXZ = 2.2 + Math.random() * 6.5;
+        const speedY = 3.0 + Math.random() * 6.8;
         this.checkmateVFXAnimations.push({
           elapsed: 0,
-          duration: 1.08 + Math.random() * 0.55,
+          duration: 1.0 + Math.random() * 0.5,
           update: (t, dt) => {
             sprite.position.x += Math.cos(angle) * speedXZ * dt;
             sprite.position.z += Math.sin(angle) * speedXZ * dt;
             sprite.position.y += (speedY - t * 10.5) * dt;
             if (sprite.position.y < 0.08) sprite.position.y = 0.08;
-            sprite.material.opacity = Math.max(0, 1 - Math.pow(t, 1.35));
+            sprite.material.opacity = Math.max(0, 0.72 * (1 - Math.pow(t, 1.35)));
           }
         });
       }
     };
 
-    const sparks2D = Array.from({ length: 68 }, (_, i) => {
-      const ang = (i / 68) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-      const spd = 125 + Math.random() * 430;
+    const sparks2D = Array.from({ length: 52 }, (_, i) => {
+      const ang = (i / 52) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+      const spd = 120 + Math.random() * 400;
       return {
         ang,
         vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd - 55,
-        size: 3.2 + Math.random() * 8.2,
+        vy: Math.sin(ang) * spd - 50,
+        size: 3.0 + Math.random() * 7.2,
         rot: Math.random() * Math.PI * 2,
         vRot: (Math.random() - 0.5) * 9,
-        color: i % 4 === 0 ? '#ffffff' : (i % 2 === 0 ? '#fef08a' : atmos.accent)
+        color: i % 4 === 0 ? '#fffbeb' : (i % 2 === 0 ? '#fde68a' : atmos.accent)
       };
     });
 
@@ -14197,16 +14657,15 @@ Object.assign(Xiangqi3DApp.prototype, {
         ctx.scale(dpr, dpr);
         ctx.clearRect(0, 0, w, h);
 
-        // 动态计算 3D 全屏调色权重 (gradeFactor)
         let gradeFactor = 0;
         if (normT < 0.14) gradeFactor = normT / 0.14;
         else if (normT < 0.82) gradeFactor = 1.0;
         else gradeFactor = Math.max(0, 1 - (normT - 0.82) / 0.18);
 
         if (this.scene) {
-          this.scene.background.copy(dayBgColor).lerp(vfxBgColor, gradeFactor * 0.92);
+          this.scene.background.copy(dayBgColor).lerp(vfxBgColor, gradeFactor * 0.88);
           if (this.scene.fog) {
-            this.scene.fog.color.copy(dayBgColor).lerp(vfxFogColor, gradeFactor * 0.92);
+            this.scene.fog.color.copy(dayBgColor).lerp(vfxFogColor, gradeFactor * 0.88);
           }
         }
         if (this.sunLight) {
@@ -14223,13 +14682,19 @@ Object.assign(Xiangqi3DApp.prototype, {
         }
 
         horizonPillars.forEach(({ beam, i }) => {
-          beam.material.opacity = gradeFactor * (0.22 + Math.sin(normT * 18 + i) * 0.08);
-          beam.rotation.y += dt * 0.8;
+          beam.material.opacity = gradeFactor * (0.11 + Math.sin(normT * 16 + i) * 0.04);
+          beam.rotation.y += dt * 0.7;
         });
 
         if (sec < 0.62) {
           const p1 = sec / 0.62;
           const ease1 = 1 - Math.pow(1 - p1, 3);
+
+          // 第一阶段严格隐藏 3D 演武模型，避免提前加载在棋盘上造成突兀感
+          if (updateCustom3D && updateCustom3D.spectacleGroup) {
+            updateCustom3D.spectacleGroup.visible = false;
+          }
+          kingBurstRaysGroup.visible = false;
 
           this.camTarget.set(
             THREE.MathUtils.lerp(0, focusX, ease1 * 0.92),
@@ -14240,34 +14705,33 @@ Object.assign(Xiangqi3DApp.prototype, {
           this.desiredSpherical.phi = THREE.MathUtils.lerp(this._savedCamBeforeVFX.spherical.phi, 1.02, ease1);
           this.desiredSpherical.theta = baseTheta + ease1 * 0.22;
 
-          // 阶段一：致胜棋子腾空旋舞聚能，向敌将发射 3D 能量锁链；敌将受压震颤
           this._activeCheckerMeshes.forEach((item, idx) => {
             if (!item.mesh) return;
             if (item.isKing) {
-              const tremor = Math.sin(p1 * 48) * 0.04 * ease1;
-              item.mesh.position.set(item.basePos.x + tremor, ease1 * 0.12, item.basePos.z + tremor);
+              const tremor = Math.sin(p1 * 44) * 0.035 * ease1;
+              item.mesh.position.set(item.basePos.x + tremor, ease1 * 0.10, item.basePos.z + tremor);
             } else {
-              const lift = Math.sin(ease1 * Math.PI * 0.5) * 0.96;
+              const lift = Math.sin(ease1 * Math.PI * 0.5) * 0.92;
               item.mesh.position.set(item.basePos.x, lift, item.basePos.z);
               item.mesh.rotation.y = ease1 * Math.PI * (idx % 2 === 0 ? 2 : -2);
-              const sc = 1 + ease1 * 0.16;
+              const sc = 1 + ease1 * 0.14;
               item.mesh.scale.set(sc, sc, sc);
             }
           });
 
           attackerPieceHalos.forEach(({ item, haloRing, linkTube, idx }) => {
             haloRing.position.y = item.mesh ? item.mesh.position.y + 0.04 : 0.04;
-            haloRing.scale.setScalar(1 + ease1 * 0.65);
+            haloRing.scale.setScalar(1 + ease1 * 0.55);
             haloRing.rotation.z += dt * (idx % 2 === 0 ? 4 : -4);
-            haloRing.material.opacity = ease1 * 0.92;
-            linkTube.material.opacity = ease1 * 0.85;
+            haloRing.material.opacity = ease1 * 0.65;
+            linkTube.material.opacity = ease1 * 0.58;
           });
 
-          const shockScale = 1 + ease1 * 8.5;
+          const shockScale = 1 + ease1 * 8.2;
           groundShockRing.scale.set(shockScale, shockScale, 1);
-          groundShockRing.material.opacity = Math.sin(p1 * Math.PI) * 0.90;
-          baguaOuter.material.opacity = ease1 * 0.82;
-          baguaOuter.rotation.z += dt * 2.2;
+          groundShockRing.material.opacity = Math.sin(p1 * Math.PI) * 0.55;
+          baguaOuter.material.opacity = ease1 * 0.52;
+          baguaOuter.rotation.z += dt * 2.0;
 
           this.drawImperialTopCinematicBar(ctx, w * 0.5, h * 0.11, subBannerText, ease1, atmos.accent);
         } else if (sec < 2.58) {
@@ -14275,59 +14739,63 @@ Object.assign(Xiangqi3DApp.prototype, {
           if (!stage2Triggered) {
             stage2Triggered = true;
             this.triggerScreenFlash();
-            this.cameraShake = 0.92;
-            spawn3DBurst(kPos.x, 0.35, kPos.z, atmos.pointHex, atmos.rimHex, 68);
+            this.cameraShake = 0.76;
+            spawn3DBurst(kPos.x, 0.35, kPos.z, atmos.pointHex, atmos.rimHex, 42);
+            if (updateCustom3D && updateCustom3D.spectacleGroup) {
+              updateCustom3D.spectacleGroup.visible = true;
+            }
+            kingBurstRaysGroup.visible = true;
           }
 
-          // 阶段二：3D 立体建模演武特写 + 进攻棋子与受击敌将全程动态互动！
           this.desiredSpherical.radius = 9.4 + Math.sin(p2 * Math.PI) * 0.8;
           this.desiredSpherical.phi = 0.98 + Math.cos(p2 * Math.PI) * 0.08;
           this.desiredSpherical.theta = baseTheta + 0.22 + Math.sin(p2 * Math.PI * 1.5) * 0.28;
-          crackDisc.material.opacity = Math.min(0.90, p2 * 2.4) * (1 - p2 * 0.18);
-          baguaOuter.material.opacity = 0.84 * (1 - p2 * 0.15);
-          baguaOuter.rotation.z += dt * 1.8;
+          crackDisc.material.opacity = Math.min(0.58, p2 * 1.8) * (1 - p2 * 0.18);
+          baguaOuter.material.opacity = 0.52 * (1 - p2 * 0.15);
+          baguaOuter.rotation.z += dt * 1.6;
 
-          // 棋子与 3D 绝杀特效实时互动：进攻棋子悬浮共鸣，敌将在重击下剧烈震颤、受迫后仰并迸射 3D 破灭金芒！
           const impactHit = Math.max(0, Math.min(1, (p2 - 0.22) / 0.55));
           this._activeCheckerMeshes.forEach((item, idx) => {
             if (!item.mesh) return;
             if (item.isKing) {
-              const shakeAmp = (0.06 + impactHit * 0.12) * (1 - p2 * 0.25);
-              const jx = Math.sin(p2 * 95) * shakeAmp;
-              const jz = Math.cos(p2 * 88) * shakeAmp;
-              const knockUp = Math.sin(impactHit * Math.PI) * 0.38;
-              item.mesh.position.set(item.basePos.x + jx, 0.10 + knockUp, item.basePos.z + jz);
+              const shakeAmp = (0.05 + impactHit * 0.10) * (1 - p2 * 0.25);
+              const jx = Math.sin(p2 * 90) * shakeAmp;
+              const jz = Math.cos(p2 * 84) * shakeAmp;
+              const knockUp = Math.sin(impactHit * Math.PI) * 0.32;
+              item.mesh.position.set(item.basePos.x + jx, 0.08 + knockUp, item.basePos.z + jz);
               item.mesh.rotation.set(
-                Math.sin(p2 * 42) * 0.24 + impactHit * 0.28,
-                Math.sin(p2 * 24) * 0.18,
-                Math.cos(p2 * 38) * 0.24
+                Math.sin(p2 * 40) * 0.20 + impactHit * 0.24,
+                Math.sin(p2 * 22) * 0.15,
+                Math.cos(p2 * 36) * 0.20
               );
             } else {
-              const hoverY = 0.34 + Math.sin(p2 * 14 + idx) * 0.14;
+              const hoverY = 0.30 + Math.sin(p2 * 14 + idx) * 0.12;
               item.mesh.position.set(item.basePos.x, hoverY, item.basePos.z);
-              item.mesh.rotation.set(Math.sin(p2 * 10 + idx) * 0.12, p2 * Math.PI * 2, 0);
-              const pulseSc = 1.12 + Math.sin(p2 * 18 + idx) * 0.06;
+              item.mesh.rotation.set(Math.sin(p2 * 10 + idx) * 0.10, p2 * Math.PI * 2, 0);
+              const pulseSc = 1.10 + Math.sin(p2 * 16 + idx) * 0.05;
               item.mesh.scale.set(pulseSc, pulseSc, pulseSc);
             }
           });
 
           attackerPieceHalos.forEach(({ item, haloRing, linkTube, idx }) => {
             haloRing.position.y = item.mesh ? item.mesh.position.y - 0.05 : 0.05;
-            haloRing.rotation.z += dt * (idx % 2 === 0 ? 5 : -5);
-            haloRing.scale.setScalar(1.25 + Math.sin(p2 * 16 + idx) * 0.22);
-            haloRing.material.opacity = 0.85;
-            linkTube.material.opacity = 0.55 + Math.sin(p2 * 24 + idx) * 0.30;
+            haloRing.rotation.z += dt * (idx % 2 === 0 ? 4.5 : -4.5);
+            haloRing.scale.setScalar(1.18 + Math.sin(p2 * 14 + idx) * 0.18);
+            haloRing.material.opacity = 0.58;
+            linkTube.material.opacity = 0.38 + Math.sin(p2 * 22 + idx) * 0.18;
           });
 
-          // 敌将内部迸射 12 道 3D 耀眼金芒光束
-          kingBurstRaysGroup.rotation.y += dt * 2.6;
+          kingBurstRaysGroup.rotation.y += dt * 2.2;
           kingBurstRays.forEach((ray, i) => {
             const rayShow = Math.sin(impactHit * Math.PI);
-            ray.scale.set(1, 0.4 + rayShow * (1.2 + (i % 3) * 0.35), 1);
-            ray.material.opacity = rayShow * 0.88;
+            ray.scale.set(1, 0.35 + rayShow * (1.05 + (i % 3) * 0.28), 1);
+            ray.material.opacity = rayShow * 0.48;
           });
 
-          if (updateCustom3D) updateCustom3D(p2, dt, 1.0);
+          // 3D 模型平滑入场过渡 (enterFade)，彻底消除一瞬间突兀跳出的生硬感
+          const enterT = Math.min(1, p2 / 0.16);
+          const enterFade = 1 - Math.pow(1 - enterT, 3);
+          if (updateCustom3D) updateCustom3D(p2, dt, enterFade);
 
           this.renderImperialHUD2D(ctx, w, h, p2, vfxType, stampTitle, subBannerText, atmos);
         } else {
@@ -14336,12 +14804,11 @@ Object.assign(Xiangqi3DApp.prototype, {
           if (!stage3Triggered) {
             stage3Triggered = true;
             this.triggerScreenFlash();
-            this.cameraShake = 0.82;
-            spawn3DBurst(kPos.x, 0.45, kPos.z, atmos.rimHex, atmos.pointHex, 60);
+            this.cameraShake = 0.68;
+            spawn3DBurst(kPos.x, 0.45, kPos.z, atmos.rimHex, atmos.pointHex, 36);
             this.spawnShatterFragments?.(kPos.x, kPos.z, winnerColor === RED ? BLACK : RED);
           }
 
-          // 阶段三：棋子平滑归位，绝杀金印轰然落定
           this._activeCheckerMeshes.forEach((item) => {
             if (!item.mesh || !item.basePos) return;
             const settle = Math.min(1, p3 * 1.8);
@@ -14357,11 +14824,11 @@ Object.assign(Xiangqi3DApp.prototype, {
 
           const fade3D = Math.max(0, 1 - p3 * 1.45);
           attackerPieceHalos.forEach(({ haloRing, linkTube }) => {
-            haloRing.material.opacity = fade3D * 0.7;
-            linkTube.material.opacity = fade3D * 0.6;
+            haloRing.material.opacity = fade3D * 0.45;
+            linkTube.material.opacity = fade3D * 0.38;
           });
           kingBurstRays.forEach(ray => {
-            ray.material.opacity = fade3D * 0.5;
+            ray.material.opacity = fade3D * 0.35;
           });
 
           this.camTarget.lerpVectors(new THREE.Vector3(focusX, 0.55, focusZ), this._savedCamBeforeVFX.target, ease3);
@@ -14369,23 +14836,26 @@ Object.assign(Xiangqi3DApp.prototype, {
           this.desiredSpherical.phi = THREE.MathUtils.lerp(1.02, this._savedCamBeforeVFX.spherical.phi, ease3);
           this.desiredSpherical.theta = THREE.MathUtils.lerp(baseTheta + 0.22, this._savedCamBeforeVFX.spherical.theta, ease3);
 
-          crackDisc.material.opacity = fade3D * 0.75;
-          baguaOuter.material.opacity = fade3D * 0.75;
-          if (updateCustom3D) updateCustom3D(1.0, dt, fade3D);
+          crackDisc.material.opacity = fade3D * 0.48;
+          baguaOuter.material.opacity = fade3D * 0.48;
+          if (updateCustom3D) {
+            if (fade3D <= 0.01 && updateCustom3D.spectacleGroup) {
+              updateCustom3D.spectacleGroup.visible = false;
+            } else {
+              updateCustom3D(1.0, dt, fade3D);
+            }
+          }
 
           this.renderImperialFinalJueshaSeal2D(ctx, w, h, p3, stampTitle, subBannerText, sparks2D, vfxType, atmos);
         }
 
-        vfxLight.intensity = (1 - normT * 0.45) * (4.8 + Math.sin(normT * 36) * 1.1);
-        vfxRimLight.intensity = (1 - normT * 0.45) * (3.2 + Math.cos(normT * 28) * 0.8);
+        vfxLight.intensity = (1 - normT * 0.45) * (1.55 + Math.sin(normT * 32) * 0.28);
+        vfxRimLight.intensity = (1 - normT * 0.45) * (1.05 + Math.cos(normT * 26) * 0.20);
         ctx.restore();
       }
     });
   },
 
-  /**
-   * 全屏电影级调色暗角与 HUD 字幕层（根据杀法专属色板渲染绚丽四周边缘辉光与顶部铭牌、底部书法名号）
-   */
   renderImperialHUD2D(ctx, w, h, p, vfxType, stampTitle, subBannerText, atmos = null) {
     const cx = w * 0.5;
     const cy = h * 0.5;
@@ -14393,9 +14863,9 @@ Object.assign(Xiangqi3DApp.prototype, {
     const prof = atmos || this.getVFXAtmosphereProfile(vfxType);
 
     ctx.save();
-    const vig = ctx.createRadialGradient(cx, cy, minDim * 0.28, cx, cy, Math.max(w, h) * 0.76);
+    const vig = ctx.createRadialGradient(cx, cy, minDim * 0.30, cx, cy, Math.max(w, h) * 0.78);
     vig.addColorStop(0.0, 'rgba(0, 0, 0, 0)');
-    vig.addColorStop(0.58, prof.tintInner);
+    vig.addColorStop(0.60, prof.tintInner);
     vig.addColorStop(1.0, prof.tintOuter);
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, w, h);
@@ -14430,9 +14900,9 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     const ringR = Math.min(w, h) * (0.14 + p3 * 0.42);
     ctx.strokeStyle = isIceOrWater
-      ? `rgba(186, 230, 253, ${(1 - p3) * 0.85})`
-      : `rgba(254, 240, 138, ${(1 - p3) * 0.85})`;
-    ctx.lineWidth = 5 * (1 - p3 * 0.55);
+      ? `rgba(186, 230, 253, ${(1 - p3) * 0.68})`
+      : `rgba(254, 240, 138, ${(1 - p3) * 0.68})`;
+    ctx.lineWidth = 4.5 * (1 - p3 * 0.55);
     ctx.beginPath();
     ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
     ctx.stroke();
@@ -14461,38 +14931,122 @@ Object.assign(Xiangqi3DApp.prototype, {
     ctx.restore();
   },
 
-  spawnMoveTrailRibbon(startPos, endPos, color, isCapture = false) {
+  /**
+   * 加强版行棋流光轨迹与起跳涟漪特效（双层立体流光丝带 + 沿途星芒粒子 + 起点聚气金环）
+   */
+  spawnMoveTrailRibbon(startPos, endPos, color, isCapture = false, pieceType = 'r') {
     if (!this.scene) return;
     const isRed = color === RED;
+    const dx = endPos.x - startPos.x;
+    const dz = endPos.z - startPos.z;
     const midX = (startPos.x + endPos.x) * 0.5;
     const midZ = (startPos.z + endPos.z) * 0.5;
+    const peakY = isCapture
+      ? (pieceType === 'c' ? 1.85 : (pieceType === 'n' ? 1.55 : 1.12))
+      : (pieceType === 'n' ? 1.28 : 0.78);
+
     const curve = new THREE.QuadraticBezierCurve3(
-      new THREE.Vector3(startPos.x, 0.18, startPos.z),
-      new THREE.Vector3(midX, isCapture ? 1.05 : 0.78, midZ),
-      new THREE.Vector3(endPos.x, 0.18, endPos.z)
+      new THREE.Vector3(startPos.x, 0.16, startPos.z),
+      new THREE.Vector3(midX, peakY, midZ),
+      new THREE.Vector3(endPos.x, 0.16, endPos.z)
     );
-    const tubeGeo = new THREE.TubeGeometry(curve, 28, isCapture ? 0.068 : 0.046, 10, false);
-    const tubeMat = new THREE.MeshBasicMaterial({
+
+    if (!this.impactWaves) this.impactWaves = [];
+
+    // 1. 内层高亮流光核心束
+    const coreGeo = new THREE.TubeGeometry(curve, 32, isCapture ? 0.062 : 0.044, 10, false);
+    const coreMat = new THREE.MeshBasicMaterial({
       color: isCapture ? 0xfef08a : (isRed ? 0xff6b6b : 0xfbbf24),
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.85,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
-    const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
-    this.scene.add(tubeMesh);
-    if (!this.impactWaves) this.impactWaves = [];
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    this.scene.add(coreMesh);
     this.impactWaves.push({
-      mesh: tubeMesh,
+      mesh: coreMesh,
       age: 0,
-      maxAge: isCapture ? 0.46 : 0.36,
+      maxAge: isCapture ? 0.52 : 0.40,
       maxScale: 1.0,
       isTrail: true
     });
+
+    // 2. 外层柔和晕染剑气光带
+    const auraGeo = new THREE.TubeGeometry(curve, 24, isCapture ? 0.13 : 0.09, 8, false);
+    const auraMat = new THREE.MeshBasicMaterial({
+      color: isRed ? 0xef4444 : 0xd97706,
+      transparent: true,
+      opacity: 0.42,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const auraMesh = new THREE.Mesh(auraGeo, auraMat);
+    this.scene.add(auraMesh);
+    this.impactWaves.push({
+      mesh: auraMesh,
+      age: 0,
+      maxAge: isCapture ? 0.58 : 0.44,
+      maxScale: 1.0,
+      isTrail: true
+    });
+
+    // 3. 起点腾空助推涟漪环
+    const launchRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.22, 0.42, 32),
+      new THREE.MeshBasicMaterial({
+        color: isRed ? 0xf87171 : 0xfbbf24,
+        transparent: true,
+        opacity: 0.78,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      })
+    );
+    launchRing.rotation.x = -Math.PI / 2;
+    launchRing.position.set(startPos.x, 0.024, startPos.z);
+    this.scene.add(launchRing);
+    this.impactWaves.push({
+      mesh: launchRing,
+      age: 0,
+      maxAge: 0.34,
+      maxScale: 1.65
+    });
+
+    // 4. 沿途飘散的星芒微粒
+    const glowTex = typeof getGlowParticleTexture === 'function' ? getGlowParticleTexture() : null;
+    if (glowTex && this.shatterParticles) {
+      const moteCount = isCapture ? 10 : 6;
+      for (let i = 1; i <= moteCount; i++) {
+        const pt = curve.getPoint(i / (moteCount + 1));
+        const spMat = new THREE.SpriteMaterial({
+          map: glowTex,
+          color: i % 2 === 0 ? 0xfef08a : (isRed ? 0xf87171 : 0xfbbf24),
+          transparent: true,
+          opacity: 0.78,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        const sp = new THREE.Sprite(spMat);
+        const sc = isCapture ? 0.28 : 0.22;
+        sp.scale.set(sc, sc, 1);
+        sp.position.set(pt.x + (Math.random() - 0.5) * 0.16, pt.y, pt.z + (Math.random() - 0.5) * 0.16);
+        this.scene.add(sp);
+        this.shatterParticles.push({
+          mesh: sp,
+          vx: (Math.random() - 0.5) * 0.8 + dx * 0.12,
+          vy: 0.6 + Math.random() * 1.1,
+          vz: (Math.random() - 0.5) * 0.8 + dz * 0.12,
+          life: 0,
+          maxLife: 0.45 + Math.random() * 0.18
+        });
+      }
+    }
   },
 
   spawnMoveImpactWave(worldX, worldZ, isCapture = false) {
     if (!this.scene) return;
+    if (!this.impactWaves) this.impactWaves = [];
     const markerTex = typeof getBoardMarkerTexture === 'function'
       ? getBoardMarkerTexture(isCapture ? 'warning' : 'last_to')
       : null;
@@ -14500,7 +15054,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       map: markerTex || null,
       color: isCapture ? 0xffef8a : 0xfde047,
       transparent: true,
-      opacity: isCapture ? 0.92 : 0.82,
+      opacity: isCapture ? 0.88 : 0.78,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       side: THREE.DoubleSide
@@ -14512,16 +15066,37 @@ Object.assign(Xiangqi3DApp.prototype, {
     waveMesh.rotation.x = -Math.PI / 2;
     waveMesh.position.set(worldX, 0.026, worldZ);
     this.scene.add(waveMesh);
-    if (!this.impactWaves) this.impactWaves = [];
     this.impactWaves.push({
       mesh: waveMesh,
       age: 0,
-      maxAge: isCapture ? 0.56 : 0.40,
-      maxScale: isCapture ? 2.45 : 1.72
+      maxAge: isCapture ? 0.56 : 0.42,
+      maxScale: isCapture ? 2.45 : 1.75
+    });
+
+    // 第二道外扩激波金环，使落子瞬间更具分量感与节奏感
+    const outerRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.38, 0.48, 36),
+      new THREE.MeshBasicMaterial({
+        color: isCapture ? 0xef4444 : 0xf59e0b,
+        transparent: true,
+        opacity: isCapture ? 0.72 : 0.54,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      })
+    );
+    outerRing.rotation.x = -Math.PI / 2;
+    outerRing.position.set(worldX, 0.028, worldZ);
+    this.scene.add(outerRing);
+    this.impactWaves.push({
+      mesh: outerRing,
+      age: 0,
+      maxAge: isCapture ? 0.48 : 0.34,
+      maxScale: isCapture ? 2.85 : 2.05
     });
   },
 
-  spawnShatterFragments(worldX, worldZ, color) {
+  spawnShatterFragments(worldX, worldZ, color, dirX = 0, dirZ = 0) {
     const isRed = color === RED;
     this.spawnMoveImpactWave(worldX, worldZ, true);
     this.cameraShake = Math.max(this.cameraShake || 0, 0.34);
@@ -14534,7 +15109,7 @@ Object.assign(Xiangqi3DApp.prototype, {
           map: slashTex,
           color: sIdx === 0 ? 0xfef08a : 0xff3333,
           transparent: true,
-          opacity: 0.95,
+          opacity: 0.88,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
           side: THREE.DoubleSide
@@ -14554,49 +15129,50 @@ Object.assign(Xiangqi3DApp.prototype, {
       }
     }
 
+    // 碎片顺着进攻方向迸射飞散，呈现真实的撞击击飞物理效果
     for (let i = 0; i < 20; i++) {
       const fragMat = new THREE.MeshStandardMaterial({
         color: isRed ? 0xe6d5b8 : 0x090d16,
         emissive: isRed ? 0xf59e0b : 0xfbbf24,
-        emissiveIntensity: 0.48,
+        emissiveIntensity: 0.38,
         roughness: 0.18,
         metalness: 0.38,
         transparent: true,
         opacity: 1
       });
       const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.075 + Math.random() * 0.045, 0), fragMat);
-      mesh.position.set(worldX, 0.24, worldZ);
+      mesh.position.set(worldX + dirX * 0.12, 0.24, worldZ + dirZ * 0.12);
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
       this.scene.add(mesh);
       this.shatterParticles.push({
         mesh,
-        vx: (Math.random() - 0.5) * 5.6,
+        vx: (Math.random() - 0.5) * 5.2 + dirX * 2.4,
         vy: 3.4 + Math.random() * 4.0,
-        vz: (Math.random() - 0.5) * 5.6,
+        vz: (Math.random() - 0.5) * 5.2 + dirZ * 2.4,
         life: 0,
         maxLife: 0.85
       });
     }
 
     if (glowTex) {
-      for (let i = 0; i < 16; i++) {
+      for (let i = 0; i < 14; i++) {
         const spMat = new THREE.SpriteMaterial({
           map: glowTex,
           color: i % 2 === 0 ? 0xfef08a : (isRed ? 0xef4444 : 0xf59e0b),
           transparent: true,
-          opacity: 0.95,
+          opacity: 0.82,
           blending: THREE.AdditiveBlending,
           depthWrite: false
         });
         const sp = new THREE.Sprite(spMat);
-        sp.scale.set(0.44, 0.44, 1);
+        sp.scale.set(0.38, 0.38, 1);
         sp.position.set(worldX, 0.28, worldZ);
         this.scene.add(sp);
         this.shatterParticles.push({
           mesh: sp,
-          vx: (Math.random() - 0.5) * 6.0,
-          vy: 2.8 + Math.random() * 4.5,
-          vz: (Math.random() - 0.5) * 6.0,
+          vx: (Math.random() - 0.5) * 5.5 + dirX * 1.8,
+          vy: 2.8 + Math.random() * 4.2,
+          vz: (Math.random() - 0.5) * 5.5 + dirZ * 1.8,
           life: 0,
           maxLife: 0.72
         });
@@ -14622,7 +15198,7 @@ Object.assign(Xiangqi3DApp.prototype, {
       new THREE.MeshBasicMaterial({
         color: 0xfef08a,
         transparent: true,
-        opacity: 0.96,
+        opacity: 0.92,
         depthWrite: false
       })
     );
@@ -14640,7 +15216,7 @@ Object.assign(Xiangqi3DApp.prototype, {
           color: tex ? 0xffffff : (i ? 0x10b981 : 0xf59e0b),
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.96,
+          opacity: 0.94,
           depthWrite: false
         })
       );
@@ -15737,6 +16313,14 @@ Object.assign(Xiangqi3DApp.prototype, {
         const movePieceType = movingPiece.isHidden ? (movingPiece.posType || movingPiece.type) : movingPiece.type;
 
         this.setLastMoveMarkers?.({ r: m.fr, c: m.fc }, { r: m.tr, c: m.tc });
+        this.spawnMoveTrailRibbon?.(startPos, endPos, movePieceType, movingPiece.color, isCapture);
+
+        const moveDx = endPos.x - startPos.x;
+        const moveDz = endPos.z - startPos.z;
+        const moveDist = Math.hypot(moveDx, moveDz) || 1;
+        const attackDirX = moveDx / moveDist;
+        const attackDirZ = moveDz / moveDist;
+        let captureShattered = false;
 
         this.activeAnimations = [];
         this.activeAnimations.push({
@@ -15755,16 +16339,31 @@ Object.assign(Xiangqi3DApp.prototype, {
               movingMesh.position.z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease);
               movingMesh.position.y = Math.sin(ease * Math.PI) * 0.75;
             }
+            if (isCapture && targetMesh && !captureShattered) {
+              if (t >= 0.45 && t < 0.72) {
+                const pre = (t - 0.45) / 0.27;
+                targetMesh.position.x = endPos.x + Math.sin(pre * 28) * 0.04 * pre;
+                targetMesh.position.z = endPos.z + Math.cos(pre * 28) * 0.04 * pre;
+                targetMesh.scale.set(1 + pre * 0.06, 1 - pre * 0.14, 1 + pre * 0.06);
+              } else if (t >= 0.72) {
+                captureShattered = true;
+                this.piecesGroup.remove(targetMesh);
+                this.pieceMeshes.delete(targetPiece.id);
+                this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
+                this.sfx.playAttackShatter();
+              }
+            }
           },
           complete: () => {
             movingMesh.rotation.set(0, 0, 0);
             movingMesh.scale.set(1, 1, 1);
             this.restoreSnapshotToEngine(snap);
-            if (isCapture && targetMesh) {
-              this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color);
+            if (isCapture && targetMesh && !captureShattered) {
+              captureShattered = true;
+              this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
               this.sfx.playAttackShatter();
-            } else if (movingPiece) {
-              this.spawnMoveImpactWave?.(endPos.x, endPos.z, false);
+            } else if (!isCapture && movingPiece) {
+              this.spawnMoveImpactWave?.(endPos.x, endPos.z, false, movingPiece.color);
               this.sfx.playMove(movingPiece.color, movingPiece.type);
             }
             this.syncPiecesFromEngine();
@@ -16795,7 +17394,7 @@ Object.assign(Xiangqi3DApp.prototype, {
 
     ctx.fillStyle = '#991b1b';
     ctx.font = 'bold 19px "XiangqiCalligraphy", "Noto Serif SC", "Songti SC", "STKaiti", "Kaiti SC", "KaiTi", serif';
-    ctx.fillText(this.currentSceneId === 'ancient_battlefield' ? '◆ 中国象棋 3D · 楚汉将台演武' : (this.currentSceneId === 'imperial_study' ? '◆ 中国象棋 3D · 紫宸御弈演武' : '◆ 中国象棋 3D · 翠竹石案演武'), cardX + 48, cardY + 166);
+    ctx.fillText(this.currentSceneId === 'ancient_battlefield' ? '◆ 中国象棋 3D · 楚汉将台演武' : (this.currentSceneId === 'imperial_study' ? '◆ 中国象棋 3D · 瑶台揽月演武' : '◆ 中国象棋 3D · 翠竹石案演武'), cardX + 48, cardY + 166);
 
     const finalizePoster = (source) => {
       const qrBoxX = cardX + cardW - 198;
@@ -16946,8 +17545,72 @@ Object.assign(Xiangqi3DApp.prototype, {
     const title = isReplay
       ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
       : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？';
+    const shareCommand = `${title}\n👉 点击链接直接应战：${url}`;
 
     const blob = this.currentPosterBlob || (this.currentPosterDataUrl ? dataURLToBlobSync(this.currentPosterDataUrl) : null);
+
+    // 微信端优先在用户手势激活期内响应，同时打开专属微信分享面板（避免被高层级弹窗遮挡）
+    if (platform === 'wechat') {
+      const ua = navigator.userAgent || '';
+      const isWeChatBrowser = /MicroMessenger/i.test(ua);
+      const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+
+      if (isMobileDevice && !isWeChatBrowser && typeof navigator.share === 'function') {
+        let file = this.currentPosterFile;
+        if (!file && blob && typeof File !== 'undefined') {
+          try {
+            file = new File([blob], isReplay ? 'xiangqi3d-replay.png' : 'xiangqi3d-endgame.png', { type: 'image/png' });
+            this.currentPosterFile = file;
+          } catch (_) { }
+        }
+        if (file && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+          try {
+            await navigator.share({ files: [file], title: isReplay ? '中国象棋 3D · 棋局复盘' : '中国象棋 3D · 残局战帖', text: title });
+            this.showCenterCallout('已调起系统分享至微信', RED, '微信分享');
+            return;
+          } catch (err) {
+            if (err?.name === 'AbortError') return;
+          }
+        }
+      }
+
+      let imageCopied = false;
+      let textCopied = false;
+      if (blob && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        try {
+          const itemData = { 'image/png': blob };
+          if (typeof Blob !== 'undefined') {
+            itemData['text/plain'] = new Blob([shareCommand], { type: 'text/plain' });
+          }
+          await navigator.clipboard.write([new ClipboardItem(itemData)]);
+          imageCopied = true;
+          textCopied = true;
+        } catch (_) {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            imageCopied = true;
+          } catch (_2) { }
+        }
+      }
+      if (!imageCopied && !textCopied) {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareCommand);
+            textCopied = true;
+          }
+        } catch (_) { }
+      }
+
+      this.openWeChatShareModal({
+        url,
+        title,
+        shareCommand,
+        imageCopied,
+        textCopied,
+        isWeChatBrowser
+      });
+      return;
+    }
 
     let imageCopied = false;
     if (blob && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
@@ -16960,42 +17623,149 @@ Object.assign(Xiangqi3DApp.prototype, {
     if (platform === 'weibo') {
       const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
       window.open(weiboUrl, '_blank', 'noopener,noreferrer,width=680,height=520');
-      this.showCenterCallout(imageCopied ? '已打开微博分享（海报图片也已复制，可直接粘贴）' : '已打开微博分享窗口', RED);
+      this.showCenterCallout(imageCopied ? '已打开微博分享（海报图片也已复制，可直接粘贴）' : '已打开微博分享窗口', RED, '社交分享');
       return;
     }
 
     if (platform === 'qq') {
       const qqUrl = `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(isReplay ? '中国象棋 3D · 棋局复盘' : '中国象棋 3D · 残局战帖')}&summary=${encodeURIComponent(title)}`;
       window.open(qqUrl, '_blank', 'noopener,noreferrer,width=720,height=540');
-      this.showCenterCallout(imageCopied ? '已打开 QQ 分享（海报图片也已复制，可在聊天框直接粘贴）' : '已打开 QQ 分享窗口', RED);
-      return;
-    }
-
-    if (platform === 'wechat') {
-      if (this.currentPosterFile && navigator.share && (!navigator.canShare || navigator.canShare({ files: [this.currentPosterFile] }))) {
-        try {
-          await navigator.share({ files: [this.currentPosterFile], title: isReplay ? '棋局复盘' : '残局战帖', text: title });
-          return;
-        } catch (err) {
-          if (err?.name === 'AbortError') return;
-        }
-      }
-      if (imageCopied) {
-        this.showCenterCallout('海报图片已复制！打开微信可直接粘贴发送，或长按上方海报转发', RED);
-      } else {
-        this.downloadEndgamePoster();
-        this.showCenterCallout('已保存高清海报图片，打开微信/朋友圈即可直接发送', RED);
-      }
+      this.showCenterCallout(imageCopied ? '已打开 QQ 分享（海报图片也已复制，可在聊天框直接粘贴）' : '已打开 QQ 分享窗口', RED, '社交分享');
       return;
     }
 
     if (platform === 'copy_image') {
       if (imageCopied) {
-        this.showCenterCallout('高清海报图片已复制，可直接粘贴到任意社交平台！', RED);
+        this.showCenterCallout('高清海报图片已复制，可直接粘贴到微信/QQ/社交平台！', RED, '复制成功');
       } else {
         this.downloadEndgamePoster();
-        this.showCenterCallout('当前浏览器限制剪贴板图片，已为您直接下载海报', RED);
+        this.showCenterCallout('当前浏览器限制剪贴板图片，已为您直接保存高清海报', RED, '已存海报');
       }
+    }
+  },
+
+  openWeChatShareModal(opts = {}) {
+    const modal = document.getElementById('wechat-share-modal');
+    const url = opts.url || this.currentShareUrl || window.location.href;
+    const isReplay = this.currentShareKind === 'replay';
+    const title = opts.title || (isReplay
+      ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
+      : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？');
+    this.currentWeChatCommand = opts.shareCommand || `${title}\n👉 点击链接直接应战：${url}`;
+
+    if (!modal) {
+      this.copyTextSafe(this.currentWeChatCommand, opts.imageCopied ? '海报与微信口令已复制，请打开微信粘贴发送' : '微信挑战口令已复制，请打开微信粘贴发送');
+      return;
+    }
+
+    const badgeEl = document.getElementById('wechat-copy-badge');
+    if (badgeEl) {
+      if (opts.imageCopied) {
+        badgeEl.textContent = '✓ 已自动复制高清战帖图片与挑战链接，去微信可直接 Ctrl+V / 粘贴发送';
+      } else if (opts.textCopied) {
+        badgeEl.textContent = '✓ 已自动复制微信挑战口令与链接，去微信可直接粘贴发送';
+      } else {
+        badgeEl.textContent = '✦ 微信扫一扫下方二维码，或点击下方按钮一键复制口令/保存海报';
+      }
+    }
+
+    const inAppGuide = document.getElementById('wechat-inapp-guide');
+    if (inAppGuide) {
+      inAppGuide.classList.toggle('hidden', !opts.isWeChatBrowser);
+    }
+
+    const posterPreview = document.getElementById('wechat-share-poster-preview');
+    if (posterPreview && this.currentPosterDataUrl) {
+      posterPreview.src = this.currentPosterDataUrl;
+    }
+
+    const cmdInput = document.getElementById('wechat-share-command-text');
+    if (cmdInput) {
+      cmdInput.value = this.currentWeChatCommand;
+    }
+
+    const qrBox = document.getElementById('wechat-share-qr-box');
+    if (qrBox) {
+      qrBox.innerHTML = '';
+      let drawn = false;
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(qrBox, {
+            text: url,
+            width: 152,
+            height: 152,
+            colorDark: '#064e3b',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.L : undefined
+          });
+          drawn = true;
+        } catch (_) { }
+      }
+      if (!drawn) {
+        const img = document.createElement('img');
+        img.alt = '微信扫码应战';
+        img.className = 'w-[152px] h-[152px] mx-auto rounded-lg';
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=4&data=' + encodeURIComponent(url);
+        qrBox.appendChild(img);
+      }
+    }
+
+    modal.classList.remove('hidden');
+    this.showCenterCallout(
+      opts.imageCopied ? '战帖图片已复制 · 微信扫码或直接粘贴发送' : '微信分享卡片已就绪 · 扫码或复制口令即可转发',
+      RED,
+      '微信战帖'
+    );
+  },
+
+  closeWeChatShareModal() {
+    document.getElementById('wechat-share-modal')?.classList.add('hidden');
+  },
+
+  copyWeChatShareCommand() {
+    this.sfx?.playSelect?.();
+    const url = this.currentShareUrl || window.location.href;
+    const isReplay = this.currentShareKind === 'replay';
+    const title = isReplay
+      ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
+      : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？';
+    const cmd = this.currentWeChatCommand || `${title}\n👉 点击链接直接应战：${url}`;
+    this.copyTextSafe(cmd, '微信挑战口令已复制，快去微信粘贴给好友吧！');
+  },
+
+  async launchWeChatApp() {
+    this.sfx?.playSelect?.();
+    const url = this.currentShareUrl || window.location.href;
+    const isReplay = this.currentShareKind === 'replay';
+    const title = isReplay
+      ? '【中国象棋 3D · 棋局复盘】步步精妙，点击链接或扫码回看整局演武！'
+      : '【中国象棋 3D · 残局战帖】我摆了一道象棋残局，敢来一决高下吗？';
+    const cmd = this.currentWeChatCommand || `${title}\n👉 点击链接直接应战：${url}`;
+    const blob = this.currentPosterBlob || (this.currentPosterDataUrl ? dataURLToBlobSync(this.currentPosterDataUrl) : null);
+
+    let copiedImg = false;
+    if (blob && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        copiedImg = true;
+      } catch (_) { }
+    }
+    if (!copiedImg) {
+      this.copyTextSafe(cmd, '已复制挑战口令，正在为您唤起微信…');
+    } else {
+      this.showCenterCallout('已复制高清战帖图片，正在唤起微信，在聊天框粘贴即可！', RED, '唤起微信');
+    }
+
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = 'weixin://';
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 1800);
+    } catch (_) {
+      window.location.href = 'weixin://';
     }
   },
 

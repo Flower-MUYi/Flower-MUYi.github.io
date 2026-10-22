@@ -504,6 +504,14 @@ Object.assign(Xiangqi3DApp.prototype, {
         const movePieceType = movingPiece.isHidden ? (movingPiece.posType || movingPiece.type) : movingPiece.type;
 
         this.setLastMoveMarkers?.({ r: m.fr, c: m.fc }, { r: m.tr, c: m.tc });
+        this.spawnMoveTrailRibbon?.(startPos, endPos, movePieceType, movingPiece.color, isCapture);
+
+        const moveDx = endPos.x - startPos.x;
+        const moveDz = endPos.z - startPos.z;
+        const moveDist = Math.hypot(moveDx, moveDz) || 1;
+        const attackDirX = moveDx / moveDist;
+        const attackDirZ = moveDz / moveDist;
+        let captureShattered = false;
 
         this.activeAnimations = [];
         this.activeAnimations.push({
@@ -522,16 +530,31 @@ Object.assign(Xiangqi3DApp.prototype, {
               movingMesh.position.z = THREE.MathUtils.lerp(startPos.z, endPos.z, ease);
               movingMesh.position.y = Math.sin(ease * Math.PI) * 0.75;
             }
+            if (isCapture && targetMesh && !captureShattered) {
+              if (t >= 0.45 && t < 0.72) {
+                const pre = (t - 0.45) / 0.27;
+                targetMesh.position.x = endPos.x + Math.sin(pre * 28) * 0.04 * pre;
+                targetMesh.position.z = endPos.z + Math.cos(pre * 28) * 0.04 * pre;
+                targetMesh.scale.set(1 + pre * 0.06, 1 - pre * 0.14, 1 + pre * 0.06);
+              } else if (t >= 0.72) {
+                captureShattered = true;
+                this.piecesGroup.remove(targetMesh);
+                this.pieceMeshes.delete(targetPiece.id);
+                this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
+                this.sfx.playAttackShatter();
+              }
+            }
           },
           complete: () => {
             movingMesh.rotation.set(0, 0, 0);
             movingMesh.scale.set(1, 1, 1);
             this.restoreSnapshotToEngine(snap);
-            if (isCapture && targetMesh) {
-              this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color);
+            if (isCapture && targetMesh && !captureShattered) {
+              captureShattered = true;
+              this.spawnShatterFragments(endPos.x, endPos.z, targetPiece.color, attackDirX, attackDirZ);
               this.sfx.playAttackShatter();
-            } else if (movingPiece) {
-              this.spawnMoveImpactWave?.(endPos.x, endPos.z, false);
+            } else if (!isCapture && movingPiece) {
+              this.spawnMoveImpactWave?.(endPos.x, endPos.z, false, movingPiece.color);
               this.sfx.playMove(movingPiece.color, movingPiece.type);
             }
             this.syncPiecesFromEngine();
